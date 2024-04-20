@@ -1,4 +1,4 @@
-package list
+package index
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 )
 
-var helpText = `A longer description that spans multiple lines and likely contains examples
+var listHelpText = `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
 Cobra is a CLI library for Go that empowers applications.
@@ -21,7 +21,7 @@ func NewListCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "See the list of indexes in your project",
-		Long: helpText,
+		Long: listHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
 			key := os.Getenv("PINECONE_API_KEY")
 			fmt.Println("list called with key:", key)

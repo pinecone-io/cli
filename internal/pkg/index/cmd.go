@@ -2,10 +2,6 @@ package index
 
 import (
 	"github.com/spf13/cobra"
-
-	describe "github.com/pinecone-io/cli/internal/pkg/index/describe"
-	list "github.com/pinecone-io/cli/internal/pkg/index/list"
-	create_serverless "github.com/pinecone-io/cli/internal/pkg/index/create_serverless"
 )
 
 var helpText = `A longer description that spans multiple lines and likely contains examples
@@ -23,9 +19,9 @@ func NewIndexCmd() *cobra.Command {
 	}
 	cmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
-	cmd.AddCommand(describe.NewDescribeCmd())
-	cmd.AddCommand(list.NewListCmd())
-	cmd.AddCommand(create_serverless.NewCreateServerlessCmd())
+	cmd.AddCommand(NewDescribeCmd())
+	cmd.AddCommand(NewListCmd())
+	cmd.AddCommand(NewCreateServerlessCmd())
 
 	return cmd
 }
