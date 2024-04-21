@@ -4,8 +4,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	auth "github.com/pinecone-io/cli/internal/pkg/auth"
-	index "github.com/pinecone-io/cli/internal/pkg/index"
+	auth "github.com/pinecone-io/cli/internal/pkg/cli/command/auth"
+	index "github.com/pinecone-io/cli/internal/pkg/cli/command/index"
 )
 
 var rootCmd = &cobra.Command{
