@@ -1,4 +1,4 @@
-package logout
+package auth
 
 import (
 	"fmt"
@@ -6,20 +6,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var helpText = `A longer description that spans multiple lines and likely contains examples
+var helpTextSetApiKey = `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`
 
-func NewLogoutCmd() *cobra.Command {
+func NewSetApiKeyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "logout",
-		Short: "Delete all saved credentials from Pinecone CLI configuration",
-		Long: helpText,
+		Use:   "set-api-key",
+		Short: "Set the API key for the Pinecone CLI",
+		Long: helpTextSetApiKey,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("logout called")
+			fmt.Println("set-api-key called")
 		},
 	}
 
