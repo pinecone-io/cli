@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/pinecone-io/go-pinecone/pinecone"
 	text "github.com/pinecone-io/cli/internal/pkg/utils/text"
+	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 )
 
 var describeHelpText = `A longer description that spans multiple lines and likely contains examples
@@ -40,14 +41,12 @@ func NewDescribeCmd() *cobra.Command {
 			})
 		
 			if err != nil {
-				fmt.Println("Error:", err)
-				return
+				exit.Error(err)
 			}
 		
 			idxs, err := pc.DescribeIndex(ctx, options.name)
 			if err != nil {
-				fmt.Println("Error:", err)
-				return
+				exit.Error(err)
 			}
 			text.PrettyPrintJSON(idxs)
 		},

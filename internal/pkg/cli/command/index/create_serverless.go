@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/pinecone-io/go-pinecone/pinecone"
+	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 )
 
 var serverlessHelpText = `A longer description that spans multiple lines and likely contains examples
@@ -68,8 +69,7 @@ func runCreateServerlessCmd(cmd *cobra.Command, options describeOptions) {
 	})
 
 	if err != nil {
-		fmt.Println("Error:", err)
-		return
+		exit.Error(err)
 	}
 
 	createRequest := &pinecone.CreateServerlessIndexRequest{
@@ -82,8 +82,7 @@ func runCreateServerlessCmd(cmd *cobra.Command, options describeOptions) {
 
 	idx, err := pc.CreateServerlessIndex(ctx, createRequest)
 	if err != nil {
-		fmt.Println("Error:", err)
-		return
+		exit.Error(err)
 	}
 	fmt.Println(idx)
 }

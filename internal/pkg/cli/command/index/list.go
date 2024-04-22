@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/pinecone-io/go-pinecone/pinecone"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
+	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 )
 
 var listHelpText = `A longer description that spans multiple lines and likely contains examples
@@ -33,40 +34,17 @@ func NewListCmd() *cobra.Command {
 			})
 		
 			if err != nil {
-				fmt.Println("Error:", err)
-				return
+				exit.Error(err)
 			}
 		
 			idxs, err := pc.ListIndexes(ctx)
 			if err != nil {
-				fmt.Println("Error:", err)
-				return
+				exit.Error(err)
 			}
 
 			fmt.Println(idxs)
 
 			text.PrettyPrintJSON(idxs)
-			
-		
-			// for _, index := range idxs {
-			// 	fmt.Println(index)
-			// }
-		
-			// idx, err := pc.Index(idxs[0].Host)
-			// defer idx.Close()
-		
-			// if err != nil {
-			// 	fmt.Println("Error:", err)
-			// 	return
-			// }
-		
-			// res, err := idx.DescribeIndexStats(&ctx)
-			// if err != nil {
-			// 	fmt.Println("Error:", err)
-			// 	return
-			// }
-		
-			// fmt.Println(res)
 		},
 	}
 
