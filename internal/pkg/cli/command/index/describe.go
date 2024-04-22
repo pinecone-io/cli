@@ -1,14 +1,12 @@
 package index
 
 import (
-	"fmt"
-	"os"
 	"context"
 
 	"github.com/spf13/cobra"
-	"github.com/pinecone-io/go-pinecone/pinecone"
 	text "github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/client"
 )
 
 var describeHelpText = `A longer description that spans multiple lines and likely contains examples
@@ -30,20 +28,9 @@ func NewDescribeCmd() *cobra.Command {
 		Short: "Get configuration and status information for an index",
 		Long: describeHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
-			key := os.Getenv("PINECONE_API_KEY")
-			fmt.Println("describe called with key:", key)
-			fmt.Println("describe called with index name:", options.name)
-
 			ctx := context.Background()
+			pc := client.NewPineconeClient()
 
-			pc, err := pinecone.NewClient(pinecone.NewClientParams{
-				ApiKey: key,
-			})
-		
-			if err != nil {
-				exit.Error(err)
-			}
-		
 			idxs, err := pc.DescribeIndex(ctx, options.name)
 			if err != nil {
 				exit.Error(err)

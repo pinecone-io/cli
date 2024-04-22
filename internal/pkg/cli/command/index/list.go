@@ -1,14 +1,12 @@
 package index
 
 import (
-	"fmt"
-	"os"
 	"context"
 
 	"github.com/spf13/cobra"
-	"github.com/pinecone-io/go-pinecone/pinecone"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/client"
 )
 
 var listHelpText = `A longer description that spans multiple lines and likely contains examples
@@ -24,25 +22,13 @@ func NewListCmd() *cobra.Command {
 		Short: "See the list of indexes in your project",
 		Long: listHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
-			key := os.Getenv("PINECONE_API_KEY")
-			fmt.Println("list called with key:", key)
-
+			pc := client.NewPineconeClient()
 			ctx := context.Background()
-
-			pc, err := pinecone.NewClient(pinecone.NewClientParams{
-				ApiKey: key,
-			})
-		
-			if err != nil {
-				exit.Error(err)
-			}
 		
 			idxs, err := pc.ListIndexes(ctx)
 			if err != nil {
 				exit.Error(err)
 			}
-
-			fmt.Println(idxs)
 
 			text.PrettyPrintJSON(idxs)
 		},

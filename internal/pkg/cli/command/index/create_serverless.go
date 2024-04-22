@@ -1,13 +1,13 @@
 package index
 
 import (
-	"fmt"
-	"os"
 	"context"
 
 	"github.com/spf13/cobra"
 	"github.com/pinecone-io/go-pinecone/pinecone"
+	text "github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/client"
 )
 
 var serverlessHelpText = `A longer description that spans multiple lines and likely contains examples
@@ -54,23 +54,8 @@ func NewCreateServerlessCmd() *cobra.Command {
 }
 
 func runCreateServerlessCmd(cmd *cobra.Command, options describeOptions) {
-	key := os.Getenv("PINECONE_API_KEY")
-	fmt.Println("describe called with key:", key)
-	fmt.Println("describe called with index name:", options)
-	// fmt.Println("describe called with dimension:", dimension)
-	// fmt.Println("describe called with metric:", metric)
-	// fmt.Println("describe called with cloud:", cloud)
-	// fmt.Println("describe called with region:", region)
-
 	ctx := context.Background()
-
-	pc, err := pinecone.NewClient(pinecone.NewClientParams{
-		ApiKey: key,
-	})
-
-	if err != nil {
-		exit.Error(err)
-	}
+	pc := client.NewPineconeClient()
 
 	createRequest := &pinecone.CreateServerlessIndexRequest{
 		Name: options.name,
@@ -84,5 +69,5 @@ func runCreateServerlessCmd(cmd *cobra.Command, options describeOptions) {
 	if err != nil {
 		exit.Error(err)
 	}
-	fmt.Println(idx)
+	text.PrettyPrintJSON(idx)
 }
