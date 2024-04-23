@@ -19,6 +19,24 @@ type describeOptions struct {
 	region    string
 }
 
+func (o describeOptions) isValidCloud() bool {
+	switch pinecone.Cloud(o.cloud) {
+	case pinecone.Aws, pinecone.Azure, pinecone.Gcp:
+		return true
+	default:
+		return false
+	}
+}
+
+func (o describeOptions) isValidMetric() bool {
+	switch pinecone.IndexMetric(o.metric) {
+	case pinecone.Cosine, pinecone.Euclidean, pinecone.Dotproduct:
+		return true
+	default:
+		return false
+	}
+}
+
 func NewCreateServerlessCmd() *cobra.Command {
 	options := describeOptions{}
 
@@ -73,22 +91,4 @@ func runCreateServerlessCmd(cmd *cobra.Command, options describeOptions) {
 		exit.Error(err)
 	}
 	text.PrettyPrintJSON(idx)
-}
-
-func (o describeOptions) isValidCloud() bool {
-	switch pinecone.Cloud(o.cloud) {
-	case pinecone.Aws, pinecone.Azure, pinecone.Gcp:
-		return true
-	default:
-		return false
-	}
-}
-
-func (o describeOptions) isValidMetric() bool {
-	switch pinecone.IndexMetric(o.metric) {
-	case pinecone.Cosine, pinecone.Euclidean, pinecone.Dotproduct:
-		return true
-	default:
-		return false
-	}
 }
