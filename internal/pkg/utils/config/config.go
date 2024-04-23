@@ -19,8 +19,6 @@ func SetupDefaults() {
 	viper.SetConfigName("config") // name of config file (without extension)
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(locations.ConfigPath)
-
-	viper.SetDefault("PINECONE_API_KEY", "")
 }
 
 func LoadConfig() {
