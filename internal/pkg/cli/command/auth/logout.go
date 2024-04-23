@@ -3,6 +3,7 @@ package auth
 import (
 	"fmt"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/config"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +20,9 @@ func NewLogoutCmd() *cobra.Command {
 		Short: "Delete all saved credentials from Pinecone CLI configuration",
 		Long:  helpTextLogout,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("logout called")
+			config.ApiKey.Set("")
+			config.SaveConfig()
+			fmt.Println("Successfully logged out")
 		},
 	}
 
