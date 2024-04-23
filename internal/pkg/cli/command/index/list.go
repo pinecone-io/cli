@@ -56,18 +56,18 @@ func NewListCmd() *cobra.Command {
 func printTable(idxs []*pinecone.Index) {
 	writer := tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
 
-	columns := []string{"NAME", "STATUS", "HOST", "DIMENSION", "METRIC", "SPEC", "CLOUD", "REGION", "ENVIRONMENT"}
+	columns := []string{"NAME", "STATUS", "HOST", "DIMENSION", "METRIC", "SPEC"}
 	header := strings.Join(columns, "\t") + "\n"
 	fmt.Fprint(writer, header)
 
 	for _, idx := range idxs {
 		if idx.Spec.Serverless == nil {
 			// Pod index
-			values := []string{idx.Name, string(idx.Status.State), idx.Host, fmt.Sprintf("%d", idx.Dimension), string(idx.Metric), "pod", "", "", idx.Spec.Pod.Environment}
+			values := []string{idx.Name, string(idx.Status.State), idx.Host, fmt.Sprintf("%d", idx.Dimension), string(idx.Metric), "pod"}
 			fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
 		} else {
 			// Serverless index
-			values := []string{idx.Name, string(idx.Status.State), idx.Host, fmt.Sprintf("%d", idx.Dimension), string(idx.Metric), "serverless", string(idx.Spec.Serverless.Cloud), idx.Spec.Serverless.Region, ""}
+			values := []string{idx.Name, string(idx.Status.State), idx.Host, fmt.Sprintf("%d", idx.Dimension), string(idx.Metric), "serverless"}
 			fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
 		}
 	}

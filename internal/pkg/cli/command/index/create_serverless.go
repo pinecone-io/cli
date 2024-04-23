@@ -6,7 +6,9 @@ import (
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/client"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
-	text "github.com/pinecone-io/cli/internal/pkg/utils/text"
+	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
+	"github.com/pinecone-io/cli/internal/pkg/utils/style"
+	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/go-pinecone/pinecone"
 	"github.com/spf13/cobra"
 )
@@ -17,6 +19,7 @@ type describeOptions struct {
 	metric    string
 	cloud     string
 	region    string
+	json      bool
 }
 
 func (o describeOptions) isValidCloud() bool {
@@ -70,6 +73,7 @@ func NewCreateServerlessCmd() *cobra.Command {
 
 	// Optional flags
 	cmd.Flags().StringVarP(&options.metric, "metric", "m", "cosine", "metric to use. One of: cosine, euclidean, dotproduct")
+	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	return cmd
 }
@@ -90,5 +94,12 @@ func runCreateServerlessCmd(cmd *cobra.Command, options describeOptions) {
 	if err != nil {
 		exit.Error(err)
 	}
-	text.PrettyPrintJSON(idx)
+	if options.json {
+		text.PrettyPrintJSON(idx)
+		return
+	}
+
+	describeCommand := fmt.Sprintf("pinecone index describe --name %s", idx.Name)
+	fmt.Fprintf(cmd.OutOrStdout(), "✅ Index %s created successfully. Run '%s' to monitor status. \n\n", style.Emphasis(idx.Name), style.Code(describeCommand))
+	presenters.PrintDescribeIndexTable(idx)
 }

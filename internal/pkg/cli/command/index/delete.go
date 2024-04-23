@@ -6,6 +6,7 @@ import (
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/client"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
 )
 
@@ -28,7 +29,7 @@ func NewDeleteCmd() *cobra.Command {
 				exit.Error(err)
 			}
 
-			fmt.Printf("Index %s deleted\n", options.name)
+			fmt.Printf("✅ Index %s deleted.\n", style.Emphasis(options.name))
 		},
 	}
 
