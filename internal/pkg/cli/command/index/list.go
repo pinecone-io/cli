@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"text/tabwriter"
 
@@ -33,6 +34,11 @@ func NewListCmd() *cobra.Command {
 			if err != nil {
 				exit.Error(err)
 			}
+
+			// Sort results alphabetically by name
+			sort.SliceStable(idxs, func(i, j int) bool {
+				return idxs[i].Name < idxs[j].Name
+			})
 
 			if options.json {
 				text.PrettyPrintJSON(idxs)
