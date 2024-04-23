@@ -12,7 +12,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "pinecone",
 	Short: "Work seamlessly with Pinecone from the command line.",
-	Long:  `pinecone is a CLI tool managing your Pinecone resources from the command line.`,
+	Long:  `pinecone is a CLI tool for managing your Pinecone resources`,
 }
 
 func Execute() {
