@@ -15,13 +15,6 @@ import (
 	"github.com/pinecone-io/go-pinecone/pinecone"
 )
 
-var listHelpText = `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`
-
 type ListIndexCmdOptions struct {
 	json bool
 }
@@ -32,7 +25,6 @@ func NewListCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "See the list of indexes in your project",
-		Long:  listHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
 			pc := client.NewPineconeClient()
 			ctx := context.Background()

@@ -3,26 +3,19 @@ package index
 import (
 	"context"
 
-	"github.com/spf13/cobra"
-	"github.com/pinecone-io/go-pinecone/pinecone"
-	text "github.com/pinecone-io/cli/internal/pkg/utils/text"
-	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/client"
+	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	text "github.com/pinecone-io/cli/internal/pkg/utils/text"
+	"github.com/pinecone-io/go-pinecone/pinecone"
+	"github.com/spf13/cobra"
 )
 
-var serverlessHelpText = `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`
-
 type describeOptions struct {
-	name string
+	name      string
 	dimension int32
-	metric string
-	cloud string
-	region string
+	metric    string
+	cloud     string
+	region    string
 }
 
 func NewCreateServerlessCmd() *cobra.Command {
@@ -31,7 +24,6 @@ func NewCreateServerlessCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-serverless",
 		Short: "Create a serverless index with the specified configuration",
-		Long: serverlessHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
 			runCreateServerlessCmd(cmd, options)
 		},
@@ -58,11 +50,11 @@ func runCreateServerlessCmd(cmd *cobra.Command, options describeOptions) {
 	pc := client.NewPineconeClient()
 
 	createRequest := &pinecone.CreateServerlessIndexRequest{
-		Name: options.name,
-		Metric: pinecone.Cosine,
+		Name:      options.name,
+		Metric:    pinecone.Cosine,
 		Dimension: options.dimension,
-		Cloud: pinecone.Aws,
-		Region: options.region,
+		Cloud:     pinecone.Aws,
+		Region:    options.region,
 	}
 
 	idx, err := pc.CreateServerlessIndex(ctx, createRequest)

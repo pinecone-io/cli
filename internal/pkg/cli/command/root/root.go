@@ -26,8 +26,6 @@ func init() {
 	config.InitConfigFile()
 	config.LoadConfig()
 
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
 	rootCmd.AddCommand(auth.NewAuthCmd())
 	rootCmd.AddCommand(index.NewIndexCmd())
 }

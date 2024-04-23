@@ -15,13 +15,6 @@ import (
 	"github.com/pinecone-io/go-pinecone/pinecone"
 )
 
-var describeHelpText = `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`
-
 type DescribeCmdOptions struct {
 	name string
 	json bool
@@ -33,7 +26,6 @@ func NewDescribeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe",
 		Short: "Get configuration and status information for an index",
-		Long:  describeHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()
 			pc := client.NewPineconeClient()
