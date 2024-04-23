@@ -2,6 +2,7 @@ package index
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/client"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -24,6 +25,16 @@ func NewCreateServerlessCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-serverless",
 		Short: "Create a serverless index with the specified configuration",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if !options.isValidCloud() {
+				return fmt.Errorf("cloud provider must be one of [aws, azure, gcp]")
+			}
+			if !options.isValidMetric() {
+				return fmt.Errorf("metric must be one of [cosine, euclidean, dotproduct]")
+			}
+
+			return nil
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			runCreateServerlessCmd(cmd, options)
 		},
@@ -51,9 +62,9 @@ func runCreateServerlessCmd(cmd *cobra.Command, options describeOptions) {
 
 	createRequest := &pinecone.CreateServerlessIndexRequest{
 		Name:      options.name,
-		Metric:    pinecone.Cosine,
+		Metric:    pinecone.IndexMetric(options.metric),
 		Dimension: options.dimension,
-		Cloud:     pinecone.Aws,
+		Cloud:     pinecone.Cloud(options.cloud),
 		Region:    options.region,
 	}
 
@@ -62,4 +73,22 @@ func runCreateServerlessCmd(cmd *cobra.Command, options describeOptions) {
 		exit.Error(err)
 	}
 	text.PrettyPrintJSON(idx)
+}
+
+func (o describeOptions) isValidCloud() bool {
+	switch pinecone.Cloud(o.cloud) {
+	case pinecone.Aws, pinecone.Azure, pinecone.Gcp:
+		return true
+	default:
+		return false
+	}
+}
+
+func (o describeOptions) isValidMetric() bool {
+	switch pinecone.IndexMetric(o.metric) {
+	case pinecone.Cosine, pinecone.Euclidean, pinecone.Dotproduct:
+		return true
+	default:
+		return false
+	}
 }
