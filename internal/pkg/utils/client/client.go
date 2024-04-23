@@ -1,13 +1,13 @@
 package client
 
 import (
+	"github.com/pinecone-io/cli/internal/pkg/utils/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/go-pinecone/pinecone"
-	"os"
 )
 
 func NewPineconeClient() *pinecone.Client {
-	key := os.Getenv("PINECONE_API_KEY")
+	key := config.ApiKey.Get()
 	pc, err := pinecone.NewClient(pinecone.NewClientParams{
 		ApiKey: key,
 	})

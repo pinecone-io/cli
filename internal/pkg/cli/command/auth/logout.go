@@ -17,7 +17,7 @@ func NewLogoutCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "logout",
 		Short: "Delete all saved credentials from Pinecone CLI configuration",
-		Long: helpTextLogout,
+		Long:  helpTextLogout,
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("logout called")
 		},
