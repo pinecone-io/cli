@@ -9,7 +9,8 @@ import (
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/client"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
-	text "github.com/pinecone-io/cli/internal/pkg/utils/text"
+	"github.com/pinecone-io/cli/internal/pkg/utils/style"
+	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 
 	"github.com/pinecone-io/go-pinecone/pinecone"
@@ -58,14 +59,18 @@ func printDescribeIndexTable(idx *pinecone.Index) {
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
 	header := strings.Join(columns, "\t") + "\n"
-	fmt.Fprint(writer, header)
+	fmt.Fprintf(writer, header)
 
 	fmt.Fprintf(writer, "Name\t%s\n", idx.Name)
 	fmt.Fprintf(writer, "Dimension\t%d\n", idx.Dimension)
 	fmt.Fprintf(writer, "Metric\t%s\n", string(idx.Metric))
 	fmt.Fprintf(writer, "State\t%s\n", string(idx.Status.State))
-	fmt.Fprintf(writer, "Ready\t%t\n", idx.Status.Ready)
-	fmt.Fprintf(writer, "Host\t%s\n", idx.Host)
+	if idx.Status.Ready {
+		fmt.Fprintf(writer, "Ready\t%s\n", style.StatusGreen("true"))
+	} else {
+		fmt.Fprintf(writer, "Ready\t%s\n", style.StatusRed("false"))
+	}
+	fmt.Fprintf(writer, "Host\t%s\n", style.Emphasis(idx.Host))
 
 	var specType string
 	if idx.Spec.Serverless == nil {
