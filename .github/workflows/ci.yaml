@@ -6,11 +6,20 @@ on:
       - main
 
 jobs:
-  build:
+  build-linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '^1.22.0' # The Go version to download (if necessary) and use.
-      - run: go version
+          go-version: '^1.22.0'
+      - run: make
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+        - uses: actions/checkout@v4
+        - uses: actions/setup-go@v5
+          with:
+            go-version: '^1.22.0'
+        - run: make
