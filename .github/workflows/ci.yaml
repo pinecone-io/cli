@@ -29,8 +29,8 @@ jobs:
             # GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
         - uses: actions/upload-artifact@v4
           with:
-            name: pinecone
-            path: dist/*
+            name: pinecone_snapshot_${{ github.sha}}_macos
+            path: dist/pinecone_amd_pinecone_darwin_amd64_v1/pinecone
             if-no-files-found: error
             retention-days: 7
             compression-level: 0
