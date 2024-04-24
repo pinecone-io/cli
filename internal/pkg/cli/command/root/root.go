@@ -4,6 +4,7 @@ import (
 	"os"
 
 	auth "github.com/pinecone-io/cli/internal/pkg/cli/command/auth"
+	collection "github.com/pinecone-io/cli/internal/pkg/cli/command/collection"
 	configCmd "github.com/pinecone-io/cli/internal/pkg/cli/command/config"
 	index "github.com/pinecone-io/cli/internal/pkg/cli/command/index"
 	version "github.com/pinecone-io/cli/internal/pkg/cli/command/version"
@@ -30,6 +31,7 @@ func init() {
 
 	rootCmd.AddCommand(auth.NewAuthCmd())
 	rootCmd.AddCommand(index.NewIndexCmd())
+	rootCmd.AddCommand(collection.NewCollectionCmd())
 	rootCmd.AddCommand(configCmd.NewConfigCmd())
 	rootCmd.AddCommand(version.NewVersionCmd())
 }
