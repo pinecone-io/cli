@@ -30,7 +30,7 @@ jobs:
         - uses: actions/upload-artifact@v4
           with:
             name: pinecone_snapshot_${{ github.sha}}_macos
-            path: dist/pinecone_amd_pinecone_darwin_amd64_v1/pinecone
+            path: dist/pinecone_darwin_amd64_v1/pinecone
             if-no-files-found: error
             retention-days: 7
             compression-level: 0
