@@ -7,14 +7,15 @@
 To build, run `make`. The built artifact will be placed into the `bin/` folder.
 
 ```
-make && ./bin/pinecone
+brew install goreleaser/tap/goreleaser
+goreleaser build --single-target --snapshot --clean
 ```
 
 For manual testing in development, you can run commands like this
 
 ```shell
-./bin/pinecone auth set-api-key "foo"
-./bin/pinecone index list
+./dist/pinecone_darwin_arm64/pinecone auth set-api-key "foo"
+./dist/pinecone_darwin_arm64/pinecone index list
 # etc
 ```
 
