@@ -22,6 +22,10 @@ builds:
       - CGO_ENABLED=0
     main: ./cmd/pinecone
     binary: pinecone
+    ldflags:
+      - -X github.com/pinecone-io/cli/internal/build.Date={{.Date}}
+      - -X github.com/pinecone-io/cli/internal/build.Commit={{.Commit}}
+      - -X github.com/pinecone-io/cli/internal/build.Version={{.Version}}
     goos:
       - linux
       - windows

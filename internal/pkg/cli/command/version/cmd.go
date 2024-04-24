@@ -13,7 +13,9 @@ func NewVersionCmd() *cobra.Command {
 		Short:  "See version information for the CLI",
 		Hidden: true,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("Pinecone CLI version %s (%s)\n", build.Version, build.Date)
+			fmt.Printf("Version: %s\n", build.Version)
+			fmt.Printf("SHA: %s\n", build.Commit)
+			fmt.Printf("Built: %s\n", build.Date)
 		},
 	}
 
