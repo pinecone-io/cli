@@ -19,40 +19,32 @@ For manual testing in development, you can run commands like this
 # etc
 ```
 
-### Installing the CLI
-
-You can place the built binary into your PATH by running
-
-```shell
-sudo make install
-```
-
 ## Usage
 
 ```shell
 # See help
-pinecone --help
+./dist/pinecone_darwin_arm64/pinecone --help
 
 # Set credentials (proper login will come later)
-pinecone auth set-api-key
+./dist/pinecone_darwin_arm64/pinecone auth set-api-key
 
 # Do index operations
-pinecone index --help
+./dist/pinecone_darwin_arm64/pinecone index --help
 
 # Create serverless indexes.
-pinecone index create-serverless --help
-pinecone index create-serverless --name example-index --dimension 1536 --metric cosine --cloud aws --region us-west-2
-pinecone index create-serverless --name="example-index" --dimension=1536 --metric="cosine" --cloud="aws" --region="us-west-2"
-pinecone index create-serverless -n example-index -d 1536 -m cosine -c aws -r us-west-2
+./dist/pinecone_darwin_arm64/pinecone index create-serverless --help
+./dist/pinecone_darwin_arm64/pinecone index create-serverless --name example-index --dimension 1536 --metric cosine --cloud aws --region us-west-2
+./dist/pinecone_darwin_arm64/pinecone index create-serverless --name="example-index" --dimension=1536 --metric="cosine" --cloud="aws" --region="us-west-2"
+./dist/pinecone_darwin_arm64/pinecone index create-serverless -n example-index -d 1536 -m cosine -c aws -r us-west-2
 
 # Describe index
-pinecone index describe --name "example-index"
-pinecone index describe --name "example-index" --json
+./dist/pinecone_darwin_arm64/pinecone index describe --name "example-index"
+./dist/pinecone_darwin_arm64/pinecone index describe --name "example-index" --json
 
 # List indexes
-pinecone index list
-pinecone index list --json
+./dist/pinecone_darwin_arm64/pinecone index list
+./dist/pinecone_darwin_arm64/pinecone index list --json
 
 # Delete index
-pinecone index delete --name "example-index"
+./dist/pinecone_darwin_arm64/pinecone index delete --name "example-index"
 ```
