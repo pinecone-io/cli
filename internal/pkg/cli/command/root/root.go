@@ -6,6 +6,7 @@ import (
 	auth "github.com/pinecone-io/cli/internal/pkg/cli/command/auth"
 	configCmd "github.com/pinecone-io/cli/internal/pkg/cli/command/config"
 	index "github.com/pinecone-io/cli/internal/pkg/cli/command/index"
+	version "github.com/pinecone-io/cli/internal/pkg/cli/command/version"
 	"github.com/pinecone-io/cli/internal/pkg/utils/config"
 	"github.com/spf13/cobra"
 )
@@ -30,4 +31,5 @@ func init() {
 	rootCmd.AddCommand(auth.NewAuthCmd())
 	rootCmd.AddCommand(index.NewIndexCmd())
 	rootCmd.AddCommand(configCmd.NewConfigCmd())
+	rootCmd.AddCommand(version.NewVersionCmd())
 }
