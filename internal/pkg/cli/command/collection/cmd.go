@@ -17,6 +17,7 @@ func NewCollectionCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(NewListCollectionsCmd())
+	cmd.AddCommand(NewCreateCollectionCmd())
 
 	return cmd
 }

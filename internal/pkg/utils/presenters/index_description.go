@@ -2,9 +2,7 @@ package presenters
 
 import (
 	"fmt"
-	"os"
 	"strings"
-	"text/tabwriter"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -25,7 +23,7 @@ func ColorizeState(state pinecone.IndexStatusState) string {
 }
 
 func PrintDescribeIndexTable(idx *pinecone.Index) {
-	writer := tabwriter.NewWriter(os.Stdout, 12, 1, 4, ' ', 0)
+	writer := NewTabWriter()
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
 	header := strings.Join(columns, "\t") + "\n"
