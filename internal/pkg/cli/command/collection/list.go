@@ -54,6 +54,20 @@ func NewListCollectionsCmd() *cobra.Command {
 	return cmd
 }
 
+func int32ToString(i *int32) string {
+	if i == nil {
+		return ""
+	}
+	return strconv.FormatInt(int64(*i), 10)
+}
+
+func int64ToString(i *int64) string {
+	if i == nil {
+		return ""
+	}
+	return strconv.FormatInt(*i, 10)
+}
+
 func printTable(collections []*pinecone.Collection) {
 	writer := tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
 
@@ -62,7 +76,7 @@ func printTable(collections []*pinecone.Collection) {
 	fmt.Fprint(writer, header)
 
 	for _, coll := range collections {
-		values := []string{coll.Name, strconv.FormatInt(int64(*coll.Dimension), 10), strconv.FormatInt(*coll.Size, 10), strconv.FormatInt(int64(*coll.VectorCount), 10), coll.Environment}
+		values := []string{coll.Name, int32ToString(coll.Dimension), int64ToString(coll.Size), string(coll.Status), int32ToString(coll.VectorCount), coll.Environment}
 		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
 	}
 	writer.Flush()
