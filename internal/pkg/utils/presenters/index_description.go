@@ -29,7 +29,7 @@ func PrintDescribeIndexTable(idx *pinecone.Index) {
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
 	header := strings.Join(columns, "\t") + "\n"
-	fmt.Fprintf(writer, header)
+	fmt.Fprint(writer, header)
 
 	fmt.Fprintf(writer, "Name\t%s\n", idx.Name)
 	fmt.Fprintf(writer, "Dimension\t%d\n", idx.Dimension)

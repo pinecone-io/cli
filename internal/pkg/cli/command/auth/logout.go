@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/config"
+	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
 )
 
@@ -14,7 +15,7 @@ func NewLogoutCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			config.ApiKey.Set("")
 			config.SaveConfig()
-			fmt.Println("Successfully logged out")
+			fmt.Printf("Config property %s cleared.\n", style.Emphasis("api_key"))
 		},
 	}
 

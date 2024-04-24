@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/config"
 	"github.com/spf13/cobra"
 )
 
@@ -10,7 +11,7 @@ func NewAuthCmd() *cobra.Command {
 		Short: "Authenticate pinecone CLI with your Pinecone account",
 	}
 
-	cmd.AddCommand(NewSetApiKeyCmd())
+	cmd.AddCommand(config.NewSetApiKeyCmd())
 	cmd.AddCommand(NewLogoutCmd())
 
 	return cmd
