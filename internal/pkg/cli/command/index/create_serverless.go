@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type describeOptions struct {
+type createServerlessOptions struct {
 	name      string
 	dimension int32
 	metric    string
@@ -22,7 +22,7 @@ type describeOptions struct {
 	json      bool
 }
 
-func (o describeOptions) isValidCloud() bool {
+func (o createServerlessOptions) isValidCloud() bool {
 	switch pinecone.Cloud(o.cloud) {
 	case pinecone.Aws, pinecone.Azure, pinecone.Gcp:
 		return true
@@ -31,7 +31,7 @@ func (o describeOptions) isValidCloud() bool {
 	}
 }
 
-func (o describeOptions) isValidMetric() bool {
+func (o createServerlessOptions) isValidMetric() bool {
 	switch pinecone.IndexMetric(o.metric) {
 	case pinecone.Cosine, pinecone.Euclidean, pinecone.Dotproduct:
 		return true
@@ -41,7 +41,7 @@ func (o describeOptions) isValidMetric() bool {
 }
 
 func NewCreateServerlessCmd() *cobra.Command {
-	options := describeOptions{}
+	options := createServerlessOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "create-serverless",
@@ -62,7 +62,7 @@ func NewCreateServerlessCmd() *cobra.Command {
 	}
 
 	// Required flags
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of index to describe")
+	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the index")
 	cmd.MarkFlagRequired("name")
 	cmd.Flags().StringVarP(&options.cloud, "cloud", "c", "", "cloud provider where you would like to deploy")
 	cmd.MarkFlagRequired("cloud")
@@ -78,7 +78,7 @@ func NewCreateServerlessCmd() *cobra.Command {
 	return cmd
 }
 
-func runCreateServerlessCmd(cmd *cobra.Command, options describeOptions) {
+func runCreateServerlessCmd(cmd *cobra.Command, options createServerlessOptions) {
 	ctx := context.Background()
 	pc := client.NewPineconeClient()
 

@@ -19,6 +19,7 @@ func NewIndexCmd() *cobra.Command {
 	cmd.AddCommand(NewDescribeCmd())
 	cmd.AddCommand(NewListCmd())
 	cmd.AddCommand(NewCreateServerlessCmd())
+	cmd.AddCommand(NewCreatePodCmd())
 	cmd.AddCommand(NewDeleteCmd())
 
 	return cmd
