@@ -72,7 +72,7 @@ func openBrowser(url string) error {
 }
 
 func startServer() {
-	srv := &http.Server{Addr: ":54049"}
+	srv := &http.Server{Addr: ":59049"}
 
 	tmpl, err := template.ParseFS(content, "callback.html")
 	if err != nil {
@@ -132,7 +132,7 @@ func startServer() {
 		fmt.Println("Server gracefully stopped.")
 	}()
 
-	fmt.Println("Starting temporary server process at http://localhost:54049 and waiting to receive authentication callback.")
+	fmt.Println("Starting temporary server process at http://localhost:59049 and waiting to receive authentication callback.")
 	fmt.Printf("Please complete authentication flow in the browser at %s or press Ctrl-C to exit.\n", style.Emphasis(ConnectUrl))
 	openBrowser(ConnectUrl)
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
