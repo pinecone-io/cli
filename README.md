@@ -4,8 +4,6 @@
 
 ## Building the CLI
 
-To build, run `make`. The built artifact will be placed into the `bin/` folder.
-
 ```
 brew install goreleaser/tap/goreleaser
 goreleaser build --single-target --snapshot --clean
