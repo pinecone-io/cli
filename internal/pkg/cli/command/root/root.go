@@ -30,6 +30,9 @@ func init() {
 	config.LoadConfig()
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
+	rootCmd.SetHelpCommand(&cobra.Command{
+		Hidden: true,
+	})
 
 	rootCmd.AddCommand(auth.NewAuthCmd())
 	rootCmd.AddCommand(index.NewIndexCmd())
