@@ -13,6 +13,7 @@ func NewAuthCmd() *cobra.Command {
 
 	cmd.AddCommand(config.NewSetApiKeyCmd())
 	cmd.AddCommand(NewLogoutCmd())
+	cmd.AddCommand(NewLoginCmd())
 
 	return cmd
 }
