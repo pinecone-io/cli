@@ -9,7 +9,8 @@ import (
 func NewPineconeClient() *pinecone.Client {
 	key := config.ApiKey.Get()
 	pc, err := pinecone.NewClient(pinecone.NewClientParams{
-		ApiKey: key,
+		ApiKey:    key,
+		SourceTag: "pinecone-cli",
 	})
 	if err != nil {
 		exit.Error(err)
