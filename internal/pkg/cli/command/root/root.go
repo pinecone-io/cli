@@ -29,6 +29,8 @@ func init() {
 	config.InitConfigFile()
 	config.LoadConfig()
 
+	rootCmd.CompletionOptions.DisableDefaultCmd = true
+
 	rootCmd.AddCommand(auth.NewAuthCmd())
 	rootCmd.AddCommand(index.NewIndexCmd())
 	rootCmd.AddCommand(collection.NewCollectionCmd())
