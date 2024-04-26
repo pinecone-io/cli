@@ -9,6 +9,7 @@ import (
 	index "github.com/pinecone-io/cli/internal/pkg/cli/command/index"
 	org "github.com/pinecone-io/cli/internal/pkg/cli/command/org"
 	project "github.com/pinecone-io/cli/internal/pkg/cli/command/project"
+	target "github.com/pinecone-io/cli/internal/pkg/cli/command/target"
 	version "github.com/pinecone-io/cli/internal/pkg/cli/command/version"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
@@ -44,4 +45,5 @@ func init() {
 	rootCmd.AddCommand(version.NewVersionCmd())
 	rootCmd.AddCommand(org.NewOrgCmd())
 	rootCmd.AddCommand(project.NewProjectCmd())
+	rootCmd.AddCommand(target.NewTargetCmd())
 }
