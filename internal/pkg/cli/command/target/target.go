@@ -35,8 +35,18 @@ func NewTargetCmd() *cobra.Command {
 		Short: "Set context for the CLI",
 		Long:  targetHelp,
 		Run: func(cmd *cobra.Command, args []string) {
-			state.TargetOrgName.Set(options.Org)
-			state.TargetProjectName.Set(options.Project)
+			if options.Org == "" && options.Project == "" {
+				fmt.Printf("To update the context, run %s. The current target context is:\n\n", style.Code("pinecone target --org <org> --project <project>"))
+				presenters.PrintTargetContext(state.GetTargetContext())
+				return
+			}
+
+			if options.Org != "" {
+				state.TargetOrgName.Set(options.Org)
+			}
+			if options.Project != "" {
+				state.TargetProjectName.Set(options.Project)
+			}
 
 			fmt.Println("✅ Target context updated")
 			fmt.Println()
@@ -46,9 +56,7 @@ func NewTargetCmd() *cobra.Command {
 
 	// Required options
 	cmd.Flags().StringVarP(&options.Org, "org", "o", "", "Organization name")
-	cmd.MarkFlagRequired("org")
 	cmd.Flags().StringVarP(&options.Project, "project", "p", "", "Project name")
-	cmd.MarkFlagRequired("project")
 
 	return cmd
 }
