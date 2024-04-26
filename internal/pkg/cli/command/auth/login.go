@@ -32,6 +32,7 @@ func NewLoginCmd() *cobra.Command {
 					return err
 				}
 				secrets.AccessToken.Set(token.AccessToken)
+				secrets.RefreshToken.Set(token.RefreshToken)
 				return nil
 			})
 		},

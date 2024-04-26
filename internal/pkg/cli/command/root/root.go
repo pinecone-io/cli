@@ -9,6 +9,7 @@ import (
 	index "github.com/pinecone-io/cli/internal/pkg/cli/command/index"
 	version "github.com/pinecone-io/cli/internal/pkg/cli/command/version"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/spf13/cobra"
 )
 
@@ -26,8 +27,8 @@ func Execute() {
 }
 
 func init() {
-	config.InitConfigFile()
 	config.LoadConfig()
+	secrets.LoadSecrets()
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 	rootCmd.SetHelpCommand(&cobra.Command{

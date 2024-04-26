@@ -9,7 +9,27 @@ import (
 var SecretsViper *viper.Viper
 
 const accessTokenKey string = "access_token"
+const refreshTokenKey string = "refresh_token"
 const apiKeyKey string = "api_key"
+
+type ConfigProperty struct {
+	KeyName string
+}
+
+func (c ConfigProperty) Set(value string) {
+	SecretsViper.Set(c.KeyName, value)
+	SaveSecrets()
+}
+
+func (c ConfigProperty) Get() string {
+	return SecretsViper.GetString(c.KeyName)
+}
+
+var (
+	RefreshToken = ConfigProperty{KeyName: refreshTokenKey}
+	AccessToken  = ConfigProperty{KeyName: accessTokenKey}
+	ApiKey       = ConfigProperty{KeyName: apiKeyKey}
+)
 
 func init() {
 	SecretsViper = viper.New()
@@ -21,6 +41,7 @@ func init() {
 
 	SecretsViper.SetDefault(apiKeyKey, "")
 	SecretsViper.SetDefault(accessTokenKey, "")
+	SecretsViper.SetDefault(refreshTokenKey, "")
 	SecretsViper.SafeWriteConfig()
 }
 
