@@ -8,7 +8,7 @@ import (
 
 // These are set with ldflags during build process
 var Auth0ClientId = "XY4m3uRYoW6S0dK9ypXmM0Wc2bzUAdXW"
-var Auth0URL = "https://production-v2-pinecone-io.us.auth0.com"
+var Auth0URL = "https://login.pinecone.io"
 var Auth0Audience = "https://us-central1-production-console.cloudfunctions.net/api/v1"
 
 type DeviceAuth struct{}
@@ -21,7 +21,7 @@ func newOauth2Config() *oauth2.Config {
 			TokenURL:      Auth0URL + "/oauth/token",
 			DeviceAuthURL: Auth0URL + "/oauth/device/code",
 		},
-		Scopes:      []string{"email"},
+		Scopes:      []string{"openid", "profile", "email"},
 		RedirectURL: "http://localhost:59049",
 	}
 }
