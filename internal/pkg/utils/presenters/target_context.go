@@ -8,6 +8,13 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 )
 
+func labelUnsetIfEmpty(value string) string {
+	if value == "" {
+		return style.StatusRed("UNSET")
+	}
+	return value
+}
+
 func PrintTargetContext(context *state.TargetContext) {
 	writer := NewTabWriter()
 
@@ -15,9 +22,9 @@ func PrintTargetContext(context *state.TargetContext) {
 	header := strings.Join(columns, "\t") + "\n"
 	fmt.Fprint(writer, header)
 
-	fmt.Fprintf(writer, "Api\t%s\n", style.Emphasis(context.Api))
-	fmt.Fprintf(writer, "Org\t%s\n", context.Org)
-	fmt.Fprintf(writer, "Project\t%s\n", context.Project)
+	fmt.Fprintf(writer, "Api\t%s\n", labelUnsetIfEmpty(style.Emphasis(context.Api)))
+	fmt.Fprintf(writer, "Org\t%s\n", labelUnsetIfEmpty(context.Org))
+	fmt.Fprintf(writer, "Project\t%s\n", labelUnsetIfEmpty(context.Project))
 
 	writer.Flush()
 }

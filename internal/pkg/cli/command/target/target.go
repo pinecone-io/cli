@@ -3,7 +3,10 @@ package target
 import (
 	"fmt"
 
+	"github.com/pinecone-io/cli/internal/pkg/dashboard"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
+	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
@@ -31,7 +34,7 @@ func NewTargetCmd() *cobra.Command {
 	options := TargetOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "target <command>",
+		Use:   "target <flags>",
 		Short: "Set context for the CLI",
 		Long:  targetHelp,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -41,14 +44,36 @@ func NewTargetCmd() *cobra.Command {
 				return
 			}
 
-			if options.Org != "" {
-				state.TargetOrgName.Set(options.Org)
-			}
-			if options.Project != "" {
-				state.TargetProjectName.Set(options.Project)
+			orgs, err := dashboard.GetOrganizations(secrets.AccessToken.Get())
+			if err != nil {
+				exit.Error(err)
 			}
 
-			fmt.Println("✅ Target context updated")
+			var org dashboard.Organization
+			if options.Org != "" {
+				org, err = getOrg(orgs, options.Org)
+				if err != nil {
+					exit.Error(err)
+				}
+				fmt.Printf("✅ Target org updated to %s\n", style.Emphasis(org.Name))
+				state.TargetOrgName.Set(org.Name)
+				state.TargetProjectName.Set("")
+			} else {
+				org, err = getOrg(orgs, state.TargetOrgName.Get())
+				if err != nil {
+					exit.Error(err)
+				}
+			}
+
+			if options.Project != "" {
+				proj, err := getProject(org, options.Project)
+				if err != nil {
+					exit.Error(err)
+				}
+				fmt.Printf("✅ Target project updated to %s\n", style.Emphasis(proj.Name))
+				state.TargetProjectName.Set(proj.Name)
+			}
+
 			fmt.Println()
 			presenters.PrintTargetContext(state.GetTargetContext())
 		},
@@ -59,4 +84,22 @@ func NewTargetCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&options.Project, "project", "p", "", "Project name")
 
 	return cmd
+}
+
+func getOrg(orgs *dashboard.OrganizationsResponse, orgName string) (dashboard.Organization, error) {
+	for _, org := range orgs.Organizations {
+		if org.Name == orgName {
+			return org, nil
+		}
+	}
+	return dashboard.Organization{}, fmt.Errorf("organization %s not found", style.Emphasis(orgName))
+}
+
+func getProject(org dashboard.Organization, projectName string) (dashboard.Project, error) {
+	for _, project := range org.Projects {
+		if project.Name == projectName {
+			return project, nil
+		}
+	}
+	return dashboard.Project{}, fmt.Errorf("project %s not found in org %s", style.Emphasis(projectName), style.Emphasis(org.Name))
 }
