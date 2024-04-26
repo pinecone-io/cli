@@ -3,12 +3,12 @@ package config
 import (
 	"fmt"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/config"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration"
 	"github.com/spf13/cobra"
 )
 
 var configHelpText = fmt.Sprintf(`Configuration for this CLI is stored in a file called 
-config.yaml in the %s directory.`, config.NewConfigLocations().ConfigPath)
+config.yaml in the %s directory.`, configuration.NewConfigLocations().ConfigPath)
 
 func NewConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{

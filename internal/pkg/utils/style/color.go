@@ -2,7 +2,7 @@ package style
 
 import (
 	"github.com/fatih/color"
-	"github.com/pinecone-io/cli/internal/pkg/utils/config"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 )
 
 func applyStyle(s string, c color.Attribute) string {

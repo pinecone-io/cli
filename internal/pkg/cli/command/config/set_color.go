@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/config"
+	conf "github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -24,7 +24,7 @@ func NewSetColorCmd() *cobra.Command {
 				colorSetting = false
 			}
 
-			config.Color.Set(colorSetting)
+			conf.Color.Set(colorSetting)
 			fmt.Printf("Config property %s updated to %s\n", style.Emphasis("color"), style.Emphasis(text.BoolToString(colorSetting)))
 		},
 	}

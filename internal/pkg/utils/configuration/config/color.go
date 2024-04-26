@@ -1,15 +1,5 @@
 package config
 
-import (
-	"github.com/spf13/viper"
-)
-
-const colorKey = "color"
-
-func init() {
-	viper.SetDefault(colorKey, true)
-}
-
 type ColorConfig struct {
 	keyName string
 }
@@ -19,11 +9,11 @@ var Color = ColorConfig{
 }
 
 func (a ColorConfig) Set(newColorSetting bool) {
-	viper.Set(colorKey, newColorSetting)
+	ConfigViper.Set(colorKey, newColorSetting)
 	SaveConfig()
 }
 
 func (a ColorConfig) Get() bool {
-	colorSetting := viper.GetBool(colorKey)
+	colorSetting := ConfigViper.GetBool(colorKey)
 	return colorSetting
 }

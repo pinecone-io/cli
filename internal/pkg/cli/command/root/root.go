@@ -8,7 +8,7 @@ import (
 	configCmd "github.com/pinecone-io/cli/internal/pkg/cli/command/config"
 	index "github.com/pinecone-io/cli/internal/pkg/cli/command/index"
 	version "github.com/pinecone-io/cli/internal/pkg/cli/command/version"
-	"github.com/pinecone-io/cli/internal/pkg/utils/config"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/spf13/cobra"
 )
 
