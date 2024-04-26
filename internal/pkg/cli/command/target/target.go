@@ -9,6 +9,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
+	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 )
 
@@ -28,6 +29,7 @@ var targetHelp = fmt.Sprintf(targetHelpTemplate, style.Code("pinecone project li
 type TargetOptions struct {
 	Org     string
 	Project string
+	json    bool
 }
 
 func NewTargetCmd() *cobra.Command {
@@ -39,6 +41,10 @@ func NewTargetCmd() *cobra.Command {
 		Long:  targetHelp,
 		Run: func(cmd *cobra.Command, args []string) {
 			if options.Org == "" && options.Project == "" {
+				if options.json {
+					text.PrettyPrintJSON(state.GetTargetContext())
+					return
+				}
 				fmt.Printf("To update the context, run %s. The current target context is:\n\n", style.Code("pinecone target --org <org> --project <project>"))
 				presenters.PrintTargetContext(state.GetTargetContext())
 				return
@@ -55,7 +61,9 @@ func NewTargetCmd() *cobra.Command {
 				if err != nil {
 					exit.Error(err)
 				}
-				fmt.Printf("✅ Target org updated to %s\n", style.Emphasis(org.Name))
+				if !options.json {
+					fmt.Printf("✅ Target org updated to %s\n", style.Emphasis(org.Name))
+				}
 				state.TargetOrgName.Set(org.Name)
 				state.TargetProjectName.Set("")
 			} else {
@@ -70,8 +78,15 @@ func NewTargetCmd() *cobra.Command {
 				if err != nil {
 					exit.Error(err)
 				}
-				fmt.Printf("✅ Target project updated to %s\n", style.Emphasis(proj.Name))
+				if !options.json {
+					fmt.Printf("✅ Target project updated to %s\n", style.Emphasis(proj.Name))
+				}
 				state.TargetProjectName.Set(proj.Name)
+			}
+
+			if options.json {
+				text.PrettyPrintJSON(state.GetTargetContext())
+				return
 			}
 
 			fmt.Println()
@@ -82,6 +97,7 @@ func NewTargetCmd() *cobra.Command {
 	// Required options
 	cmd.Flags().StringVarP(&options.Org, "org", "o", "", "Organization name")
 	cmd.Flags().StringVarP(&options.Project, "project", "p", "", "Project name")
+	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	return cmd
 }
