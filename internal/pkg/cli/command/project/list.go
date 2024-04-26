@@ -9,6 +9,8 @@ import (
 
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
+	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -17,6 +19,7 @@ import (
 
 type ListProjectCmdOptions struct {
 	json    bool
+	all     bool
 	orgName string
 	orgId   string
 }
@@ -27,12 +30,6 @@ func NewListProjectsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list <command>",
 		Short: "list projects in an org",
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if options.orgName == "" && options.orgId == "" {
-				return fmt.Errorf("organization name or id must be specified")
-			}
-			return nil
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			orgs, err := dashboard.GetOrganizations(secrets.AccessToken.Get())
 			if err != nil {
@@ -41,6 +38,11 @@ func NewListProjectsCmd() *cobra.Command {
 
 			if options.json {
 				text.PrettyPrintJSON(orgs)
+				return
+			}
+
+			if options.all {
+				printTableAll(orgs)
 				return
 			}
 
@@ -65,12 +67,32 @@ func NewListProjectsCmd() *cobra.Command {
 				}
 				exit.Error(fmt.Errorf("organization %s not found", options.orgId))
 			}
+
+			targetOrg := state.GetTargetContext().Org
+			if targetOrg == "" {
+				exit.Error(fmt.Errorf("no target organization set. Please run %s or specify org via flags.", style.Code("pinecone target")))
+			}
+
+			for _, org := range orgs.Organizations {
+				if org.Name == targetOrg {
+					sortProjectsByName(org.Projects)
+					printTable(org.Projects)
+					return
+				}
+			}
+			// Since the target org is not found, clear the invalid target context
+			// to avoid confusion. User can get in this state if they delete the org
+			// via some other method (e.g. web, SDK, etc) and then run this command
+			// with saved state that is now stale.
+			state.Clear()
+			exit.Error(fmt.Errorf("The target organization %s is not found. Clearing invalid target context. Run %s to see available orgs and %s to set your target context.", style.Emphasis(targetOrg), style.Code("pinecone org list"), style.Code("pinecone target")))
 		},
 	}
 
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 	cmd.Flags().StringVarP(&options.orgName, "org_name", "o", "", "name of organization")
 	cmd.Flags().StringVarP(&options.orgId, "org_id", "i", "", "id of organization")
+	cmd.Flags().BoolVar(&options.all, "all", false, "display projects in all organizations")
 
 	return cmd
 }
@@ -89,8 +111,24 @@ func printTable(projects []dashboard.Project) {
 	fmt.Fprint(writer, header)
 
 	for _, proj := range projects {
-		values := []string{proj.Id, proj.Name}
+		values := []string{proj.GlobalProject.Id, proj.Name}
 		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
+	}
+	writer.Flush()
+}
+
+func printTableAll(orgs *dashboard.OrganizationsResponse) {
+	writer := tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
+
+	columns := []string{"ORG ID", "ORG NAME", "PROJECT NAME", "PROJECT ID"}
+	header := strings.Join(columns, "\t") + "\n"
+	fmt.Fprint(writer, header)
+
+	for _, org := range orgs.Organizations {
+		for _, proj := range org.Projects {
+			values := []string{org.Id, org.Name, proj.Name, proj.GlobalProject.Id}
+			fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
+		}
 	}
 	writer.Flush()
 }
