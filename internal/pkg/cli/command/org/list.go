@@ -10,6 +10,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/spf13/cobra"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 )
 
@@ -26,7 +27,7 @@ func NewListOrgsCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			orgs, err := dashboard.GetOrganizations(secrets.AccessToken.Get())
 			if err != nil {
-				panic(err)
+				exit.Error(err)
 			}
 
 			if options.json {
