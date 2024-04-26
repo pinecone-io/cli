@@ -45,6 +45,13 @@ func init() {
 	SecretsViper.SafeWriteConfig()
 }
 
+func Clear() {
+	ApiKey.Set("")
+	AccessToken.Set("")
+	RefreshToken.Set("")
+	SaveSecrets()
+}
+
 func LoadSecrets() {
 	err := SecretsViper.ReadInConfig() // Find and read the config file
 	if err != nil {                    // Handle errors reading the config file

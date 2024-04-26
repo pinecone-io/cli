@@ -12,9 +12,7 @@ func NewLogoutCmd() *cobra.Command {
 		Use:   "logout",
 		Short: "Delete all saved credentials from Pinecone CLI configuration",
 		Run: func(cmd *cobra.Command, args []string) {
-			secrets.ApiKey.Set("")
-			secrets.AccessToken.Set("")
-			secrets.SaveSecrets()
+			secrets.Clear()
 			fmt.Println("✅ Secrets cleared.")
 		},
 	}
