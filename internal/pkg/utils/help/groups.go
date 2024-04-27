@@ -8,16 +8,16 @@ import (
 var (
 	GROUP_START = &cobra.Group{
 		ID:    "getting-started",
-		Title: style.Heading("Getting Started"),
+		Title: style.Heading("Auth Commands"),
 	}
 
 	GROUP_VECTORDB = &cobra.Group{
 		ID:    "vectordb",
-		Title: style.Heading("Vector Database"),
+		Title: style.Heading("Vector Database Commands"),
 	}
 
 	GROUP_MANAGEMENT = &cobra.Group{
 		ID:    "index",
-		Title: style.Heading("Management"),
+		Title: style.Heading("Management Commands"),
 	}
 )

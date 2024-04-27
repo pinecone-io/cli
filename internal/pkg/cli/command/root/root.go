@@ -24,6 +24,11 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "pinecone",
 	Short: "Work seamlessly with Pinecone from the command line.",
+	Example: help.Examples([]string{
+		"pinecone login",
+		"pinecone target --org=\"my-org\" --project=\"my-project\"",
+		"pinecone index create-serverless --help",
+	}),
 	Long: fmt.Sprintf(`pinecone is a CLI tool for managing your Pinecone resources
 	
 Get started by logging in with

@@ -3,6 +3,7 @@ package help
 import (
 	"fmt"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/docslinks"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 )
 
@@ -51,6 +52,8 @@ var part6 = fmt.Sprintf(`%s
 {{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}
 
 Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
-`, style.Heading("Flags"), style.Heading("Global Flags"))
+
+For in-depth documentation and resources, visit %s
+`, style.Heading("Flags"), style.Heading("Global Flags"), style.URL(docslinks.DocsHome))
 
 var HelpTemplate = part1 + part2 + part3 + part4 + part5 + part6

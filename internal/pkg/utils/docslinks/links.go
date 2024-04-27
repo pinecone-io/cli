@@ -1,3 +1,6 @@
 package docslinks
 
-const UnderstandingCollectionsGuide = "https://docs.pinecone.io/guides/indexes/understanding-collections"
+const (
+	DocsHome                      = "https://docs.pinecone.io"
+	UnderstandingCollectionsGuide = "https://docs.pinecone.io/guides/indexes/understanding-collections"
+)

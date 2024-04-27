@@ -11,23 +11,6 @@ func applyStyle(s string, c color.Attribute) string {
 	return colored(s)
 }
 
-func Emphasis(s string) string {
-	return applyStyle(s, color.FgCyan)
-}
-
-func Heading(s string) string {
-	return applyStyle(s, color.Bold)
-}
-
-func Code(s string) string {
-	formatted := applyStyle(s, color.FgMagenta)
-	if color.NoColor {
-		// Add backticks for code formatting if color is disabled
-		return "`" + formatted + "`"
-	}
-	return formatted
-}
-
 func CodeWithPrompt(s string) string {
 	return (applyStyle("$ ", color.Faint) + applyStyle(s, color.FgMagenta))
 }
