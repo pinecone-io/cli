@@ -9,9 +9,8 @@ import (
 
 func NewVersionCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:    "version",
-		Short:  "See version information for the CLI",
-		Hidden: true,
+		Use:   "version",
+		Short: "See version information for the CLI",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Printf("Version: %s\n", build.Version)
 			fmt.Printf("SHA: %s\n", build.Commit)

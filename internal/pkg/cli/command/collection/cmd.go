@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/docslinks"
+	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/spf13/cobra"
 )
 
@@ -11,9 +12,10 @@ var collectionHelpText = fmt.Sprintf(`To learn more about collections, please se
 
 func NewCollectionCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "collection <command>",
-		Short: "Work with collections",
-		Long:  collectionHelpText,
+		Use:     "collection <command>",
+		Short:   "Work with collections",
+		Long:    collectionHelpText,
+		GroupID: help.GROUP_VECTORDB.ID,
 	}
 
 	cmd.AddCommand(NewCreateCollectionCmd())

@@ -7,6 +7,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -36,9 +37,10 @@ func NewTargetCmd() *cobra.Command {
 	options := TargetOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "target <flags>",
-		Short: "Set context for the CLI",
-		Long:  targetHelp,
+		Use:     "target <flags>",
+		Short:   "Set context for the CLI",
+		GroupID: help.GROUP_START.ID,
+		Long:    targetHelp,
 		Run: func(cmd *cobra.Command, args []string) {
 			if options.Org == "" && options.Project == "" {
 				if options.json {

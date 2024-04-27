@@ -1,10 +1,11 @@
-package auth
+package login
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
+	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	deviceauth "github.com/pinecone-io/cli/internal/pkg/utils/oauth2"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
@@ -12,8 +13,9 @@ import (
 
 func NewLoginCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "login",
-		Short: "Login to Pinecone CLI",
+		Use:     "login",
+		Short:   "Login to Pinecone CLI",
+		GroupID: help.GROUP_START.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()
 

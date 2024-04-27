@@ -1,6 +1,7 @@
 package index
 
 import (
+	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/spf13/cobra"
 )
 
@@ -11,9 +12,10 @@ its contents.`
 
 func NewIndexCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "index <command>",
-		Short: "Work with indexes",
-		Long:  helpText,
+		Use:     "index <command>",
+		Short:   "Work with indexes",
+		Long:    helpText,
+		GroupID: help.GROUP_VECTORDB.ID,
 	}
 
 	cmd.AddCommand(NewDescribeCmd())

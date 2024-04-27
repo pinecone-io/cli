@@ -15,6 +15,10 @@ func Emphasis(s string) string {
 	return applyStyle(s, color.FgCyan)
 }
 
+func Heading(s string) string {
+	return applyStyle(s, color.Bold)
+}
+
 func Code(s string) string {
 	formatted := applyStyle(s, color.FgMagenta)
 	if color.NoColor {
@@ -22,6 +26,10 @@ func Code(s string) string {
 		return "`" + formatted + "`"
 	}
 	return formatted
+}
+
+func CodeWithPrompt(s string) string {
+	return (applyStyle("$ ", color.Faint) + applyStyle(s, color.FgMagenta))
 }
 
 func StatusGreen(s string) string {
