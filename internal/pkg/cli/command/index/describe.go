@@ -3,9 +3,9 @@ package index
 import (
 	"context"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/client"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
+	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +23,7 @@ func NewDescribeCmd() *cobra.Command {
 		Short: "Get configuration and status information for an index",
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()
-			pc := client.NewPineconeClient()
+			pc := sdk.NewPineconeClient()
 
 			idx, err := pc.DescribeIndex(ctx, options.name)
 			if err != nil {

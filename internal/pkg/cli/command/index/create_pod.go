@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/client"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
+	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/go-pinecone/pinecone"
@@ -78,7 +78,7 @@ func NewCreatePodCmd() *cobra.Command {
 
 func runCreatePodCmd(cmd *cobra.Command, options createPodOptions) {
 	ctx := context.Background()
-	pc := client.NewPineconeClient()
+	pc := sdk.NewPineconeClient()
 
 	createRequest := &pinecone.CreatePodIndexRequest{
 		Name:        options.name,

@@ -6,71 +6,61 @@ import (
 	"github.com/spf13/viper"
 )
 
-var StateViper *viper.Viper
-
-const targetProjectName string = "target_project_name"
-const targetProjectGlobalId string = "target_project_global_id"
-const targetOrgName string = "target_org_name"
-const targetOrgId string = "target_org_id"
-const humanMode string = "human_mode"
-
-type ConfigProperty struct {
-	KeyName string
-}
-
-func (c ConfigProperty) Set(value string) {
-	StateViper.Set(c.KeyName, value)
-	SaveState()
-}
-
-func (c ConfigProperty) Get() string {
-	return StateViper.GetString(c.KeyName)
-}
-
-type ConfigPropertyBool struct {
-	KeyName string
-}
-
-func (c ConfigPropertyBool) Set(value bool) {
-	StateViper.Set(c.KeyName, value)
-	SaveState()
-}
-
-func (c ConfigPropertyBool) Get() bool {
-	return StateViper.GetBool(c.KeyName)
-}
+var StateViper *viper.Viper = viper.New()
 
 var (
-	TargetProjectName     = ConfigProperty{KeyName: targetProjectName}
-	TargetProjectGlobalId = ConfigProperty{KeyName: targetProjectGlobalId}
-
-	TargetOrgName = ConfigProperty{KeyName: targetOrgName}
-	TargetOrgId   = ConfigProperty{KeyName: targetOrgId}
-
-	HumanMode = ConfigPropertyBool{KeyName: humanMode}
+	TargetProjectName = configuration.ConfigProperty[string]{
+		KeyName:      "target_project_name",
+		ViperStore:   StateViper,
+		DefaultValue: "",
+	}
+	TargetProjectGlobalId = configuration.ConfigProperty[string]{
+		KeyName:      "target_project_global_id",
+		ViperStore:   StateViper,
+		DefaultValue: "",
+	}
+	TargetOrgName = configuration.ConfigProperty[string]{
+		KeyName:      "target_org_name",
+		ViperStore:   StateViper,
+		DefaultValue: "",
+	}
+	TargetOrgId = configuration.ConfigProperty[string]{
+		KeyName:      "target_org_id",
+		ViperStore:   StateViper,
+		DefaultValue: "",
+	}
+	HumanMode = configuration.ConfigProperty[bool]{
+		KeyName:      "human_mode",
+		ViperStore:   StateViper,
+		DefaultValue: true,
+	}
 )
+var properties = []configuration.Property{
+	TargetProjectName,
+	TargetProjectGlobalId,
+	TargetOrgName,
+	TargetOrgId,
+	HumanMode,
+}
 
 func init() {
-	StateViper = viper.New()
 	locations := configuration.NewConfigLocations()
 
 	StateViper.SetConfigName("state")
 	StateViper.SetConfigType("yaml")
 	StateViper.AddConfigPath(locations.ConfigPath)
 
-	StateViper.SetDefault(targetProjectName, "")
-	StateViper.SetDefault(targetProjectGlobalId, "")
-	StateViper.SetDefault(targetOrgName, "")
-	StateViper.SetDefault(targetOrgId, "")
-	StateViper.SetDefault(humanMode, false)
+	for _, property := range properties {
+		property.Init()
+	}
+
 	StateViper.SafeWriteConfig()
 }
 
 func Clear() {
-	TargetProjectName.Set("")
-	TargetProjectGlobalId.Set("")
-	TargetOrgName.Set("")
-	TargetOrgId.Set("")
+	for _, property := range properties {
+		property.Clear()
+	}
 	SaveState()
 }
 

@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
+	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/oauth2"
+	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 )
 
 func buildRequest(verb string, path string) (*http.Request, error) {
@@ -19,7 +22,7 @@ func buildRequest(verb string, path string) (*http.Request, error) {
 	}
 
 	if os.Getenv("PINECONE_DEBUG_CURL") == "true" {
-		fmt.Printf("curl -X %s %s -H \"Content-Type: application/json\" -H \"User-Agent: Pinecone CLI\" -H \"Authorization: Bearer %s\"\n", verb, path, secrets.AccessToken.Get())
+		fmt.Printf("curl -X %s %s -H \"Content-Type: application/json\" -H \"User-Agent: Pinecone CLI\" -H \"Authorization: Bearer %s\"\n", verb, path, secrets.OAuth2Token.Get().AccessToken)
 	}
 
 	req.Header.Add("User-Agent", "Pinecone CLI")
@@ -36,7 +39,11 @@ func performRequest(req *http.Request) (*http.Response, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Error sending request:", err)
+		if strings.Contains(err.Error(), "token expired") {
+			secrets.OAuth2Token.Clear()
+			secrets.SaveSecrets()
+			exit.ErrorMsg(fmt.Sprintf("Your session has expired. Please run %s to log in again.", style.Code("pinecone login")))
+		}
 		return nil, err
 	}
 

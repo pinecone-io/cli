@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/client"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
+	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -27,7 +27,7 @@ func NewCreateCollectionCmd() *cobra.Command {
 		Use:   "create",
 		Short: "Create a collection from a pod-based index",
 		Run: func(cmd *cobra.Command, args []string) {
-			pc := client.NewPineconeClient()
+			pc := sdk.NewPineconeClient()
 			ctx := context.Background()
 
 			req := &pinecone.CreateCollectionRequest{

@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/client"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
+	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/go-pinecone/pinecone"
@@ -80,7 +80,7 @@ func NewCreateServerlessCmd() *cobra.Command {
 
 func runCreateServerlessCmd(cmd *cobra.Command, options createServerlessOptions) {
 	ctx := context.Background()
-	pc := client.NewPineconeClient()
+	pc := sdk.NewPineconeClient()
 
 	createRequest := &pinecone.CreateServerlessIndexRequest{
 		Name:      options.name,

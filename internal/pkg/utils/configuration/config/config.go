@@ -6,40 +6,39 @@ import (
 	"github.com/spf13/viper"
 )
 
-var ConfigViper *viper.Viper
+var ConfigViper *viper.Viper = viper.New()
 
-const colorKey = "color"
+var (
+	Color = configuration.ConfigProperty[bool]{
+		KeyName:      "color",
+		ViperStore:   ConfigViper,
+		DefaultValue: true,
+	}
+)
+var properties = []configuration.Property{
+	Color,
+}
 
 func init() {
-	ConfigViper = viper.New()
-	ConfigViper.SetDefault(colorKey, true)
-
 	locations := configuration.NewConfigLocations()
 
 	ConfigViper.SetConfigName("config") // name of config file (without extension)
 	ConfigViper.SetConfigType("yaml")
 	ConfigViper.AddConfigPath(locations.ConfigPath)
 
-	ConfigViper.SetDefault(colorKey, true)
+	for _, property := range properties {
+		property.Init()
+	}
+
 	ConfigViper.SafeWriteConfig()
 }
 
-type ConfigPropertyBool struct {
-	KeyName string
-}
-
-func (c ConfigPropertyBool) Set(value bool) {
-	ConfigViper.Set(c.KeyName, value)
+func Clear() {
+	for _, property := range properties {
+		property.Clear()
+	}
 	SaveConfig()
 }
-
-func (c ConfigPropertyBool) Get() bool {
-	return ConfigViper.GetBool(c.KeyName)
-}
-
-var (
-	Color = ConfigPropertyBool{KeyName: colorKey}
-)
 
 func LoadConfig() {
 	err := ConfigViper.ReadInConfig() // Find and read the config file

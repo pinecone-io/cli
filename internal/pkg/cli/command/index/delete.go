@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/client"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
 )
@@ -22,7 +22,7 @@ func NewDeleteCmd() *cobra.Command {
 		Short: "Delete an index",
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()
-			pc := client.NewPineconeClient()
+			pc := sdk.NewPineconeClient()
 
 			err := pc.DeleteIndex(ctx, options.name)
 			if err != nil {

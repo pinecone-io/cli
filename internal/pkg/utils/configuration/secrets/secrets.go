@@ -4,51 +4,45 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/spf13/viper"
+	"golang.org/x/oauth2"
 )
 
-var SecretsViper *viper.Viper
+var SecretsViper *viper.Viper = viper.New()
 
-const accessTokenKey string = "access_token"
-const refreshTokenKey string = "refresh_token"
-const apiKeyKey string = "api_key"
-
-type ConfigProperty struct {
-	KeyName string
+var OAuth2Token = configuration.MarshaledProperty[oauth2.Token]{
+	KeyName:      "oauth2_token",
+	ViperStore:   SecretsViper,
+	DefaultValue: &oauth2.Token{},
 }
-
-func (c ConfigProperty) Set(value string) {
-	SecretsViper.Set(c.KeyName, value)
-	SaveSecrets()
-}
-
-func (c ConfigProperty) Get() string {
-	return SecretsViper.GetString(c.KeyName)
-}
-
 var (
-	RefreshToken = ConfigProperty{KeyName: refreshTokenKey}
-	AccessToken  = ConfigProperty{KeyName: accessTokenKey}
-	ApiKey       = ConfigProperty{KeyName: apiKeyKey}
+	ApiKey = configuration.ConfigProperty[string]{
+		KeyName:    "api_key",
+		ViperStore: SecretsViper,
+		// DefaultValue: "",
+	}
 )
+var properties = []configuration.Property{
+	ApiKey,
+	OAuth2Token,
+}
 
 func init() {
-	SecretsViper = viper.New()
 	locations := configuration.NewConfigLocations()
 
 	SecretsViper.SetConfigName("secrets") // name of config file (without extension)
 	SecretsViper.SetConfigType("yaml")
 	SecretsViper.AddConfigPath(locations.ConfigPath)
 
-	SecretsViper.SetDefault(apiKeyKey, "")
-	SecretsViper.SetDefault(accessTokenKey, "")
-	SecretsViper.SetDefault(refreshTokenKey, "")
+	for _, property := range properties {
+		property.Init()
+	}
 	SecretsViper.SafeWriteConfig()
 }
 
 func Clear() {
-	ApiKey.Set("")
-	AccessToken.Set("")
-	RefreshToken.Set("")
+	for _, property := range properties {
+		property.Clear()
+	}
 	SaveSecrets()
 }
 

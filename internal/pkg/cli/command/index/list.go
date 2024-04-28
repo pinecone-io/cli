@@ -8,8 +8,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/client"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 
@@ -27,7 +27,7 @@ func NewListCmd() *cobra.Command {
 		Use:   "list",
 		Short: "See the list of indexes in your project",
 		Run: func(cmd *cobra.Command, args []string) {
-			pc := client.NewPineconeClient()
+			pc := sdk.NewPineconeClient()
 			ctx := context.Background()
 
 			idxs, err := pc.ListIndexes(ctx)

@@ -1,10 +1,9 @@
-package client
+package sdk
 
 import (
 	"fmt"
 
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
-	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
@@ -27,7 +26,7 @@ func newClientForUser() *pinecone.Client {
 		fmt.Println()
 		presenters.PrintTargetContext(target)
 		fmt.Println()
-		exit.Error(fmt.Errorf("The target organization and project must both be set. Please run %s", style.Code("pinecone target")))
+		exit.ErrorMsg(fmt.Sprintf("The target organization and project must both be set. Please run %s", style.Code("pinecone target")))
 	}
 
 	orgs, err := dashboard.GetOrganizations()
@@ -56,7 +55,7 @@ func newClientForUser() *pinecone.Client {
 	if len(keyResponse.Keys) > 0 {
 		key = keyResponse.Keys[0].Value
 	} else {
-		exit.Error(fmt.Errorf("No API keys found for project %s", style.Code(target.Project)))
+		exit.ErrorMsg(fmt.Sprintf("No API keys found for project %s", style.Code(target.Project)))
 	}
 
 	if key == "" {
@@ -71,13 +70,12 @@ func newClientForUser() *pinecone.Client {
 	return pc
 }
 
-func newClientForMachine() *pinecone.Client {
-	key := secrets.ApiKey.Get()
-	if key == "" {
+func NewClientForMachine(apiKey string) *pinecone.Client {
+	if apiKey == "" {
 		exit.Error(fmt.Errorf("API key not set. Please run %s", style.Code("pinecone auth set-api-key")))
 	}
 
-	pc, err := pinecone.NewClient(newClientParams(key))
+	pc, err := pinecone.NewClient(newClientParams(apiKey))
 	if err != nil {
 		exit.Error(err)
 	}
@@ -86,10 +84,5 @@ func newClientForMachine() *pinecone.Client {
 }
 
 func NewPineconeClient() *pinecone.Client {
-	key := secrets.ApiKey.Get()
-	if key == "" {
-		return newClientForUser()
-	} else {
-		return newClientForMachine()
-	}
+	return newClientForUser()
 }

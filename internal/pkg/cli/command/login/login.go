@@ -36,8 +36,7 @@ func NewLoginCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				secrets.AccessToken.Set(token.AccessToken)
-				secrets.RefreshToken.Set(token.RefreshToken)
+				secrets.OAuth2Token.Set(token)
 				return nil
 			})
 		},
