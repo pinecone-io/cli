@@ -2,6 +2,7 @@ package configuration
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/spf13/viper"
@@ -19,6 +20,7 @@ type ConfigProperty[T any] struct {
 }
 
 func (c ConfigProperty[T]) Init() {
+	fmt.Println("Setting default value for property:", c.KeyName)
 	c.ViperStore.SetDefault(c.KeyName, c.DefaultValue)
 }
 
@@ -45,7 +47,12 @@ type MarshaledProperty[T any] struct {
 }
 
 func (c MarshaledProperty[T]) Init() {
-	c.ViperStore.SetDefault(c.KeyName, *c.DefaultValue)
+	fmt.Println("Setting default value for property:", c.KeyName)
+	bytes, err := json.Marshal(c.DefaultValue)
+	if err != nil {
+		exit.Error(err)
+	}
+	c.ViperStore.SetDefault(c.KeyName, string(bytes))
 }
 
 func (c MarshaledProperty[T]) Set(value *T) {

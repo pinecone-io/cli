@@ -13,29 +13,12 @@ import (
 	project "github.com/pinecone-io/cli/internal/pkg/cli/command/project"
 	target "github.com/pinecone-io/cli/internal/pkg/cli/command/target"
 	version "github.com/pinecone-io/cli/internal/pkg/cli/command/version"
-	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
-	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
-	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
 )
 
-var rootCmd = &cobra.Command{
-	Use:   "pinecone",
-	Short: "Work seamlessly with Pinecone from the command line.",
-	Example: help.Examples([]string{
-		"pinecone login",
-		"pinecone target --org=\"my-org\" --project=\"my-project\"",
-		"pinecone index create-serverless --help",
-	}),
-	Long: fmt.Sprintf(`pinecone is a CLI tool for managing your Pinecone resources
-	
-Get started by logging in with
-
-  %s
-	`, style.CodeWithPrompt("pinecone login")),
-}
+var rootCmd *cobra.Command
 
 func Execute() {
 	err := rootCmd.Execute()
@@ -45,9 +28,21 @@ func Execute() {
 }
 
 func init() {
-	config.LoadConfig()
-	secrets.LoadSecrets()
-	state.LoadState()
+	rootCmd = &cobra.Command{
+		Use:   "pinecone",
+		Short: "Work seamlessly with Pinecone from the command line.",
+		Example: help.Examples([]string{
+			"pinecone login",
+			"pinecone target --org=\"my-org\" --project=\"my-project\"",
+			"pinecone index create-serverless --help",
+		}),
+		Long: fmt.Sprintf(`pinecone is a CLI tool for managing your Pinecone resources
+		
+	Get started by logging in with
+	
+	  %s
+		`, style.CodeWithPrompt("pinecone login")),
+	}
 
 	rootCmd.SetUsageTemplate(help.HelpTemplate)
 

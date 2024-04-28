@@ -83,8 +83,8 @@ func NewListProjectsCmd() *cobra.Command {
 			// to avoid confusion. User can get in this state if they delete the org
 			// via some other method (e.g. web, SDK, etc) and then run this command
 			// with saved state that is now stale.
-			state.Clear()
-			exit.Error(fmt.Errorf("The target organization %s is not found. Clearing invalid target context. Run %s to see available orgs and %s to set your target context.", style.Emphasis(targetOrg), style.Code("pinecone org list"), style.Code("pinecone target")))
+			state.ConfigFile.Clear()
+			exit.ErrorMsg(fmt.Sprintf("The target organization %s is not found. Clearing invalid target context. Run %s to see available orgs and %s to set your target context.", style.Emphasis(targetOrg), style.Code("pinecone org list"), style.Code("pinecone target")))
 		},
 	}
 

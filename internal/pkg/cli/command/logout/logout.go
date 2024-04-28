@@ -14,7 +14,7 @@ func NewLogoutCmd() *cobra.Command {
 		Short:   "Delete all saved tokens and keys",
 		GroupID: help.GROUP_START.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			secrets.Clear()
+			secrets.ConfigFile.Clear()
 			fmt.Println("✅ Secrets cleared.")
 		},
 	}
