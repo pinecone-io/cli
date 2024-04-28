@@ -9,10 +9,10 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/io"
 )
 
-const (
+var (
 	spinnerTextEllipsis = "..."
-	spinnerTextDone     = "done"
-	spinnerTextFailed   = "failed"
+	spinnerTextDone     = StatusGreen("done")
+	spinnerTextFailed   = StatusRed("failed")
 
 	spinnerColor = "blue"
 )
