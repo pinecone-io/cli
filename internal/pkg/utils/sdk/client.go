@@ -6,6 +6,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/go-pinecone/pinecone"
@@ -55,6 +56,7 @@ func newClientForUser() *pinecone.Client {
 	if len(keyResponse.Keys) > 0 {
 		key = keyResponse.Keys[0].Value
 	} else {
+		log.Error().Str("project", target.Project).Msg("No API keys found for project")
 		exit.ErrorMsg(fmt.Sprintf("No API keys found for project %s", style.Code(target.Project)))
 	}
 

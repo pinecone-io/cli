@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/go-pinecone/pinecone"
@@ -24,6 +25,7 @@ func ColorizeState(state pinecone.IndexStatusState) string {
 
 func PrintDescribeIndexTable(idx *pinecone.Index) {
 	writer := NewTabWriter()
+	log.Debug().Str("name", idx.Name).Msg("Printing index description")
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
 	header := strings.Join(columns, "\t") + "\n"

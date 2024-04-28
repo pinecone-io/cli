@@ -7,6 +7,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
+	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -41,11 +42,19 @@ func NewTargetCmd() *cobra.Command {
 		GroupID: help.GROUP_START.ID,
 		Long:    targetHelp,
 		Run: func(cmd *cobra.Command, args []string) {
+			log.Debug().
+				Str("org", options.Org).
+				Str("project", options.Project).
+				Bool("json", options.json).
+				Msg("target command invoked")
+
 			if options.Org == "" && options.Project == "" {
 				if options.json {
+					log.Info().Msg("Outputting target context as JSON")
 					text.PrettyPrintJSON(state.GetTargetContext())
 					return
 				}
+				log.Info().Msg("Outputting target context as table")
 				fmt.Printf("To update the context, run %s. The current target context is:\n\n", style.Code("pinecone target --org <org> --project <project>"))
 				presenters.PrintTargetContext(state.GetTargetContext())
 				return

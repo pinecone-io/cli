@@ -1,5 +1,9 @@
 package dashboard
 
+import (
+	"github.com/pinecone-io/cli/internal/pkg/utils/log"
+)
+
 const (
 	URL_GET_ORGANIZATIONS = "/v2/dashboard/organizations"
 )
@@ -26,5 +30,20 @@ type GlobalProject struct {
 }
 
 func GetOrganizations() (*OrganizationsResponse, error) {
-	return FetchAndDecode[OrganizationsResponse](URL_GET_ORGANIZATIONS, "GET")
+	resp, err := FetchAndDecode[OrganizationsResponse](URL_GET_ORGANIZATIONS, "GET")
+	if err != nil {
+		return nil, err
+	}
+	for _, org := range resp.Organizations {
+		log.Trace().
+			Str("org", org.Name).
+			Msg("found org")
+		for _, proj := range org.Projects {
+			log.Trace().
+				Str("org", org.Name).
+				Str("project", proj.Name).
+				Msg("found project in org")
+		}
+	}
+	return resp, nil
 }

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
+	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 )
 
@@ -16,6 +17,7 @@ func labelUnsetIfEmpty(value string) string {
 }
 
 func PrintTargetContext(context *state.TargetContext) {
+	log.Info().Str("api", context.Api).Str("org", context.Org).Str("project", context.Project).Msg("Printing target context")
 	writer := NewTabWriter()
 
 	columns := []string{"ATTRIBUTE", "VALUE"}

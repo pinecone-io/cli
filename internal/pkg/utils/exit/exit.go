@@ -1,20 +1,22 @@
 package exit
 
 import (
-	"fmt"
 	"os"
+
+	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 )
 
 func Error(reason error) {
-	fmt.Println(reason)
+	log.Error().Msg(reason.Error())
 	os.Exit(1)
 }
 
 func ErrorMsg(msg string) {
-	fmt.Println(msg)
+	log.Error().Msg(msg)
 	os.Exit(1)
 }
 
 func Success() {
+	log.Info().Msg("Exiting successfully")
 	os.Exit(0)
 }

@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 )
 
 func HomeDirPath(subdir string) (string, error) {
@@ -14,6 +15,7 @@ func HomeDirPath(subdir string) (string, error) {
 	}
 
 	newPath := filepath.Join(homeDir, subdir)
+	log.Trace().Str("homedir", newPath).Msg("Built home directory")
 	return newPath, nil
 }
 
@@ -56,9 +58,12 @@ type ConfigLocations struct {
 
 func NewConfigLocations() *ConfigLocations {
 	configPath := ConfigDirPath()
-	ensureConfigDir()
 
 	return &ConfigLocations{
 		ConfigPath: configPath,
 	}
+}
+
+func init() {
+	ensureConfigDir()
 }

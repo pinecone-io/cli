@@ -2,9 +2,9 @@ package configuration
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/spf13/viper"
 )
 
@@ -20,11 +20,12 @@ type ConfigProperty[T any] struct {
 }
 
 func (c ConfigProperty[T]) Init() {
-	fmt.Println("Setting default value for property:", c.KeyName)
+	log.Trace().Str("key", c.KeyName).Msg("Setting default value for property")
 	c.ViperStore.SetDefault(c.KeyName, c.DefaultValue)
 }
 
 func (c ConfigProperty[T]) Set(value T) {
+	log.Trace().Str("key", c.KeyName).Msg("Setting value for property")
 	c.ViperStore.Set(c.KeyName, value)
 	err := c.ViperStore.WriteConfig()
 	if err != nil {
@@ -33,6 +34,7 @@ func (c ConfigProperty[T]) Set(value T) {
 }
 
 func (c ConfigProperty[T]) Get() T {
+	log.Trace().Str("key", c.KeyName).Msg("Reading value for property")
 	return c.ViperStore.Get(c.KeyName).(T)
 }
 
@@ -47,7 +49,7 @@ type MarshaledProperty[T any] struct {
 }
 
 func (c MarshaledProperty[T]) Init() {
-	fmt.Println("Setting default value for property:", c.KeyName)
+	log.Trace().Str("key", c.KeyName).Msg("Setting default value for property")
 	bytes, err := json.Marshal(c.DefaultValue)
 	if err != nil {
 		exit.Error(err)
@@ -56,6 +58,7 @@ func (c MarshaledProperty[T]) Init() {
 }
 
 func (c MarshaledProperty[T]) Set(value *T) {
+	log.Trace().Str("key", c.KeyName).Msg("Setting value for property")
 	bytes, err := json.Marshal(value)
 	if err != nil {
 		exit.Error(err)
@@ -68,6 +71,7 @@ func (c MarshaledProperty[T]) Set(value *T) {
 }
 
 func (c MarshaledProperty[T]) Get() T {
+	log.Trace().Str("key", c.KeyName).Msg("Reading value for property")
 	bytes := []byte(c.ViperStore.GetString(c.KeyName))
 	var value T
 	err := json.Unmarshal(bytes, &value)

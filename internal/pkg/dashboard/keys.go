@@ -17,7 +17,7 @@ type Key struct {
 }
 
 const (
-	URL_GET_API_KEYS = "v2/dashboard/projects/%s/api-keys"
+	URL_GET_API_KEYS = "/v2/dashboard/projects/%s/api-keys"
 )
 
 func GetApiKeys(project Project) (*KeyResponse, error) {

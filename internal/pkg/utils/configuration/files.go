@@ -1,9 +1,8 @@
 package configuration
 
 import (
-	"fmt"
-
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/spf13/viper"
 )
 
@@ -15,7 +14,7 @@ type ConfigFile struct {
 }
 
 func (c ConfigFile) Init() {
-	fmt.Printf("Setting up config file: %s.%s\n", c.FileName, c.FileFormat)
+	log.Trace().Str("file_name", c.FileName).Str("file_format", c.FileFormat).Msg("Initializing config file")
 	locations := NewConfigLocations()
 
 	c.ViperStore.SetConfigName(c.FileName) // name of config file (without extension)
@@ -23,7 +22,6 @@ func (c ConfigFile) Init() {
 	c.ViperStore.AddConfigPath(locations.ConfigPath)
 
 	for _, property := range c.Properties {
-		fmt.Printf("Setting default value for property: %v\n", property)
 		property.Init()
 	}
 	c.ViperStore.SafeWriteConfig()
@@ -31,6 +29,7 @@ func (c ConfigFile) Init() {
 }
 
 func (c ConfigFile) Clear() {
+	log.Debug().Str("file_name", c.FileName).Msg("Clearing config file")
 	for _, property := range c.Properties {
 		property.Clear()
 	}
@@ -38,7 +37,7 @@ func (c ConfigFile) Clear() {
 }
 
 func (c ConfigFile) LoadConfig() {
-	fmt.Printf("Loading config file %s.%s\n", c.FileName, c.FileFormat)
+	log.Debug().Str("file_name", c.FileName).Str("file_format", c.FileFormat).Msg("Loading config file")
 	err := c.ViperStore.ReadInConfig() // Find and read the config file
 	if err != nil {                    // Handle errors reading the config file
 		exit.Error(err)
