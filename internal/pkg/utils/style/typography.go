@@ -8,6 +8,10 @@ func Emphasis(s string) string {
 	return applyStyle(s, color.FgCyan)
 }
 
+func HeavyEmphasis(s string) string {
+	return applyColor(s, color.New(color.FgCyan, color.Bold))
+}
+
 func Heading(s string) string {
 	return applyStyle(s, color.Bold)
 }

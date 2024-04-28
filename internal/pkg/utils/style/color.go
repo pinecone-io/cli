@@ -5,6 +5,12 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 )
 
+func applyColor(s string, c *color.Color) string {
+	color.NoColor = !config.Color.Get()
+	colored := c.SprintFunc()
+	return colored(s)
+}
+
 func applyStyle(s string, c color.Attribute) string {
 	color.NoColor = !config.Color.Get()
 	colored := color.New(c).SprintFunc()

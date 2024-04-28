@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
-	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -52,7 +51,7 @@ func NewTargetCmd() *cobra.Command {
 				return
 			}
 
-			orgs, err := dashboard.GetOrganizations(secrets.AccessToken.Get())
+			orgs, err := dashboard.GetOrganizations()
 			if err != nil {
 				exit.Error(err)
 			}

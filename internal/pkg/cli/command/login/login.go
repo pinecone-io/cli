@@ -3,6 +3,8 @@ package login
 import (
 	"context"
 	"fmt"
+	"os/exec"
+	"runtime"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -26,7 +28,8 @@ func NewLoginCmd() *cobra.Command {
 				return
 			}
 
-			fmt.Printf("Visit %s to authenticate.\n", style.Emphasis(authResponse.VerificationURIComplete))
+			fmt.Printf("Visit %s to authenticate using code %s.\n", style.Emphasis(authResponse.VerificationURIComplete), style.HeavyEmphasis(authResponse.UserCode))
+			openBrowser(authResponse.VerificationURIComplete)
 
 			style.Spinner("Waiting for authorization...", func() error {
 				token, err := da.GetDeviceAccessToken(ctx, authResponse)
@@ -41,4 +44,22 @@ func NewLoginCmd() *cobra.Command {
 	}
 
 	return cmd
+}
+
+func openBrowser(url string) error {
+	var cmd string
+	var args []string
+
+	switch runtime.GOOS {
+	case "windows":
+		cmd = "cmd"
+		args = []string{"/c", "start"}
+	case "darwin":
+		cmd = "open"
+	default:
+		cmd = "xdg-open"
+	}
+	args = append(args, url)
+
+	return exec.Command(cmd, args...).Start()
 }

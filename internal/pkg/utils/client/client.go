@@ -30,7 +30,7 @@ func newClientForUser() *pinecone.Client {
 		exit.Error(fmt.Errorf("The target organization and project must both be set. Please run %s", style.Code("pinecone target")))
 	}
 
-	orgs, err := dashboard.GetOrganizations(secrets.AccessToken.Get())
+	orgs, err := dashboard.GetOrganizations()
 	if err != nil {
 		exit.Error(err)
 	}
@@ -47,7 +47,7 @@ func newClientForUser() *pinecone.Client {
 		}
 	}
 
-	keyResponse, err2 := dashboard.GetApiKeys(project, secrets.AccessToken.Get())
+	keyResponse, err2 := dashboard.GetApiKeys(project)
 	if err2 != nil {
 		exit.Error(err2)
 	}

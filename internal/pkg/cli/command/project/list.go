@@ -8,7 +8,6 @@ import (
 	"text/tabwriter"
 
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
-	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
@@ -31,7 +30,7 @@ func NewListProjectsCmd() *cobra.Command {
 		Use:   "list <command>",
 		Short: "list projects in an org",
 		Run: func(cmd *cobra.Command, args []string) {
-			orgs, err := dashboard.GetOrganizations(secrets.AccessToken.Get())
+			orgs, err := dashboard.GetOrganizations()
 			if err != nil {
 				exit.Error(err)
 			}
