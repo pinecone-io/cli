@@ -41,10 +41,12 @@ func performRequest(req *http.Request) (*http.Response, error) {
 	resp, err := client.Do(req)
 	if err != nil {
 		if strings.Contains(err.Error(), "token expired") {
-			fmt.Println(err)
 			secrets.OAuth2Token.Clear()
 			secrets.ConfigFile.Save()
-			exit.ErrorMsg(fmt.Sprintf("Your session has expired. Please run %s to log in again.", style.Code("pinecone login")))
+			msg := fmt.Sprintf("Your session has expired. Please run %s to log in again.", style.Code("pinecone login"))
+			fmt.Println(msg)
+			exit.ErrorMsg(msg)
+			return nil, err
 		}
 		return nil, err
 	}

@@ -1,6 +1,8 @@
 package style
 
 import (
+	"fmt"
+
 	"github.com/fatih/color"
 )
 
@@ -16,8 +18,24 @@ func Heading(s string) string {
 	return applyStyle(s, color.Bold)
 }
 
+func Underline(s string) string {
+	return applyStyle(s, color.Underline)
+}
+
+func Hint(s string) string {
+	return applyStyle("Hint: ", color.Faint) + s
+}
+
+func CodeHint(templateString string, codeString string) string {
+	return applyStyle("Hint: ", color.Faint) + fmt.Sprintf(templateString, Code(codeString))
+}
+
+func SuccessMsg(s string) string {
+	return applyStyle("[SUCCESS] ", color.FgGreen) + s
+}
+
 func Code(s string) string {
-	formatted := applyStyle(s, color.FgMagenta)
+	formatted := applyColor(s, color.New(color.FgMagenta, color.Bold))
 	if color.NoColor {
 		// Add backticks for code formatting if color is disabled
 		return "`" + formatted + "`"
