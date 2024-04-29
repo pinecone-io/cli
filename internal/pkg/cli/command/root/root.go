@@ -38,9 +38,9 @@ func init() {
 		}),
 		Long: fmt.Sprintf(`pinecone is a CLI tool for managing your Pinecone resources
 		
-	Get started by logging in with
+Get started by logging in with
 	
-	  %s
+  %s
 		`, style.CodeWithPrompt("pinecone login")),
 	}
 

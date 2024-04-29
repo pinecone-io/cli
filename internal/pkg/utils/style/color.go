@@ -18,7 +18,7 @@ func applyStyle(s string, c color.Attribute) string {
 }
 
 func CodeWithPrompt(s string) string {
-	return (applyStyle("$ ", color.Faint) + applyStyle(s, color.FgMagenta))
+	return (applyStyle("$ ", color.Faint) + applyColor(s, color.New(color.FgMagenta, color.Bold)))
 }
 
 func StatusGreen(s string) string {
