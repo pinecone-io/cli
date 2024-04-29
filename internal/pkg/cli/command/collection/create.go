@@ -43,7 +43,7 @@ func NewCreateCollectionCmd() *cobra.Command {
 				text.PrettyPrintJSON(collection)
 			} else {
 				describeCommand := fmt.Sprintf("pinecone collection describe --name %s", collection.Name)
-				fmt.Fprintf(cmd.OutOrStdout(), "✅ Collection %s created successfully. Run %s to monitor status. \n\n", style.Emphasis(collection.Name), style.Code(describeCommand))
+				fmt.Fprintf(cmd.OutOrStdout(), style.SuccessMsg("Collection %s created successfully. Run %s to monitor status. \n\n"), style.Emphasis(collection.Name), style.Code(describeCommand))
 				presenters.PrintDescribeCollectionTable(collection)
 			}
 		},

@@ -72,7 +72,7 @@ func NewTargetCmd() *cobra.Command {
 					exit.Error(err)
 				}
 				if !options.json {
-					fmt.Printf("✅ Target org updated to %s\n", style.Emphasis(org.Name))
+					fmt.Printf(style.SuccessMsg("Target org updated to %s\n"), style.Emphasis(org.Name))
 				}
 				state.TargetOrgName.Set(org.Name)
 				state.TargetProjectName.Set("")
@@ -89,7 +89,7 @@ func NewTargetCmd() *cobra.Command {
 					exit.Error(err)
 				}
 				if !options.json {
-					fmt.Printf("✅ Target project updated to %s\n", style.Emphasis(proj.Name))
+					fmt.Printf(style.SuccessMsg("Target project updated to %s\n"), style.Emphasis(proj.Name))
 				}
 				state.TargetProjectName.Set(proj.Name)
 			}

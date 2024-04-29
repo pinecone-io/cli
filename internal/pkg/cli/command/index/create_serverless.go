@@ -100,6 +100,6 @@ func runCreateServerlessCmd(cmd *cobra.Command, options createServerlessOptions)
 	}
 
 	describeCommand := fmt.Sprintf("pinecone index describe --name %s", idx.Name)
-	fmt.Fprintf(cmd.OutOrStdout(), "✅ Index %s created successfully. Run %s to monitor status. \n\n", style.Emphasis(idx.Name), style.Code(describeCommand))
+	fmt.Fprintf(cmd.OutOrStdout(), style.SuccessMsg("Index %s created successfully. Run %s to monitor status. \n\n"), style.Emphasis(idx.Name), style.Code(describeCommand))
 	presenters.PrintDescribeIndexTable(idx)
 }

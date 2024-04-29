@@ -30,7 +30,7 @@ func NewDeleteCollectionCmd() *cobra.Command {
 				exit.Error(err)
 			}
 
-			fmt.Printf("✅ Collection %s deleted.\n", style.Emphasis(options.name))
+			fmt.Printf(style.SuccessMsg("Collection %s deleted.\n"), style.Emphasis(options.name))
 		},
 	}
 
