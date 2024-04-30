@@ -2,9 +2,9 @@ package index
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -45,7 +45,7 @@ func NewCreatePodCmd() *cobra.Command {
 		Example: "",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if !options.isValidMetric() {
-				return fmt.Errorf("metric must be one of [cosine, euclidean, dotproduct]")
+				return pcio.Errorf("metric must be one of [cosine, euclidean, dotproduct]")
 			}
 
 			return nil
@@ -99,7 +99,7 @@ func runCreatePodCmd(cmd *cobra.Command, options createPodOptions) {
 		return
 	}
 
-	describeCommand := fmt.Sprintf("pinecone index describe --name %s", idx.Name)
-	fmt.Fprintf(cmd.OutOrStdout(), style.SuccessMsg("Index %s created successfully. Run %s to monitor status. \n\n"), style.Emphasis(idx.Name), style.Code(describeCommand))
+	describeCommand := pcio.Sprintf("pinecone index describe --name %s", idx.Name)
+	pcio.Fprintf(cmd.OutOrStdout(), style.SuccessMsg("Index %s created successfully. Run %s to monitor status. \n\n"), style.Emphasis(idx.Name), style.Code(describeCommand))
 	presenters.PrintDescribeIndexTable(idx)
 }

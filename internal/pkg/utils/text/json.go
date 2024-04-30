@@ -2,7 +2,8 @@ package text
 
 import (
 	"encoding/json"
-	"fmt"
+
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
 func InlineJSON(data interface{}) string {
@@ -18,6 +19,6 @@ func PrettyPrintJSON(data interface{}) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Println(string(jsonData))
+	pcio.Println(string(jsonData))
 	return string(jsonData), nil
 }

@@ -1,7 +1,6 @@
 package pinecone
 
 import (
-	"fmt"
 	"os"
 
 	collection "github.com/pinecone-io/cli/internal/pkg/cli/command/collection"
@@ -14,11 +13,16 @@ import (
 	target "github.com/pinecone-io/cli/internal/pkg/cli/command/target"
 	version "github.com/pinecone-io/cli/internal/pkg/cli/command/version"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
 )
 
 var rootCmd *cobra.Command
+
+type GlobalOptions struct {
+	quiet bool
+}
 
 func Execute() {
 	err := rootCmd.Execute()
@@ -28,15 +32,19 @@ func Execute() {
 }
 
 func init() {
+	globalOptions := GlobalOptions{}
 	rootCmd = &cobra.Command{
 		Use:   "pinecone",
 		Short: "Work seamlessly with Pinecone from the command line.",
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			pcio.SetQuiet(globalOptions.quiet)
+		},
 		Example: help.Examples([]string{
 			"pinecone login",
 			"pinecone target --org=\"my-org\" --project=\"my-project\"",
 			"pinecone index create-serverless --help",
 		}),
-		Long: fmt.Sprintf(`pinecone is a CLI tool for managing your Pinecone resources
+		Long: pcio.Sprintf(`pinecone is a CLI tool for managing your Pinecone resources
 		
 Get started by logging in with
 	
@@ -71,4 +79,8 @@ Get started by logging in with
 	rootCmd.SetHelpCommand(&cobra.Command{
 		Hidden: true,
 	})
+
+	// Global flags
+	rootCmd.PersistentFlags().BoolVarP(&globalOptions.quiet, "quiet", "q", false, "suppress output")
+
 }

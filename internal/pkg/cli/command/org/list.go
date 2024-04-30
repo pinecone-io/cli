@@ -1,7 +1,6 @@
 package org
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -10,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 )
 
@@ -48,11 +48,11 @@ func printTable(orgs []dashboard.Organization) {
 
 	columns := []string{"ID", "NAME", "PROJECTS"}
 	header := strings.Join(columns, "\t") + "\n"
-	fmt.Fprint(writer, header)
+	pcio.Fprint(writer, header)
 
 	for _, org := range orgs {
-		values := []string{org.Id, org.Name, fmt.Sprintf("%d", len(org.Projects))}
-		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
+		values := []string{org.Id, org.Name, pcio.Sprintf("%d", len(org.Projects))}
+		pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
 	}
 	writer.Flush()
 }

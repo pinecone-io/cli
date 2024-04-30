@@ -1,13 +1,12 @@
 package target
 
 import (
-	"fmt"
-
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -25,7 +24,7 @@ For automation use cases relying on API-Keys for authentication, there's no need
 to specify a project context as the API-Key is already associated with a specific
 project in the backend.
 `
-var targetHelp = fmt.Sprintf(targetHelpTemplate, style.Code("pinecone project list"))
+var targetHelp = pcio.Sprintf(targetHelpTemplate, style.Code("pinecone project list"))
 
 type TargetOptions struct {
 	Org     string
@@ -55,7 +54,7 @@ func NewTargetCmd() *cobra.Command {
 					return
 				}
 				log.Info().Msg("Outputting target context as table")
-				fmt.Printf("To update the context, run %s. The current target context is:\n\n", style.Code("pinecone target --org <org> --project <project>"))
+				pcio.Printf("To update the context, run %s. The current target context is:\n\n", style.Code("pinecone target --org <org> --project <project>"))
 				presenters.PrintTargetContext(state.GetTargetContext())
 				return
 			}
@@ -72,7 +71,7 @@ func NewTargetCmd() *cobra.Command {
 					exit.Error(err)
 				}
 				if !options.json {
-					fmt.Printf(style.SuccessMsg("Target org updated to %s\n"), style.Emphasis(org.Name))
+					pcio.Printf(style.SuccessMsg("Target org updated to %s\n"), style.Emphasis(org.Name))
 				}
 				state.TargetOrgName.Set(org.Name)
 				state.TargetProjectName.Set("")
@@ -89,7 +88,7 @@ func NewTargetCmd() *cobra.Command {
 					exit.Error(err)
 				}
 				if !options.json {
-					fmt.Printf(style.SuccessMsg("Target project updated to %s\n"), style.Emphasis(proj.Name))
+					pcio.Printf(style.SuccessMsg("Target project updated to %s\n"), style.Emphasis(proj.Name))
 				}
 				state.TargetProjectName.Set(proj.Name)
 			}
@@ -99,7 +98,7 @@ func NewTargetCmd() *cobra.Command {
 				return
 			}
 
-			fmt.Println()
+			pcio.Println()
 			presenters.PrintTargetContext(state.GetTargetContext())
 		},
 	}
@@ -118,7 +117,7 @@ func getOrg(orgs *dashboard.OrganizationsResponse, orgName string) (dashboard.Or
 			return org, nil
 		}
 	}
-	return dashboard.Organization{}, fmt.Errorf("organization %s not found", style.Emphasis(orgName))
+	return dashboard.Organization{}, pcio.Errorf("organization %s not found", style.Emphasis(orgName))
 }
 
 func getProject(org dashboard.Organization, projectName string) (dashboard.Project, error) {
@@ -127,5 +126,5 @@ func getProject(org dashboard.Organization, projectName string) (dashboard.Proje
 			return project, nil
 		}
 	}
-	return dashboard.Project{}, fmt.Errorf("project %s not found in org %s", style.Emphasis(projectName), style.Emphasis(org.Name))
+	return dashboard.Project{}, pcio.Errorf("project %s not found in org %s", style.Emphasis(projectName), style.Emphasis(org.Name))
 }

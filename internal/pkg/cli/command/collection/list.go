@@ -2,7 +2,6 @@ package collection
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"sort"
 	"strconv"
@@ -10,6 +9,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -74,11 +74,11 @@ func printTable(collections []*pinecone.Collection) {
 
 	columns := []string{"NAME", "DIMENSION", "SIZE", "STATUS", "VECTORS", "ENVIRONMENT"}
 	header := strings.Join(columns, "\t") + "\n"
-	fmt.Fprint(writer, header)
+	pcio.Fprint(writer, header)
 
 	for _, coll := range collections {
 		values := []string{coll.Name, int32ToString(coll.Dimension), int64ToString(coll.Size), string(coll.Status), int32ToString(coll.VectorCount), coll.Environment}
-		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
+		pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
 	}
 	writer.Flush()
 }

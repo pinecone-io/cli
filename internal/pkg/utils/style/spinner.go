@@ -6,7 +6,7 @@ import (
 	"github.com/briandowns/spinner"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
-	"github.com/pinecone-io/cli/internal/pkg/utils/io"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
 var (
@@ -35,11 +35,11 @@ func loading(initialMsg, doneMsg, failMsg string, fn func() error) error {
 	go func() {
 		defer close(done)
 
-		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(io.Messages))
+		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(pcio.Messages))
 		s.Prefix = initialMsg
 		s.FinalMSG = doneMsg
 		s.HideCursor = true
-		s.Writer = io.Messages
+		s.Writer = pcio.Messages
 
 		if err := s.Color(spinnerColor); err != nil {
 			exit.Error(err)

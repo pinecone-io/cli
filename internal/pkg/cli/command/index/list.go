@@ -2,13 +2,13 @@ package index
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"sort"
 	"strings"
 	"text/tabwriter"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -58,17 +58,17 @@ func printTable(idxs []*pinecone.Index) {
 
 	columns := []string{"NAME", "STATUS", "HOST", "DIMENSION", "METRIC", "SPEC"}
 	header := strings.Join(columns, "\t") + "\n"
-	fmt.Fprint(writer, header)
+	pcio.Fprint(writer, header)
 
 	for _, idx := range idxs {
 		if idx.Spec.Serverless == nil {
 			// Pod index
-			values := []string{idx.Name, string(idx.Status.State), idx.Host, fmt.Sprintf("%d", idx.Dimension), string(idx.Metric), "pod"}
-			fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
+			values := []string{idx.Name, string(idx.Status.State), idx.Host, pcio.Sprintf("%d", idx.Dimension), string(idx.Metric), "pod"}
+			pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
 		} else {
 			// Serverless index
-			values := []string{idx.Name, string(idx.Status.State), idx.Host, fmt.Sprintf("%d", idx.Dimension), string(idx.Metric), "serverless"}
-			fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
+			values := []string{idx.Name, string(idx.Status.State), idx.Host, pcio.Sprintf("%d", idx.Dimension), string(idx.Metric), "serverless"}
+			pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
 		}
 	}
 	writer.Flush()

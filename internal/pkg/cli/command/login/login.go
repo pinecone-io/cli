@@ -2,7 +2,6 @@ package login
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -18,6 +17,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	pc_oauth2 "github.com/pinecone-io/cli/internal/pkg/utils/oauth2"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
 )
@@ -33,14 +33,14 @@ func NewLoginCmd() *cobra.Command {
 			da := pc_oauth2.DeviceAuth{}
 			authResponse, err := da.GetAuthResponse(ctx)
 			if err != nil {
-				fmt.Println(err)
+				pcio.Println(err)
 				return
 			}
 
-			fmt.Printf("Visit %s to authorize the CLI.\n", style.Underline(authResponse.VerificationURIComplete))
-			fmt.Println()
-			fmt.Printf("The code %s should be displayed on the authorization page.\n", style.HeavyEmphasis(authResponse.UserCode))
-			fmt.Println()
+			pcio.Printf("Visit %s to authorize the CLI.\n", style.Underline(authResponse.VerificationURIComplete))
+			pcio.Println()
+			pcio.Printf("The code %s should be displayed on the authorization page.\n", style.HeavyEmphasis(authResponse.UserCode))
+			pcio.Println()
 			browser.OpenBrowser(authResponse.VerificationURIComplete)
 
 			style.Spinner("Waiting for authorization...", func() error {
@@ -52,39 +52,39 @@ func NewLoginCmd() *cobra.Command {
 				return nil
 			})
 
-			fmt.Println()
+			pcio.Println()
 			accessToken := secrets.OAuth2Token.Get()
 			claims, err := pc_oauth2.ParseClaimsUnverified(&accessToken)
 			if err != nil {
 				log.Error().Msg("Error parsing claims")
-				exit.Error(fmt.Errorf("error parsing claims from access token: %s", err))
+				exit.Error(pcio.Errorf("error parsing claims from access token: %s", err))
 				return
 			}
 
-			fmt.Println(style.SuccessMsg("Logged in as " + style.Emphasis(claims.Email)))
+			pcio.Println(style.SuccessMsg("Logged in as " + style.Emphasis(claims.Email)))
 
 			orgsResponse, err := dashboard.GetOrganizations()
 			if err != nil {
 				log.Error().Msg("Error fetching organizations")
-				exit.Error(fmt.Errorf("error fetching organizations: %s", err))
+				exit.Error(pcio.Errorf("error fetching organizations: %s", err))
 				return
 			}
 
 			targetOrg := postLoginSetTargetOrg(orgsResponse)
 			state.TargetOrgName.Set(targetOrg)
 
-			fmt.Println()
-			fmt.Printf(style.SuccessMsg("Target org set to %s.\n"), style.Emphasis(targetOrg))
+			pcio.Println()
+			pcio.Printf(style.SuccessMsg("Target org set to %s.\n"), style.Emphasis(targetOrg))
 
 			targetProject := postLoginSetupTargetProject(orgsResponse, targetOrg)
 			state.TargetProjectName.Set(targetProject)
-			fmt.Printf(style.SuccessMsg("Target project set %s.\n"), style.Emphasis(targetProject))
+			pcio.Printf(style.SuccessMsg("Target project set %s.\n"), style.Emphasis(targetProject))
 
-			fmt.Println()
-			fmt.Println(style.CodeHint("Run %s to view or change the target context.", "pinecone target"))
+			pcio.Println()
+			pcio.Println(style.CodeHint("Run %s to view or change the target context.", "pinecone target"))
 
-			fmt.Println()
-			fmt.Printf("Now try %s to learn about index operations.\n", style.Code("pinecone index -h"))
+			pcio.Println()
+			pcio.Printf("Now try %s to learn about index operations.\n", style.Code("pinecone index -h"))
 		},
 	}
 
@@ -103,9 +103,9 @@ func postLoginSetTargetOrg(orgsResponse *dashboard.OrganizationsResponse) string
 		orgName = orgsResponse.Organizations[0].Name
 		log.Info().Msgf("Only 1 org present so target org set to %s", orgName)
 	} else {
-		fmt.Println()
-		fmt.Println("Many API operations take place in the context of a specific org and project.")
-		fmt.Println(fmt.Sprintf("This CLI maintains a piece of state called the %s so it knows which \n", style.Emphasis("target")) +
+		pcio.Println()
+		pcio.Println("Many API operations take place in the context of a specific org and project.")
+		pcio.Println(pcio.Sprintf("This CLI maintains a piece of state called the %s so it knows which \n", style.Emphasis("target")) +
 			"organization and project to use when calling the API on your behalf.")
 
 		orgNames := []string{}
@@ -141,8 +141,8 @@ func postLoginSetupTargetProject(orgs *dashboard.OrganizationsResponse, targetOr
 func uiProjectSelector(projectItems []string) string {
 	var targetProject string = ""
 	m2 := NewList(projectItems, len(projectItems)+6, "Choose a project to target", func() {
-		fmt.Println("Exiting without targeting a project.")
-		fmt.Printf("You can always run %s to set or change a project context later.\n", style.Code("pinecone target"))
+		pcio.Println("Exiting without targeting a project.")
+		pcio.Printf("You can always run %s to set or change a project context later.\n", style.Code("pinecone target"))
 		exit.Success()
 	}, func(choice string) string {
 		targetProject = choice
@@ -150,7 +150,7 @@ func uiProjectSelector(projectItems []string) string {
 		return "Target project: " + choice
 	})
 	if _, err := tea.NewProgram(m2).Run(); err != nil {
-		fmt.Println("Error running program:", err)
+		pcio.Println("Error running program:", err)
 		os.Exit(1)
 	}
 	return targetProject
@@ -159,15 +159,15 @@ func uiProjectSelector(projectItems []string) string {
 func uiOrgSelector(orgNames []string) string {
 	var orgName string
 	m := NewList(orgNames, len(orgNames)+6, "Choose an organization to target", func() {
-		fmt.Println("Exiting without targeting an organization.")
-		fmt.Printf("You can always run %s to set or change a project context later.\n", style.Code("pinecone target"))
+		pcio.Println("Exiting without targeting an organization.")
+		pcio.Printf("You can always run %s to set or change a project context later.\n", style.Code("pinecone target"))
 		exit.Success()
 	}, func(choice string) string {
 		orgName = choice
 		return "Target organization: " + choice
 	})
 	if _, err := tea.NewProgram(m).Run(); err != nil {
-		fmt.Println("Error running program:", err)
+		pcio.Println("Error running program:", err)
 		os.Exit(1)
 	}
 	return orgName
@@ -273,7 +273,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 		return
 	}
 
-	str := fmt.Sprintf("%d. %s", index+1, i)
+	str := pcio.Sprintf("%d. %s", index+1, i)
 
 	fn := itemStyle.Render
 	if index == m.Index() {
@@ -282,5 +282,5 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 		}
 	}
 
-	fmt.Fprint(w, fn(str))
+	pcio.Fprint(w, fn(str))
 }

@@ -1,7 +1,6 @@
 package project
 
 import (
-	"fmt"
 	"os"
 	"sort"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 )
 
@@ -53,7 +53,7 @@ func NewListProjectsCmd() *cobra.Command {
 						return
 					}
 				}
-				exit.Error(fmt.Errorf("organization %s not found", options.orgName))
+				exit.Error(pcio.Errorf("organization %s not found", options.orgName))
 			}
 
 			if options.orgId != "" {
@@ -64,12 +64,12 @@ func NewListProjectsCmd() *cobra.Command {
 						return
 					}
 				}
-				exit.Error(fmt.Errorf("organization %s not found", options.orgId))
+				exit.Error(pcio.Errorf("organization %s not found", options.orgId))
 			}
 
 			targetOrg := state.GetTargetContext().Org
 			if targetOrg == "" {
-				exit.Error(fmt.Errorf("no target organization set. Please run %s or specify org via flags.", style.Code("pinecone target")))
+				exit.Error(pcio.Errorf("no target organization set. Please run %s or specify org via flags.", style.Code("pinecone target")))
 			}
 
 			for _, org := range orgs.Organizations {
@@ -84,7 +84,7 @@ func NewListProjectsCmd() *cobra.Command {
 			// via some other method (e.g. web, SDK, etc) and then run this command
 			// with saved state that is now stale.
 			state.ConfigFile.Clear()
-			exit.ErrorMsg(fmt.Sprintf("The target organization %s is not found. Clearing invalid target context. Run %s to see available orgs and %s to set your target context.", style.Emphasis(targetOrg), style.Code("pinecone org list"), style.Code("pinecone target")))
+			exit.ErrorMsg(pcio.Sprintf("The target organization %s is not found. Clearing invalid target context. Run %s to see available orgs and %s to set your target context.", style.Emphasis(targetOrg), style.Code("pinecone org list"), style.Code("pinecone target")))
 		},
 	}
 
@@ -107,11 +107,11 @@ func printTable(projects []dashboard.Project) {
 
 	columns := []string{"ID", "NAME"}
 	header := strings.Join(columns, "\t") + "\n"
-	fmt.Fprint(writer, header)
+	pcio.Fprint(writer, header)
 
 	for _, proj := range projects {
 		values := []string{proj.GlobalProject.Id, proj.Name}
-		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
+		pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
 	}
 	writer.Flush()
 }
@@ -121,12 +121,12 @@ func printTableAll(orgs *dashboard.OrganizationsResponse) {
 
 	columns := []string{"ORG ID", "ORG NAME", "PROJECT NAME", "PROJECT ID"}
 	header := strings.Join(columns, "\t") + "\n"
-	fmt.Fprint(writer, header)
+	pcio.Fprint(writer, header)
 
 	for _, org := range orgs.Organizations {
 		for _, proj := range org.Projects {
 			values := []string{org.Id, org.Name, proj.Name, proj.GlobalProject.Id}
-			fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
+			pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
 		}
 	}
 	writer.Flush()

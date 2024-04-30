@@ -1,9 +1,8 @@
 package style
 
 import (
-	"fmt"
-
 	"github.com/fatih/color"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
 func Emphasis(s string) string {
@@ -27,7 +26,7 @@ func Hint(s string) string {
 }
 
 func CodeHint(templateString string, codeString string) string {
-	return applyStyle("Hint: ", color.Faint) + fmt.Sprintf(templateString, Code(codeString))
+	return applyStyle("Hint: ", color.Faint) + pcio.Sprintf(templateString, Code(codeString))
 }
 
 func SuccessMsg(s string) string {

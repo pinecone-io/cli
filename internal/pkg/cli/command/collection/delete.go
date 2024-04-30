@@ -2,9 +2,9 @@ package collection
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
@@ -30,7 +30,7 @@ func NewDeleteCollectionCmd() *cobra.Command {
 				exit.Error(err)
 			}
 
-			fmt.Printf(style.SuccessMsg("Collection %s deleted.\n"), style.Emphasis(options.name))
+			pcio.Printf(style.SuccessMsg("Collection %s deleted.\n"), style.Emphasis(options.name))
 		},
 	}
 

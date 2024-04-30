@@ -1,9 +1,8 @@
 package auth
 
 import (
-	"fmt"
-
 	"github.com/pinecone-io/cli/internal/build"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/spf13/cobra"
 )
 
@@ -12,9 +11,9 @@ func NewVersionCmd() *cobra.Command {
 		Use:   "version",
 		Short: "See version information for the CLI",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("Version: %s\n", build.Version)
-			fmt.Printf("SHA: %s\n", build.Commit)
-			fmt.Printf("Built: %s\n", build.Date)
+			pcio.Printf("Version: %s\n", build.Version)
+			pcio.Printf("SHA: %s\n", build.Commit)
+			pcio.Printf("Built: %s\n", build.Date)
 		},
 	}
 

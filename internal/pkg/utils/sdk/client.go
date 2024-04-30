@@ -1,12 +1,11 @@
 package sdk
 
 import (
-	"fmt"
-
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/go-pinecone/pinecone"
@@ -23,11 +22,11 @@ func newClientForUser() *pinecone.Client {
 	target := state.GetTargetContext()
 
 	if target.Org == "" || target.Project == "" {
-		fmt.Println("Target context is currently:")
-		fmt.Println()
+		pcio.Println("Target context is currently:")
+		pcio.Println()
 		presenters.PrintTargetContext(target)
-		fmt.Println()
-		exit.ErrorMsg(fmt.Sprintf("The target organization and project must both be set. Please run %s", style.Code("pinecone target")))
+		pcio.Println()
+		exit.ErrorMsg(pcio.Sprintf("The target organization and project must both be set. Please run %s", style.Code("pinecone target")))
 	}
 
 	orgs, err := dashboard.GetOrganizations()
@@ -57,11 +56,11 @@ func newClientForUser() *pinecone.Client {
 		key = keyResponse.Keys[0].Value
 	} else {
 		log.Error().Str("project", target.Project).Msg("No API keys found for project")
-		exit.ErrorMsg(fmt.Sprintf("No API keys found for project %s", style.Code(target.Project)))
+		exit.ErrorMsg(pcio.Sprintf("No API keys found for project %s", style.Code(target.Project)))
 	}
 
 	if key == "" {
-		exit.Error(fmt.Errorf("API key not set. Please run %s or %s", style.Code("pinecone auth login"), style.Code("pinecone auth set-api-key")))
+		exit.Error(pcio.Errorf("API key not set. Please run %s or %s", style.Code("pinecone auth login"), style.Code("pinecone auth set-api-key")))
 	}
 
 	pc, err := pinecone.NewClient(newClientParams(key))
@@ -74,7 +73,7 @@ func newClientForUser() *pinecone.Client {
 
 func NewClientForMachine(apiKey string) *pinecone.Client {
 	if apiKey == "" {
-		exit.Error(fmt.Errorf("API key not set. Please run %s", style.Code("pinecone auth set-api-key")))
+		exit.Error(pcio.Errorf("API key not set. Please run %s", style.Code("pinecone auth set-api-key")))
 	}
 
 	pc, err := pinecone.NewClient(newClientParams(apiKey))

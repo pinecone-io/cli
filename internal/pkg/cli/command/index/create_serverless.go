@@ -2,9 +2,9 @@ package index
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -48,10 +48,10 @@ func NewCreateServerlessCmd() *cobra.Command {
 		Short: "Create a serverless index with the specified configuration",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if !options.isValidCloud() {
-				return fmt.Errorf("cloud provider must be one of [aws, azure, gcp]")
+				return pcio.Errorf("cloud provider must be one of [aws, azure, gcp]")
 			}
 			if !options.isValidMetric() {
-				return fmt.Errorf("metric must be one of [cosine, euclidean, dotproduct]")
+				return pcio.Errorf("metric must be one of [cosine, euclidean, dotproduct]")
 			}
 
 			return nil
@@ -99,7 +99,7 @@ func runCreateServerlessCmd(cmd *cobra.Command, options createServerlessOptions)
 		return
 	}
 
-	describeCommand := fmt.Sprintf("pinecone index describe --name %s", idx.Name)
-	fmt.Fprintf(cmd.OutOrStdout(), style.SuccessMsg("Index %s created successfully. Run %s to monitor status. \n\n"), style.Emphasis(idx.Name), style.Code(describeCommand))
+	describeCommand := pcio.Sprintf("pinecone index describe --name %s", idx.Name)
+	pcio.Fprintf(cmd.OutOrStdout(), style.SuccessMsg("Index %s created successfully. Run %s to monitor status. \n\n"), style.Emphasis(idx.Name), style.Code(describeCommand))
 	presenters.PrintDescribeIndexTable(idx)
 }

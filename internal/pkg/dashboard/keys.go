@@ -1,7 +1,7 @@
 package dashboard
 
 import (
-	"fmt"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
 type KeyResponse struct {
@@ -21,6 +21,6 @@ const (
 )
 
 func GetApiKeys(project Project) (*KeyResponse, error) {
-	url := fmt.Sprintf(URL_GET_API_KEYS, project.GlobalProject.Id)
+	url := pcio.Sprintf(URL_GET_API_KEYS, project.GlobalProject.Id)
 	return FetchAndDecode[KeyResponse](url, "GET")
 }

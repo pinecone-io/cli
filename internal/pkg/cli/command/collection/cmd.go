@@ -1,14 +1,13 @@
 package collection
 
 import (
-	"fmt"
-
 	"github.com/pinecone-io/cli/internal/pkg/utils/docslinks"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/spf13/cobra"
 )
 
-var collectionHelpText = fmt.Sprintf(`To learn more about collections, please see %s`, docslinks.UnderstandingCollectionsGuide)
+var collectionHelpText = pcio.Sprintf(`To learn more about collections, please see %s`, docslinks.UnderstandingCollectionsGuide)
 
 func NewCollectionCmd() *cobra.Command {
 	cmd := &cobra.Command{

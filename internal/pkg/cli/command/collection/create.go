@@ -2,9 +2,9 @@ package collection
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -42,8 +42,8 @@ func NewCreateCollectionCmd() *cobra.Command {
 			if options.json {
 				text.PrettyPrintJSON(collection)
 			} else {
-				describeCommand := fmt.Sprintf("pinecone collection describe --name %s", collection.Name)
-				fmt.Fprintf(cmd.OutOrStdout(), style.SuccessMsg("Collection %s created successfully. Run %s to monitor status. \n\n"), style.Emphasis(collection.Name), style.Code(describeCommand))
+				describeCommand := pcio.Sprintf("pinecone collection describe --name %s", collection.Name)
+				pcio.Fprintf(cmd.OutOrStdout(), style.SuccessMsg("Collection %s created successfully. Run %s to monitor status. \n\n"), style.Emphasis(collection.Name), style.Code(describeCommand))
 				presenters.PrintDescribeCollectionTable(collection)
 			}
 		},
