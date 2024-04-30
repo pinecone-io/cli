@@ -33,6 +33,10 @@ func SuccessMsg(s string) string {
 	return applyStyle("[SUCCESS] ", color.FgGreen) + s
 }
 
+func FailMsg(s string) string {
+	return applyStyle("[ERROR] ", color.FgRed) + s
+}
+
 func Code(s string) string {
 	formatted := applyColor(s, color.New(color.FgMagenta, color.Bold))
 	if color.NoColor {

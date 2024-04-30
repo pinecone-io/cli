@@ -2,6 +2,7 @@ package index
 
 import (
 	"context"
+	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
@@ -26,6 +27,9 @@ func NewDeleteCmd() *cobra.Command {
 
 			err := pc.DeleteIndex(ctx, options.name)
 			if err != nil {
+				if strings.Contains(err.Error(), "not found") {
+					pcio.Printf(style.FailMsg("The index %s does not exist\n"), style.Emphasis(options.name))
+				}
 				exit.Error(err)
 			}
 

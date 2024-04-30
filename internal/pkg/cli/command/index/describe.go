@@ -2,10 +2,13 @@ package index
 
 import (
 	"context"
+	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
+	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 )
@@ -27,6 +30,9 @@ func NewDescribeCmd() *cobra.Command {
 
 			idx, err := pc.DescribeIndex(ctx, options.name)
 			if err != nil {
+				if strings.Contains(err.Error(), "not found") {
+					pcio.Printf(style.FailMsg("The index %s does not exist\n"), style.Emphasis(options.name))
+				}
 				exit.Error(err)
 			}
 
