@@ -45,9 +45,9 @@ func init() {
 			"pinecone index create-serverless --help",
 		}),
 		Long: pcio.Sprintf(`pinecone is a CLI tool for managing your Pinecone resources
-		
+
 Get started by logging in with
-	
+
   %s
 		`, style.CodeWithPrompt("pinecone login")),
 	}

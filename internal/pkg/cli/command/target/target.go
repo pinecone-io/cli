@@ -13,18 +13,24 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var targetHelpTemplate string = `Many API calls take place in the context of a specific project. 
+var targetHelpPart1 string = text.WordWrap(`Many API calls take place in the context of a specific project. 
 When using the CLI interactively (i.e. via the device authorization flow) you
-should use this command to set the current project context for the CLI.
+should use this command to set the current project context for the CLI.`, 80)
 
-If you're not sure what values to pass to this command, you can discover available 
-projects and organizations by running %s.
+var targetHelpPart2 string = text.WordWrap(pcio.Sprintf(`If you're not sure what values to pass to 
+this command, you can discover available projects and organizations by running %s.`, style.Code("pinecone project list")), 80)
 
-For automation use cases relying on API-Keys for authentication, there's no need
+var targetHelpPart3 = text.WordWrap(`For automation use cases relying on API-Keys for authentication, there's no need
 to specify a project context as the API-Key is already associated with a specific
 project in the backend.
-`
-var targetHelp = pcio.Sprintf(targetHelpTemplate, style.Code("pinecone project list"))
+`, 80)
+
+var targetHelp = pcio.Sprintf(`%s
+
+%s
+
+%s
+`, targetHelpPart1, targetHelpPart2, targetHelpPart3)
 
 type TargetOptions struct {
 	Org     string

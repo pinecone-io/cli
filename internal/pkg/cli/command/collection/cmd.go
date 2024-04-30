@@ -1,13 +1,19 @@
 package collection
 
 import (
-	"github.com/pinecone-io/cli/internal/pkg/utils/docslinks"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 )
 
-var collectionHelpText = pcio.Sprintf(`To learn more about collections, please see %s`, docslinks.UnderstandingCollectionsGuide)
+var collectionHelpText = text.WordWrap(`
+A collection is a static copy of an index. It is a non-queryable 
+representation of a set of vectors and metadata. You can create a 
+collection from an index, and you can create a new index from a 
+collection. This new index can differ from the original source index: the 
+new index can have a different number of pods, a different pod type, 
+or a different similarity metric.
+`, 80)
 
 func NewCollectionCmd() *cobra.Command {
 	cmd := &cobra.Command{
