@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
@@ -36,6 +37,7 @@ func NewCreateCollectionCmd() *cobra.Command {
 			}
 			collection, err := pc.CreateCollection(ctx, req)
 			if err != nil {
+				msg.FailMsg("Failed to create collection: %s\n", err)
 				exit.Error(err)
 			}
 
@@ -43,7 +45,7 @@ func NewCreateCollectionCmd() *cobra.Command {
 				text.PrettyPrintJSON(collection)
 			} else {
 				describeCommand := pcio.Sprintf("pinecone collection describe --name %s", collection.Name)
-				pcio.Fprintf(cmd.OutOrStdout(), style.SuccessMsg("Collection %s created successfully. Run %s to monitor status. \n\n"), style.Emphasis(collection.Name), style.Code(describeCommand))
+				msg.SuccessMsg("Collection %s created successfully. Run %s to check status. \n\n", style.Emphasis(collection.Name), style.Code(describeCommand))
 				presenters.PrintDescribeCollectionTable(collection)
 			}
 		},

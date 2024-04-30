@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
@@ -27,10 +27,11 @@ func NewDeleteCollectionCmd() *cobra.Command {
 
 			err := pc.DeleteCollection(ctx, options.name)
 			if err != nil {
+				msg.FailMsg("Failed to delete collection %s: %s\n", style.Emphasis(options.name), err)
 				exit.Error(err)
 			}
 
-			pcio.Printf(style.SuccessMsg("Collection %s deleted.\n"), style.Emphasis(options.name))
+			msg.SuccessMsg("Collection %s deleted.\n", style.Emphasis(options.name))
 		},
 	}
 

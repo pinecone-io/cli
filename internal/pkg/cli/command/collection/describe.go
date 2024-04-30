@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -27,6 +28,7 @@ func NewDescribeCollectionCmd() *cobra.Command {
 
 			collection, err := pc.DescribeCollection(ctx, options.name)
 			if err != nil {
+				msg.FailMsg("Failed to describe collection %s: %s\n", options.name, err)
 				exit.Error(err)
 			}
 

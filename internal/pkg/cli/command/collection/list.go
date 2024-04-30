@@ -9,6 +9,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -33,6 +34,7 @@ func NewListCollectionsCmd() *cobra.Command {
 
 			collections, err := pc.ListCollections(ctx)
 			if err != nil {
+				msg.FailMsg("Failed to list collections: %s\n", err)
 				exit.Error(err)
 			}
 
