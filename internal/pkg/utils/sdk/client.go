@@ -5,6 +5,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
+	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -22,6 +23,8 @@ func newClientForUser() *pinecone.Client {
 	target := state.GetTargetContext()
 
 	if target.Org == "" || target.Project == "" {
+		msg.FailMsg("Please run %s to set a context", style.Code("pinecone target"))
+		pcio.Println()
 		pcio.Println("Target context is currently:")
 		pcio.Println()
 		presenters.PrintTargetContext(target)
