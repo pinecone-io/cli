@@ -32,6 +32,8 @@ func NewDescribeCmd() *cobra.Command {
 			if err != nil {
 				if strings.Contains(err.Error(), "not found") {
 					pcio.Printf(style.FailMsg("The index %s does not exist\n"), style.Emphasis(options.name))
+				} else {
+					pcio.Printf(style.FailMsg("Failed to describe index %s: %s\n"), style.Emphasis(options.name), err)
 				}
 				exit.Error(err)
 			}

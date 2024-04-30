@@ -10,6 +10,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
+	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 
@@ -32,6 +33,7 @@ func NewListCmd() *cobra.Command {
 
 			idxs, err := pc.ListIndexes(ctx)
 			if err != nil {
+				pcio.Printf(style.FailMsg("Failed to list indexes: %s\n"), err)
 				exit.Error(err)
 			}
 

@@ -22,40 +22,12 @@ type createServerlessOptions struct {
 	json      bool
 }
 
-func (o createServerlessOptions) isValidCloud() bool {
-	switch pinecone.Cloud(o.cloud) {
-	case pinecone.Aws, pinecone.Azure, pinecone.Gcp:
-		return true
-	default:
-		return false
-	}
-}
-
-func (o createServerlessOptions) isValidMetric() bool {
-	switch pinecone.IndexMetric(o.metric) {
-	case pinecone.Cosine, pinecone.Euclidean, pinecone.Dotproduct:
-		return true
-	default:
-		return false
-	}
-}
-
 func NewCreateServerlessCmd() *cobra.Command {
 	options := createServerlessOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "create-serverless",
 		Short: "Create a serverless index with the specified configuration",
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if !options.isValidCloud() {
-				return pcio.Errorf("cloud provider must be one of [aws, azure, gcp]")
-			}
-			if !options.isValidMetric() {
-				return pcio.Errorf("metric must be one of [cosine, euclidean, dotproduct]")
-			}
-
-			return nil
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			runCreateServerlessCmd(cmd, options)
 		},
@@ -92,6 +64,7 @@ func runCreateServerlessCmd(cmd *cobra.Command, options createServerlessOptions)
 
 	idx, err := pc.CreateServerlessIndex(ctx, createRequest)
 	if err != nil {
+		pcio.Printf(style.FailMsg("Failed to create serverless index %s: %s\n"), style.Emphasis(options.name), err)
 		exit.Error(err)
 	}
 	if options.json {
