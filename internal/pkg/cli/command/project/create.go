@@ -5,6 +5,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
 )
@@ -39,7 +40,8 @@ func NewCreateProjectCmd() *cobra.Command {
 				exit.Error(err)
 			}
 			if !proj.Success {
-				msg.FailMsg("Failed to create project %s: %s\n", style.Emphasis(options.name))
+				msg.FailMsg("Failed to create project %s\n", style.Emphasis(options.name))
+				exit.Error(pcio.Errorf("Create project call returned 200 but with success=false in the body%s", options.name))
 			}
 			msg.SuccessMsg("Project %s created successfully.\n", style.Emphasis(proj.GlobalProject.Name))
 		},

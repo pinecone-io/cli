@@ -65,6 +65,7 @@ func NewDeleteProjectCmd() *cobra.Command {
 			}
 			if !resp.Success {
 				msg.FailMsg("Failed to delete project %s: %s\n", style.Emphasis(options.name))
+				exit.Error(pcio.Errorf("Delete project call returned 200 but with success=false in the body", options.name))
 			}
 
 			// Clear target project if the deleted project is the target project
@@ -127,7 +128,7 @@ func verifyNoIndexes(orgName string, projectName string) {
 
 	idxs, err := pc.ListIndexes(ctx)
 	if err != nil {
-		pcio.Printf(style.FailMsg("Failed to list indexes: %s\n"), err)
+		msg.FailMsg("Failed to list indexes: %s\n", err)
 		exit.Error(err)
 	}
 	if len(idxs) > 0 {
@@ -144,7 +145,7 @@ func verifyNoCollections(orgName string, projectName string) {
 
 	collections, err := pc.ListCollections(ctx)
 	if err != nil {
-		pcio.Printf(style.FailMsg("Failed to list collections: %s\n"), err)
+		msg.FailMsg("Failed to list collections: %s\n", err)
 		exit.Error(err)
 	}
 	if len(collections) > 0 {
