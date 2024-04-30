@@ -77,30 +77,44 @@ func NewTargetCmd() *cobra.Command {
 
 			var org dashboard.Organization
 			if options.Org != "" {
+				// User passed an org flag, need to verify it exists and
+				// lookup the id for it.
 				org = getOrg(orgs, options.Org)
 				if !options.json {
 					msg.SuccessMsg("Target org updated to %s", style.Emphasis(org.Name))
 				}
-				var oldOrg = state.TargetOrgName.Get()
-				var newOrg = org.Name
+				var oldOrg = state.TargetOrg.Get().Name
 
-				state.TargetOrgName.Set(newOrg)
+				// Save the new target org
+				state.TargetOrg.Set(&state.TargetOrganization{
+					Name: org.Name,
+					Id:   org.Id,
+				})
 
-				// If the org has changed, reset the project
+				// If the org has changed, reset the project context
 				if oldOrg != org.Name {
-					state.TargetProjectName.Set("")
+					state.TargetProj.Set(&state.TargetProject{
+						Name: "",
+						Id:   "",
+					})
 				}
 			} else {
-				// Use the current org if no org is specified
-				org = getOrg(orgs, state.TargetOrgName.Get())
+				// Read the current target org if no org is specified
+				// with flags
+				org = getOrg(orgs, state.TargetOrg.Get().Name)
 			}
 
 			if options.Project != "" {
+				// User passed a project flag, need to verify it exists and
+				// lookup the id for it.
 				proj := getProject(org, options.Project)
 				if !options.json {
-					pcio.Printf(style.SuccessMsg("Target project updated to %s\n"), style.Emphasis(proj.Name))
+					msg.SuccessMsg("Target project updated to %s", style.Emphasis(proj.Name))
 				}
-				state.TargetProjectName.Set(proj.Name)
+				state.TargetProj.Set(&state.TargetProject{
+					Name: proj.Name,
+					Id:   proj.GlobalProject.Id,
+				})
 			}
 
 			if options.json {
@@ -136,7 +150,7 @@ func getOrg(orgs *dashboard.OrganizationsResponse, orgName string) dashboard.Org
 
 	availableOrgs := strings.Join(orgNames, ", ")
 	log.Error().Str("orgName", orgName).Str("avialableOrgs", availableOrgs).Msg("Failed to find organization")
-	msg.FailMsg("Failed to find organization %s. Available organizations: %s.\n", style.Emphasis(orgName), availableOrgs)
+	msg.FailMsg("Failed to find organization %s. Available organizations: %s.", style.Emphasis(orgName), availableOrgs)
 	exit.ErrorMsg(pcio.Sprintf("organization %s not found", style.Emphasis(orgName)))
 	return dashboard.Organization{}
 }

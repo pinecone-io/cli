@@ -7,39 +7,37 @@ import (
 
 var StateViper *viper.Viper = viper.New()
 
+type TargetOrganization struct {
+	Name string `json:"name"`
+	Id   string `json:"id"`
+}
+
+type TargetProject struct {
+	Name string `json:"name"`
+	Id   string `json:"global_id"`
+}
+
 var (
-	TargetProjectName = configuration.ConfigProperty[string]{
-		KeyName:      "target_project_name",
-		ViperStore:   StateViper,
-		DefaultValue: "",
+	TargetProj = configuration.MarshaledProperty[TargetProject]{
+		KeyName:    "target_project",
+		ViperStore: StateViper,
+		DefaultValue: &TargetProject{
+			Name: "",
+			Id:   "",
+		},
 	}
-	TargetProjectGlobalId = configuration.ConfigProperty[string]{
-		KeyName:      "target_project_global_id",
-		ViperStore:   StateViper,
-		DefaultValue: "",
-	}
-	TargetOrgName = configuration.ConfigProperty[string]{
-		KeyName:      "target_org_name",
-		ViperStore:   StateViper,
-		DefaultValue: "",
-	}
-	TargetOrgId = configuration.ConfigProperty[string]{
-		KeyName:      "target_org_id",
-		ViperStore:   StateViper,
-		DefaultValue: "",
-	}
-	HumanMode = configuration.ConfigProperty[bool]{
-		KeyName:      "human_mode",
-		ViperStore:   StateViper,
-		DefaultValue: true,
+	TargetOrg = configuration.MarshaledProperty[TargetOrganization]{
+		KeyName:    "target_org",
+		ViperStore: StateViper,
+		DefaultValue: &TargetOrganization{
+			Name: "",
+			Id:   "",
+		},
 	}
 )
 var properties = []configuration.Property{
-	TargetProjectName,
-	TargetProjectGlobalId,
-	TargetOrgName,
-	TargetOrgId,
-	HumanMode,
+	TargetOrg,
+	TargetProj,
 }
 
 var ConfigFile = configuration.ConfigFile{

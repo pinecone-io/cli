@@ -16,6 +16,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
+	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	pc_oauth2 "github.com/pinecone-io/cli/internal/pkg/utils/oauth2"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -57,12 +58,13 @@ func NewLoginCmd() *cobra.Command {
 			claims, err := pc_oauth2.ParseClaimsUnverified(&accessToken)
 			if err != nil {
 				log.Error().Msg("Error parsing claims")
+				msg.FailMsg("An auth token was fetched but an error occured while parsing the token's claims: %s", err)
 				exit.Error(pcio.Errorf("error parsing claims from access token: %s", err))
 				return
 			}
+			msg.SuccessMsg("Logged in as " + style.Emphasis(claims.Email))
 
-			pcio.Println(style.SuccessMsg("Logged in as " + style.Emphasis(claims.Email)))
-
+			// Fetch the user's organizations and projects
 			orgsResponse, err := dashboard.GetOrganizations()
 			if err != nil {
 				log.Error().Msg("Error fetching organizations")
@@ -70,14 +72,13 @@ func NewLoginCmd() *cobra.Command {
 				return
 			}
 
+			// Ask the user to choose a target org
 			targetOrg := postLoginSetTargetOrg(orgsResponse)
-			state.TargetOrgName.Set(targetOrg)
-
 			pcio.Println()
 			pcio.Printf(style.SuccessMsg("Target org set to %s.\n"), style.Emphasis(targetOrg))
 
+			// Ask the user to choose a target project
 			targetProject := postLoginSetupTargetProject(orgsResponse, targetOrg)
-			state.TargetProjectName.Set(targetProject)
 			pcio.Printf(style.SuccessMsg("Target project set %s.\n"), style.Emphasis(targetProject))
 
 			pcio.Println()
@@ -112,7 +113,17 @@ func postLoginSetTargetOrg(orgsResponse *dashboard.OrganizationsResponse) string
 		for _, org := range orgsResponse.Organizations {
 			orgNames = append(orgNames, org.Name)
 		}
+
 		orgName = uiOrgSelector(orgNames)
+		for _, org := range orgsResponse.Organizations {
+			if org.Name == orgName {
+				state.TargetOrg.Set(&state.TargetOrganization{
+					Name: org.Name,
+					Id:   org.Id,
+				})
+				break
+			}
+		}
 	}
 	return orgName
 }
@@ -125,13 +136,27 @@ func postLoginSetupTargetProject(orgs *dashboard.OrganizationsResponse, targetOr
 				exit.ErrorMsg("No projects found. Please create a project before proceeding.")
 				return ""
 			} else if len(org.Projects) == 1 {
+				state.TargetProj.Set(&state.TargetProject{
+					Name: org.Projects[0].Name,
+					Id:   org.Projects[0].GlobalProject.Id,
+				})
 				return org.Projects[0].Name
 			} else {
 				projectItems := []string{}
 				for _, proj := range org.Projects {
 					projectItems = append(projectItems, proj.Name)
 				}
-				return uiProjectSelector(projectItems)
+				projectName := uiProjectSelector(projectItems)
+
+				for _, proj := range org.Projects {
+					if proj.Name == projectName {
+						state.TargetProj.Set(&state.TargetProject{
+							Name: proj.Name,
+							Id:   proj.GlobalProject.Id,
+						})
+						return proj.Name
+					}
+				}
 			}
 		}
 	}
@@ -146,7 +171,6 @@ func uiProjectSelector(projectItems []string) string {
 		exit.Success()
 	}, func(choice string) string {
 		targetProject = choice
-		state.TargetProjectName.Set(choice)
 		return "Target project: " + choice
 	})
 	if _, err := tea.NewProgram(m2).Run(); err != nil {

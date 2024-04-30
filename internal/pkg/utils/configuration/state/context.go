@@ -9,7 +9,7 @@ type TargetContext struct {
 func GetTargetContext() *TargetContext {
 	return &TargetContext{
 		Api:     "https://api.pinecone.io",
-		Org:     TargetOrgName.Get(),
-		Project: TargetProjectName.Get(),
+		Org:     TargetOrg.Get().Name,
+		Project: TargetProj.Get().Name,
 	}
 }

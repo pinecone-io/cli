@@ -1,6 +1,7 @@
 package dashboard
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -9,14 +10,20 @@ import (
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
-	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/oauth2"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 )
 
-func buildRequest(verb string, path string) (*http.Request, error) {
-	req, err := http.NewRequest(verb, path, nil)
+func buildRequest(verb string, path string, bodyJson []byte) (*http.Request, error) {
+	var body *bytes.Buffer
+	if len(bodyJson) > 0 {
+		body = bytes.NewBuffer(bodyJson)
+	} else {
+		body = bytes.NewBuffer([]byte{})
+	}
+
+	req, err := http.NewRequest(verb, path, body)
 	if err != nil {
 		pcio.Println("Error creating request:", err)
 		return nil, err
@@ -67,48 +74,4 @@ func decodeResponse[T any](resp *http.Response, target *T) error {
 	}
 
 	return nil
-}
-
-func FetchAndDecode[T any](path string, method string) (*T, error) {
-	url := DashboardBaseURL + path
-	req, err := buildRequest(method, url)
-	log.Info().
-		Str("method", method).
-		Str("url", url).
-		Msg("Fetching data from dashboard")
-	if err != nil {
-		log.Error().
-			Err(err).
-			Str("url", url).
-			Str("method", method).
-			Msg("Error building request")
-		return nil, pcio.Errorf("error building request: %v", err)
-	}
-
-	resp, err := performRequest(req)
-	if err != nil {
-		log.Error().
-			Err(err).
-			Str("method", method).
-			Str("url", url)
-		return nil, pcio.Errorf("error performing request to %s: %v", url, err)
-	}
-
-	var parsedResponse T
-	err = decodeResponse(resp, &parsedResponse)
-	if err != nil {
-		log.Error().
-			Err(err).
-			Str("method", method).
-			Str("url", url).
-			Str("status", resp.Status).
-			Msg("Error decoding response")
-		return nil, pcio.Errorf("error decoding JSON: %v", err)
-	}
-
-	log.Info().
-		Str("method", method).
-		Str("url", url).
-		Msg("Request completed successfully")
-	return &parsedResponse, nil
 }

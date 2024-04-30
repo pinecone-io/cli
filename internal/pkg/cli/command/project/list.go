@@ -28,7 +28,7 @@ func NewListProjectsCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "list <command>",
-		Short: "list projects in an org",
+		Short: "list projects in the target org",
 		Run: func(cmd *cobra.Command, args []string) {
 			orgs, err := dashboard.GetOrganizations()
 			if err != nil {

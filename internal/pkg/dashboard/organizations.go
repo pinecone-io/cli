@@ -25,12 +25,14 @@ type Project struct {
 }
 
 type GlobalProject struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+	Id         string `json:"id"`
+	Name       string `json:"name"`
+	Quota      string `json:"quota"`
+	IndexQuota string `json:"indexQuota"`
 }
 
 func GetOrganizations() (*OrganizationsResponse, error) {
-	resp, err := FetchAndDecode[OrganizationsResponse](URL_GET_ORGANIZATIONS, "GET")
+	resp, err := FetchAndDecode[OrganizationsResponse](URL_GET_ORGANIZATIONS)
 	if err != nil {
 		return nil, err
 	}

@@ -20,6 +20,9 @@ func (da *DeviceAuth) GetDeviceAccessToken(ctx context.Context, deviceAuthRespon
 	deviceAuthResponse.Interval += 1 // Add 1 second to the poll interval to avoid slow_down error
 
 	token, err := conf.DeviceAccessToken(ctx, deviceAuthResponse, oauth2.AccessTypeOffline)
+	if err != nil {
+		return nil, err
+	}
 	LogTokenClaims(token, "Obtained access token with device auth")
 	return token, err
 }
