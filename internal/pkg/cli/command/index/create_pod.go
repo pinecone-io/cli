@@ -27,15 +27,6 @@ type createPodOptions struct {
 	json bool
 }
 
-func (o createPodOptions) isValidMetric() bool {
-	switch pinecone.IndexMetric(o.metric) {
-	case pinecone.Cosine, pinecone.Euclidean, pinecone.Dotproduct:
-		return true
-	default:
-		return false
-	}
-}
-
 func NewCreatePodCmd() *cobra.Command {
 	options := createPodOptions{}
 
@@ -43,13 +34,6 @@ func NewCreatePodCmd() *cobra.Command {
 		Use:     "create-pod",
 		Short:   "Create a pod index with the specified configuration",
 		Example: "",
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if !options.isValidMetric() {
-				return pcio.Errorf("metric must be one of [cosine, euclidean, dotproduct]")
-			}
-
-			return nil
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			runCreatePodCmd(cmd, options)
 		},
@@ -92,6 +76,7 @@ func runCreatePodCmd(cmd *cobra.Command, options createPodOptions) {
 
 	idx, err := pc.CreatePodIndex(ctx, createRequest)
 	if err != nil {
+		pcio.Printf(style.FailMsg("Failed to create index %s: %s\n"), style.Emphasis(options.name), err)
 		exit.Error(err)
 	}
 	if options.json {
