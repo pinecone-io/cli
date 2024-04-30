@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
@@ -28,12 +28,12 @@ func NewDeleteCmd() *cobra.Command {
 			err := pc.DeleteIndex(ctx, options.name)
 			if err != nil {
 				if strings.Contains(err.Error(), "not found") {
-					pcio.Printf(style.FailMsg("The index %s does not exist\n"), style.Emphasis(options.name))
+					msg.FailMsg("The index %s does not exist\n", style.Emphasis(options.name))
 				}
 				exit.Error(err)
 			}
 
-			pcio.Printf(style.SuccessMsg("Index %s deleted.\n"), style.Emphasis(options.name))
+			msg.SuccessMsg("Index %s deleted.\n", style.Emphasis(options.name))
 		},
 	}
 

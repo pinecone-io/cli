@@ -26,7 +26,7 @@ func NewListCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "See the list of indexes in your project",
+		Short: "See the list of indexes in the targeted project",
 		Run: func(cmd *cobra.Command, args []string) {
 			pc := sdk.NewPineconeClient()
 			ctx := context.Background()

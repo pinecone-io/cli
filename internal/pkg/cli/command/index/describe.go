@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -31,9 +31,9 @@ func NewDescribeCmd() *cobra.Command {
 			idx, err := pc.DescribeIndex(ctx, options.name)
 			if err != nil {
 				if strings.Contains(err.Error(), "not found") {
-					pcio.Printf(style.FailMsg("The index %s does not exist\n"), style.Emphasis(options.name))
+					msg.FailMsg("The index %s does not exist\n", style.Emphasis(options.name))
 				} else {
-					pcio.Printf(style.FailMsg("Failed to describe index %s: %s\n"), style.Emphasis(options.name), err)
+					msg.FailMsg("Failed to describe index %s: %s\n", style.Emphasis(options.name), err)
 				}
 				exit.Error(err)
 			}

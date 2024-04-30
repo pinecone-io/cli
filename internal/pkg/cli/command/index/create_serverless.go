@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
@@ -64,7 +65,7 @@ func runCreateServerlessCmd(cmd *cobra.Command, options createServerlessOptions)
 
 	idx, err := pc.CreateServerlessIndex(ctx, createRequest)
 	if err != nil {
-		pcio.Printf(style.FailMsg("Failed to create serverless index %s: %s\n"), style.Emphasis(options.name), err)
+		msg.FailMsg("Failed to create serverless index %s: %s\n", style.Emphasis(options.name), err)
 		exit.Error(err)
 	}
 	if options.json {
@@ -73,6 +74,6 @@ func runCreateServerlessCmd(cmd *cobra.Command, options createServerlessOptions)
 	}
 
 	describeCommand := pcio.Sprintf("pinecone index describe --name %s", idx.Name)
-	pcio.Fprintf(cmd.OutOrStdout(), style.SuccessMsg("Index %s created successfully. Run %s to monitor status. \n\n"), style.Emphasis(idx.Name), style.Code(describeCommand))
+	msg.SuccessMsg("Index %s created successfully. Run %s to monitor status. \n\n", style.Emphasis(idx.Name), style.Code(describeCommand))
 	presenters.PrintDescribeIndexTable(idx)
 }
