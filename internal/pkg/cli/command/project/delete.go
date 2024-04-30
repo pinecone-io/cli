@@ -19,6 +19,7 @@ import (
 type DeleteProjectCmdOptions struct {
 	name string
 	json bool
+	yes  bool
 }
 
 func NewDeleteProjectCmd() *cobra.Command {
@@ -30,6 +31,7 @@ func NewDeleteProjectCmd() *cobra.Command {
 		Example: help.Examples([]string{
 			"pinecone target -o \"my-org\"",
 			"pinecone project delete --name=\"demo\"",
+			"pinecone project delete --name=\"demo\" --yes",
 		}),
 		Run: func(cmd *cobra.Command, args []string) {
 			orgId, err := getTargetOrgId()
@@ -61,7 +63,9 @@ func NewDeleteProjectCmd() *cobra.Command {
 				exit.Error(pcio.Errorf("project not found"))
 			}
 
-			confirmDelete(options.name, orgId)
+			if !options.yes {
+				confirmDelete(options.name, orgId)
+			}
 
 			resp, err := dashboard.DeleteProject(orgId, projectId)
 			if err != nil {
@@ -76,6 +80,7 @@ func NewDeleteProjectCmd() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVar(&options.yes, "yes", false, "suppress confirmation prompt by pre-confirming your intent to perform destructive delete operations")
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the project")
 	cmd.MarkFlagRequired("name")
 	return cmd
