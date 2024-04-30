@@ -1,11 +1,14 @@
 package target
 
 import (
+	"strings"
+
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
+	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -59,7 +62,8 @@ func NewTargetCmd() *cobra.Command {
 					text.PrettyPrintJSON(state.GetTargetContext())
 					return
 				}
-				log.Info().Msg("Outputting target context as table")
+				log.Info().
+					Msg("Outputting target context as table")
 				pcio.Printf("To update the context, run %s. The current target context is:\n\n", style.Code("pinecone target --org <org> --project <project>"))
 				presenters.PrintTargetContext(state.GetTargetContext())
 				return
@@ -67,32 +71,32 @@ func NewTargetCmd() *cobra.Command {
 
 			orgs, err := dashboard.GetOrganizations()
 			if err != nil {
+				msg.FailMsg("Failed to get organizations: %s", err)
 				exit.Error(err)
 			}
 
 			var org dashboard.Organization
 			if options.Org != "" {
-				org, err = getOrg(orgs, options.Org)
-				if err != nil {
-					exit.Error(err)
-				}
+				org = getOrg(orgs, options.Org)
 				if !options.json {
-					pcio.Printf(style.SuccessMsg("Target org updated to %s\n"), style.Emphasis(org.Name))
+					msg.SuccessMsg("Target org updated to %s", style.Emphasis(org.Name))
 				}
-				state.TargetOrgName.Set(org.Name)
-				state.TargetProjectName.Set("")
+				var oldOrg = state.TargetOrgName.Get()
+				var newOrg = org.Name
+
+				state.TargetOrgName.Set(newOrg)
+
+				// If the org has changed, reset the project
+				if oldOrg != org.Name {
+					state.TargetProjectName.Set("")
+				}
 			} else {
-				org, err = getOrg(orgs, state.TargetOrgName.Get())
-				if err != nil {
-					exit.Error(err)
-				}
+				// Use the current org if no org is specified
+				org = getOrg(orgs, state.TargetOrgName.Get())
 			}
 
 			if options.Project != "" {
-				proj, err := getProject(org, options.Project)
-				if err != nil {
-					exit.Error(err)
-				}
+				proj := getProject(org, options.Project)
 				if !options.json {
 					pcio.Printf(style.SuccessMsg("Target project updated to %s\n"), style.Emphasis(proj.Name))
 				}
@@ -117,20 +121,39 @@ func NewTargetCmd() *cobra.Command {
 	return cmd
 }
 
-func getOrg(orgs *dashboard.OrganizationsResponse, orgName string) (dashboard.Organization, error) {
+func getOrg(orgs *dashboard.OrganizationsResponse, orgName string) dashboard.Organization {
 	for _, org := range orgs.Organizations {
 		if org.Name == orgName {
-			return org, nil
+			return org
 		}
 	}
-	return dashboard.Organization{}, pcio.Errorf("organization %s not found", style.Emphasis(orgName))
+
+	// Join org names for error message
+	orgNames := make([]string, len(orgs.Organizations))
+	for i, org := range orgs.Organizations {
+		orgNames[i] = org.Name
+	}
+
+	availableOrgs := strings.Join(orgNames, ", ")
+	log.Error().Str("orgName", orgName).Str("avialableOrgs", availableOrgs).Msg("Failed to find organization")
+	msg.FailMsg("Failed to find organization %s. Available organizations: %s.\n", style.Emphasis(orgName), availableOrgs)
+	exit.ErrorMsg(pcio.Sprintf("organization %s not found", style.Emphasis(orgName)))
+	return dashboard.Organization{}
 }
 
-func getProject(org dashboard.Organization, projectName string) (dashboard.Project, error) {
+func getProject(org dashboard.Organization, projectName string) dashboard.Project {
 	for _, project := range org.Projects {
 		if project.Name == projectName {
-			return project, nil
+			return project
 		}
 	}
-	return dashboard.Project{}, pcio.Errorf("project %s not found in org %s", style.Emphasis(projectName), style.Emphasis(org.Name))
+
+	availableProjects := make([]string, len(org.Projects))
+	for i, project := range org.Projects {
+		availableProjects[i] = project.Name
+	}
+
+	msg.FailMsg("Failed to find project %s in org %s. Available projects: %s.", style.Emphasis(projectName), style.Emphasis(org.Name), strings.Join(availableProjects, ", "))
+	exit.Error(pcio.Errorf("project %s not found in organization %s", projectName, org.Name))
+	return dashboard.Project{}
 }
