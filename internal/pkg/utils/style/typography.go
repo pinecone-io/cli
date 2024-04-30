@@ -35,6 +35,14 @@ func SuccessMsg(s string) string {
 	return applyStyle("[SUCCESS] ", color.FgGreen) + s
 }
 
+func WarnMsg(s string) string {
+	return applyStyle("[WARN] ", color.FgYellow) + s
+}
+
+func InfoMsg(s string) string {
+	return applyStyle("[INFO] ", color.FgHiWhite) + s
+}
+
 func FailMsg(s string, a ...interface{}) string {
 	return applyStyle("[ERROR] ", color.FgRed) + fmt.Sprintf(s, a...)
 }

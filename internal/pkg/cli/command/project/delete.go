@@ -1,6 +1,11 @@
 package project
 
 import (
+	"bufio"
+	"fmt"
+	"os"
+	"strings"
+
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -56,6 +61,8 @@ func NewDeleteProjectCmd() *cobra.Command {
 				exit.Error(pcio.Errorf("project not found"))
 			}
 
+			confirmDelete(options.name, orgId)
+
 			resp, err := dashboard.DeleteProject(orgId, projectId)
 			if err != nil {
 				msg.FailMsg("Failed to delete project %s: %s\n", style.Emphasis(options.name), err)
@@ -80,4 +87,31 @@ func getTargetOrgId() (string, error) {
 		return "", pcio.Errorf("no target organization set")
 	}
 	return orgId, nil
+}
+
+func confirmDelete(projectName, orgId string) {
+	msg.WarnMsg("This will delete the project %s in organization %s.", style.Emphasis(projectName), style.Emphasis(state.TargetOrg.Get().Name))
+	msg.WarnMsg("This action cannot be undone.")
+
+	// Prompt the user
+	fmt.Print("Do you want to continue? (y/N): ")
+
+	// Read the user's input
+	reader := bufio.NewReader(os.Stdin)
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error reading input:", err)
+		return
+	}
+
+	// Trim any whitespace from the input and convert to lowercase
+	input = strings.TrimSpace(strings.ToLower(input))
+
+	// Check if the user entered "y" or "yes"
+	if input == "y" || input == "yes" {
+		msg.InfoMsg("You chose to continue delete.")
+	} else {
+		msg.InfoMsg("Operation canceled.")
+		exit.Success()
+	}
 }
