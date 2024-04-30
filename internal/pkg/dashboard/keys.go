@@ -20,7 +20,7 @@ const (
 	URL_GET_API_KEYS = "/v2/dashboard/projects/%s/api-keys"
 )
 
-func GetApiKeys(project Project) (*KeyResponse, error) {
-	url := pcio.Sprintf(URL_GET_API_KEYS, project.GlobalProject.Id)
+func GetApiKeys(project GlobalProject) (*KeyResponse, error) {
+	url := pcio.Sprintf(URL_GET_API_KEYS, project.Id)
 	return GetAndDecode[KeyResponse](url)
 }

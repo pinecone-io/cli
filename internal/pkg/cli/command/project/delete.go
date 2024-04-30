@@ -2,6 +2,7 @@ package project
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
 )
@@ -35,45 +37,42 @@ func NewDeleteProjectCmd() *cobra.Command {
 		}),
 		Run: func(cmd *cobra.Command, args []string) {
 			orgId, err := getTargetOrgId()
+			orgName := state.TargetOrg.Get().Name
 			if err != nil {
 				msg.FailMsg("No target organization set. Use %s to set the organization context.", style.Code("pinecone target -o <org>"))
 				cmd.Help()
 				exit.ErrorMsg("No organization context set")
 			}
 
-			orgs, err := dashboard.ListOrganizations()
+			projToDelete, err := dashboard.GetProjectByName(orgName, options.name)
 			if err != nil {
-				msg.FailMsg("Failed to retrieve org information: %s\n", err)
+				msg.FailMsg("Failed to retrieve project information: %s\n", err)
+				msg.HintMsg("To see a list of projects in the organization, run %s", style.Code("pinecone project list"))
 				exit.Error(err)
 			}
 
-			var projectId string
-			for _, org := range orgs.Organizations {
-				if org.Id == orgId {
-					for _, proj := range org.Projects {
-						if proj.GlobalProject.Name == options.name {
-							projectId = proj.GlobalProject.Id
-						}
-					}
-				}
-			}
-			if projectId == "" {
-				msg.FailMsg("Project %s not found in organization %s. Did you already delete it?\n", style.Emphasis(options.name), style.Emphasis(state.TargetOrg.Get().Name))
-				msg.HintMsg("To see a list of projects in the organization, run %s", style.Code("pinecone project list"))
-				exit.Error(pcio.Errorf("project not found"))
-			}
+			verifyNoIndexes(orgName, projToDelete.Name)
+			verifyNoCollections(orgName, projToDelete.Name)
 
 			if !options.yes {
 				confirmDelete(options.name, orgId)
 			}
 
-			resp, err := dashboard.DeleteProject(orgId, projectId)
+			resp, err := dashboard.DeleteProject(orgId, projToDelete.Id)
 			if err != nil {
 				msg.FailMsg("Failed to delete project %s: %s\n", style.Emphasis(options.name), err)
 				exit.Error(err)
 			}
 			if !resp.Success {
 				msg.FailMsg("Failed to delete project %s: %s\n", style.Emphasis(options.name))
+			}
+
+			// Clear target project if the deleted project is the target project
+			if state.TargetProj.Get().Name == options.name {
+				state.TargetProj.Set(&state.TargetProject{
+					Id:   "",
+					Name: "",
+				})
 			}
 			msg.SuccessMsg("Project %s deleted.\n", style.Emphasis(options.name))
 		},
@@ -118,5 +117,39 @@ func confirmDelete(projectName, orgId string) {
 	} else {
 		msg.InfoMsg("Operation canceled.")
 		exit.Success()
+	}
+}
+
+func verifyNoIndexes(orgName string, projectName string) {
+	// Check if project contains indexes
+	pc := sdk.NewPineconeClientForUserProjectByName(orgName, projectName)
+	ctx := context.Background()
+
+	idxs, err := pc.ListIndexes(ctx)
+	if err != nil {
+		pcio.Printf(style.FailMsg("Failed to list indexes: %s\n"), err)
+		exit.Error(err)
+	}
+	if len(idxs) > 0 {
+		msg.FailMsg("Project %s contains indexes. Delete the indexes before deleting the project.", style.Emphasis(projectName))
+		msg.HintMsg("To see indexes in this project, run %s", pcio.Sprintf(style.Code("pinecone target -p \"%s\" && pinecone index list"), projectName))
+		exit.Error(pcio.Errorf("project contains indexes"))
+	}
+}
+
+func verifyNoCollections(orgName string, projectName string) {
+	// Check if project contains collections
+	pc := sdk.NewPineconeClientForUserProjectByName(orgName, projectName)
+	ctx := context.Background()
+
+	collections, err := pc.ListCollections(ctx)
+	if err != nil {
+		pcio.Printf(style.FailMsg("Failed to list collections: %s\n"), err)
+		exit.Error(err)
+	}
+	if len(collections) > 0 {
+		msg.FailMsg("Project %s contains collections. Delete the collections before deleting the project.", style.Emphasis(projectName))
+		msg.HintMsg("To see collections in this project, run %s", pcio.Sprintf(style.Code("pinecone target -p \"%s\" && pinecone collection list"), projectName))
+		exit.Error(pcio.Errorf("project contains collections"))
 	}
 }
