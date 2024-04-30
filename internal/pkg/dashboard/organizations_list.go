@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	URL_GET_ORGANIZATIONS = "/v2/dashboard/organizations"
+	URL_LIST_ORGANIZATIONS = "/v2/dashboard/organizations"
 )
 
 type OrganizationsResponse struct {
@@ -31,18 +31,18 @@ type GlobalProject struct {
 	IndexQuota string `json:"indexQuota"`
 }
 
-func GetOrganizations() (*OrganizationsResponse, error) {
-	resp, err := FetchAndDecode[OrganizationsResponse](URL_GET_ORGANIZATIONS)
+func ListOrganizations() (*OrganizationsResponse, error) {
+	resp, err := GetAndDecode[OrganizationsResponse](URL_LIST_ORGANIZATIONS)
 	if err != nil {
 		return nil, err
 	}
 	for _, org := range resp.Organizations {
 		log.Trace().
-			Str("org", org.Name).
+			Str("org", string(org.Name)).
 			Msg("found org")
 		for _, proj := range org.Projects {
 			log.Trace().
-				Str("org", org.Name).
+				Str("org", string(org.Name)).
 				Str("project", proj.Name).
 				Msg("found project in org")
 		}

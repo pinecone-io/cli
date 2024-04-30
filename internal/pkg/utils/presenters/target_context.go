@@ -17,7 +17,7 @@ func labelUnsetIfEmpty(value string) string {
 }
 
 func PrintTargetContext(context *state.TargetContext) {
-	log.Info().Str("api", context.Api).Str("org", context.Org).Str("project", context.Project).Msg("Printing target context")
+	log.Info().Str("api", context.Api).Str("org", string(context.Org)).Str("project", string(context.Project)).Msg("Printing target context")
 	writer := NewTabWriter()
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
@@ -25,8 +25,8 @@ func PrintTargetContext(context *state.TargetContext) {
 	pcio.Fprint(writer, header)
 
 	pcio.Fprintf(writer, "Api\t%s\n", labelUnsetIfEmpty(style.Emphasis(context.Api)))
-	pcio.Fprintf(writer, "Org\t%s\n", labelUnsetIfEmpty(context.Org))
-	pcio.Fprintf(writer, "Project\t%s\n", labelUnsetIfEmpty(context.Project))
+	pcio.Fprintf(writer, "Org\t%s\n", labelUnsetIfEmpty(string(context.Org)))
+	pcio.Fprintf(writer, "Project\t%s\n", labelUnsetIfEmpty(string(context.Project)))
 
 	writer.Flush()
 }

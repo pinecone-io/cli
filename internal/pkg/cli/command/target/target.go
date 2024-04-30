@@ -69,7 +69,7 @@ func NewTargetCmd() *cobra.Command {
 				return
 			}
 
-			orgs, err := dashboard.GetOrganizations()
+			orgs, err := dashboard.ListOrganizations()
 			if err != nil {
 				msg.FailMsg("Failed to get organizations: %s", err)
 				exit.Error(err)

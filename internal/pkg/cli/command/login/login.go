@@ -65,7 +65,7 @@ func NewLoginCmd() *cobra.Command {
 			msg.SuccessMsg("Logged in as " + style.Emphasis(claims.Email))
 
 			// Fetch the user's organizations and projects
-			orgsResponse, err := dashboard.GetOrganizations()
+			orgsResponse, err := dashboard.ListOrganizations()
 			if err != nil {
 				log.Error().Msg("Error fetching organizations")
 				exit.Error(pcio.Errorf("error fetching organizations: %s", err))

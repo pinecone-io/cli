@@ -26,7 +26,7 @@ func CreateProject(orgId string, projName string, podQuota int32) (*CreateProjec
 		PodQuota:    podQuota,
 		Environment: "serverless",
 	}
-	resp, err := PostAndDecode[CreateProjectResponse, CreateProjectRequest](path, body)
+	resp, err := PostAndDecode[CreateProjectRequest, CreateProjectResponse](path, body)
 	if err != nil {
 		return nil, err
 	}

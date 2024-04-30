@@ -32,7 +32,7 @@ func newClientForUser() *pinecone.Client {
 		exit.ErrorMsg(pcio.Sprintf("The target organization and project must both be set. Please run %s", style.Code("pinecone target")))
 	}
 
-	orgs, err := dashboard.GetOrganizations()
+	orgs, err := dashboard.ListOrganizations()
 	if err != nil {
 		exit.Error(err)
 	}

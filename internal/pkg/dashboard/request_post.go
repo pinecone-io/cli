@@ -8,11 +8,11 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
-func PostAndDecode[T any, B any](path string, body B) (*T, error) {
-	return RequestWithBodyAndDecode[T, B](path, http.MethodPost, body)
+func PostAndDecode[B any, R any](path string, body B) (*R, error) {
+	return RequestWithBodyAndDecode[B, R](path, http.MethodPost, body)
 }
 
-func RequestWithBodyAndDecode[T any, B any](path string, method string, body B) (*T, error) {
+func RequestWithBodyAndDecode[B any, R any](path string, method string, body B) (*R, error) {
 	url := DashboardBaseURL + path
 
 	var bodyJson []byte
@@ -49,7 +49,7 @@ func RequestWithBodyAndDecode[T any, B any](path string, method string, body B) 
 		return nil, pcio.Errorf("error performing request to %s: %v", url, err)
 	}
 
-	var parsedResponse T
+	var parsedResponse R
 	err = decodeResponse(resp, &parsedResponse)
 	if err != nil {
 		log.Error().

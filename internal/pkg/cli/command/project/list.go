@@ -27,10 +27,10 @@ func NewListProjectsCmd() *cobra.Command {
 	options := ListProjectCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "list <command>",
+		Use:   "list",
 		Short: "list projects in the target org",
 		Run: func(cmd *cobra.Command, args []string) {
-			orgs, err := dashboard.GetOrganizations()
+			orgs, err := dashboard.ListOrganizations()
 			if err != nil {
 				exit.Error(err)
 			}

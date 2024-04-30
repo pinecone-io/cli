@@ -14,6 +14,7 @@ func NewProjectCmd() *cobra.Command {
 
 	cmd.AddCommand(NewListProjectsCmd())
 	cmd.AddCommand(NewCreateProjectCmd())
+	cmd.AddCommand(NewDeleteProjectCmd())
 
 	return cmd
 }

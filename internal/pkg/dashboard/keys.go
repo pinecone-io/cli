@@ -22,5 +22,5 @@ const (
 
 func GetApiKeys(project Project) (*KeyResponse, error) {
 	url := pcio.Sprintf(URL_GET_API_KEYS, project.GlobalProject.Id)
-	return FetchAndDecode[KeyResponse](url)
+	return GetAndDecode[KeyResponse](url)
 }

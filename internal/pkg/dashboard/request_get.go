@@ -7,9 +7,8 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
-func FetchAndDecode[T any](path string) (*T, error) {
+func RequestWithoutBodyAndDecode[T any](path string, method string) (*T, error) {
 	url := DashboardBaseURL + path
-	method := http.MethodGet
 	req, err := buildRequest(method, url, nil)
 	log.Info().
 		Str("method", method).
@@ -50,4 +49,8 @@ func FetchAndDecode[T any](path string) (*T, error) {
 		Str("url", url).
 		Msg("Request completed successfully")
 	return &parsedResponse, nil
+}
+
+func GetAndDecode[T any](path string) (*T, error) {
+	return RequestWithoutBodyAndDecode[T](path, http.MethodGet)
 }

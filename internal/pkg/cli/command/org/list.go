@@ -24,7 +24,7 @@ func NewListOrgsCmd() *cobra.Command {
 		Use:   "list <command>",
 		Short: "list organizations",
 		Run: func(cmd *cobra.Command, args []string) {
-			orgs, err := dashboard.GetOrganizations()
+			orgs, err := dashboard.ListOrganizations()
 			if err != nil {
 				exit.Error(err)
 			}
