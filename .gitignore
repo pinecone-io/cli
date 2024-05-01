@@ -24,3 +24,4 @@ go.work
 bin/
 
 dist/
+.env
