@@ -46,6 +46,9 @@ archives:
       - goos: windows
         format: zip
 
+env_files:
+  github_token: .env
+
 changelog:
   sort: asc
   filters:
