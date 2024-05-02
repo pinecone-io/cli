@@ -21,8 +21,9 @@ func NewCreateApiKeyCmd() *cobra.Command {
 	options := CreateApiKeyOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "create-key",
-		Short: "create an API key in a project",
+		Use:     "create-key",
+		Short:   "create an API key in a project",
+		GroupID: help.GROUP_PROJECTS_API_KEYS.ID,
 		Example: help.Examples([]string{
 			"pinecone target -o \"my-org\" -p \"my-project\"",
 			"pinecone create-key -n \"my-key\" --reveal",

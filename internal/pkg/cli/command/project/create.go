@@ -20,8 +20,9 @@ func NewCreateProjectCmd() *cobra.Command {
 	options := CreateProjectCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "create",
-		Short: "create a project in the target org",
+		Use:     "create",
+		Short:   "create a project in the target org",
+		GroupID: help.GROUP_PROJECTS_CRUD.ID,
 		Example: help.Examples([]string{
 			"pinecone target -o \"my-org\"",
 			"pinecone project create --name=\"demo\"",

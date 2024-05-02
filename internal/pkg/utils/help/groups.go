@@ -20,4 +20,14 @@ var (
 		ID:    "index",
 		Title: style.Heading("Management Commands"),
 	}
+
+	GROUP_PROJECTS_API_KEYS = &cobra.Group{
+		ID:    "keys",
+		Title: style.Heading("API Key Management"),
+	}
+
+	GROUP_PROJECTS_CRUD = &cobra.Group{
+		ID:    "projects",
+		Title: style.Heading("Project Management"),
+	}
 )

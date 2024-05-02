@@ -35,6 +35,7 @@ func NewDeleteProjectCmd() *cobra.Command {
 			"pinecone project delete --name=\"demo\"",
 			"pinecone project delete --name=\"demo\" --yes",
 		}),
+		GroupID: help.GROUP_PROJECTS_CRUD.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			orgId, err := getTargetOrgId()
 			orgName := state.TargetOrg.Get().Name

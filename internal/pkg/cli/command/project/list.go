@@ -8,6 +8,7 @@ import (
 
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
+	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
 
@@ -27,8 +28,9 @@ func NewListProjectsCmd() *cobra.Command {
 	options := ListProjectCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "list projects in the target org",
+		Use:     "list",
+		Short:   "list projects in the target org",
+		GroupID: help.GROUP_PROJECTS_CRUD.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			orgs, err := dashboard.ListOrganizations()
 			if err != nil {

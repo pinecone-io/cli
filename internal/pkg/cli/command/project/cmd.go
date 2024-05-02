@@ -12,6 +12,9 @@ func NewProjectCmd() *cobra.Command {
 		GroupID: help.GROUP_MANAGEMENT.ID,
 	}
 
+	cmd.AddGroup(help.GROUP_PROJECTS_CRUD)
+	cmd.AddGroup(help.GROUP_PROJECTS_API_KEYS)
+
 	cmd.AddCommand(NewListProjectsCmd())
 	cmd.AddCommand(NewCreateProjectCmd())
 	cmd.AddCommand(NewDeleteProjectCmd())

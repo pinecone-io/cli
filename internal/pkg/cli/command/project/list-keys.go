@@ -29,6 +29,7 @@ func NewListKeysCmd() *cobra.Command {
 			"pinecone target -o \"my-org\" -p \"my-project\"",
 			"pinecone list-keys --reveal",
 		}),
+		GroupID: help.GROUP_PROJECTS_API_KEYS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			projId, err := getTargetProjectId()
 			if err != nil {
