@@ -18,6 +18,7 @@ jobs:
         - name: Setup Google service account creds
           id: setup-google
           run: |
+            mkdir -p secrets
             echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDS }}" > secrets/gcp_key.json
             echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/secrets/gcp_key.json" >> $GITHUB_OUTPUT
         - name: Run GoReleaser
