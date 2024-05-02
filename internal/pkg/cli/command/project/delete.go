@@ -94,6 +94,14 @@ func getTargetOrgId() (string, error) {
 	return orgId, nil
 }
 
+func getTargetProjectId() (string, error) {
+	projId := state.TargetProj.Get().Id
+	if projId == "" {
+		return "", pcio.Errorf("no target project set")
+	}
+	return projId, nil
+}
+
 func confirmDelete(projectName, orgId string) {
 	msg.WarnMsg("This will delete the project %s in organization %s.", style.Emphasis(projectName), style.Emphasis(state.TargetOrg.Get().Name))
 	msg.WarnMsg("This action cannot be undone.")

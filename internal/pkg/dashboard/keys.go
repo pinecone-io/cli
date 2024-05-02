@@ -9,11 +9,9 @@ type KeyResponse struct {
 }
 
 type Key struct {
-	Id            string `json:"id"`
-	Name          string `json:"name"`
-	UserLabel     string `json:"user_label"`
-	Value         string `json:"value"`
-	IntegrationId string `json:"integration_id"`
+	Id        string `json:"id"`
+	UserLabel string `json:"user_label"`
+	Value     string `json:"value"`
 }
 
 const (
@@ -21,6 +19,10 @@ const (
 )
 
 func GetApiKeys(project GlobalProject) (*KeyResponse, error) {
-	url := pcio.Sprintf(URL_GET_API_KEYS, project.Id)
+	return GetApiKeysById(project.Id)
+}
+
+func GetApiKeysById(projectId string) (*KeyResponse, error) {
+	url := pcio.Sprintf(URL_GET_API_KEYS, projectId)
 	return GetAndDecode[KeyResponse](url)
 }
