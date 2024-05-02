@@ -64,8 +64,8 @@ func NewDeleteProjectCmd() *cobra.Command {
 				exit.Error(err)
 			}
 			if !resp.Success {
-				msg.FailMsg("Failed to delete project %s: %s\n", style.Emphasis(options.name))
-				exit.Error(pcio.Errorf("Delete project call returned 200 but with success=false in the body", options.name))
+				msg.FailMsg("Failed to delete project %s\n", style.Emphasis(options.name))
+				exit.Error(pcio.Errorf("Delete project %s call returned 200 but with success=false in the body", options.name))
 			}
 
 			// Clear target project if the deleted project is the target project
