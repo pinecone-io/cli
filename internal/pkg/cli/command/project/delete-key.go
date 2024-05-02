@@ -1,7 +1,13 @@
 package project
 
 import (
+	"bufio"
+	"fmt"
+	"os"
+	"strings"
+
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -12,6 +18,7 @@ import (
 
 type DeleteApiKeyOptions struct {
 	name string
+	yes  bool
 }
 
 func NewDeleteKeyCmd() *cobra.Command {
@@ -19,7 +26,7 @@ func NewDeleteKeyCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:     "delete-key",
-		Short:   "create an API key in a project",
+		Short:   "delete an API key in a project",
 		GroupID: help.GROUP_PROJECTS_API_KEYS.ID,
 		Example: help.Examples([]string{
 			"pinecone target -o \"my-org\" -p \"my-project\"",
@@ -59,6 +66,10 @@ func NewDeleteKeyCmd() *cobra.Command {
 				exit.ErrorMsg(pcio.Sprintf("Key with name %s does not exist", style.Emphasis(options.name)))
 			}
 
+			if !options.yes {
+				confirmDeleteApiKey(options.name)
+			}
+
 			_, err = dashboard.DeleteApiKey(projId, keyToDelete)
 			if err != nil {
 				msg.FailMsg("Failed to delete key: %s", err)
@@ -69,5 +80,34 @@ func NewDeleteKeyCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the key to create")
+	cmd.Flags().BoolVar(&options.yes, "yes", false, "skip confirmation prompt")
 	return cmd
+}
+
+func confirmDeleteApiKey(apiKeyName string) {
+	msg.WarnMsg("This operation will delete API Key %s from project %s.", style.Emphasis(apiKeyName), style.Emphasis(state.TargetProj.Get().Name))
+	msg.WarnMsg("Any integrations you have that auth with this API Key will stop working.")
+	msg.WarnMsg("This action cannot be undone.")
+
+	// Prompt the user
+	fmt.Print("Do you want to continue? (y/N): ")
+
+	// Read the user's input
+	reader := bufio.NewReader(os.Stdin)
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error reading input:", err)
+		return
+	}
+
+	// Trim any whitespace from the input and convert to lowercase
+	input = strings.TrimSpace(strings.ToLower(input))
+
+	// Check if the user entered "y" or "yes"
+	if input == "y" || input == "yes" {
+		msg.InfoMsg("You chose to continue delete.")
+	} else {
+		msg.InfoMsg("Operation canceled.")
+		exit.Success()
+	}
 }
