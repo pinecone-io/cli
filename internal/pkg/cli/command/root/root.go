@@ -75,7 +75,7 @@ Get started by logging in with
 	rootCmd.AddCommand(configCmd.NewConfigCmd())
 
 	// Declutter default stuff
-	rootCmd.CompletionOptions.DisableDefaultCmd = true
+	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 	rootCmd.SetHelpCommand(&cobra.Command{
 		Hidden: true,
 	})
