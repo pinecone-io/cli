@@ -16,9 +16,10 @@ jobs:
         - name: Set up Go
           uses: actions/setup-go@v2
         - name: Setup Google service account creds
+          id: setup-google
           run: |
             echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDS }}" > secrets/gcp_key.json
-            echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/secrets/gcp_key.json" >> $GITHUB_ENV
+            echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/secrets/gcp_key.json" >> $GITHUB_OUTPUT
         - name: Run GoReleaser
           uses: goreleaser/goreleaser-action@v2
           with:
@@ -26,3 +27,4 @@ jobs:
             args: release --clean
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.setup-google.outputs.GOOGLE_APPLICATION_CREDENTIALS }} 
