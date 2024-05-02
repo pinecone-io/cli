@@ -57,7 +57,11 @@ func NewListKeysCmd() *cobra.Command {
 			}
 
 			if options.json {
-				text.PrettyPrintJSON(keysToShow)
+				presentedKeys := []PresentedKey{}
+				for _, key := range keysToShow {
+					presentedKeys = append(presentedKeys, presentKey(key))
+				}
+				text.PrettyPrintJSON(presentedKeys)
 			} else {
 				printKeysTable(keysToShow)
 			}
@@ -82,4 +86,18 @@ func printKeysTable(keys []dashboard.Key) {
 	}
 
 	w.Flush()
+}
+
+type PresentedKey struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+	Id    string `json:"id"`
+}
+
+func presentKey(key dashboard.Key) PresentedKey {
+	return PresentedKey{
+		Name:  key.UserLabel,
+		Value: key.Value,
+		Id:    key.Id,
+	}
 }

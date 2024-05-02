@@ -72,7 +72,8 @@ func NewCreateApiKeyCmd() *cobra.Command {
 			}
 
 			if options.json {
-				text.PrettyPrintJSON(keysToShow[0])
+				presentedKey := presentKey(keysToShow[0])
+				text.PrettyPrintJSON(presentedKey)
 			} else {
 				msg.SuccessMsg("Key %s created\n", keysResponse.Key.UserLabel)
 				if !options.reveal {
