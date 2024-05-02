@@ -12,6 +12,7 @@ type Key struct {
 	Id        string `json:"id"`
 	UserLabel string `json:"user_label"`
 	Value     string `json:"value"`
+	UserName  string `json:"user_name"`
 }
 
 const (

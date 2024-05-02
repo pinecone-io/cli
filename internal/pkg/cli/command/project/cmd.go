@@ -20,6 +20,7 @@ func NewProjectCmd() *cobra.Command {
 	cmd.AddCommand(NewDeleteProjectCmd())
 	cmd.AddCommand(NewListKeysCmd())
 	cmd.AddCommand(NewCreateApiKeyCmd())
+	cmd.AddCommand(NewDeleteKeyCmd())
 
 	return cmd
 }
