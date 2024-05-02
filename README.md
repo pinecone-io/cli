@@ -19,7 +19,7 @@ goreleaser build --single-target --snapshot --clean
 For manual testing in development, you can run commands like this
 
 ```shell
-./dist/pinecone_darwin_arm64/pinecone auth set-api-key "foo"
+./dist/pinecone_darwin_arm64/pinecone login
 ./dist/pinecone_darwin_arm64/pinecone index list
 # etc
 ```
