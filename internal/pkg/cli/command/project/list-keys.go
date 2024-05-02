@@ -1,9 +1,11 @@
 package project
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -43,9 +45,16 @@ func NewListKeysCmd() *cobra.Command {
 				exit.Error(err)
 			}
 
+			// Sort keys alphabetically
+			sortedKeys := keysResponse.Keys
+			sort.Slice(sortedKeys, func(i, j int) bool {
+				return sortedKeys[i].UserLabel < sortedKeys[j].UserLabel
+			})
+
+			// Unless --reveal, redact secret key values
 			var keysToShow []dashboard.Key = []dashboard.Key{}
 			if !options.reveal {
-				for _, key := range keysResponse.Keys {
+				for _, key := range sortedKeys {
 					keysToShow = append(keysToShow, dashboard.Key{
 						Id:        key.Id,
 						UserLabel: key.UserLabel,
@@ -53,9 +62,10 @@ func NewListKeysCmd() *cobra.Command {
 					})
 				}
 			} else {
-				keysToShow = keysResponse.Keys
+				keysToShow = sortedKeys
 			}
 
+			// Display output
 			if options.json {
 				presentedKeys := []PresentedKey{}
 				for _, key := range keysToShow {
@@ -63,7 +73,17 @@ func NewListKeysCmd() *cobra.Command {
 				}
 				text.PrettyPrintJSON(presentedKeys)
 			} else {
+				pcio.Printf("org: %s\n", style.Emphasis(state.TargetOrg.Get().Name))
+				pcio.Printf("project: %s\n", style.Emphasis(state.TargetProj.Get().Name))
+				pcio.Println()
+				pcio.Println(style.Heading("API Keys"))
+				if !options.reveal {
+					msg.HintMsg("To see the key values, add the %s flag", style.Code("--reveal"))
+				}
+
+				pcio.Println()
 				printKeysTable(keysToShow)
+
 			}
 		},
 	}
@@ -81,7 +101,12 @@ func printKeysTable(keys []dashboard.Key) {
 	pcio.Fprint(w, header)
 
 	for _, key := range keys {
-		values := []string{key.UserLabel, key.Value}
+		var values []string
+		if key.Value == "REDACTED" {
+			values = []string{key.UserLabel, style.StatusRed(key.Value)}
+		} else {
+			values = []string{key.UserLabel, key.Value}
+		}
 		pcio.Fprintf(w, strings.Join(values, "\t")+"\n")
 	}
 

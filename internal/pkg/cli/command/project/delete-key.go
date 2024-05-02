@@ -40,7 +40,7 @@ func NewDeleteKeyCmd() *cobra.Command {
 			}
 
 			if options.name == "" {
-				msg.FailMsg("Name of the key is required")
+				msg.FailMsg("Name of the key is required. Pass it with the %s flag", style.Code("--name"))
 				exit.ErrorMsg("Name of the key is required")
 			}
 
