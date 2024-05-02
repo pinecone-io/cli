@@ -1,0 +1,28 @@
+name: Goreleaser Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+    publish:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+        - name: Set up Go
+          uses: actions/setup-go@v2
+        - name: Setup Google service account creds
+          run: |
+            echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDS }}" > secrets/gcp_key.json
+            echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/secrets/gcp_key.json" >> $GITHUB_ENV
+        - name: Run GoReleaser
+          uses: goreleaser/goreleaser-action@v2
+          with:
+            version: latest
+            args: release --clean
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
