@@ -4,8 +4,15 @@
 
 ## Building the CLI
 
+1. [Install golang](https://go.dev/doc/install) if you do not have it already
+
+2. Install goreleaser
 ```
 brew install goreleaser/tap/goreleaser
+```
+
+3. Build the CLI
+```
 goreleaser build --single-target --snapshot --clean
 ```
 
