@@ -1,9 +1,31 @@
 name: Goreleaser Publish
+run-name: "Release ${{ inputs.tag_name }} / ${{ inputs.platforms }}"
 
 on:
-  push:
-    tags:
-      - 'v*'
+    workflow_dispatch:
+      inputs:
+        tag_name:
+          required: true
+          type: string
+        platforms:
+          default: "linux,macos,windows"
+          type: string
+        release:
+          description: "Whether to create a GitHub Release"
+          type: boolean
+          default: true
+    # push:
+    #   tags:
+    #     - 'v*'
+          
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
 
 jobs:
     publish:
@@ -29,3 +51,53 @@ jobs:
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.setup-google.outputs.GOOGLE_APPLICATION_CREDENTIALS }} 
+
+    macos:
+      runs-on: macos-latest
+      if: contains(inputs.platforms, 'macos')
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+        - name: Set up Go
+          uses: actions/setup-go@v5
+          with:
+            go-version-file: 'go.mod'
+        - name: Configure env for macOS signing
+          env:
+            APPLE_APPLICATION_CERT: ${{ secrets.APPLE_DEVELOPER_ID_JHAMON_PERSONAL_P12 }}
+            APPLE_APPLICATION_CERT_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_JHAMON_PERSONAL_PASSWORD }}
+          run: |
+            keychain="$RUNNER_TEMP/buildagent.keychain"
+            keychain_password="password1"
+
+            security create-keychain -p "$keychain_password" "$keychain"
+            security default-keychain -s "$keychain"
+            security unlock-keychain -p "$keychain_password" "$keychain"
+
+            base64 -D <<<"$APPLE_APPLICATION_CERT" > "$RUNNER_TEMP/cert.p12"
+            security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$APPLE_APPLICATION_CERT_PASSWORD" -T /usr/bin/codesign
+            security set-key-partition-list -S "apple-tool:,apple:,codesign:" -s -k "$keychain_password" "$keychain"
+            rm "$RUNNER_TEMP/cert.p12"
+        - name: Run GoReleaser
+          uses: goreleaser/goreleaser-action@v5
+          with:
+              distribution: goreleaser
+              version: latest
+              args: build --id macos
+        - name: Notarize macOS archives
+          env:
+            APPLE_ID: ${{ vars.APPLE_ID }}
+            APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+            APPLE_DEVELOPER_ID: ${{ vars.APPLE_DEVELOPER_ID }}
+          run: |
+            shopt -s failglob
+            script/mac_notarize dist/gh_*_macOS_*.zip
+        - uses: actions/upload-artifact@v4
+          with:
+            name: macos
+            if-no-files-found: error
+            retention-days: 7
+            path: |
+                dist/*.tar.gz
+                dist/*.zip
+    

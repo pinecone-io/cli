@@ -18,18 +18,28 @@ before:
     - go generate ./...
 
 builds:
-  - env:
+  - <<: &build_defaults
+      env:
       - CGO_ENABLED=0
-    main: ./cmd/pinecone
-    binary: pinecone
-    ldflags:
+      main: ./cmd/pinecone
+      binary: pinecone
+      ldflags:
       - -X github.com/pinecone-io/cli/internal/build.Date={{.Date}}
       - -X github.com/pinecone-io/cli/internal/build.Commit={{.Commit}}
       - -X github.com/pinecone-io/cli/internal/build.Version={{.Version}}
-    goos:
-      - linux
-      - windows
-      - darwin
+      id: linux
+      goos: [linux]
+      goarch: [amd64,arm64]
+    
+  - <<: *build_defaults
+    id: macos
+    goos: [darwin]
+    goarch: [amd64,arm64]
+    hooks:
+      # This will notarize Apple binaries and replace goreleaser bins with the notarized ones
+      post:
+        - cmd: ./script/mac_notarize.sh
+          output: true
 
 archives:
   - format: tar.gz
