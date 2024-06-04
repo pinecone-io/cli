@@ -33,7 +33,7 @@ func NewListKnowledgeModelsCmd() *cobra.Command {
 				return
 			}
 			pcio.Printf("Found %d knowledge models\n", len(modelList.KnowledgeModels))
-			printTable(modelList.KnowledgeModels)
+			printTableModels(modelList.KnowledgeModels)
 		},
 	}
 
@@ -42,7 +42,7 @@ func NewListKnowledgeModelsCmd() *cobra.Command {
 	return cmd
 }
 
-func printTable(models []knowledge.KnowledgeModel) {
+func printTableModels(models []knowledge.KnowledgeModel) {
 	writer := tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
 
 	columns := []string{"NAME", "METADATA", "STATUS", "CREATED_AT", "UPDATED_AT"}

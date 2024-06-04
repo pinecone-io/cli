@@ -19,11 +19,11 @@ type DeleteKnowledgeModelResponse struct {
 	Success bool `json:"success"`
 }
 
-func DeleteKnowledgeModel(kbName string) (*DeleteKnowledgeModelResponse, error) {
+func DeleteKnowledgeModel(kmName string) (*DeleteKnowledgeModelResponse, error) {
 
 	resp, err := network.RequestWithoutBodyAndDecode[DeleteKnowledgeModelResponse](
 		KnowledgeControlPlaneBaseStagingUrl,
-		pcio.Sprintf(URL_DELETE_KNOWLEDGE_MODEL, kbName), http.MethodDelete)
+		pcio.Sprintf(URL_DELETE_KNOWLEDGE_MODEL, kmName), http.MethodDelete)
 	if err != nil {
 		return nil, err
 	}

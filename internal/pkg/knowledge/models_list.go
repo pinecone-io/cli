@@ -13,15 +13,15 @@ const (
 
 type KnowledgeModel struct {
 	Name      string                    `json:"name"`
-	Metadata  KnowledgeModelMetadata    `json:"metadata"`
+	Metadata  KnowledgeMetadata         `json:"metadata"`
 	Status    KnowledgeModelStatusState `json:"status"`
 	CreatedAt string                    `json:"created_at"`
 	UpdatedAt string                    `json:"updated_at"`
 }
 
-type KnowledgeModelMetadata map[string]interface{}
+type KnowledgeMetadata map[string]interface{}
 
-func (kmm *KnowledgeModelMetadata) ToString() string {
+func (kmm *KnowledgeMetadata) ToString() string {
 	jsonData, err := json.Marshal(kmm)
 	// TODO : handle swallowing decoding error
 	if err != nil {
@@ -40,7 +40,7 @@ const (
 )
 
 type ListKnowledgeModelsResponse struct {
-	KnowledgeModels []KnowledgeModel `json:"knowledge_bases"`
+	KnowledgeModels []KnowledgeModel `json:"knowledge_models"`
 }
 
 func ListKnowledgeModels() (*ListKnowledgeModelsResponse, error) {

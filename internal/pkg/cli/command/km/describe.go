@@ -9,7 +9,7 @@ import (
 )
 
 type DescribeKnowledgeModelOptions struct {
-	kbName string
+	kmName string
 	json   bool
 }
 
@@ -20,7 +20,7 @@ func NewDescribeKnowledgeModelCmd() *cobra.Command {
 		Use:   "describe",
 		Short: "Describe a knowledge model",
 		Run: func(cmd *cobra.Command, args []string) {
-			model, err := knowledge.DescribeKnowledgeModel(options.kbName)
+			model, err := knowledge.DescribeKnowledgeModel(options.kmName)
 			if err != nil {
 				exit.Error(err)
 			}
@@ -35,8 +35,8 @@ func NewDescribeKnowledgeModelCmd() *cobra.Command {
 		},
 	}
 	// required flags
-	cmd.Flags().StringVarP(&options.kbName, "name", "n", "", "name of the knowledge base to describe")
-	cmd.MarkFlagRequired("kb-name")
+	cmd.Flags().StringVarP(&options.kmName, "name", "n", "", "name of the knowledge base to describe")
+	cmd.MarkFlagRequired("name")
 
 	// optional flags
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
