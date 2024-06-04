@@ -1,6 +1,7 @@
 package dashboard
 
 import (
+	"github.com/pinecone-io/cli/internal/pkg/utils/network"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
@@ -14,7 +15,7 @@ type DeletePostResponse struct {
 
 func DeleteProject(orgId string, projId string) (*DeletePostResponse, error) {
 	path := pcio.Sprintf(URL_DELETE_PROJECT, projId)
-	resp, err := DeleteAndDecode[DeletePostResponse](path)
+	resp, err := network.DeleteAndDecode[DeletePostResponse](DashboardBaseURL, path)
 	if err != nil {
 		return nil, err
 	}

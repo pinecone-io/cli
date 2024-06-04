@@ -6,12 +6,14 @@ import (
 	collection "github.com/pinecone-io/cli/internal/pkg/cli/command/collection"
 	configCmd "github.com/pinecone-io/cli/internal/pkg/cli/command/config"
 	index "github.com/pinecone-io/cli/internal/pkg/cli/command/index"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/km"
 	login "github.com/pinecone-io/cli/internal/pkg/cli/command/login"
 	logout "github.com/pinecone-io/cli/internal/pkg/cli/command/logout"
 	org "github.com/pinecone-io/cli/internal/pkg/cli/command/org"
 	project "github.com/pinecone-io/cli/internal/pkg/cli/command/project"
 	target "github.com/pinecone-io/cli/internal/pkg/cli/command/target"
 	version "github.com/pinecone-io/cli/internal/pkg/cli/command/version"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -21,7 +23,8 @@ import (
 var rootCmd *cobra.Command
 
 type GlobalOptions struct {
-	quiet bool
+	quiet       bool
+	development bool
 }
 
 func Execute() {
@@ -38,6 +41,7 @@ func init() {
 		Short: "Work seamlessly with Pinecone from the command line.",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			pcio.SetQuiet(globalOptions.quiet)
+			state.IsDevelopment.Set(&globalOptions.development)
 		},
 		Example: help.Examples([]string{
 			"pinecone login",
@@ -70,6 +74,10 @@ Get started by logging in with
 	rootCmd.AddCommand(index.NewIndexCmd())
 	rootCmd.AddCommand(collection.NewCollectionCmd())
 
+	// Knowledge engine group
+	rootCmd.AddGroup(help.GROUP_KNOWLEDGE_ENGINE)
+	rootCmd.AddCommand(km.NewKmCommand())
+
 	// Misc group
 	rootCmd.AddCommand(version.NewVersionCmd())
 	rootCmd.AddCommand(configCmd.NewConfigCmd())
@@ -82,5 +90,5 @@ Get started by logging in with
 
 	// Global flags
 	rootCmd.PersistentFlags().BoolVarP(&globalOptions.quiet, "quiet", "q", false, "suppress output")
-
+	rootCmd.PersistentFlags().BoolVarP(&globalOptions.development, "dev", "d", false, "enable development (staging) mode")
 }

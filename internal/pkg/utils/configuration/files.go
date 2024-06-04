@@ -1,8 +1,11 @@
 package configuration
 
 import (
+	"reflect"
+
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/spf13/viper"
 )
 
@@ -31,6 +34,7 @@ func (c ConfigFile) Init() {
 func (c ConfigFile) Clear() {
 	log.Debug().Str("file_name", c.FileName).Msg("Clearing config file")
 	for _, property := range c.Properties {
+		pcio.Printf("Clearing %s\n", reflect.TypeOf(property))
 		property.Clear()
 	}
 	c.Save()

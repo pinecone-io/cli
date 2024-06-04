@@ -16,6 +16,11 @@ var (
 		Title: style.Heading("Vector Database Commands"),
 	}
 
+	GROUP_KNOWLEDGE_ENGINE = &cobra.Group{
+		ID:    "km",
+		Title: style.Heading("Knowledge Engine Commands"),
+	}
+
 	GROUP_MANAGEMENT = &cobra.Group{
 		ID:    "index",
 		Title: style.Heading("Management Commands"),

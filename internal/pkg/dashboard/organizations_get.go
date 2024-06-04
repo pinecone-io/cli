@@ -2,6 +2,7 @@ package dashboard
 
 import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
+	"github.com/pinecone-io/cli/internal/pkg/utils/network"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
@@ -23,7 +24,7 @@ type DescribeOrganizationResponse struct {
 
 func DescribeOrganization(orgId string) (*DescribeOrganizationResponse, error) {
 	path := pcio.Sprintf(URL_GET_ORGANIZATION, orgId)
-	resp, err := GetAndDecode[DescribeOrganizationResponse](path)
+	resp, err := network.GetAndDecode[DescribeOrganizationResponse](DashboardBaseURL, path)
 	if err != nil {
 		return nil, err
 	}

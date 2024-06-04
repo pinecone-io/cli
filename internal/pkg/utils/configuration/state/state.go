@@ -18,7 +18,8 @@ type TargetProject struct {
 }
 
 var (
-	TargetProj = configuration.MarshaledProperty[TargetProject]{
+	defaultIsDevelopment = false
+	TargetProj           = configuration.MarshaledProperty[TargetProject]{
 		KeyName:    "target_project",
 		ViperStore: StateViper,
 		DefaultValue: &TargetProject{
@@ -34,10 +35,16 @@ var (
 			Id:   "",
 		},
 	}
+	IsDevelopment = configuration.MarshaledProperty[bool]{
+		KeyName:      "is_development",
+		ViperStore:   StateViper,
+		DefaultValue: &defaultIsDevelopment,
+	}
 )
 var properties = []configuration.Property{
 	TargetOrg,
 	TargetProj,
+	IsDevelopment,
 }
 
 var ConfigFile = configuration.ConfigFile{
