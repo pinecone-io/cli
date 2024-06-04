@@ -3,6 +3,7 @@ package dashboard
 import (
 	"net/http"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/network"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
@@ -26,7 +27,7 @@ func DeleteApiKey(projId string, key Key) (*DeleteApiKeyResponse, error) {
 		UserName: key.UserName,
 	}
 
-	resp, err := RequestWithBodyAndDecode[DeleteApiKeyRequest, DeleteApiKeyResponse](path, http.MethodDelete, body)
+	resp, err := network.RequestWithBodyAndDecode[DeleteApiKeyRequest, DeleteApiKeyResponse](DashboardBaseURL, path, http.MethodDelete, body)
 	if err != nil {
 		return nil, err
 	}

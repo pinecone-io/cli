@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
@@ -13,9 +14,17 @@ import (
 )
 
 func newClientParams(key string) pinecone.NewClientParams {
+	isDevelopment := state.IsDevelopment.Get()
+	targetContext := state.GetTargetContext()
+	clientControllerHostUrl := targetContext.Api
+	if isDevelopment {
+		clientControllerHostUrl = targetContext.ApiStaging
+	}
+
 	return pinecone.NewClientParams{
 		ApiKey:    key,
 		SourceTag: "pinecone-cli",
+		Host:      clientControllerHostUrl,
 	}
 }
 
@@ -25,7 +34,16 @@ func newClientForUserFromTarget() *pinecone.Client {
 	targetProjectName := state.TargetProj.Get().Name
 	targetProjectId := state.TargetProj.Get().Id
 
+	apiKey := secrets.ApiKey.Get()
+
+	pcio.Printf("targetOrgName: %s\n targetOrgId: %s\n targetProjectName: %s\n targetProjectId: %s\n", targetOrgName, targetOrgId, targetProjectName, targetProjectId)
+
 	if targetOrgId == "" || targetProjectId == "" {
+
+		if apiKey != "" {
+			return NewClientForMachine(apiKey)
+		}
+
 		msg.FailMsg("Please run %s to set a target context", style.Code("pinecone target"))
 		pcio.Println()
 		pcio.Println("Target context is currently:")

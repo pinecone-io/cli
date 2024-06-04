@@ -1,4 +1,4 @@
-package dashboard
+package network
 
 import (
 	"bytes"
@@ -30,7 +30,11 @@ func buildRequest(verb string, path string, bodyJson []byte) (*http.Request, err
 	}
 
 	if os.Getenv("PINECONE_DEBUG_CURL") == "true" {
-		pcio.Printf("curl -X %s %s -H \"Content-Type: application/json\" -H \"User-Agent: Pinecone CLI\" -H \"Authorization: Bearer %s\"\n", verb, path, secrets.OAuth2Token.Get().AccessToken)
+		if secrets.OAuth2Token.Get().AccessToken != "" {
+			pcio.Printf("curl -X %s %s -H \"Content-Type: application/json\" -H \"User-Agent: Pinecone CLI\" -H \"Authorization: Bearer %s\"\n", verb, path, secrets.OAuth2Token.Get().AccessToken)
+		} else {
+			pcio.Printf("curl -X %s %s -H \"Content-Type: application/json\" -H \"User-Agent: Pinecone CLI\" -H \"Api-Key: %s\"\n", verb, path, secrets.ApiKey.Get())
+		}
 	}
 
 	req.Header.Add("User-Agent", "Pinecone CLI")

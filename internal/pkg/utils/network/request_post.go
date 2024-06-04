@@ -1,4 +1,4 @@
-package dashboard
+package network
 
 import (
 	"encoding/json"
@@ -8,12 +8,12 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
-func PostAndDecode[B any, R any](path string, body B) (*R, error) {
-	return RequestWithBodyAndDecode[B, R](path, http.MethodPost, body)
+func PostAndDecode[B any, R any](baseUrl string, path string, body B) (*R, error) {
+	return RequestWithBodyAndDecode[B, R](baseUrl, path, http.MethodPost, body)
 }
 
-func RequestWithBodyAndDecode[B any, R any](path string, method string, body B) (*R, error) {
-	url := DashboardBaseURL + path
+func RequestWithBodyAndDecode[B any, R any](baseUrl string, path string, method string, body B) (*R, error) {
+	url := baseUrl + path
 
 	var bodyJson []byte
 	bodyJson, err := json.Marshal(body)

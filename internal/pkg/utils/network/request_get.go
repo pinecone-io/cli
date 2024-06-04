@@ -1,19 +1,27 @@
-package dashboard
+package network
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
-func RequestWithoutBodyAndDecode[T any](path string, method string) (*T, error) {
-	url := DashboardBaseURL + path
+func RequestWithoutBodyAndDecode[T any](baseUrl string, path string, method string) (*T, error) {
+	url := baseUrl + path
+
+	requestedService := "knowledge engine"
+	if strings.Contains(url, "console") {
+		requestedService = "dashboard"
+	}
+
 	req, err := buildRequest(method, url, nil)
 	log.Info().
 		Str("method", method).
 		Str("url", url).
-		Msg("Fetching data from dashboard")
+		Msg(fmt.Sprintf("Fetching data from %s", requestedService))
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -51,6 +59,6 @@ func RequestWithoutBodyAndDecode[T any](path string, method string) (*T, error) 
 	return &parsedResponse, nil
 }
 
-func GetAndDecode[T any](path string) (*T, error) {
-	return RequestWithoutBodyAndDecode[T](path, http.MethodGet)
+func GetAndDecode[T any](baseUrl string, path string) (*T, error) {
+	return RequestWithoutBodyAndDecode[T](baseUrl, path, http.MethodGet)
 }

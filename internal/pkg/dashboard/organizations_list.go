@@ -2,6 +2,7 @@ package dashboard
 
 import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
+	"github.com/pinecone-io/cli/internal/pkg/utils/network"
 )
 
 const (
@@ -32,7 +33,7 @@ type GlobalProject struct {
 }
 
 func ListOrganizations() (*OrganizationsResponse, error) {
-	resp, err := GetAndDecode[OrganizationsResponse](URL_LIST_ORGANIZATIONS)
+	resp, err := network.GetAndDecode[OrganizationsResponse](DashboardBaseURL, URL_LIST_ORGANIZATIONS)
 	if err != nil {
 		return nil, err
 	}

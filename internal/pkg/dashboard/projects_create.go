@@ -1,6 +1,7 @@
 package dashboard
 
 import (
+	"github.com/pinecone-io/cli/internal/pkg/utils/network"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
@@ -26,7 +27,7 @@ func CreateProject(orgId string, projName string, podQuota int32) (*CreateProjec
 		PodQuota:    podQuota,
 		Environment: "serverless",
 	}
-	resp, err := PostAndDecode[CreateProjectRequest, CreateProjectResponse](path, body)
+	resp, err := network.PostAndDecode[CreateProjectRequest, CreateProjectResponse](DashboardBaseURL, path, body)
 	if err != nil {
 		return nil, err
 	}

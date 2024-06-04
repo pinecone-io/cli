@@ -1,6 +1,7 @@
 package dashboard
 
 import (
+	"github.com/pinecone-io/cli/internal/pkg/utils/network"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
@@ -22,7 +23,7 @@ func CreateApiKey(projId string, keyName string) (*CreateApiKeyResponse, error) 
 	body := CreateApiKeyRequest{
 		Label: keyName,
 	}
-	resp, err := PostAndDecode[CreateApiKeyRequest, CreateApiKeyResponse](path, body)
+	resp, err := network.PostAndDecode[CreateApiKeyRequest, CreateApiKeyResponse](DashboardBaseURL, path, body)
 	if err != nil {
 		return nil, err
 	}

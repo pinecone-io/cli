@@ -26,3 +26,6 @@ bin/
 dist/
 .env
 secrets
+
+# Misc
+.DS_Store

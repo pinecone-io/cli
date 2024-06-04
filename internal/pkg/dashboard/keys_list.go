@@ -1,6 +1,7 @@
 package dashboard
 
 import (
+	"github.com/pinecone-io/cli/internal/pkg/utils/network"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
@@ -25,5 +26,5 @@ func GetApiKeys(project GlobalProject) (*KeyResponse, error) {
 
 func GetApiKeysById(projectId string) (*KeyResponse, error) {
 	url := pcio.Sprintf(URL_GET_API_KEYS, projectId)
-	return GetAndDecode[KeyResponse](url)
+	return network.GetAndDecode[KeyResponse](DashboardBaseURL, url)
 }

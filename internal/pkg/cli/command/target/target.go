@@ -39,6 +39,7 @@ type TargetOptions struct {
 	Org     string
 	Project string
 	json    bool
+	clear   bool
 }
 
 func NewTargetCmd() *cobra.Command {
@@ -55,6 +56,12 @@ func NewTargetCmd() *cobra.Command {
 				Str("project", options.Project).
 				Bool("json", options.json).
 				Msg("target command invoked")
+
+			if options.clear {
+				state.ConfigFile.Clear()
+				pcio.Print("target context cleared")
+				return
+			}
 
 			if options.Org == "" && options.Project == "" {
 				if options.json {
@@ -130,6 +137,7 @@ func NewTargetCmd() *cobra.Command {
 	// Required options
 	cmd.Flags().StringVarP(&options.Org, "org", "o", "", "Organization name")
 	cmd.Flags().StringVarP(&options.Project, "project", "p", "", "Project name")
+	cmd.Flags().BoolVar(&options.clear, "clear", false, "Clear the target context")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	return cmd
