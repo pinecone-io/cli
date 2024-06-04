@@ -11,10 +11,10 @@ const (
 	URL_DESCRIBE_KNOWLEDGE_MODEL = "/knowledge/models/%s"
 )
 
-func DescribeKnowledgeModel(kbName string) (*KnowledgeModel, error) {
+func DescribeKnowledgeModel(kmName string) (*KnowledgeModel, error) {
 	resp, err := network.GetAndDecode[KnowledgeModel](
 		KnowledgeControlPlaneBaseStagingUrl,
-		fmt.Sprintf(URL_DESCRIBE_KNOWLEDGE_MODEL, kbName),
+		fmt.Sprintf(URL_DESCRIBE_KNOWLEDGE_MODEL, kmName),
 	)
 	if err != nil {
 		return nil, err

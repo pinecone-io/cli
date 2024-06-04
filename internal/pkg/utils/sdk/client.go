@@ -14,10 +14,10 @@ import (
 )
 
 func newClientParams(key string) pinecone.NewClientParams {
-	isDevelopment := state.IsDevelopment.Get()
+	isStaging := state.IsStaging.Get()
 	targetContext := state.GetTargetContext()
 	clientControllerHostUrl := targetContext.Api
-	if isDevelopment {
+	if isStaging {
 		clientControllerHostUrl = targetContext.ApiStaging
 	}
 
