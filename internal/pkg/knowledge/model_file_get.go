@@ -14,7 +14,7 @@ const (
 
 func DescribeKnowledgeModelFile(kmName string, fileId string) (*KnowledgeFileModel, error) {
 	resp, err := network.GetAndDecode[KnowledgeFileModel](
-		KnowledgeDataPlaneBaseStagingUrl,
+		GetKnowledgeDataBaseUrl(),
 		fmt.Sprintf(URL_GET_KNOWLEDGE_MODEL_FILE, kmName, fileId),
 	)
 	if err != nil {

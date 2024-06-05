@@ -12,7 +12,7 @@ const (
 
 func UploadKnowledgeFile(kmName string, filePath string) (*KnowledgeFileModel, error) {
 	resp, err := network.PostAndDecodeMultipartFormData[KnowledgeFileModel](
-		KnowledgeDataPlaneBaseStagingUrl,
+		GetKnowledgeDataBaseUrl(),
 		fmt.Sprintf(URL_KNOWLEDGE_FILE_UPLOAD, kmName),
 		filePath)
 	if err != nil {

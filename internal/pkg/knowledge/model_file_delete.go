@@ -15,7 +15,7 @@ type DeleteKnowledgeFileResponse string
 
 func DeleteKnowledgeFile(kmName string, fileId string) (*DeleteKnowledgeFileResponse, error) {
 	resp, err := network.RequestWithoutBodyAndDecode[DeleteKnowledgeFileResponse](
-		KnowledgeDataPlaneBaseStagingUrl,
+		GetKnowledgeDataBaseUrl(),
 		pcio.Sprintf(URL_DELETE_KNOWLEDGE_FILE, kmName, fileId), http.MethodDelete)
 	if err != nil {
 		return nil, err

@@ -24,7 +24,7 @@ type DescribeOrganizationResponse struct {
 
 func DescribeOrganization(orgId string) (*DescribeOrganizationResponse, error) {
 	path := pcio.Sprintf(URL_GET_ORGANIZATION, orgId)
-	resp, err := network.GetAndDecode[DescribeOrganizationResponse](DashboardBaseURL, path)
+	resp, err := network.GetAndDecode[DescribeOrganizationResponse](GetDashboardBaseURL(), path)
 	if err != nil {
 		return nil, err
 	}

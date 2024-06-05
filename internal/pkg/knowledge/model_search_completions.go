@@ -55,7 +55,7 @@ func GetKnowledgeModelSearchCompletions(kmName string, content string) (*ChatCom
 		},
 	}
 	resp, err := network.PostAndDecode[SearchCompletionsRequest, ChatCompletionModel](
-		KnowledgeDataPlaneBaseStagingUrl,
+		GetKnowledgeDataBaseUrl(),
 		fmt.Sprintf(URL_KNOWLEDGE_MODEL_SEARCH_COMPLETIONS, kmName),
 		body,
 	)
