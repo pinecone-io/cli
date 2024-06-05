@@ -11,10 +11,6 @@ const (
 	URL_DELETE_KNOWLEDGE_MODEL = "/knowledge/models/%s"
 )
 
-type DeleteKnowledgeModelRequest struct {
-	Name string `json:"name"`
-}
-
 type DeleteKnowledgeModelResponse struct {
 	Success bool `json:"success"`
 }
