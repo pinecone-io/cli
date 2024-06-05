@@ -13,7 +13,7 @@ const (
 
 func DescribeKnowledgeModel(kmName string) (*KnowledgeModel, error) {
 	resp, err := network.GetAndDecode[KnowledgeModel](
-		KnowledgeControlPlaneBaseStagingUrl,
+		GetKnowledgeControlBaseUrl(),
 		fmt.Sprintf(URL_DESCRIBE_KNOWLEDGE_MODEL, kmName),
 	)
 	if err != nil {

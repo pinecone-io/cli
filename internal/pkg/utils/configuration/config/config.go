@@ -13,9 +13,15 @@ var (
 		ViperStore:   ConfigViper,
 		DefaultValue: true,
 	}
+	Staging = configuration.ConfigProperty[bool]{
+		KeyName:      "staging",
+		ViperStore:   ConfigViper,
+		DefaultValue: false,
+	}
 )
 var properties = []configuration.Property{
 	Color,
+	Staging,
 }
 
 var configFile = configuration.ConfigFile{

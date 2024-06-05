@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -14,7 +15,7 @@ import (
 )
 
 func newClientParams(key string) pinecone.NewClientParams {
-	isStaging := state.IsStaging.Get()
+	isStaging := config.Staging.Get()
 	targetContext := state.GetTargetContext()
 	clientControllerHostUrl := targetContext.Api
 	if isStaging {

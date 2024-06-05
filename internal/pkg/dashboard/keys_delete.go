@@ -27,7 +27,7 @@ func DeleteApiKey(projId string, key Key) (*DeleteApiKeyResponse, error) {
 		UserName: key.UserName,
 	}
 
-	resp, err := network.RequestWithBodyAndDecode[DeleteApiKeyRequest, DeleteApiKeyResponse](DashboardBaseURL, path, http.MethodDelete, body)
+	resp, err := network.RequestWithBodyAndDecode[DeleteApiKeyRequest, DeleteApiKeyResponse](GetDashboardBaseURL(), path, http.MethodDelete, body)
 	if err != nil {
 		return nil, err
 	}

@@ -17,7 +17,9 @@ func CreateKnowledgeModel(name string) (*KnowledgeModel, error) {
 	body := CreateKnowledgeModelRequest{
 		Name: name,
 	}
-	resp, err := network.PostAndDecode[CreateKnowledgeModelRequest, KnowledgeModel](KnowledgeControlPlaneBaseStagingUrl, URL_POST_KNOWLEDGE_MODEL, body)
+	resp, err := network.PostAndDecode[CreateKnowledgeModelRequest, KnowledgeModel](
+		GetKnowledgeControlBaseUrl(),
+		URL_POST_KNOWLEDGE_MODEL, body)
 	if err != nil {
 		return nil, err
 	}

@@ -13,7 +13,6 @@ import (
 	project "github.com/pinecone-io/cli/internal/pkg/cli/command/project"
 	target "github.com/pinecone-io/cli/internal/pkg/cli/command/target"
 	version "github.com/pinecone-io/cli/internal/pkg/cli/command/version"
-	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -23,8 +22,7 @@ import (
 var rootCmd *cobra.Command
 
 type GlobalOptions struct {
-	quiet     bool
-	isStaging bool
+	quiet bool
 }
 
 func Execute() {
@@ -41,7 +39,6 @@ func init() {
 		Short: "Work seamlessly with Pinecone from the command line.",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			pcio.SetQuiet(globalOptions.quiet)
-			state.IsStaging.Set(&globalOptions.isStaging)
 		},
 		Example: help.Examples([]string{
 			"pinecone login",
@@ -90,5 +87,4 @@ Get started by logging in with
 
 	// Global flags
 	rootCmd.PersistentFlags().BoolVarP(&globalOptions.quiet, "quiet", "q", false, "suppress output")
-	rootCmd.PersistentFlags().BoolVarP(&globalOptions.isStaging, "staging", "s", false, "target staging APIs for network operations")
 }

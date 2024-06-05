@@ -18,7 +18,7 @@ type DeleteKnowledgeModelResponse struct {
 func DeleteKnowledgeModel(kmName string) (*DeleteKnowledgeModelResponse, error) {
 
 	resp, err := network.RequestWithoutBodyAndDecode[DeleteKnowledgeModelResponse](
-		KnowledgeControlPlaneBaseStagingUrl,
+		GetKnowledgeControlBaseUrl(),
 		pcio.Sprintf(URL_DELETE_KNOWLEDGE_MODEL, kmName), http.MethodDelete)
 	if err != nil {
 		return nil, err
