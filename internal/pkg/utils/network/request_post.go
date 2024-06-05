@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
@@ -27,7 +28,7 @@ func PostAndDecodeMultipartFormData[R any](baseUrl string, path string, bodyPath
 	}
 	defer file.Close()
 
-	part, err := writer.CreateFormFile("file", bodyPath)
+	part, err := writer.CreateFormFile("file", filepath.Base(bodyPath))
 	if err != nil {
 		return nil, pcio.Errorf("error creating form file: %v", err)
 	}
