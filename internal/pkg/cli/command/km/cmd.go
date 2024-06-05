@@ -25,6 +25,7 @@ func NewKmCommand() *cobra.Command {
 	cmd.AddCommand(NewListKnowledgeFilesCmd())
 	cmd.AddCommand(NewDescribeKnowledgeFileCmd())
 	cmd.AddCommand(NewDeleteKnowledgeFileCmd())
+	cmd.AddCommand(NewUploadKnowledgeFileCmd())
 
 	return cmd
 }
