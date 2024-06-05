@@ -13,9 +13,6 @@ const (
 )
 
 func DescribeKnowledgeModelFile(kmName string, fileId string) (*KnowledgeFileModel, error) {
-	checkStr := fmt.Sprintf(URL_GET_KNOWLEDGE_MODEL_FILE, kmName, fileId)
-	fmt.Printf("CHECK URL STR: %s\n", checkStr)
-
 	resp, err := network.GetAndDecode[KnowledgeFileModel](
 		KnowledgeDataPlaneBaseStagingUrl,
 		fmt.Sprintf(URL_GET_KNOWLEDGE_MODEL_FILE, kmName, fileId),
