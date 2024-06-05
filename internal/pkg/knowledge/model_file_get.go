@@ -24,7 +24,6 @@ func DescribeKnowledgeModelFile(kmName string, fileId string) (*KnowledgeFileMod
 		Str("name", resp.Name).
 		Str("id", resp.Id).
 		Str("metadata", resp.Metadata.ToString()).
-		Str("mime_type", resp.MimeType).
 		Str("created_on", resp.CreatedOn).
 		Str("updated_on", resp.UpdatedOn).
 		Str("status", string(resp.Status)).

@@ -15,7 +15,6 @@ type KnowledgeFileModel struct {
 	Name      string                   `json:"name"`
 	Id        string                   `json:"id"`
 	Metadata  KnowledgeMetadata        `json:"metadata"`
-	MimeType  string                   `json:"mime_type"`
 	CreatedOn string                   `json:"created_on"`
 	UpdatedOn string                   `json:"updated_on"`
 	Status    KnowledgeFileStatusState `json:"status"`

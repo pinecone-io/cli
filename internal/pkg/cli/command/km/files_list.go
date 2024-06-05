@@ -48,7 +48,7 @@ func NewListKnowledgeFilesCmd() *cobra.Command {
 func printTableFiles(files []knowledge.KnowledgeFileModel) {
 	writer := tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
 
-	columns := []string{"NAME", "ID", "METADATA", "MIME_TYPE", "CREATED_ON", "UPDATED_ON", "STATUS"}
+	columns := []string{"NAME", "ID", "METADATA", "CREATED_ON", "UPDATED_ON", "STATUS"}
 	header := strings.Join(columns, "\t") + "\n"
 	pcio.Fprint(writer, header)
 
@@ -57,7 +57,6 @@ func printTableFiles(files []knowledge.KnowledgeFileModel) {
 			file.Name,
 			file.Id,
 			file.Metadata.ToString(),
-			file.MimeType,
 			file.CreatedOn,
 			file.UpdatedOn,
 			string(file.Status),

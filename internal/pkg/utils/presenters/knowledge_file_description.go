@@ -19,7 +19,6 @@ func PrintDescribeKnowledgeFileTable(file *knowledge.KnowledgeFileModel) {
 	pcio.Fprintf(writer, "Name\t%s\n", file.Name)
 	pcio.Fprintf(writer, "Id\t%s\n", file.Id)
 	pcio.Fprintf(writer, "Metadata\t%s\n", file.Metadata.ToString())
-	pcio.Fprintf(writer, "MimeType\t%s\n", file.MimeType)
 	pcio.Fprintf(writer, "CreatedOn\t%s\n", file.CreatedOn)
 	pcio.Fprintf(writer, "UpdatedOn\t%s\n", file.UpdatedOn)
 	pcio.Fprintf(writer, "Status\t%s\n", file.Status)
