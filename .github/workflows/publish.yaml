@@ -22,7 +22,7 @@ jobs:
             echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDS }}" > secrets/gcp_key.json
             echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/secrets/gcp_key.json" >> $GITHUB_OUTPUT
         - name: Run GoReleaser
-          uses: goreleaser/goreleaser-action@v2
+          uses: goreleaser/goreleaser-action@v6
           with:
             version: latest
             args: release --clean
