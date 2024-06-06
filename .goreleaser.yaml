@@ -49,10 +49,10 @@ report_sizes: true
 env_files:
   github_token: .env
 
-# blobs:
-#   - provider: gs
-#     bucket: pinecone-cli
-#     directory: "{{.Version}}"
+blobs:
+  - provider: gs
+    bucket: pinecone-cli
+    directory: "{{.Version}}"
 
 changelog:
   sort: asc
