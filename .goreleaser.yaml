@@ -72,6 +72,7 @@ brews:
       owner: pinecone-io
       name: homebrew-tap
       branch: main
+      token: "{{ .Env.HOMEBREW_GITHUB_API_TOKEN }}"
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
