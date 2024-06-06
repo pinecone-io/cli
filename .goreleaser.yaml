@@ -73,7 +73,7 @@ brews:
       name: homebrew-tap
       branch: main
     url_headers:
-      - 'Authorization: bearer #{ENV["HOMEBREW_GITHUB_API_TOKEN"]}'
+      - 'Authorization: bearer {{.Env.HOMEBREW_GITHUB_API_TOKEN}}'
     download_strategy: GitHubPrivateRepositoryReleaseDownloadStrategy
     commit_author:
       name: goreleaserbot
