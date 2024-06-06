@@ -36,6 +36,7 @@ func ListKnowledgeModelFiles(kmName string) (*ListKnowledgeModelFilesResponse, e
 	resp, err := network.GetAndDecode[ListKnowledgeModelFilesResponse](
 		GetKnowledgeDataBaseUrl(),
 		fmt.Sprintf(URL_LIST_KNOWLEDGE_MODEL_FILES, kmName),
+		true,
 	)
 	if err != nil {
 		return nil, err

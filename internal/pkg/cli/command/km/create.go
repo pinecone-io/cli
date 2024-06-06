@@ -8,13 +8,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type CreateKnowledgeModelOptions struct {
+type CreateKnowledgeModelCmdOptions struct {
 	name string
 	json bool
 }
 
 func NewCreateKnowledgeModelCmd() *cobra.Command {
-	options := CreateKnowledgeModelOptions{}
+	options := CreateKnowledgeModelCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "create",

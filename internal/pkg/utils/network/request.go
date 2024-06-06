@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/oauth2"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -43,11 +45,11 @@ func buildRequest(verb string, path string, bodyJson []byte) (*http.Request, err
 	return req, nil
 }
 
-func performRequest(req *http.Request) (*http.Response, error) {
+func performRequest(req *http.Request, useApiKey bool) (*http.Response, error) {
 	// This http client is built using our oauth configurations
 	// and is already configured with our access token
 	ctx := context.Background()
-	client := oauth2.GetHttpClient(ctx)
+	client := oauth2.GetHttpClient(ctx, useApiKey)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -78,4 +80,110 @@ func decodeResponse[T any](resp *http.Response, target *T) error {
 	}
 
 	return nil
+}
+
+func RequestWithBodyAndDecode[B any, R any](baseUrl string, path string, method string, useApiKey bool, body B) (*R, error) {
+	url := baseUrl + path
+
+	var bodyJson []byte
+	bodyJson, err := json.Marshal(body)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("method", method).
+			Str("url", url).
+			Msg("Error marshalling JSON")
+		return nil, pcio.Errorf("error marshalling JSON: %v", err)
+	}
+
+	req, err := buildRequest(method, url, bodyJson)
+	log.Info().
+		Str("method", method).
+		Str("url", url).
+		Msg("Fetching data from dashboard")
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("url", url).
+			Str("method", method).
+			Msg("Error building request")
+		return nil, pcio.Errorf("error building request: %v", err)
+	}
+
+	resp, err := performRequest(req, useApiKey)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("method", method).
+			Str("url", url)
+		return nil, pcio.Errorf("error performing request to %s: %v", url, err)
+	}
+
+	var parsedResponse R
+	err = decodeResponse(resp, &parsedResponse)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("method", method).
+			Str("url", url).
+			Str("status", resp.Status).
+			Msg("Error decoding response")
+		return nil, pcio.Errorf("error decoding JSON: %v", err)
+	}
+
+	log.Info().
+		Str("method", method).
+		Str("url", url).
+		Msg("Request completed successfully")
+	return &parsedResponse, nil
+}
+
+func RequestWithoutBodyAndDecode[T any](baseUrl string, path string, method string, useApiKey bool) (*T, error) {
+	url := baseUrl + path
+
+	requestedService := "knowledge engine"
+	if strings.Contains(url, "console") {
+		requestedService = "dashboard"
+	}
+
+	req, err := buildRequest(method, url, nil)
+	log.Info().
+		Str("method", method).
+		Str("url", url).
+		Msg(fmt.Sprintf("Fetching data from %s", requestedService))
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("url", url).
+			Str("method", method).
+			Msg("Error building request")
+		return nil, pcio.Errorf("error building request: %v", err)
+	}
+
+	resp, err := performRequest(req, useApiKey)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("method", method).
+			Str("url", url)
+		return nil, pcio.Errorf("error performing request to %s: %v", url, err)
+	}
+
+	var parsedResponse T
+	err = decodeResponse(resp, &parsedResponse)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("method", method).
+			Str("url", url).
+			Str("status", resp.Status).
+			Msg("Error decoding response")
+		return nil, pcio.Errorf("error decoding JSON: %v", err)
+	}
+
+	log.Info().
+		Str("method", method).
+		Str("url", url).
+		Msg("Request completed successfully")
+	return &parsedResponse, nil
 }

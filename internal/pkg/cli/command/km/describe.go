@@ -8,13 +8,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type DescribeKnowledgeModelOptions struct {
+type DescribeKnowledgeModelCmdOptions struct {
 	kmName string
 	json   bool
 }
 
 func NewDescribeKnowledgeModelCmd() *cobra.Command {
-	options := DescribeKnowledgeModelOptions{}
+	options := DescribeKnowledgeModelCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "describe",

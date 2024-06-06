@@ -16,6 +16,7 @@ func DescribeKnowledgeModelFile(kmName string, fileId string) (*KnowledgeFileMod
 	resp, err := network.GetAndDecode[KnowledgeFileModel](
 		GetKnowledgeDataBaseUrl(),
 		fmt.Sprintf(URL_GET_KNOWLEDGE_MODEL_FILE, kmName, fileId),
+		true,
 	)
 	if err != nil {
 		exit.Error(err)

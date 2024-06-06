@@ -19,7 +19,10 @@ func DeleteKnowledgeModel(kmName string) (*DeleteKnowledgeModelResponse, error) 
 
 	resp, err := network.RequestWithoutBodyAndDecode[DeleteKnowledgeModelResponse](
 		GetKnowledgeControlBaseUrl(),
-		pcio.Sprintf(URL_DELETE_KNOWLEDGE_MODEL, kmName), http.MethodDelete)
+		pcio.Sprintf(URL_DELETE_KNOWLEDGE_MODEL, kmName),
+		http.MethodDelete,
+		true,
+	)
 	if err != nil {
 		return nil, err
 	}

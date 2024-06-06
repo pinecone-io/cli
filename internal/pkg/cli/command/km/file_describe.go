@@ -8,14 +8,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type DescribeKnowledgeFileOptions struct {
+type DescribeKnowledgeFileCmdOptions struct {
 	kmName string
 	fileId string
 	json   bool
 }
 
 func NewDescribeKnowledgeFileCmd() *cobra.Command {
-	options := DescribeKnowledgeFileOptions{}
+	options := DescribeKnowledgeFileCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "describe-file",

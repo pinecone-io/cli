@@ -19,7 +19,10 @@ func CreateKnowledgeModel(name string) (*KnowledgeModel, error) {
 	}
 	resp, err := network.PostAndDecode[CreateKnowledgeModelRequest, KnowledgeModel](
 		GetKnowledgeControlBaseUrl(),
-		URL_POST_KNOWLEDGE_MODEL, body)
+		URL_POST_KNOWLEDGE_MODEL,
+		true,
+		body,
+	)
 	if err != nil {
 		return nil, err
 	}

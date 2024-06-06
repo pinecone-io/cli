@@ -2,6 +2,7 @@ package state
 
 import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration"
+	"github.com/pinecone-io/cli/internal/pkg/utils/models"
 	"github.com/spf13/viper"
 )
 
@@ -15,6 +16,15 @@ type TargetOrganization struct {
 type TargetProject struct {
 	Name string `json:"name"`
 	Id   string `json:"global_id"`
+}
+
+type TargetKnowledgeModel struct {
+	Name string `json:"name"`
+	Id   string `json:"id"`
+}
+
+type ChatHistory struct {
+	History *models.KnowledgeModelChatHistory `json:"history"`
 }
 
 var (
@@ -34,10 +44,27 @@ var (
 			Id:   "",
 		},
 	}
+	TargetKm = configuration.MarshaledProperty[TargetKnowledgeModel]{
+		KeyName:    "target_knowledge_model",
+		ViperStore: StateViper,
+		DefaultValue: &TargetKnowledgeModel{
+			Name: "",
+			Id:   "",
+		},
+	}
+	ChatHist = configuration.MarshaledProperty[ChatHistory]{
+		KeyName:    "chat_history",
+		ViperStore: StateViper,
+		DefaultValue: &ChatHistory{
+			History: &models.KnowledgeModelChatHistory{},
+		},
+	}
 )
 var properties = []configuration.Property{
 	TargetOrg,
 	TargetProj,
+	TargetKm,
+	ChatHist,
 }
 
 var ConfigFile = configuration.ConfigFile{

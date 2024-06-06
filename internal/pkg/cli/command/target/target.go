@@ -59,7 +59,7 @@ func NewTargetCmd() *cobra.Command {
 
 			if options.clear {
 				state.ConfigFile.Clear()
-				pcio.Print("target context cleared")
+				pcio.Print("target cleared")
 				return
 			}
 

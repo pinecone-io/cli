@@ -12,12 +12,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type ListKnowledgeModelsOptions struct {
+type ListKnowledgeModelsCmdOptions struct {
 	json bool
 }
 
 func NewListKnowledgeModelsCmd() *cobra.Command {
-	options := ListKnowledgeModelsOptions{}
+	options := ListKnowledgeModelsCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "list",

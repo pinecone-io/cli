@@ -18,10 +18,10 @@ func (akt *apiKeyTransport) RoundTrip(req *http.Request) (*http.Response, error)
 	return akt.next.RoundTrip(req)
 }
 
-func GetHttpClient(ctx context.Context) *http.Client {
+func GetHttpClient(ctx context.Context, useApiKey bool) *http.Client {
 	token := secrets.OAuth2Token.Get()
 
-	if token.AccessToken != "" {
+	if token.AccessToken != "" && !useApiKey {
 		log.Debug().Msg("Creating http client with OAuth2 token handling")
 		config := newOauth2Config()
 		log.Debug().
