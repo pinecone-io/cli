@@ -73,8 +73,8 @@ brews:
       name: homebrew-tap
       branch: main
     url_headers:
-      - "Accept: application/octet-stream"
       - 'Authorization: bearer #{ENV["HOMEBREW_GITHUB_API_TOKEN"]}'
+    download_strategy: GitHubPrivateRepositoryReleaseDownloadStrategy
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
