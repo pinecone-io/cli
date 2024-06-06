@@ -60,3 +60,18 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
+
+brews:
+  - name: pinecone-dev
+    repository:
+      owner: pinecone-io
+      name: homebrew-tap
+      branch: main
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+    directory: Formula
+    license: "Apache-2.0"
+    test: |
+      system "#{bin} --version"
