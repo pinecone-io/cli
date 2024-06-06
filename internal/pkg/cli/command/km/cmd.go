@@ -18,15 +18,19 @@ func NewKmCommand() *cobra.Command {
 		GroupID: help.GROUP_KNOWLEDGE_ENGINE.ID,
 	}
 
+	// TODO - add targeting for knowledge model
+
 	cmd.AddCommand(NewCreateKnowledgeModelCmd())
 	cmd.AddCommand(NewListKnowledgeModelsCmd())
 	cmd.AddCommand(NewDescribeKnowledgeModelCmd())
 	cmd.AddCommand(NewDeleteKnowledgeModelCmd())
+
+	// Model-specific commands
+	cmd.AddCommand(NewKnowledgeModelChatCmd())
 	cmd.AddCommand(NewListKnowledgeFilesCmd())
-	cmd.AddCommand(NewDescribeKnowledgeFileCmd())
 	cmd.AddCommand(NewDeleteKnowledgeFileCmd())
 	cmd.AddCommand(NewUploadKnowledgeFileCmd())
-	cmd.AddCommand(NewKnowledgeModelChatCmd())
+	cmd.AddCommand(NewDescribeKnowledgeFileCmd())
 
 	return cmd
 }

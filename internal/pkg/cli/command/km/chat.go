@@ -8,14 +8,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type KnowledgeModelChatOptions struct {
+type KnowledgeModelChatCmdOptions struct {
 	kmName  string
 	content string
 	json    bool
 }
 
 func NewKnowledgeModelChatCmd() *cobra.Command {
-	options := KnowledgeModelChatOptions{}
+	options := KnowledgeModelChatCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "chat",

@@ -7,14 +7,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type UploadKnowledgeFileOptions struct {
+type UploadKnowledgeFileCmdOptions struct {
 	kmName   string
 	filePath string
 	json     bool
 }
 
 func NewUploadKnowledgeFileCmd() *cobra.Command {
-	options := UploadKnowledgeFileOptions{}
+	options := UploadKnowledgeFileCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "upload-file",

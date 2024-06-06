@@ -14,7 +14,9 @@ func UploadKnowledgeFile(kmName string, filePath string) (*KnowledgeFileModel, e
 	resp, err := network.PostAndDecodeMultipartFormData[KnowledgeFileModel](
 		GetKnowledgeDataBaseUrl(),
 		fmt.Sprintf(URL_KNOWLEDGE_FILE_UPLOAD, kmName),
-		filePath)
+		true,
+		filePath,
+	)
 	if err != nil {
 		return nil, err
 	}

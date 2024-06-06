@@ -12,13 +12,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type ListKnowledgeFilesOptions struct {
+type ListKnowledgeFilesCmdOptions struct {
 	json   bool
 	kmName string
 }
 
 func NewListKnowledgeFilesCmd() *cobra.Command {
-	options := ListKnowledgeFilesOptions{}
+	options := ListKnowledgeFilesCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "files",

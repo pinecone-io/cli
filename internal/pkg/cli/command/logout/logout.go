@@ -2,6 +2,7 @@ package logout
 
 import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -16,6 +17,9 @@ func NewLogoutCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			secrets.ConfigFile.Clear()
 			pcio.Println(style.SuccessMsg("Secrets cleared."))
+
+			state.ConfigFile.Clear()
+			pcio.Println(style.SuccessMsg("State cleared."))
 		},
 	}
 

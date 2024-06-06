@@ -37,8 +37,6 @@ func newClientForUserFromTarget() *pinecone.Client {
 
 	apiKey := secrets.ApiKey.Get()
 
-	pcio.Printf("targetOrgName: %s\n targetOrgId: %s\n targetProjectName: %s\n targetProjectId: %s\n", targetOrgName, targetOrgId, targetProjectName, targetProjectId)
-
 	if targetOrgId == "" || targetProjectId == "" {
 
 		if apiKey != "" {

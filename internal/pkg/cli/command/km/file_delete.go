@@ -7,14 +7,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type DeleteKnowledgeFileOptions struct {
+type DeleteKnowledgeFileCmdOptions struct {
 	kmName string
 	fileId string
 	json   bool
 }
 
 func NewDeleteKnowledgeFileCmd() *cobra.Command {
-	options := DeleteKnowledgeFileOptions{}
+	options := DeleteKnowledgeFileCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "delete-file",
