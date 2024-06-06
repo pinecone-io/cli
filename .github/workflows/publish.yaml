@@ -18,9 +18,8 @@ jobs:
         - name: Setup Google service account creds
           id: setup-google
           run: |
-            mkdir -p secrets
-            echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDS }}" > secrets/gcp_key.json
-            echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/secrets/gcp_key.json" >> $GITHUB_OUTPUT
+            echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDS }}" > /tmp/gcp_key.json
+            echo "GOOGLE_APPLICATION_CREDENTIALS_PATH=/tmp/gcp_key.json" >> $GITHUB_OUTPUT
         - name: Run GoReleaser
           uses: goreleaser/goreleaser-action@v6
           with:
@@ -28,5 +27,5 @@ jobs:
             args: release --clean
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.setup-google.outputs.GOOGLE_APPLICATION_CREDENTIALS }} 
+            GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.setup-google.outputs.GOOGLE_APPLICATION_CREDENTIALS_PATH }} 
             HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_GITHUB_API_TOKEN }}
