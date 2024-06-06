@@ -72,13 +72,11 @@ brews:
       owner: pinecone-io
       name: homebrew-tap
       branch: main
-    url_headers:
-      - 'Authorization: bearer {{.Env.HOMEBREW_GITHUB_API_TOKEN}}'
-    download_strategy: GitHubPrivateRepositoryReleaseDownloadStrategy
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
     commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+    skip_upload: auto
     directory: Formula
     license: "Apache-2.0"
     test: |
