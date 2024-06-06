@@ -44,6 +44,8 @@ archives:
       - goos: windows
         format: zip
 
+report_sizes: true
+
 env_files:
   github_token: .env
 
@@ -62,7 +64,7 @@ changelog:
 release:
   github:
     owner: pinecone-io
-    name: pinecone-cli
+    name: cli
 
 brews:
   - name: pinecone-dev
