@@ -7,6 +7,7 @@ import (
 
 	"github.com/pinecone-io/cli/internal/pkg/knowledge"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -20,8 +21,9 @@ func NewListKnowledgeModelsCmd() *cobra.Command {
 	options := ListKnowledgeModelsCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "See the list of knowledge models the targeted project",
+		Use:     "list",
+		Short:   "See the list of knowledge models the targeted project",
+		GroupID: help.GROUP_KM_MANAGEMENT.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			modelList, err := knowledge.ListKnowledgeModels()
 			if err != nil {

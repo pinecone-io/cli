@@ -72,7 +72,7 @@ Get started by logging in with
 	rootCmd.AddCommand(collection.NewCollectionCmd())
 
 	// Knowledge engine group
-	rootCmd.AddGroup(help.GROUP_KNOWLEDGE_ENGINE)
+	rootCmd.AddGroup(help.GROUP_KNOWLEDGE_MODEL)
 	rootCmd.AddCommand(km.NewKmCommand())
 
 	// Misc group

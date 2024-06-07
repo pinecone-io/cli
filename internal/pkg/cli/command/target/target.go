@@ -35,7 +35,7 @@ var targetHelp = pcio.Sprintf(`%s
 %s
 `, targetHelpPart1, targetHelpPart2, targetHelpPart3)
 
-type TargetOptions struct {
+type TargetCmdOptions struct {
 	Org     string
 	Project string
 	json    bool
@@ -43,7 +43,7 @@ type TargetOptions struct {
 }
 
 func NewTargetCmd() *cobra.Command {
-	options := TargetOptions{}
+	options := TargetCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "target <flags>",
@@ -57,12 +57,14 @@ func NewTargetCmd() *cobra.Command {
 				Bool("json", options.json).
 				Msg("target command invoked")
 
+			// Clear targets
 			if options.clear {
 				state.ConfigFile.Clear()
 				pcio.Print("target cleared")
 				return
 			}
 
+			// Print current target if no org, project, or knowledge model is specified
 			if options.Org == "" && options.Project == "" {
 				if options.json {
 					log.Info().Msg("Outputting target context as JSON")
@@ -82,6 +84,7 @@ func NewTargetCmd() *cobra.Command {
 				exit.Error(err)
 			}
 
+			// Update the organization target
 			var org dashboard.Organization
 			if options.Org != "" {
 				// User passed an org flag, need to verify it exists and
@@ -111,6 +114,7 @@ func NewTargetCmd() *cobra.Command {
 				org = getOrg(orgs, state.TargetOrg.Get().Name)
 			}
 
+			// Update the project target
 			if options.Project != "" {
 				// User passed a project flag, need to verify it exists and
 				// lookup the id for it.
