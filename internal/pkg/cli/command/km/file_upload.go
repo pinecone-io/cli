@@ -34,6 +34,10 @@ func NewUploadKnowledgeFileCmd() *cobra.Command {
 				return
 			}
 
+			// Check if file is pdf or txt
+			if !knowledge.IsSupportedFile(options.filePath) {
+			}
+
 			file, err := knowledge.UploadKnowledgeFile(options.kmName, options.filePath)
 			if err != nil {
 				exit.Error(err)

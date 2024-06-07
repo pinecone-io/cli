@@ -14,7 +14,7 @@ import (
 
 type KnowledgeModelChatCmdOptions struct {
 	kmName  string
-	content string
+	message string
 	json    bool
 }
 
@@ -35,8 +35,8 @@ func NewKnowledgeModelChatCmd() *cobra.Command {
 				return
 			}
 
-			style.Spinner("...", func() error {
-				resp, err := knowledge.GetKnowledgeModelSearchCompletions(options.kmName, options.content)
+			style.Spinner("", func() error {
+				resp, err := knowledge.GetKnowledgeModelSearchCompletions(options.kmName, options.message)
 				if err != nil {
 					exit.Error(err)
 				}
@@ -52,13 +52,14 @@ func NewKnowledgeModelChatCmd() *cobra.Command {
 			})
 		},
 	}
-	// required flags
-	cmd.Flags().StringVarP(&options.kmName, "name", "n", "", "name of the knowledge base to describe")
-	cmd.Flags().StringVarP(&options.content, "content", "c", "", "your message to the knowledge model")
+
+	cmd.Flags().StringVarP(&options.kmName, "name", "n", "", "name of the knowledge model to chat with")
+	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().StringVarP(&options.message, "message", "m", "", "your message to the knowledge model")
 	cmd.MarkFlagRequired("content")
 
-	// optional flags
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.AddCommand(NewKnowledgeModelChatClearCmd())
+	cmd.AddCommand(NewKnowledgeModelChatDescribeCmd())
 
 	return cmd
 }
