@@ -64,7 +64,8 @@ func processChatCompletionModel(resp *models.ChatCompletionModel) []models.ChatC
 			Str("FinishReason", string(choice.FinishReason)).
 			Msg("found ChoiceModel")
 
-		// TODO - filter messages based on Role? something else?
+		// TODO - filter messages based on Role? Chris Bolton had mentioned there were messages that needed
+		// to be filtered. Follow up.
 
 		messages = append(messages, choice.Message)
 	}
