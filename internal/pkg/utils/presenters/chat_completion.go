@@ -8,13 +8,7 @@ func PrintKnowledgeChatResponse(response string) {
 	writer := NewTabWriter()
 
 	pcio.Printf(response)
-	// columns := []string{"RESPONSE", "SCORE"}
-	// header := strings.Join(columns, "\t") + "\n"
-	// pcio.Fprint(writer, header)
-
-	// for _, r := range resp.Responses {
-	// 	pcio.Fprintf(writer, "%s\t%f\n", r.Response, r.Score)
-	// }
+	// TODO - implement better display UX for chat responses
 
 	writer.Flush()
 }
