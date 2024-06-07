@@ -34,7 +34,7 @@ func NewKnowledgeModelChatClearCmd() *cobra.Command {
 			(*chatHistory.History)[options.kmName] = models.KnowledgeModelChat{}
 			state.ChatHist.Set(&chatHistory)
 
-			// TODO - add message for chat history reset
+			pcio.Printf("Chat history for knowledge model %s cleared.\n", options.kmName)
 		},
 	}
 

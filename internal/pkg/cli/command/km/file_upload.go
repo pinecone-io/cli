@@ -36,6 +36,8 @@ func NewUploadKnowledgeFileCmd() *cobra.Command {
 
 			// Check if file is pdf or txt
 			if !knowledge.IsSupportedFile(options.filePath) {
+				pcio.Printf("File type not supported. Supported file types are .pdf and .txt\n")
+				return
 			}
 
 			file, err := knowledge.UploadKnowledgeFile(options.kmName, options.filePath)
