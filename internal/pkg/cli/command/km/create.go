@@ -3,6 +3,7 @@ package km
 import (
 	"github.com/pinecone-io/cli/internal/pkg/knowledge"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
@@ -17,8 +18,9 @@ func NewCreateKnowledgeModelCmd() *cobra.Command {
 	options := CreateKnowledgeModelCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "create",
-		Short: "Create a knowledge model",
+		Use:     "create",
+		Short:   "Create a knowledge model",
+		GroupID: help.GROUP_KM_MANAGEMENT.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			model, err := knowledge.CreateKnowledgeModel(options.name)
 			if err != nil {

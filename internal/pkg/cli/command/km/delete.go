@@ -3,6 +3,7 @@ package km
 import (
 	"github.com/pinecone-io/cli/internal/pkg/knowledge"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/spf13/cobra"
 )
@@ -16,8 +17,9 @@ func NewDeleteKnowledgeModelCmd() *cobra.Command {
 	options := DeleteKnowledgeModelCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "delete",
-		Short: "Delete a knowledge model",
+		Use:     "delete",
+		Short:   "Delete a knowledge model",
+		GroupID: help.GROUP_KM_MANAGEMENT.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			_, err := knowledge.DeleteKnowledgeModel(options.kmName)
 			if err != nil {

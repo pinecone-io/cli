@@ -49,7 +49,6 @@ var (
 		ViperStore: StateViper,
 		DefaultValue: &TargetKnowledgeModel{
 			Name: "",
-			Id:   "",
 		},
 	}
 	ChatHist = configuration.MarshaledProperty[ChatHistory]{
