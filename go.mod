@@ -9,7 +9,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.10.0
 	github.com/fatih/color v1.16.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
-	github.com/pinecone-io/go-pinecone v0.4.1
+	github.com/pinecone-io/go-pinecone v0.5.0
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
@@ -64,5 +64,3 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/pinecone-io/go-pinecone => ../go-pinecone
