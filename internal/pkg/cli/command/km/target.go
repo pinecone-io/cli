@@ -25,6 +25,8 @@ var targetHelp = pcio.Sprintf("%s\n", kmTargetHelpPart1)
 func NewKmTargetCmd() *cobra.Command {
 	options := KmTargetCmdOptions{}
 
+	// TODO - implement ability to select a knowledge model interactively from list of available knowledge models
+
 	cmd := &cobra.Command{
 		Use:     "target <flags>",
 		Short:   "Set the target knowledge model",
