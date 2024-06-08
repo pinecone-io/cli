@@ -27,7 +27,7 @@ func GetKnowledgeModelSearchCompletions(kmName string, content string) (*models.
 
 	// Add new outgoing messages to existing conversation, this becomes the body
 	chat.Messages = append(chat.Messages, outgoingMsg)
-	fmt.Printf("current Messages cache count: %v\n", len(chat.Messages))
+
 	body := models.ChatCompletionRequest{
 		Messages: chat.Messages,
 	}
