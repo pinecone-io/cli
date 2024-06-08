@@ -7,9 +7,7 @@ project_name: pinecone
 
 before:
   hooks:
-    # You may remove this if you don't use go modules.
     - go mod tidy
-    # you may remove this if you don't need go generate
     - go generate ./...
 
 builds:
@@ -68,6 +66,8 @@ release:
 
 brews:
   - name: pinecone-dev
+    homepage: "https://www.pinecone.io"
+    description: "Pinecone CLI"
     repository:
       owner: pinecone-io
       name: homebrew-tap
