@@ -7,11 +7,13 @@
 1. [Install golang](https://go.dev/doc/install) if you do not have it already
 
 2. Install goreleaser
+
 ```
 brew install goreleaser/tap/goreleaser
 ```
 
 3. Build the CLI
+
 ```
 goreleaser build --single-target --snapshot --clean
 ```
@@ -30,8 +32,12 @@ For manual testing in development, you can run commands like this
 # See help
 ./dist/pinecone_darwin_arm64/pinecone --help
 
-# Set credentials (proper login will come later)
-./dist/pinecone_darwin_arm64/pinecone auth set-api-key
+# Set authorization credentials - set an API key directly, or log in via the OAuth flow
+./dist/pinecone_darwin_arm64/pinecone config set-api-key
+./dist/pinecone_darwin_arm64/pinecone login
+
+# Check currently configured API key
+./dist/pinecone_darwin_arm64/pinecone config get-api-key
 
 # Do index operations
 ./dist/pinecone_darwin_arm64/pinecone index --help
@@ -52,4 +58,20 @@ For manual testing in development, you can run commands like this
 
 # Delete index
 ./dist/pinecone_darwin_arm64/pinecone index delete --name "example-index"
+
+# Interact with Assistants / Knowledge Models
+./dist/pinecone_darwin_arm64/pinecone km -- help
+./dist/pinecone_darwin_arm64/pinecone km list
+./dist/pinecone_darwin_arm64/pinecone km describe --name "my-assistant"
+
+# Create a knowledge model
+./dist/pinecone_darwin_arm64/pinecone km create --name "new-knowledge-model"
+
+# Target a knowledge model and check associated files
+./dist/pinecone_darwin_arm64/pinecone km target --name "new-knowledge-model"
+./dist/pinecone_darwin_arm64/pinecone km files
+
+# Chat with a knowledge model
+
+./dist/pinecone_darwin_arm64/pinecone km chat --message "Give me the table of contents in a table format, and a brief summary of chapter 2"
 ```
