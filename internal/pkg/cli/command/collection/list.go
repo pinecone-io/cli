@@ -79,7 +79,7 @@ func printTable(collections []*pinecone.Collection) {
 	pcio.Fprint(writer, header)
 
 	for _, coll := range collections {
-		values := []string{coll.Name, string(coll.Dimension), string(coll.Size), string(coll.Status), string(coll.VectorCount), coll.Environment}
+		values := []string{coll.Name, string(coll.Dimension), strconv.FormatInt(coll.Size, 10), string(coll.Status), string(coll.VectorCount), coll.Environment}
 		pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
 	}
 	writer.Flush()
