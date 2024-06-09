@@ -6,7 +6,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
 )
@@ -30,20 +29,20 @@ func NewDeleteKnowledgeFileCmd() *cobra.Command {
 				options.kmName = targetKm
 			}
 			if options.kmName == "" {
-				pcio.Printf("You must target a knowledge model or specify one with the %s flag\n", style.Emphasis("--model"))
-				return
+				msg.FailMsg("You must target a knowledge model or specify one with the %s flag\n", style.Emphasis("--model"))
+				exit.ErrorMsg("no knowledge model specified")
 			}
 
 			_, err := knowledge.DeleteKnowledgeFile(options.kmName, options.fileId)
 			if err != nil {
+				msg.FailMsg("Failed to delete file %s in knowledge model: %s\n", style.Emphasis(options.fileId), err)
 				exit.Error(err)
 			}
 
-			msg.SuccessMsg("Knowledge file %s deleted.\n", options.fileId)
+			msg.SuccessMsg("Knowledge file %s deleted.\n", style.Emphasis(options.fileId))
 		},
 	}
 
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 	cmd.Flags().StringVarP(&options.kmName, "model", "m", "", "name of the knowledge model to list files for")
 	cmd.Flags().StringVarP(&options.fileId, "id", "i", "", "id of the file to describe")
 	cmd.MarkFlagRequired("id")

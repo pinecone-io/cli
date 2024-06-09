@@ -8,7 +8,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -35,12 +34,6 @@ func NewUploadKnowledgeFileCmd() *cobra.Command {
 			if options.kmName == "" {
 				msg.FailMsg("You must target a knowledge model or specify one with the %s flag\n", style.Emphasis("--model"))
 				exit.Error(fmt.Errorf("no knowledge model specified"))
-			}
-
-			// Check if file is pdf or txt
-			if !knowledge.IsSupportedFile(options.filePath) {
-				pcio.Printf("File type not supported. Supported file types are .pdf and .txt\n")
-				return
 			}
 
 			file, err := knowledge.UploadKnowledgeFile(options.kmName, options.filePath)
