@@ -44,7 +44,7 @@ func NewDeleteKnowledgeFileCmd() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
-	cmd.Flags().StringVarP(&options.kmName, "name", "n", "", "name of the knowledge model to list files for")
+	cmd.Flags().StringVarP(&options.kmName, "model", "m", "", "name of the knowledge model to list files for")
 	cmd.Flags().StringVarP(&options.fileId, "id", "i", "", "id of the file to describe")
 	cmd.MarkFlagRequired("id")
 

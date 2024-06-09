@@ -50,7 +50,7 @@ func NewUploadKnowledgeFileCmd() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
-	cmd.Flags().StringVarP(&options.kmName, "name", "n", "", "name of the knowledge model upload a file to")
+	cmd.Flags().StringVarP(&options.kmName, "model", "m", "", "name of the knowledge model upload a file to")
 	cmd.Flags().StringVarP(&options.filePath, "file", "f", "", "the path of the file you want to upload")
 	cmd.MarkFlagRequired("file")
 
