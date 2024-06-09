@@ -8,8 +8,6 @@ on:
 jobs:
     publish:
       runs-on: ubuntu-latest
-      outputs:
-        version: ${{ steps.prepare-version.outputs.version }}
       steps:
         - name: Checkout
           uses: actions/checkout@v4
@@ -32,15 +30,15 @@ jobs:
             GOOGLE_APPLICATION_CREDENTIALS: "/tmp/gcp_key.json"
             HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_GITHUB_API_TOKEN }}
         
-        - name: Prepare version
-          id: prepare-version
+        - name: Trigger update-dev-formula workflow
           run: |
             version=echo "${{ steps.goreleaser.outputs.metadata }}" | jq -r ".tag" | cut -c 2-
             echo "Version is $version"
-            echo version=$version >> $GITHUB_OUTPUT
+
+            curl -X POST \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "X-Github-API-Version: 2022-11-28" \
+              https://api.github.com/pinecone-io/homebrew-pinecone/repo/actions/workflows/update-dev-formula/dispatches \
+              -d '{"ref": "main", "inputs": {"version":"$VERSION"}'
     
-    update-dev-formula:
-      uses: pinecone-io/homebrew-tap/.github/workflows/update-dev-formula.yaml@main
-      needs: publish
-      with:
-        version: ${{ needs.publish.outputs.version }}
