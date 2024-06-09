@@ -9,8 +9,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/km"
 	login "github.com/pinecone-io/cli/internal/pkg/cli/command/login"
 	logout "github.com/pinecone-io/cli/internal/pkg/cli/command/logout"
-	org "github.com/pinecone-io/cli/internal/pkg/cli/command/org"
-	project "github.com/pinecone-io/cli/internal/pkg/cli/command/project"
 	target "github.com/pinecone-io/cli/internal/pkg/cli/command/target"
 	version "github.com/pinecone-io/cli/internal/pkg/cli/command/version"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -62,9 +60,9 @@ Get started by logging in with
 	rootCmd.AddCommand(target.NewTargetCmd())
 
 	// Management group
-	rootCmd.AddGroup(help.GROUP_MANAGEMENT)
-	rootCmd.AddCommand(org.NewOrgCmd())
-	rootCmd.AddCommand(project.NewProjectCmd())
+	// rootCmd.AddGroup(help.GROUP_MANAGEMENT)
+	// rootCmd.AddCommand(org.NewOrgCmd())
+	// rootCmd.AddCommand(project.NewProjectCmd())
 
 	// Vector database group
 	rootCmd.AddGroup(help.GROUP_VECTORDB)

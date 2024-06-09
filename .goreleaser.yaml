@@ -24,6 +24,8 @@ builds:
       - windows
       - darwin
 
+# This basically staples the two mac binaries together so users don't
+# have to make a decision about which one they need.
 universal_binaries:
 - replace: true
 
