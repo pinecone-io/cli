@@ -32,7 +32,7 @@ func NewDescribeKnowledgeFileCmd() *cobra.Command {
 				options.kmName = targetKm
 			}
 			if options.kmName == "" {
-				pcio.Printf("You must target a knowledge model or specify one with the %s flag\n", style.Emphasis("--name"))
+				pcio.Printf("You must target a knowledge model or specify one with the %s flag\n", style.Emphasis("--model"))
 				return
 			}
 
