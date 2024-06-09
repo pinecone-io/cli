@@ -1,6 +1,8 @@
 package km
 
 import (
+	"fmt"
+
 	"github.com/pinecone-io/cli/internal/pkg/knowledge"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -8,6 +10,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
+	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 )
 
@@ -30,8 +33,8 @@ func NewUploadKnowledgeFileCmd() *cobra.Command {
 				options.kmName = targetKm
 			}
 			if options.kmName == "" {
-				pcio.Printf("You must target a knowledge model or specify one with the %s flag\n", style.Emphasis("--model"))
-				return
+				msg.FailMsg("You must target a knowledge model or specify one with the %s flag\n", style.Emphasis("--model"))
+				exit.Error(fmt.Errorf("no knowledge model specified"))
 			}
 
 			// Check if file is pdf or txt
@@ -42,10 +45,16 @@ func NewUploadKnowledgeFileCmd() *cobra.Command {
 
 			file, err := knowledge.UploadKnowledgeFile(options.kmName, options.filePath)
 			if err != nil {
+				msg.FailMsg("Failed to upload file %s to knowledge model %s: %s\n", style.Emphasis(options.filePath), style.Emphasis(options.kmName), err)
 				exit.Error(err)
 			}
 
-			msg.SuccessMsg("Knowledge file %s uploaded. ID=%s \n", options.filePath, file.Id)
+			if options.json {
+				text.PrettyPrintJSON(file)
+				return
+			}
+
+			msg.SuccessMsg("Knowledge file %s uploaded. The file was assigned id \"%s\". \n", style.Emphasis(options.filePath), style.Emphasis(file.Id))
 		},
 	}
 
