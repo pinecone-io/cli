@@ -8,6 +8,8 @@ on:
 jobs:
     publish:
       runs-on: ubuntu-latest
+      outputs:
+        version: ${{ steps.prepare-version.outputs.version }}
       steps:
         - name: Checkout
           uses: actions/checkout@v4
@@ -36,7 +38,9 @@ jobs:
             version=echo "${{ steps.goreleaser.outputs.metadata }}" | jq -r ".tag" | cut -c 2-
             echo "Version is $version"
             echo version=$version >> $GITHUB_OUTPUT
-        - name: Update pinecone-dev formula
-          uses: pinecone-io/homebrew-tap/.github/workflows/update-dev-formula.yaml@main
-          with:
-            version: ${{ steps.prepare-version.outputs.version }}
+    
+    update-dev-formula:
+      uses: pinecone-io/homebrew-tap/.github/workflows/update-dev-formula.yaml@main
+      needs: publish
+      with:
+        version: ${{ needs.publish.outputs.version }}
