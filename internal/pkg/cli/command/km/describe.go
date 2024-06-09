@@ -5,6 +5,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
+	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -36,6 +37,7 @@ func NewDescribeKnowledgeModelCmd() *cobra.Command {
 
 			model, err := knowledge.DescribeKnowledgeModel(options.kmName)
 			if err != nil {
+				msg.FailMsg("Failed to describe knowledge model %s: %s\n", style.Emphasis(options.kmName), err)
 				exit.Error(err)
 			}
 
