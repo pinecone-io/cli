@@ -45,7 +45,7 @@ func PrintTargetKnowledgeModel(context *state.TargetContext) {
 	header := strings.Join(columns, "\t") + "\n"
 	pcio.Fprint(writer, header)
 
-	pcio.Fprintf(writer, "Knowledge Model\t%s\n", labelUnsetIfEmpty(style.Emphasis(context.KnowledgeModel)))
+	pcio.Fprintf(writer, "Knowledge Model\t%s\n", labelUnsetIfEmpty(context.KnowledgeModel))
 
 	writer.Flush()
 }
