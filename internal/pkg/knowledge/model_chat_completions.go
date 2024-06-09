@@ -13,10 +13,10 @@ const (
 	URL_KNOWLEDGE_MODEL_CHAT_COMPLETIONS = "/knowledge/chat/%s/chat/completions"
 )
 
-func GetKnowledgeModelSearchCompletions(kmName string, content string) (*models.ChatCompletionModel, error) {
+func GetKnowledgeModelSearchCompletions(kmName string, msg string) (*models.ChatCompletionModel, error) {
 	outgoingMsg := models.ChatCompletionMessage{
 		Role:    "user",
-		Content: content,
+		Content: msg,
 	}
 	chatHistory := state.ChatHist.Get()
 	chat, exists := (*chatHistory.History)[kmName]
