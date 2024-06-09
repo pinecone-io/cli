@@ -35,7 +35,7 @@ func NewDeleteKnowledgeFileCmd() *cobra.Command {
 
 			_, err := knowledge.DeleteKnowledgeFile(options.kmName, options.fileId)
 			if err != nil {
-				msg.FailMsg("Failed to delete file %s in knowledge model: %s\n", style.Emphasis(options.fileId), err)
+				msg.FailMsg("Failed to delete file %s in knowledge model %s: %s\n", style.Emphasis(options.fileId), style.Emphasis(options.kmName), err)
 				exit.Error(err)
 			}
 
