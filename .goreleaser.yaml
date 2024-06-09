@@ -65,7 +65,7 @@ release:
     name: cli
 
 brews:
-  - name: pinecone-dev
+  - name: pinecone
     homepage: "https://www.pinecone.io"
     description: "Pinecone CLI"
     repository:
@@ -81,4 +81,4 @@ brews:
     directory: Formula
     license: "Apache-2.0"
     test: |
-      system "#{bin} --version"
+      system "#{bin} --help"
