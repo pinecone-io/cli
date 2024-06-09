@@ -32,7 +32,7 @@ jobs:
         
         - name: Trigger update-dev-formula workflow
           run: |
-            version=echo "${{ steps.goreleaser.outputs.metadata }}" | jq -r ".tag" | cut -c 2-
+            version=echo '${{ steps.goreleaser.outputs.metadata }}' | jq -r ".tag" | cut -c 2-
             echo "Version is $version"
 
             curl -X POST \
