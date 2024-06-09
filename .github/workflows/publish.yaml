@@ -20,6 +20,7 @@ jobs:
           run: |
             echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDS_JSON_BASE64 }}" | base64 -d > /tmp/gcp_key.json
         - name: Run GoReleaser
+          id: goreleaser
           uses: goreleaser/goreleaser-action@v6
           with:
             version: '~> v2'
@@ -28,3 +29,14 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             GOOGLE_APPLICATION_CREDENTIALS: "/tmp/gcp_key.json"
             HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_GITHUB_API_TOKEN }}
+        
+        - name: Prepare version
+          id: prepare-version
+          run: |
+            version=echo "${{ steps.goreleaser.outputs.metadata }}" | jq -r ".tag" | cut -c 2-
+            echo "Version is $version"
+            echo version=$version >> $GITHUB_OUTPUT
+        - name: Update pinecone-dev formula
+          uses: pinecone-io/homebrew-tap/.github/workflows/update-dev-formula.yaml@main
+          with:
+            version: ${{ steps.prepare-version.outputs.version }}
