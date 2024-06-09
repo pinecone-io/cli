@@ -70,7 +70,7 @@ func startChat(kmName string) {
 	// Display previous chat history up to 10 messages
 	displayChatHistory(kmName, 10)
 
-	pcio.Printf("Now chatting with knowledge model %s. Type your message and press Enter. Press CTRL+C to exit.\n\n", style.Emphasis(kmName))
+	pcio.Printf("\n\nNow chatting with knowledge model %s. Type your message and press Enter. Press CTRL+C to exit, or pass \"exit()\"\n\n", style.Emphasis(kmName))
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
