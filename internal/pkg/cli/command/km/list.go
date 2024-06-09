@@ -22,7 +22,7 @@ func NewListKnowledgeModelsCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:     "list",
-		Short:   "See the list of knowledge models the targeted project",
+		Short:   "See the list of knowledge models in the targeted project",
 		GroupID: help.GROUP_KM_MANAGEMENT.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			modelList, err := knowledge.ListKnowledgeModels()
@@ -34,7 +34,13 @@ func NewListKnowledgeModelsCmd() *cobra.Command {
 				text.PrettyPrintJSON(modelList)
 				return
 			}
-			pcio.Printf("Found %d knowledge models\n", len(modelList.KnowledgeModels))
+
+			modelCount := len(modelList.KnowledgeModels)
+			if modelCount == 0 {
+				pcio.Println("No knowledge models found")
+				return
+			}
+
 			printTableModels(modelList.KnowledgeModels)
 		},
 	}
