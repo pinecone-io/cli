@@ -9,6 +9,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
+	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -39,6 +40,7 @@ func NewListKnowledgeFilesCmd() *cobra.Command {
 
 			fileList, err := knowledge.ListKnowledgeModelFiles(options.kmName)
 			if err != nil {
+				msg.FailMsg("Failed to list files for knowledge model %s: %s\n", style.Emphasis(options.kmName), err)
 				exit.Error(err)
 			}
 
@@ -46,7 +48,13 @@ func NewListKnowledgeFilesCmd() *cobra.Command {
 				text.PrettyPrintJSON(fileList)
 				return
 			}
-			pcio.Printf("Found %d files in knowledge model %s\n", len(fileList.Files), options.kmName)
+
+			fileCount := len(fileList.Files)
+			if fileCount == 0 {
+				msg.InfoMsg("No files found in knowledge model %s. Add one with %s.\n", style.Emphasis(options.kmName), style.Code("pinecone km file-upload"))
+				return
+			}
+
 			printTableFiles(fileList.Files)
 		},
 	}
