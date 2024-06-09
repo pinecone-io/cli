@@ -8,7 +8,9 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/knowledge"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
+	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 )
@@ -37,7 +39,7 @@ func NewListKnowledgeModelsCmd() *cobra.Command {
 
 			modelCount := len(modelList.KnowledgeModels)
 			if modelCount == 0 {
-				pcio.Println("No knowledge models found")
+				msg.InfoMsg("No knowledge models found. Create one with %s.\n", style.Code("pinecone km create"))
 				return
 			}
 
