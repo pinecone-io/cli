@@ -32,7 +32,6 @@ func NewKnowledgeModelChatDescribeCmd() *cobra.Command {
 
 			chatHistory := state.ChatHist.Get()
 			chat, ok := (*chatHistory.History)[options.kmName]
-
 			if !ok {
 				pcio.Printf("No chat history found for knowledge model %s\n", style.Emphasis(options.kmName))
 				return
@@ -41,7 +40,7 @@ func NewKnowledgeModelChatDescribeCmd() *cobra.Command {
 			if options.json {
 				text.PrettyPrintJSON(chat)
 			} else {
-				presenters.PrintChatHistory(chat)
+				presenters.PrintChatHistory(chat, 100)
 			}
 		},
 	}

@@ -66,10 +66,11 @@ func NewKnowledgeModelChatCmd() *cobra.Command {
 
 func startChat(kmName string) {
 	reader := bufio.NewReader(os.Stdin)
-	pcio.Printf("Now chatting with knowledge model %s. Type your message and press Enter. Press CTRL+C to exit.\n\n", style.Emphasis(kmName))
 
-	// Display previous chat history
-	displayChatHistory(kmName)
+	// Display previous chat history up to 10 messages
+	displayChatHistory(kmName, 10)
+
+	pcio.Printf("Now chatting with knowledge model %s. Type your message and press Enter. Press CTRL+C to exit.\n\n", style.Emphasis(kmName))
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
@@ -89,6 +90,8 @@ func startChat(kmName string) {
 		}
 
 		text = strings.TrimSpace(text)
+
+		validateForChatCommands(text)
 
 		if text != "" {
 			_, err := sendMessage(kmName, text)
@@ -123,7 +126,7 @@ func sendMessage(kmName string, message string) (*models.ChatCompletionModel, er
 	return response, nil
 }
 
-func displayChatHistory(kmName string) {
+func displayChatHistory(kmName string, maxNoMsgs int) {
 	chatHistory := state.ChatHist.Get()
 	chat, ok := (*chatHistory.History)[kmName]
 	if !ok {
@@ -131,5 +134,13 @@ func displayChatHistory(kmName string) {
 		return
 	}
 
-	presenters.PrintChatHistory(chat)
+	presenters.PrintChatHistory(chat, maxNoMsgs)
+}
+
+// This function checks to see if the input contains any valid chat commands
+func validateForChatCommands(text string) {
+	if strings.Contains(text, "exit()") {
+		pcio.Printf("Exiting chat...\n")
+		os.Exit(0)
+	}
 }

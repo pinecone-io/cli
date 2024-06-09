@@ -3,21 +3,21 @@ package presenters
 import (
 	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/models"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 )
 
-func PrintChatHistory(chatHistory models.KnowledgeModelChat) {
+func PrintChatHistory(chatHistory models.KnowledgeModelChat, maxNoMsgs int) {
 	writer := NewTabWriter()
-	user := os.Getenv("USER")
 
-	pcio.Printf("%+v", chatHistory)
-	messages := chatHistory.Messages
+	messages := truncateMessages(chatHistory.Messages, maxNoMsgs)
+
 	for _, message := range messages {
 		if message.Role == "user" {
-			pcio.Print(style.StatusGreen(fmt.Sprintf("%s:\n", user)))
+			pcio.Print(style.StatusGreen(fmt.Sprintf("%s:\n", getUser())))
 		} else {
 			pcio.Printf(style.StatusYellow("Assistant:\n"))
 		}
@@ -25,4 +25,30 @@ func PrintChatHistory(chatHistory models.KnowledgeModelChat) {
 	}
 
 	writer.Flush()
+}
+
+func truncateMessages(messages []models.ChatCompletionMessage, maxNoMsgs int) []models.ChatCompletionMessage {
+	if maxNoMsgs <= 0 {
+		maxNoMsgs = 100
+	}
+
+	if len(messages) <= maxNoMsgs {
+		return messages
+	}
+
+	return messages[len(messages)-maxNoMsgs:]
+}
+
+func getUser() string {
+	var user string
+	if runtime.GOOS == "windows" {
+		user = os.Getenv("USERNAME")
+	} else {
+		user = os.Getenv("USER")
+	}
+
+	if user == "" {
+		user = "user"
+	}
+	return user
 }
