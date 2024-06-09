@@ -35,7 +35,7 @@ func NewListKnowledgeFilesCmd() *cobra.Command {
 				options.kmName = targetKm
 			}
 			if options.kmName == "" {
-				msg.FailMsg("You must target a knowledge model or specify one with the %s flag\n", style.Emphasis("--name"))
+				msg.FailMsg("You must target a knowledge model or specify one with the %s flag\n", style.Emphasis("--model"))
 				exit.Error(fmt.Errorf("no knowledge model specified"))
 			}
 
@@ -61,7 +61,7 @@ func NewListKnowledgeFilesCmd() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
-	cmd.Flags().StringVarP(&options.kmName, "name", "n", "", "name of the knowledge model to list files for")
+	cmd.Flags().StringVarP(&options.kmName, "model", "m", "", "name of the knowledge model to list files for")
 
 	return cmd
 }
