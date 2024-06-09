@@ -38,6 +38,7 @@ func NewDescribeKnowledgeFileCmd() *cobra.Command {
 
 			file, err := knowledge.DescribeKnowledgeModelFile(options.kmName, options.fileId)
 			if err != nil {
+				msg.FailMsg("Failed to describe file %s in knowledge model: %s\n", style.Emphasis(options.fileId), err)
 				exit.Error(err)
 			}
 
