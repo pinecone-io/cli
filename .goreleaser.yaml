@@ -53,9 +53,6 @@ blobs:
   - provider: gs
     bucket: pinecone-cli
     directory: "{{.Version}}"
-  - provider: gs
-    bucket: pinecone-cli
-    directory: latest
 
 changelog:
   sort: asc
