@@ -38,6 +38,6 @@ jobs:
             curl -X POST \
               -H "Accept: application/vnd.github+json" \
               -H "Authorization: bearer ${{ secrets.GITHUB_TOKEN }}" \
-              https://api.github.com/pinecone-io/homebrew-pinecone/repo/actions/workflows/update-dev-formula.yaml/dispatches \
+              https://api.github.com/repos/pinecone-io/homebrew-pinecone/actions/workflows/update-dev-formula.yaml/dispatches \
               -d "{\"ref\": \"main\", \"inputs\": {\"version\":\"$version\"}}"
     
