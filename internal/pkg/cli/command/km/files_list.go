@@ -1,6 +1,7 @@
 package km
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -34,8 +35,8 @@ func NewListKnowledgeFilesCmd() *cobra.Command {
 				options.kmName = targetKm
 			}
 			if options.kmName == "" {
-				pcio.Printf("You must target a knowledge model or specify one with the %s flag\n", style.Emphasis("--name"))
-				return
+				msg.FailMsg("You must target a knowledge model or specify one with the %s flag\n", style.Emphasis("--name"))
+				exit.Error(fmt.Errorf("no knowledge model specified"))
 			}
 
 			fileList, err := knowledge.ListKnowledgeModelFiles(options.kmName)
