@@ -91,7 +91,7 @@ func startChat(kmName string) {
 
 		text = strings.TrimSpace(text)
 
-		validateForChatCommands(text)
+		checkForChatCommands(text)
 
 		if text != "" {
 			_, err := sendMessage(kmName, text)
@@ -137,10 +137,12 @@ func displayChatHistory(kmName string, maxNoMsgs int) {
 	presenters.PrintChatHistory(chat, maxNoMsgs)
 }
 
-// This function checks to see if the input contains any valid chat commands
-func validateForChatCommands(text string) {
-	if strings.Contains(text, "exit()") {
-		pcio.Printf("Exiting chat...\n")
+// This function checks the input for accepted chat commands
+func checkForChatCommands(text string) {
+	switch text {
+	case "exit()":
+		pcio.Printf("Exiting chat...\n\n")
 		os.Exit(0)
+	default:
 	}
 }

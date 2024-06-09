@@ -8,6 +8,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/models"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
+	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 )
 
 func PrintChatHistory(chatHistory models.KnowledgeModelChat, maxNoMsgs int) {
@@ -17,11 +18,11 @@ func PrintChatHistory(chatHistory models.KnowledgeModelChat, maxNoMsgs int) {
 
 	for _, message := range messages {
 		if message.Role == "user" {
-			pcio.Print(style.StatusGreen(fmt.Sprintf("%s:\n", getUser())))
+			pcio.Print(style.StatusGreen(fmt.Sprintf("\n\n%s:\n", getUser())))
 		} else {
-			pcio.Printf(style.StatusYellow("Assistant:\n"))
+			pcio.Printf(style.StatusYellow("\n\nAssistant:\n"))
 		}
-		pcio.Printf(message.Content + "\n\n")
+		pcio.Printf(text.WordWrapPreserveFormatting(message.Content, 80))
 	}
 
 	writer.Flush()
