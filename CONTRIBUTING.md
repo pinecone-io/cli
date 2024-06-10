@@ -66,7 +66,7 @@ To make a new release, you simply tag a commit with a version and push it. The h
 
 Something along these lines:
 
-```
+```sh
 # Pull and ensure you have no uncomitted changes
 git checkout main
 git pull
