@@ -58,6 +58,7 @@ Get started by logging in with
 	rootCmd.AddCommand(login.NewLoginCmd())
 	rootCmd.AddCommand(logout.NewLogoutCmd())
 	rootCmd.AddCommand(target.NewTargetCmd())
+	rootCmd.AddCommand(login.NewWhoAmICmd())
 
 	// Management group
 	// rootCmd.AddGroup(help.GROUP_MANAGEMENT)
