@@ -2,7 +2,9 @@ package config
 
 import (
 	conf "github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/help"
+	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -12,7 +14,16 @@ func NewSetColorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-color",
 		Short: "Configure whether the CLI prints output with color",
+		Example: help.Examples([]string{
+			"pinecone config set-color true",
+			"pinecone config set-color false",
+		}),
 		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) == 0 {
+				msg.FailMsg("Please provide a value for color. Accepted values are 'true', 'false'")
+				exit.ErrorMsg("No value provided for color")
+			}
+
 			colorArg := args[0]
 
 			var colorSetting bool
@@ -24,7 +35,7 @@ func NewSetColorCmd() *cobra.Command {
 			}
 
 			conf.Color.Set(colorSetting)
-			pcio.Printf("Config property %s updated to %s\n", style.Emphasis("color"), style.Emphasis(text.BoolToString(colorSetting)))
+			msg.SuccessMsg("Config property %s updated to %s\n", style.Emphasis("color"), style.Emphasis(text.BoolToString(colorSetting)))
 		},
 	}
 

@@ -5,6 +5,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
@@ -14,7 +15,15 @@ func NewSetEnvCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-environment <production|staging>",
 		Short: "Configure the environment (production or staging)",
+		Example: help.Examples([]string{
+			"pinecone config set-environment production",
+			"pinecone config set-environment staging",
+		}),
 		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) == 0 {
+				msg.FailMsg("Please provide a value for environment. Accepted values are %s, %s", style.Emphasis("production"), style.Emphasis("staging"))
+				exit.ErrorMsg("No value provided for environment")
+			}
 			envArg := args[0]
 
 			var settingValue string
