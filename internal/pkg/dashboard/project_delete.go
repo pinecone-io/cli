@@ -15,7 +15,12 @@ type DeletePostResponse struct {
 
 func DeleteProject(orgId string, projId string) (*DeletePostResponse, error) {
 	path := pcio.Sprintf(URL_DELETE_PROJECT, projId)
-	resp, err := network.DeleteAndDecode[DeletePostResponse](GetDashboardBaseURL(), path, false)
+	dashboardUrl, err := GetDashboardBaseURL()
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := network.DeleteAndDecode[DeletePostResponse](dashboardUrl, path, false)
 	if err != nil {
 		return nil, err
 	}

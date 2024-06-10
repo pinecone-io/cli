@@ -14,8 +14,13 @@ const (
 type DeleteKnowledgeFileResponse string
 
 func DeleteKnowledgeFile(kmName string, fileId string) (*DeleteKnowledgeFileResponse, error) {
+	knowledgeDataUrl, err := GetKnowledgeDataBaseUrl()
+	if err != nil {
+		return nil, err
+	}
+
 	resp, err := network.RequestWithoutBodyAndDecode[DeleteKnowledgeFileResponse](
-		GetKnowledgeDataBaseUrl(),
+		knowledgeDataUrl,
 		pcio.Sprintf(URL_DELETE_KNOWLEDGE_FILE, kmName, fileId),
 		http.MethodDelete,
 		true,

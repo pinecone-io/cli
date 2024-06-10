@@ -33,7 +33,12 @@ type GlobalProject struct {
 }
 
 func ListOrganizations() (*OrganizationsResponse, error) {
-	resp, err := network.GetAndDecode[OrganizationsResponse](GetDashboardBaseURL(), URL_LIST_ORGANIZATIONS, false)
+	dashboardUrl, err := GetDashboardBaseURL()
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := network.GetAndDecode[OrganizationsResponse](dashboardUrl, URL_LIST_ORGANIZATIONS, false)
 	if err != nil {
 		return nil, err
 	}

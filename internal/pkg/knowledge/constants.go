@@ -2,26 +2,21 @@ package knowledge
 
 import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
+	"github.com/pinecone-io/cli/internal/pkg/utils/environment"
 )
 
-const KnowledgeDataPlaneBaseStagingUrl = "https://staging-data.ke.pinecone.io"
-const KnowledgeDataPlaneBaseUrl = "https://prod-1-data.ke.pinecone.io"
-
-const KnowledgeControlPlaneBaseStagingUrl = "https://api-staging.pinecone.io"
-const KnowledgeControlPlaneBaseUrl = "https://api.pinecone.io"
-
-func GetKnowledgeDataBaseUrl() string {
-	if config.Staging.Get() {
-		return KnowledgeDataPlaneBaseStagingUrl
-	} else {
-		return KnowledgeDataPlaneBaseUrl
+func GetKnowledgeDataBaseUrl() (string, error) {
+	connectionConfigs, err := environment.GetEnvConfig(config.Environment.Get())
+	if err != nil {
+		return "", err
 	}
+	return connectionConfigs.KnowledgeDataPlaneUrl, nil
 }
 
-func GetKnowledgeControlBaseUrl() string {
-	if config.Staging.Get() {
-		return KnowledgeControlPlaneBaseStagingUrl
-	} else {
-		return KnowledgeControlPlaneBaseUrl
+func GetKnowledgeControlBaseUrl() (string, error) {
+	connectionConfigs, err := environment.GetEnvConfig(config.Environment.Get())
+	if err != nil {
+		return "", err
 	}
+	return connectionConfigs.KnowledgeControlPlaneUrl, nil
 }

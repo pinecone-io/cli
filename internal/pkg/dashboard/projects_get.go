@@ -26,6 +26,7 @@ func GetProjectById(orgId string, projId string) (*GlobalProject, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	for _, org := range orgs.Organizations {
 		if org.Id == orgId {
 			for _, proj := range org.Projects {

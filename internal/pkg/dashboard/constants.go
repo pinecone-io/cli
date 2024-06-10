@@ -2,15 +2,13 @@ package dashboard
 
 import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
+	"github.com/pinecone-io/cli/internal/pkg/utils/environment"
 )
 
-const DashboardBaseURL = "https://console-api.pinecone.io"
-const StagingDashboardBaseURL = "https://staging.console-api.pinecone.io"
-
-func GetDashboardBaseURL() string {
-	if config.Staging.Get() {
-		return StagingDashboardBaseURL
-	} else {
-		return DashboardBaseURL
+func GetDashboardBaseURL() (string, error) {
+	connectionConfigs, err := environment.GetEnvConfig(config.Environment.Get())
+	if err != nil {
+		return "", err
 	}
+	return connectionConfigs.DashboardUrl, nil
 }

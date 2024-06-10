@@ -5,6 +5,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
+	"github.com/pinecone-io/cli/internal/pkg/utils/environment"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -15,11 +16,13 @@ import (
 )
 
 func newClientParams(key string) pinecone.NewClientParams {
-	isStaging := config.Staging.Get()
-	targetContext := state.GetTargetContext()
-	clientControllerHostUrl := targetContext.Api
-	if isStaging {
-		clientControllerHostUrl = targetContext.ApiStaging
+	env := config.Environment.Get()
+
+	var clientControllerHostUrl string
+	if env == "production" {
+		clientControllerHostUrl = environment.Prod.IndexControlPlaneUrl
+	} else {
+		clientControllerHostUrl = environment.Staging.IndexControlPlaneUrl
 	}
 
 	return pinecone.NewClientParams{

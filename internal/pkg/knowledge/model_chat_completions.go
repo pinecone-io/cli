@@ -31,8 +31,14 @@ func GetKnowledgeModelSearchCompletions(kmName string, msg string) (*models.Chat
 	body := models.ChatCompletionRequest{
 		Messages: chat.Messages,
 	}
+
+	knowledgeDataUrl, err := GetKnowledgeDataBaseUrl()
+	if err != nil {
+		return nil, err
+	}
+
 	resp, err := network.PostAndDecode[models.ChatCompletionRequest, models.ChatCompletionModel](
-		GetKnowledgeDataBaseUrl(),
+		knowledgeDataUrl,
 		fmt.Sprintf(URL_KNOWLEDGE_MODEL_CHAT_COMPLETIONS, kmName),
 		true,
 		body,

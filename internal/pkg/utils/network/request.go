@@ -49,7 +49,10 @@ func performRequest(req *http.Request, useApiKey bool) (*http.Response, error) {
 	// This http client is built using our oauth configurations
 	// and is already configured with our access token
 	ctx := context.Background()
-	client := oauth2.GetHttpClient(ctx, useApiKey)
+	client, err := oauth2.GetHttpClient(ctx, useApiKey)
+	if err != nil {
+		return nil, err
+	}
 
 	resp, err := client.Do(req)
 	if err != nil {
