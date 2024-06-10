@@ -1,7 +1,11 @@
 package configuration
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
 	"reflect"
+	"runtime"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
@@ -28,6 +32,13 @@ func (c ConfigFile) Init() {
 		property.Init()
 	}
 	c.ViperStore.SafeWriteConfig()
+
+	// Set permissions on config file
+	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
+		path := filepath.Join(locations.ConfigPath, fmt.Sprintf("%s.%s", c.FileName, c.FileFormat))
+		os.Chmod(path, 0600)
+	}
+
 	c.LoadConfig()
 }
 
