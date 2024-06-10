@@ -1,77 +1,64 @@
 # Pinecone CLI
 
-`pinecone` is Pinecone on the command line. See the [Pinecone CLI PRD](https://www.notion.so/PRD-Pinecone-CLI-59fda5da83bc4e3a8593b74056914cd1?pm=c)
+`pinecone` is Pinecone on the command line. 
 
-## Building the CLI
+This CLI is still in an alpha state and does not support every operation available through our REST apis. Please try it out and give us your feedback, but also be prepared to upgrade as we continue building out the feature set and improving the UX.
 
-1. [Install golang](https://go.dev/doc/install) if you do not have it already
+## Installing
 
-2. Install goreleaser
+### Via Homebrew (Mac)
 
-```
-brew install goreleaser/tap/goreleaser
-```
+The most convenient way to install this is via [Homebrew](https://brew.sh)
 
-3. Build the CLI
-
-```
-goreleaser build --single-target --snapshot --clean
+```brew
+brew tap pinecone-io/tap
+brew install pinecone-io/tap/pinecone
 ```
 
-For manual testing in development, you can run commands like this
+If you have previously installed and would like to upgrade to the latest version, run
 
-```shell
-./dist/pinecone_darwin_arm64/pinecone login
-./dist/pinecone_darwin_arm64/pinecone index list
-# etc
 ```
+brew update
+brew tap pinecone-io/tap --repair
+brew upgrade pinecone-io/tap/pinecone
+```
+
+### Download artifacts from release page (Linux, Windows)
+
+We have pre-built binaries for many platforms available on the [Releases](https://github.com/pinecone-io/cli/releases) page.
+
+### Build from source
+
+To learn about the steps involved in building from source, see [CONTRIBUTING](./CONTRIBUTING.md)
 
 ## Usage
 
 ```shell
-# See help
-./dist/pinecone_darwin_arm64/pinecone --help
+pinecone --help
 
-# Set authorization credentials - set an API key directly, or log in via the OAuth flow
-./dist/pinecone_darwin_arm64/pinecone config set-api-key
-./dist/pinecone_darwin_arm64/pinecone login
+pinecone login
+```
 
-# Check currently configured API key
-./dist/pinecone_darwin_arm64/pinecone config get-api-key
+### Managing indexes
 
-# Do index operations
-./dist/pinecone_darwin_arm64/pinecone index --help
+```sh
+# Learn about supported index operations
+pinecone index --help
 
 # Create serverless indexes.
-./dist/pinecone_darwin_arm64/pinecone index create-serverless --help
-./dist/pinecone_darwin_arm64/pinecone index create-serverless --name example-index --dimension 1536 --metric cosine --cloud aws --region us-west-2
-./dist/pinecone_darwin_arm64/pinecone index create-serverless --name="example-index" --dimension=1536 --metric="cosine" --cloud="aws" --region="us-west-2"
-./dist/pinecone_darwin_arm64/pinecone index create-serverless -n example-index -d 1536 -m cosine -c aws -r us-west-2
+pinecone index create-serverless --help
+pinecone index create-serverless --name example-index --dimension 1536 --metric cosine --cloud aws --region us-west-2
+pinecone index create-serverless --name="example-index" --dimension=1536 --metric="cosine" --cloud="aws" --region="us-west-2"
+pinecone index create-serverless -n example-index -d 1536 -m cosine -c aws -r us-west-2
 
 # Describe index
-./dist/pinecone_darwin_arm64/pinecone index describe --name "example-index"
-./dist/pinecone_darwin_arm64/pinecone index describe --name "example-index" --json
+pinecone index describe --name "example-index"
+pinecone index describe --name "example-index" --json
 
 # List indexes
-./dist/pinecone_darwin_arm64/pinecone index list
-./dist/pinecone_darwin_arm64/pinecone index list --json
+pinecone index list
+pinecone index list --json
 
 # Delete index
-./dist/pinecone_darwin_arm64/pinecone index delete --name "example-index"
-
-# Interact with Assistants / Knowledge Models
-./dist/pinecone_darwin_arm64/pinecone km -- help
-./dist/pinecone_darwin_arm64/pinecone km list
-./dist/pinecone_darwin_arm64/pinecone km describe --name "my-assistant"
-
-# Create a knowledge model
-./dist/pinecone_darwin_arm64/pinecone km create --name "new-knowledge-model"
-
-# Target a knowledge model and check associated files
-./dist/pinecone_darwin_arm64/pinecone km target --name "new-knowledge-model"
-./dist/pinecone_darwin_arm64/pinecone km files
-
-# Chat with a knowledge model
-
-./dist/pinecone_darwin_arm64/pinecone km chat --message "Give me the table of contents in a table format, and a brief summary of chapter 2"
+pinecone index delete --name "example-index"
 ```
