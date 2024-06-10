@@ -60,7 +60,7 @@ func NewTargetCmd() *cobra.Command {
 			// Clear targets
 			if options.clear {
 				state.ConfigFile.Clear()
-				pcio.Print("target cleared")
+				msg.SuccessMsg("Target context has been cleared")
 				return
 			}
 
