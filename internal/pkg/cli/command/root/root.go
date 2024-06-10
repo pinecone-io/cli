@@ -40,7 +40,7 @@ func init() {
 		},
 		Example: help.Examples([]string{
 			"pinecone login",
-			"pinecone target --org=\"my-org\" --project=\"my-project\"",
+			"pinecone target -i",
 			"pinecone index create-serverless --help",
 		}),
 		Long: pcio.Sprintf(`pinecone is a CLI tool for managing your Pinecone resources
