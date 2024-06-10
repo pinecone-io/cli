@@ -83,7 +83,7 @@ func NewLoginCmd() *cobra.Command {
 			pcio.Printf(style.InfoMsg("Target project set %s.\n"), style.Emphasis(targetProj.Name))
 
 			pcio.Println()
-			pcio.Println(style.CodeHint("Run %s to view or change the target context.", "pinecone target"))
+			pcio.Println(style.CodeHint("Run %s to change the target context.", "pinecone target -i"))
 
 			pcio.Println()
 			pcio.Printf("Now try %s to learn about index operations.\n", style.Code("pinecone index -h"))
