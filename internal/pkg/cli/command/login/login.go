@@ -44,6 +44,8 @@ func NewLoginCmd() *cobra.Command {
 			bufio.NewReader(os.Stdin).ReadBytes('\n')
 			browser.OpenBrowser(authResponse.VerificationURIComplete)
 
+			pcio.Println("After you approve in the browser, it may take a few seconds for the next step to complete.")
+
 			style.Spinner("Waiting for authorization...", func() error {
 				token, err := da.GetDeviceAccessToken(ctx, authResponse)
 				if err != nil {
