@@ -37,11 +37,11 @@ var targetHelp = pcio.Sprintf(`%s
 `, targetHelpPart1, targetHelpPart3)
 
 type TargetCmdOptions struct {
-	Org         string
-	Project     string
-	json        bool
-	clear       bool
-	interactive bool
+	Org     string
+	Project string
+	json    bool
+	clear   bool
+	show    bool
 }
 
 func NewTargetCmd() *cobra.Command {
@@ -66,7 +66,7 @@ func NewTargetCmd() *cobra.Command {
 				return
 			}
 
-			if options.interactive {
+			if options.Org == "" && options.Project == "" && !options.show {
 				// Fetch the user's organizations and projects
 				orgsResponse, err := dashboard.ListOrganizations()
 				if err != nil {
@@ -87,7 +87,7 @@ func NewTargetCmd() *cobra.Command {
 			}
 
 			// Print current target if no org, project, or knowledge model is specified
-			if options.Org == "" && options.Project == "" {
+			if options.show {
 				if options.json {
 					log.Info().Msg("Outputting target context as JSON")
 					text.PrettyPrintJSON(state.GetTargetContext())
@@ -163,7 +163,7 @@ func NewTargetCmd() *cobra.Command {
 	// Required options
 	cmd.Flags().StringVarP(&options.Org, "org", "o", "", "Organization name")
 	cmd.Flags().StringVarP(&options.Project, "project", "p", "", "Project name")
-	cmd.Flags().BoolVarP(&options.interactive, "interactive", "i", false, "Choose a project interactively")
+	cmd.Flags().BoolVarP(&options.show, "show", "s", false, "Show the current context")
 	cmd.Flags().BoolVar(&options.clear, "clear", false, "Clear the target context")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
