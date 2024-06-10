@@ -6,7 +6,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -24,14 +23,16 @@ func NewDescribeKnowledgeModelCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "describe",
 		Short:   "Describe a knowledge model",
-		GroupID: help.GROUP_KM_OPERATIONS.ID,
+		GroupID: help.GROUP_KM_MANAGEMENT.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			targetKm := state.TargetKm.Get().Name
-			if targetKm != "" {
+			// If no name is provided, use the target knowledge model
+			if options.kmName == "" {
+				targetKm := state.TargetKm.Get().Name
 				options.kmName = targetKm
 			}
 			if options.kmName == "" {
-				pcio.Printf("You must target a knowledge model or specify one with the %s flag\n", style.Emphasis("--name"))
+				msg.FailMsg("You must target a knowledge model or specify one with the %s flag\n", style.Emphasis("--name"))
+				exit.ErrorMsg("No knowledge model specified")
 				return
 			}
 
