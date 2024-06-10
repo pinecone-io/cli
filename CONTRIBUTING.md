@@ -95,7 +95,7 @@ Within a few minutes of pushing tags, you should see:
 - A new update to the [Releases page](https://github.com/pinecone-io/cli/releases) with built artifacts attached. If you want to be fancy, you can edit the text there to give a more narrative overview of what is in the release. But for these early iterations we're just pushing and shipping without a lot of ceremony.
 - Updates to to the [Homebrew tap](https://github.com/pinecone-io/homebrew-tap) should happen automatically
 
-To consume the update from Homebrew, users should run
+To consume the update from Homebrew (assuming they have previously installed it from homebrew), users should run
 
 ```sh
 brew update
