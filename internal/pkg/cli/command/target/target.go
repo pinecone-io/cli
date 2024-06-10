@@ -134,6 +134,7 @@ func NewTargetCmd() *cobra.Command {
 			}
 
 			pcio.Println()
+
 			presenters.PrintTargetContext(state.GetTargetContext())
 		},
 	}

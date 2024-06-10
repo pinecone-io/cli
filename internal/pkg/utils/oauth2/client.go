@@ -18,19 +18,24 @@ func (akt *apiKeyTransport) RoundTrip(req *http.Request) (*http.Response, error)
 	return akt.next.RoundTrip(req)
 }
 
-func GetHttpClient(ctx context.Context, useApiKey bool) *http.Client {
+func GetHttpClient(ctx context.Context, useApiKey bool) (*http.Client, error) {
 	token := secrets.OAuth2Token.Get()
 
 	if token.AccessToken != "" && !useApiKey {
 		log.Debug().Msg("Creating http client with OAuth2 token handling")
-		config := newOauth2Config()
+		config, err := newOauth2Config()
+		if err != nil {
+			log.Error().Err(err).Msg("Error creating OAuth2 config")
+			return nil, err
+		}
+
 		log.Debug().
 			Bool("has_access_token", token.AccessToken != "").
 			Bool("has_refresh_token", token.AccessToken != "").
 			Str("expiry", token.Expiry.String()).
 			Msg("Creating http client with OAuth2 token handling")
 		LogTokenClaims(&token, "Using saved access token with claims")
-		return config.Client(context.Background(), &token)
+		return config.Client(context.Background(), &token), nil
 	}
 
 	log.Debug().Msg("Creating http client without OAuth2 token handling")
@@ -39,5 +44,5 @@ func GetHttpClient(ctx context.Context, useApiKey bool) *http.Client {
 			apiKey: secrets.ApiKey.Get(),
 			next:   http.DefaultTransport,
 		},
-	}
+	}, nil
 }

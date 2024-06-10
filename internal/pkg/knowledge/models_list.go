@@ -44,8 +44,13 @@ type ListKnowledgeModelsResponse struct {
 }
 
 func ListKnowledgeModels() (*ListKnowledgeModelsResponse, error) {
+	knowledgeControlUrl, err := GetKnowledgeControlBaseUrl()
+	if err != nil {
+		return nil, err
+	}
+
 	resp, err := network.GetAndDecode[ListKnowledgeModelsResponse](
-		GetKnowledgeControlBaseUrl(),
+		knowledgeControlUrl,
 		URL_LIST_KNOWLEDGE_MODELS,
 		true,
 	)

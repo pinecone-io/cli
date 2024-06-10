@@ -27,8 +27,14 @@ func CreateProject(orgId string, projName string, podQuota int32) (*CreateProjec
 		PodQuota:    podQuota,
 		Environment: "serverless",
 	}
+
+	dashboardUrl, err := GetDashboardBaseURL()
+	if err != nil {
+		return nil, err
+	}
+
 	resp, err := network.PostAndDecode[CreateProjectRequest, CreateProjectResponse](
-		GetDashboardBaseURL(),
+		dashboardUrl,
 		path,
 		false,
 		body,

@@ -18,7 +18,6 @@ func labelUnsetIfEmpty(value string) string {
 
 func PrintTargetContext(context *state.TargetContext) {
 	log.Info().
-		Str("api", context.Api).
 		Str("org", string(context.Org)).
 		Str("project", string(context.Project)).
 		Msg("Printing target context")
@@ -28,7 +27,6 @@ func PrintTargetContext(context *state.TargetContext) {
 	header := strings.Join(columns, "\t") + "\n"
 	pcio.Fprint(writer, header)
 
-	pcio.Fprintf(writer, "Api\t%s\n", labelUnsetIfEmpty(style.Emphasis(context.Api)))
 	pcio.Fprintf(writer, "Org\t%s\n", labelUnsetIfEmpty(string(context.Org)))
 	pcio.Fprintf(writer, "Project\t%s\n", labelUnsetIfEmpty(string(context.Project)))
 

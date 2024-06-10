@@ -25,6 +25,11 @@ func GetApiKeys(project GlobalProject) (*KeyResponse, error) {
 }
 
 func GetApiKeysById(projectId string) (*KeyResponse, error) {
+	dashboardUrl, err := GetDashboardBaseURL()
+	if err != nil {
+		return nil, err
+	}
+
 	url := pcio.Sprintf(URL_GET_API_KEYS, projectId)
-	return network.GetAndDecode[KeyResponse](GetDashboardBaseURL(), url, false)
+	return network.GetAndDecode[KeyResponse](dashboardUrl, url, false)
 }

@@ -33,8 +33,13 @@ type ListKnowledgeModelFilesResponse struct {
 }
 
 func ListKnowledgeModelFiles(kmName string) (*ListKnowledgeModelFilesResponse, error) {
+	knowledgeDataUrl, err := GetKnowledgeDataBaseUrl()
+	if err != nil {
+		return nil, err
+	}
+
 	resp, err := network.GetAndDecode[ListKnowledgeModelFilesResponse](
-		GetKnowledgeDataBaseUrl(),
+		knowledgeDataUrl,
 		fmt.Sprintf(URL_LIST_KNOWLEDGE_MODEL_FILES, kmName),
 		true,
 	)

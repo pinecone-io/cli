@@ -17,12 +17,10 @@ func NewConfigCmd() *cobra.Command {
 		Long:  configHelpText,
 	}
 
-	// TODO - Remove NewSetStagingCmd(). Look at adding more robust support for configuration through this command.
-
 	cmd.AddCommand(NewSetColorCmd())
 	cmd.AddCommand(NewSetApiKeyCmd())
 	cmd.AddCommand(NewGetApiKeyCmd())
-	cmd.AddCommand(NewSetStagingCmd())
+	cmd.AddCommand(NewSetEnvCmd())
 
 	return cmd
 }

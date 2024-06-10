@@ -13,8 +13,13 @@ const (
 )
 
 func DescribeKnowledgeModelFile(kmName string, fileId string) (*KnowledgeFileModel, error) {
+	knowledgeDataUrl, err := GetKnowledgeDataBaseUrl()
+	if err != nil {
+		return nil, err
+	}
+
 	resp, err := network.GetAndDecode[KnowledgeFileModel](
-		GetKnowledgeDataBaseUrl(),
+		knowledgeDataUrl,
 		fmt.Sprintf(URL_GET_KNOWLEDGE_MODEL_FILE, kmName, fileId),
 		true,
 	)
