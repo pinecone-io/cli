@@ -22,7 +22,7 @@ func Waiting(fn func() error) error {
 }
 
 func Spinner(text string, fn func() error) error {
-	initialMsg := text + spinnerTextEllipsis + "\n"
+	initialMsg := text + "... "
 	doneMsg := initialMsg + spinnerTextDone + "\n"
 	failMsg := initialMsg + spinnerTextFailed + "\n"
 

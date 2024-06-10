@@ -1,7 +1,9 @@
 package login
 
 import (
+	"bufio"
 	"context"
+	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
 	"github.com/pinecone-io/cli/internal/pkg/utils/browser"
@@ -36,6 +38,10 @@ func NewLoginCmd() *cobra.Command {
 			pcio.Println()
 			pcio.Printf("The code %s should be displayed on the authorization page.\n", style.HeavyEmphasis(authResponse.UserCode))
 			pcio.Println()
+
+			// Press enter to launch the browser
+			pcio.Printf("Press %s to open the browser.\n", style.Code("[Enter]"))
+			bufio.NewReader(os.Stdin).ReadBytes('\n')
 			browser.OpenBrowser(authResponse.VerificationURIComplete)
 
 			style.Spinner("Waiting for authorization...", func() error {
