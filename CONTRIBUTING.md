@@ -89,9 +89,9 @@ git tag v0.0.40
 git push --tags
 ```
 
-From there, everything happens in this [publish workflow](https://github.com/pinecone-io/cli/actions/workflows/publish.yaml).
+From there, everything happens in this [publish workflow](https://github.com/pinecone-io/cli/actions/workflows/publish.yaml) which is using [goreleaser](https://goreleaser.com/) to handle the process of building binaries for different platforms, packing them into archives, publishing those artifacts on github, and updating our homebrew formula so those updates are easily installable on mac. In the future this will probably expand to cover more forms of distribution. If anything breaks down in this process, the `.goreleaser.yaml` file is probably where your attention will be needed but so far it has been very reliable.
 
-Within a few minutes, you should see:
+Within a few minutes of pushing tags, you should see:
 - A new update to the [Releases page](https://github.com/pinecone-io/cli/releases) with built artifacts attached. If you want to be fancy, you can edit the text there to give a more narrative overview of what is in the release. But for these early iterations we're just pushing and shipping without a lot of ceremony.
 - Updates to to the [Homebrew tap](https://github.com/pinecone-io/homebrew-tap) should happen automatically
 
