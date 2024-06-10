@@ -13,6 +13,8 @@ The most convenient way to install this is via [Homebrew](https://brew.sh)
 ```brew
 brew tap pinecone-io/tap
 brew install pinecone-io/tap/pinecone
+
+pinecone --help
 ```
 
 If you have previously installed and would like to upgrade to the latest version, run
