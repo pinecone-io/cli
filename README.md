@@ -21,8 +21,7 @@ If you have previously installed and would like to upgrade to the latest version
 
 ```
 brew update
-brew tap pinecone-io/tap --repair
-brew upgrade pinecone-io/tap/pinecone
+brew upgrade pinecone
 ```
 
 ### Download artifacts from release page (Linux, Windows)
