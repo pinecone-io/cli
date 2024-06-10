@@ -55,7 +55,7 @@ func newClientForUserFromTarget() *pinecone.Client {
 	oauth2Token := secrets.OAuth2Token.Get()
 
 	if oauth2Token.AccessToken == "" {
-		msg.FailMsg("You need to either set an API key with %s or login and run %s to login and set a target project", style.Code("pinecone config set-api-key"), style.Code("pinecone target"))
+		msg.FailMsg("Please set an API key with %s or login with %s before attempting this operation.", style.Code("pinecone config set-api-key"), style.Code("pinecone login"))
 		exit.ErrorMsg("User is not logged in")
 	}
 

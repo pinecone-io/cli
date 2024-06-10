@@ -2,7 +2,7 @@ package config
 
 import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
 )
@@ -14,7 +14,8 @@ func NewSetApiKeyCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			newApiKey := args[0]
 			secrets.ApiKey.Set(newApiKey)
-			pcio.Printf("Config property %s updated. To clear saved keys, run %s.\n", style.Emphasis("api_key"), style.Code("pinecone logout"))
+			msg.SuccessMsg("Config property %s updated.", style.Emphasis("api_key"))
+			msg.InfoMsg("To clear saved keys, run %s.", style.Code("pinecone logout"))
 		},
 	}
 
