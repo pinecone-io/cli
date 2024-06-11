@@ -52,8 +52,8 @@ func NewDeleteProjectCmd() *cobra.Command {
 				exit.Error(err)
 			}
 
-			verifyNoIndexes(orgName, projToDelete.Name)
-			verifyNoCollections(orgName, projToDelete.Name)
+			verifyNoIndexes(orgName, projToDelete.Id, projToDelete.Name)
+			verifyNoCollections(orgName, projToDelete.Id, projToDelete.Name)
 
 			if !options.yes {
 				confirmDelete(options.name, orgId)
@@ -130,9 +130,9 @@ func confirmDelete(projectName, orgId string) {
 	}
 }
 
-func verifyNoIndexes(orgName string, projectName string) {
+func verifyNoIndexes(orgId string, projectId string, projectName string) {
 	// Check if project contains indexes
-	pc := sdk.NewPineconeClientForUserProjectByName(orgName, projectName)
+	pc := sdk.NewPineconeClientForProjectById(orgId, projectId)
 	ctx := context.Background()
 
 	idxs, err := pc.ListIndexes(ctx)
@@ -147,9 +147,9 @@ func verifyNoIndexes(orgName string, projectName string) {
 	}
 }
 
-func verifyNoCollections(orgName string, projectName string) {
+func verifyNoCollections(orgId string, projectId string, projectName string) {
 	// Check if project contains collections
-	pc := sdk.NewPineconeClientForUserProjectByName(orgName, projectName)
+	pc := sdk.NewPineconeClientForProjectById(orgId, projectId)
 	ctx := context.Background()
 
 	collections, err := pc.ListCollections(ctx)
