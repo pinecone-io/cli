@@ -3,13 +3,23 @@ package assistants
 import (
 	"fmt"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/network"
 )
 
 const (
-	URL_LIST_ASSISTANT_FILES = "/knowledge/files/%s"
+	URL_LIST_ASSISTANT_FILES         = "/knowledge/files/%s"
+	URL_LIST_ASSISTANT_FILES_STAGING = "/assistant/files/%s"
 )
+
+func getListAssistantFilesUrl() string {
+	if config.Environment.Get() == "production" {
+		return URL_LIST_ASSISTANT_FILES
+	} else {
+		return URL_LIST_ASSISTANT_FILES_STAGING
+	}
+}
 
 type AssistantFileModel struct {
 	Name      string                   `json:"name"`
@@ -33,14 +43,14 @@ type ListAssistantFilesResponse struct {
 }
 
 func ListAssistantFiles(name string) (*ListAssistantFilesResponse, error) {
-	assistantDataUrl, err := GetKnowledgeDataBaseUrl()
+	assistantDataUrl, err := GetAssistantDataBaseUrl()
 	if err != nil {
 		return nil, err
 	}
 
 	resp, err := network.GetAndDecode[ListAssistantFilesResponse](
 		assistantDataUrl,
-		fmt.Sprintf(URL_LIST_ASSISTANT_FILES, name),
+		fmt.Sprintf(getListAssistantFilesUrl(), name),
 		true,
 	)
 	if err != nil {

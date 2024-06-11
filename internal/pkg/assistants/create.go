@@ -1,12 +1,22 @@
 package assistants
 
 import (
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/network"
 )
 
 const (
-	URL_CREATE_ASSISTANT = "/knowledge/models"
+	URL_CREATE_ASSISTANT         = "/knowledge/models"
+	URL_CREATE_ASSISTANT_STAGING = "/assistant/assistants"
 )
+
+func getCreateAssistantUrl() string {
+	if config.Environment.Get() == "production" {
+		return URL_CREATE_ASSISTANT
+	} else {
+		return URL_CREATE_ASSISTANT_STAGING
+	}
+}
 
 type CreateAssistantRequest struct {
 	Name     string                 `json:"name"`
@@ -18,14 +28,14 @@ func CreateAssistant(name string) (*AssistantModel, error) {
 		Name: name,
 	}
 
-	knowledgeControlUrl, err := GetKnowledgeControlBaseUrl()
+	assistantControlUrl, err := GetAssistantControlBaseUrl()
 	if err != nil {
 		return nil, err
 	}
 
 	resp, err := network.PostAndDecode[CreateAssistantRequest, AssistantModel](
-		knowledgeControlUrl,
-		URL_CREATE_ASSISTANT,
+		assistantControlUrl,
+		getCreateAssistantUrl(),
 		true,
 		body,
 	)
