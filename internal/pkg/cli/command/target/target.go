@@ -227,7 +227,6 @@ func postLoginSetTargetOrg(orgsResponse *dashboard.OrganizationsResponse) string
 		orgName = orgsResponse.Organizations[0].Name
 		log.Info().Msgf("Only 1 org present so target org set to %s", orgName)
 	} else {
-		pcio.Println()
 		pcio.Println("Many API operations take place in the context of a specific org and project.")
 		pcio.Println(pcio.Sprintf("This CLI maintains a piece of state called the %s so it knows which \n", style.Emphasis("target")) +
 			"organization and project to use when calling the API on your behalf.")
