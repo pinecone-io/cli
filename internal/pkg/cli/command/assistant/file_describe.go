@@ -1,7 +1,7 @@
-package km
+package assistant
 
 import (
-	"github.com/pinecone-io/cli/internal/pkg/knowledge"
+	"github.com/pinecone-io/cli/internal/pkg/assistants"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -14,7 +14,7 @@ import (
 )
 
 type DescribeKnowledgeFileCmdOptions struct {
-	kmName string
+	name   string
 	fileId string
 	json   bool
 }
@@ -24,34 +24,34 @@ func NewDescribeKnowledgeFileCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:     "file-describe",
-		Short:   "Describe a file in a knowledge model",
-		GroupID: help.GROUP_KM_OPERATIONS.ID,
+		Short:   "Describe a file in an assistant",
+		GroupID: help.GROUP_ASSISTANT_OPERATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			targetKm := state.TargetKm.Get().Name
+			targetKm := state.TargetAsst.Get().Name
 			if targetKm != "" {
-				options.kmName = targetKm
+				options.name = targetKm
 			}
-			if options.kmName == "" {
-				pcio.Printf("You must target a knowledge model or specify one with the %s flag\n", style.Emphasis("--model"))
+			if options.name == "" {
+				pcio.Printf("You must target an assistant or specify one with the %s flag\n", style.Emphasis("--model"))
 				return
 			}
 
-			file, err := knowledge.DescribeKnowledgeModelFile(options.kmName, options.fileId)
+			file, err := assistants.DescribeAssistantFile(options.name, options.fileId)
 			if err != nil {
-				msg.FailMsg("Failed to describe file %s in knowledge model: %s\n", style.Emphasis(options.fileId), err)
+				msg.FailMsg("Failed to describe file %s in assistant: %s\n", style.Emphasis(options.fileId), err)
 				exit.Error(err)
 			}
 
 			if options.json {
 				text.PrettyPrintJSON(file)
 			} else {
-				presenters.PrintDescribeKnowledgeFileTable(file)
+				presenters.PrintDescribeAssistantFileTable(file)
 			}
 		},
 	}
 
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
-	cmd.Flags().StringVarP(&options.kmName, "model", "m", "", "name of the knowledge model to list files for")
+	cmd.Flags().StringVarP(&options.name, "model", "m", "", "name of the assistant to list files for")
 	cmd.Flags().StringVarP(&options.fileId, "id", "i", "", "id of the file to describe")
 	cmd.MarkFlagRequired("id")
 

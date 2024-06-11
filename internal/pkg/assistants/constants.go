@@ -1,4 +1,4 @@
-package knowledge
+package assistants
 
 import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"

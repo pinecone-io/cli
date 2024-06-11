@@ -11,7 +11,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 )
 
-func PrintChatHistory(chatHistory models.KnowledgeModelChat, maxNoMsgs int) {
+func PrintChatHistory(chatHistory models.AssistantChat, maxNoMsgs int) {
 	writer := NewTabWriter()
 
 	messages := truncateMessages(chatHistory.Messages, maxNoMsgs)

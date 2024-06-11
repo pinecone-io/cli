@@ -1,4 +1,4 @@
-package knowledge
+package assistants
 
 import (
 	"net/http"
@@ -8,14 +8,14 @@ import (
 )
 
 const (
-	URL_DELETE_KNOWLEDGE_MODEL = "/knowledge/models/%s"
+	URL_DELETE_ASSISTANT = "/knowledge/models/%s"
 )
 
 type DeleteKnowledgeModelResponse struct {
 	Success bool `json:"success"`
 }
 
-func DeleteKnowledgeModel(kmName string) (*DeleteKnowledgeModelResponse, error) {
+func DeleteAssistant(name string) (*DeleteKnowledgeModelResponse, error) {
 
 	knowledgeControlUrl, err := GetKnowledgeControlBaseUrl()
 	if err != nil {
@@ -24,7 +24,7 @@ func DeleteKnowledgeModel(kmName string) (*DeleteKnowledgeModelResponse, error) 
 
 	resp, err := network.RequestWithoutBodyAndDecode[DeleteKnowledgeModelResponse](
 		knowledgeControlUrl,
-		pcio.Sprintf(URL_DELETE_KNOWLEDGE_MODEL, kmName),
+		pcio.Sprintf(URL_DELETE_ASSISTANT, name),
 		http.MethodDelete,
 		true,
 	)

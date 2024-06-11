@@ -61,15 +61,15 @@ func NewSetEnvCmd() *cobra.Command {
 				msg.InfoMsg("To set a new API key, run %s", style.Code("pinecone config set-api-key"))
 			}
 
-			if (state.TargetOrg.Get().Name != "" || state.TargetProj.Get().Name != "") && state.TargetKm.Get().Name != "" {
+			if (state.TargetOrg.Get().Name != "" || state.TargetProj.Get().Name != "") && state.TargetAsst.Get().Name != "" {
 				state.TargetOrg.Clear()
 				state.TargetProj.Clear()
 				msg.InfoMsg("Target organization and project cleared; to set a new target, run %s", style.Code("pinecone target -o myorg -p myproj"))
 			}
 
-			if state.TargetKm.Get().Name != "" {
-				state.TargetKm.Clear()
-				msg.InfoMsg("Target knowledge model cleared; to set a new target model, run %s", style.Code("pinecone km target -m mymodel"))
+			if state.TargetAsst.Get().Name != "" {
+				state.TargetAsst.Clear()
+				msg.InfoMsg("Target assistant cleared; to set a new target assistant, run %s", style.Code("pinecone assistant target -m myassistant"))
 			}
 		},
 	}

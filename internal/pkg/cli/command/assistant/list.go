@@ -1,11 +1,11 @@
-package km
+package assistant
 
 import (
 	"os"
 	"strings"
 	"text/tabwriter"
 
-	"github.com/pinecone-io/cli/internal/pkg/knowledge"
+	"github.com/pinecone-io/cli/internal/pkg/assistants"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -19,15 +19,15 @@ type ListKnowledgeModelsCmdOptions struct {
 	json bool
 }
 
-func NewListKnowledgeModelsCmd() *cobra.Command {
+func NewListAssistantsCmd() *cobra.Command {
 	options := ListKnowledgeModelsCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "list",
-		Short:   "See the list of knowledge models in the targeted project",
-		GroupID: help.GROUP_KM_MANAGEMENT.ID,
+		Short:   "See the list of assistants in the targeted project",
+		GroupID: help.GROUP_ASSISTANT_MANAGEMENT.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			modelList, err := knowledge.ListKnowledgeModels()
+			modelList, err := assistants.ListAssistants()
 			if err != nil {
 				exit.Error(err)
 			}
@@ -39,7 +39,7 @@ func NewListKnowledgeModelsCmd() *cobra.Command {
 
 			modelCount := len(modelList.KnowledgeModels)
 			if modelCount == 0 {
-				msg.InfoMsg("No knowledge models found. Create one with %s.\n", style.Code("pinecone km create"))
+				msg.InfoMsg("No assistants found. Create one with %s.\n", style.Code("pinecone assistant create"))
 				return
 			}
 
@@ -52,7 +52,7 @@ func NewListKnowledgeModelsCmd() *cobra.Command {
 	return cmd
 }
 
-func printTableModels(models []knowledge.KnowledgeModel) {
+func printTableModels(models []assistants.AssistantModel) {
 	writer := tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
 
 	columns := []string{"NAME", "METADATA", "STATUS", "CREATED_AT", "UPDATED_AT"}

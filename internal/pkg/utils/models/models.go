@@ -17,9 +17,9 @@ type ChatCompletionMessage struct {
 	Content string `json:"content"`
 }
 
-type KnowledgeModelChatHistory map[string]KnowledgeModelChat
+type AssistantChatHistory map[string]AssistantChat
 
-type KnowledgeModelChat struct {
+type AssistantChat struct {
 	Messages  []ChatCompletionMessage `json:"messages"`
 	CreatedOn time.Time               `json:"created_on"`
 }

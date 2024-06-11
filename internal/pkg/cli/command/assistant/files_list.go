@@ -1,4 +1,4 @@
-package km
+package assistant
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/pinecone-io/cli/internal/pkg/knowledge"
+	"github.com/pinecone-io/cli/internal/pkg/assistants"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -18,30 +18,30 @@ import (
 )
 
 type ListKnowledgeFilesCmdOptions struct {
-	json   bool
-	kmName string
+	json bool
+	name string
 }
 
-func NewListKnowledgeFilesCmd() *cobra.Command {
+func NewListAssistantFilesCmd() *cobra.Command {
 	options := ListKnowledgeFilesCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "files",
-		Short:   "See the list of files in a knowledge model",
-		GroupID: help.GROUP_KM_OPERATIONS.ID,
+		Short:   "See the list of files in an assistant",
+		GroupID: help.GROUP_ASSISTANT_OPERATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			targetKm := state.TargetKm.Get().Name
+			targetKm := state.TargetAsst.Get().Name
 			if targetKm != "" {
-				options.kmName = targetKm
+				options.name = targetKm
 			}
-			if options.kmName == "" {
-				msg.FailMsg("You must target a knowledge model or specify one with the %s flag\n", style.Emphasis("--model"))
-				exit.Error(fmt.Errorf("no knowledge model specified"))
+			if options.name == "" {
+				msg.FailMsg("You must target an assistant or specify one with the %s flag\n", style.Emphasis("--model"))
+				exit.Error(fmt.Errorf("no assistant specified"))
 			}
 
-			fileList, err := knowledge.ListKnowledgeModelFiles(options.kmName)
+			fileList, err := assistants.ListAssistantFiles(options.name)
 			if err != nil {
-				msg.FailMsg("Failed to list files for knowledge model %s: %s\n", style.Emphasis(options.kmName), err)
+				msg.FailMsg("Failed to list files for assistant %s: %s\n", style.Emphasis(options.name), err)
 				exit.Error(err)
 			}
 
@@ -52,7 +52,7 @@ func NewListKnowledgeFilesCmd() *cobra.Command {
 
 			fileCount := len(fileList.Files)
 			if fileCount == 0 {
-				msg.InfoMsg("No files found in knowledge model %s. Add one with %s.\n", style.Emphasis(options.kmName), style.Code("pinecone km file-upload"))
+				msg.InfoMsg("No files found in assistant %s. Add one with %s.\n", style.Emphasis(options.name), style.Code("pinecone assistant file-upload"))
 				return
 			}
 
@@ -61,12 +61,12 @@ func NewListKnowledgeFilesCmd() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
-	cmd.Flags().StringVarP(&options.kmName, "model", "m", "", "name of the knowledge model to list files for")
+	cmd.Flags().StringVarP(&options.name, "model", "m", "", "name of the assistant to list files for")
 
 	return cmd
 }
 
-func printTableFiles(files []knowledge.KnowledgeFileModel) {
+func printTableFiles(files []assistants.AssistantFileModel) {
 	writer := tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
 
 	columns := []string{"NAME", "ID", "METADATA", "CREATED_ON", "UPDATED_ON", "STATUS"}
