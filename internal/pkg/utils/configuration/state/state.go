@@ -18,13 +18,13 @@ type TargetProject struct {
 	Id   string `json:"global_id"`
 }
 
-type TargetKnowledgeModel struct {
+type TargetAssistant struct {
 	Name string `json:"name"`
 	Id   string `json:"id"`
 }
 
 type ChatHistory struct {
-	History *models.KnowledgeModelChatHistory `json:"history"`
+	History *models.AssistantChatHistory `json:"history"`
 }
 
 var (
@@ -44,10 +44,10 @@ var (
 			Id:   "",
 		},
 	}
-	TargetKm = configuration.MarshaledProperty[TargetKnowledgeModel]{
+	TargetAsst = configuration.MarshaledProperty[TargetAssistant]{
 		KeyName:    "target_knowledge_model",
 		ViperStore: StateViper,
-		DefaultValue: &TargetKnowledgeModel{
+		DefaultValue: &TargetAssistant{
 			Name: "",
 		},
 	}
@@ -55,14 +55,14 @@ var (
 		KeyName:    "chat_history",
 		ViperStore: StateViper,
 		DefaultValue: &ChatHistory{
-			History: &models.KnowledgeModelChatHistory{},
+			History: &models.AssistantChatHistory{},
 		},
 	}
 )
 var properties = []configuration.Property{
 	TargetOrg,
 	TargetProj,
-	TargetKm,
+	TargetAsst,
 	ChatHist,
 }
 

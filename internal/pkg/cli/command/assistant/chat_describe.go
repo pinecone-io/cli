@@ -1,4 +1,4 @@
-package km
+package assistant
 
 import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
@@ -9,31 +9,31 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type KnowledgeModelChatDescribeCmdOptions struct {
-	json   bool
-	kmName string
+type AssistantChatDescribeCmdOptions struct {
+	json bool
+	name string
 }
 
-func NewKnowledgeModelChatDescribeCmd() *cobra.Command {
-	options := KnowledgeModelChatDescribeCmdOptions{}
+func NewAssistantChatDescribeCmd() *cobra.Command {
+	options := AssistantChatDescribeCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "describe",
-		Short: "Describe a knowledge model chat",
+		Short: "Describe an assistant chat",
 		Run: func(cmd *cobra.Command, args []string) {
-			targetKm := state.TargetKm.Get().Name
+			targetKm := state.TargetAsst.Get().Name
 			if targetKm != "" {
-				options.kmName = targetKm
+				options.name = targetKm
 			}
-			if options.kmName == "" {
-				pcio.Printf("You must target a knowledge model or specify one with the %s flag\n", style.Emphasis("--name"))
+			if options.name == "" {
+				pcio.Printf("You must target an assistant or specify one with the %s flag\n", style.Emphasis("--name"))
 				return
 			}
 
 			chatHistory := state.ChatHist.Get()
-			chat, ok := (*chatHistory.History)[options.kmName]
+			chat, ok := (*chatHistory.History)[options.name]
 			if !ok {
-				pcio.Printf("No chat history found for knowledge model %s\n", style.Emphasis(options.kmName))
+				pcio.Printf("No chat history found for assistant %s\n", style.Emphasis(options.name))
 				return
 			}
 
@@ -45,7 +45,7 @@ func NewKnowledgeModelChatDescribeCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.kmName, "name", "n", "", "name of the knowledge base to describe")
+	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the assistant chat to describe")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	return cmd

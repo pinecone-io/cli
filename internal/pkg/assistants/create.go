@@ -1,20 +1,20 @@
-package knowledge
+package assistants
 
 import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/network"
 )
 
 const (
-	URL_POST_KNOWLEDGE_MODEL = "/knowledge/models"
+	URL_CREATE_ASSISTANT = "/knowledge/models"
 )
 
-type CreateKnowledgeModelRequest struct {
+type CreateAssistantRequest struct {
 	Name     string                 `json:"name"`
 	Metadata map[string]interface{} `json:"metadata"`
 }
 
-func CreateKnowledgeModel(name string) (*KnowledgeModel, error) {
-	body := CreateKnowledgeModelRequest{
+func CreateAssistant(name string) (*AssistantModel, error) {
+	body := CreateAssistantRequest{
 		Name: name,
 	}
 
@@ -23,9 +23,9 @@ func CreateKnowledgeModel(name string) (*KnowledgeModel, error) {
 		return nil, err
 	}
 
-	resp, err := network.PostAndDecode[CreateKnowledgeModelRequest, KnowledgeModel](
+	resp, err := network.PostAndDecode[CreateAssistantRequest, AssistantModel](
 		knowledgeControlUrl,
-		URL_POST_KNOWLEDGE_MODEL,
+		URL_CREATE_ASSISTANT,
 		true,
 		body,
 	)

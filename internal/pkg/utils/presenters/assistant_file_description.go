@@ -3,14 +3,12 @@ package presenters
 import (
 	"strings"
 
-	"github.com/pinecone-io/cli/internal/pkg/knowledge"
-	"github.com/pinecone-io/cli/internal/pkg/utils/log"
+	"github.com/pinecone-io/cli/internal/pkg/assistants"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
-func PrintDescribeKnowledgeFileTable(file *knowledge.KnowledgeFileModel) {
+func PrintDescribeAssistantFileTable(file *assistants.AssistantFileModel) {
 	writer := NewTabWriter()
-	log.Debug().Str("file_id", file.Id).Msg("Printing knowledge file description")
 
 	columns := []string{"ATTIRBUTE", "VALUE"}
 	header := strings.Join(columns, "\t") + "\n"

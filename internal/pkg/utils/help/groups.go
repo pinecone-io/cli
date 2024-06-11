@@ -10,41 +10,36 @@ var (
 		ID:    "getting-started",
 		Title: style.Heading("Auth Commands"),
 	}
-
-	GROUP_VECTORDB = &cobra.Group{
-		ID:    "vectordb",
-		Title: style.Heading("Vector Database Commands"),
-	}
-
-	GROUP_KNOWLEDGE_MODEL = &cobra.Group{
-		ID:    "km",
-		Title: style.Heading("Knowledge Model Commands"),
-	}
-
 	GROUP_MANAGEMENT = &cobra.Group{
 		ID:    "index",
 		Title: style.Heading("Management Commands"),
 	}
-
+	GROUP_VECTORDB = &cobra.Group{
+		ID:    "vectordb",
+		Title: style.Heading("Vector Database Commands"),
+	}
 	GROUP_PROJECTS_API_KEYS = &cobra.Group{
 		ID:    "keys",
 		Title: style.Heading("API Key Management"),
 	}
-
 	GROUP_PROJECTS_CRUD = &cobra.Group{
 		ID:    "projects",
 		Title: style.Heading("Project Management"),
 	}
-	GROUP_KM_TARGETING = &cobra.Group{
-		ID:    "km_targeting",
-		Title: style.Heading("Target Knowledge Model"),
+	GROUP_ASSISTANT = &cobra.Group{
+		ID:    "assistant",
+		Title: style.Heading("Assistant Commands"),
 	}
-	GROUP_KM_MANAGEMENT = &cobra.Group{
-		ID:    "km_management",
-		Title: style.Heading("Knowledge Model Management"),
+	GROUP_ASSISTANT_TARGETING = &cobra.Group{
+		ID:    "assistant_targeting",
+		Title: style.Heading("Target Assistant"),
 	}
-	GROUP_KM_OPERATIONS = &cobra.Group{
-		ID:    "km_operations",
-		Title: style.Heading("Knowledge Model Operations"),
+	GROUP_ASSISTANT_MANAGEMENT = &cobra.Group{
+		ID:    "assistant_management",
+		Title: style.Heading("Assistant Management"),
+	}
+	GROUP_ASSISTANT_OPERATIONS = &cobra.Group{
+		ID:    "assistant_operations",
+		Title: style.Heading("Assistant Operations"),
 	}
 )

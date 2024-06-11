@@ -144,7 +144,7 @@ func RequestWithBodyAndDecode[B any, R any](baseUrl string, path string, method 
 func RequestWithoutBodyAndDecode[T any](baseUrl string, path string, method string, useApiKey bool) (*T, error) {
 	url := baseUrl + path
 
-	requestedService := "knowledge engine"
+	requestedService := "assistant engine"
 	if strings.Contains(url, "console") {
 		requestedService = "dashboard"
 	}

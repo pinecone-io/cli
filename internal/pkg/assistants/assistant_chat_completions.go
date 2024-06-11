@@ -1,4 +1,4 @@
-package knowledge
+package assistants
 
 import (
 	"fmt"
@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	URL_KNOWLEDGE_MODEL_CHAT_COMPLETIONS = "/knowledge/chat/%s/chat/completions"
+	URL_ASSISTANT_CHAT_COMPLETIONS = "/knowledge/chat/%s/chat/completions"
 )
 
-func GetKnowledgeModelSearchCompletions(kmName string, msg string) (*models.ChatCompletionModel, error) {
+func GetAssistantChatCompletions(kmName string, msg string) (*models.ChatCompletionModel, error) {
 	outgoingMsg := models.ChatCompletionMessage{
 		Role:    "user",
 		Content: msg,
@@ -21,7 +21,7 @@ func GetKnowledgeModelSearchCompletions(kmName string, msg string) (*models.Chat
 	chatHistory := state.ChatHist.Get()
 	chat, exists := (*chatHistory.History)[kmName]
 	if !exists {
-		chat = models.KnowledgeModelChat{}
+		chat = models.AssistantChat{}
 		(*chatHistory.History)[kmName] = chat
 	}
 
@@ -39,7 +39,7 @@ func GetKnowledgeModelSearchCompletions(kmName string, msg string) (*models.Chat
 
 	resp, err := network.PostAndDecode[models.ChatCompletionRequest, models.ChatCompletionModel](
 		knowledgeDataUrl,
-		fmt.Sprintf(URL_KNOWLEDGE_MODEL_CHAT_COMPLETIONS, kmName),
+		fmt.Sprintf(URL_ASSISTANT_CHAT_COMPLETIONS, kmName),
 		true,
 		body,
 	)

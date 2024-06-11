@@ -1,4 +1,4 @@
-package km
+package assistant
 
 import (
 	"bufio"
@@ -9,7 +9,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/pinecone-io/cli/internal/pkg/knowledge"
+	"github.com/pinecone-io/cli/internal/pkg/assistants"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -20,46 +20,46 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type KnowledgeModelChatCmdOptions struct {
-	kmName  string
+type AssistantChatCmdOptions struct {
+	name    string
 	message string
 	json    bool
 }
 
-func NewKnowledgeModelChatCmd() *cobra.Command {
-	options := KnowledgeModelChatCmdOptions{}
+func NewAssistantChatCmd() *cobra.Command {
+	options := AssistantChatCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "chat",
-		Short:   "Chat with a knowledge model",
-		GroupID: help.GROUP_KM_OPERATIONS.ID,
+		Short:   "Chat with an assistant",
+		GroupID: help.GROUP_ASSISTANT_OPERATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			targetKm := state.TargetKm.Get().Name
+			targetKm := state.TargetAsst.Get().Name
 			if targetKm != "" {
-				options.kmName = targetKm
+				options.name = targetKm
 			}
-			if options.kmName == "" {
-				pcio.Printf("You must target a knowledge model or specify one with the %s flag\n", style.Emphasis("--name"))
+			if options.name == "" {
+				pcio.Printf("You must target an assistant or specify one with the %s flag\n", style.Emphasis("--name"))
 				return
 			}
 
 			// If no message is provided drop them into chat
 			if options.message == "" {
-				startChat(options.kmName)
+				startChat(options.name)
 			} else {
-				// If message is provided, send it to the knowledge model
-				sendMessage(options.kmName, options.message)
+				// If message is provided, send it to the assistant
+				sendMessage(options.name, options.message)
 			}
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.kmName, "name", "n", "", "name of the knowledge model to chat with")
+	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the assistant to chat with")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
-	cmd.Flags().StringVarP(&options.message, "message", "m", "", "your message to the knowledge model")
+	cmd.Flags().StringVarP(&options.message, "message", "m", "", "your message to the assistant")
 	cmd.MarkFlagRequired("content")
 
-	cmd.AddCommand(NewKnowledgeModelChatClearCmd())
-	cmd.AddCommand(NewKnowledgeModelChatDescribeCmd())
+	cmd.AddCommand(NewAssistantChatClearCmd())
+	cmd.AddCommand(NewAssistantChatDescribeCmd())
 
 	return cmd
 }
@@ -70,14 +70,14 @@ func startChat(kmName string) {
 	// Display previous chat history up to 10 messages
 	displayChatHistory(kmName, 10)
 
-	pcio.Printf("\n\nNow chatting with knowledge model %s. Type your message and press Enter. Press CTRL+C to exit, or pass \"exit()\"\n\n", style.Emphasis(kmName))
+	pcio.Printf("\n\nNow chatting with assistant %s. Type your message and press Enter. Press CTRL+C to exit, or pass \"exit()\"\n\n", style.Emphasis(kmName))
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
 	go func() {
 		<-ctx.Done()
-		pcio.Printf("\nExiting chat with knowledge model %s.\n\n", style.Emphasis(kmName))
+		pcio.Printf("\nExiting chat with assistant %s.\n\n", style.Emphasis(kmName))
 		os.Exit(0)
 	}()
 
@@ -107,7 +107,7 @@ func sendMessage(kmName string, message string) (*models.ChatCompletionModel, er
 	response := &models.ChatCompletionModel{}
 
 	err := style.Spinner("", func() error {
-		chatResponse, err := knowledge.GetKnowledgeModelSearchCompletions(kmName, message)
+		chatResponse, err := assistants.GetAssistantChatCompletions(kmName, message)
 		if err != nil {
 			exit.Error(err)
 		}
@@ -130,7 +130,7 @@ func displayChatHistory(kmName string, maxNoMsgs int) {
 	chatHistory := state.ChatHist.Get()
 	chat, ok := (*chatHistory.History)[kmName]
 	if !ok {
-		pcio.Printf("No chat history found for knowledge model %s\n", style.Emphasis(kmName))
+		pcio.Printf("No chat history found for assistant %s\n", style.Emphasis(kmName))
 		return
 	}
 

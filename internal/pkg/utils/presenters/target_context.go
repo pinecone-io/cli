@@ -35,15 +35,15 @@ func PrintTargetContext(context *state.TargetContext) {
 
 func PrintTargetKnowledgeModel(context *state.TargetContext) {
 	log.Info().
-		Str("knowledge model", context.KnowledgeModel).
-		Msg("Printing target knowledge model")
+		Str("assistant", context.Assistant).
+		Msg("Printing target assistant")
 	writer := NewTabWriter()
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
 	header := strings.Join(columns, "\t") + "\n"
 	pcio.Fprint(writer, header)
 
-	pcio.Fprintf(writer, "Knowledge Model\t%s\n", labelUnsetIfEmpty(context.KnowledgeModel))
+	pcio.Fprintf(writer, "Assistant\t%s\n", labelUnsetIfEmpty(context.Assistant))
 
 	writer.Flush()
 }

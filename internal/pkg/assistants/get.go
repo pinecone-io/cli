@@ -1,4 +1,4 @@
-package knowledge
+package assistants
 
 import (
 	"fmt"
@@ -8,29 +8,29 @@ import (
 )
 
 const (
-	URL_DESCRIBE_KNOWLEDGE_MODEL = "/knowledge/models/%s"
+	URL_DESCRIBE_ASSISTANT = "/knowledge/models/%s"
 )
 
-func DescribeKnowledgeModel(kmName string) (*KnowledgeModel, error) {
+func DescribeAssistant(name string) (*AssistantModel, error) {
 	knowledgeControlUrl, err := GetKnowledgeControlBaseUrl()
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := network.GetAndDecode[KnowledgeModel](
+	resp, err := network.GetAndDecode[AssistantModel](
 		knowledgeControlUrl,
-		fmt.Sprintf(URL_DESCRIBE_KNOWLEDGE_MODEL, kmName),
+		fmt.Sprintf(URL_DESCRIBE_ASSISTANT, name),
 		true,
 	)
 	if err != nil {
 		return nil, err
 	}
 	log.Trace().
-		Str("model", resp.Name).
+		Str("name", resp.Name).
 		Str("status", string(resp.Status)).
 		Str("created_at", resp.CreatedAt).
 		Str("updated_at", resp.UpdatedAt).
 		Str("metadata", resp.Metadata.ToString()).
-		Msg("found model")
+		Msg("found assistant")
 	return resp, nil
 }

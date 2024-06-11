@@ -1,4 +1,4 @@
-package knowledge
+package assistants
 
 import (
 	"fmt"
@@ -9,18 +9,18 @@ import (
 )
 
 const (
-	URL_GET_KNOWLEDGE_MODEL_FILE = "/knowledge/files/%s/%s"
+	URL_DESCRIBE_ASSISTANT_FILE = "/knowledge/files/%s/%s"
 )
 
-func DescribeKnowledgeModelFile(kmName string, fileId string) (*KnowledgeFileModel, error) {
-	knowledgeDataUrl, err := GetKnowledgeDataBaseUrl()
+func DescribeAssistantFile(name string, fileId string) (*AssistantFileModel, error) {
+	assistantDataUrl, err := GetKnowledgeDataBaseUrl()
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := network.GetAndDecode[KnowledgeFileModel](
-		knowledgeDataUrl,
-		fmt.Sprintf(URL_GET_KNOWLEDGE_MODEL_FILE, kmName, fileId),
+	resp, err := network.GetAndDecode[AssistantFileModel](
+		assistantDataUrl,
+		fmt.Sprintf(URL_DESCRIBE_ASSISTANT_FILE, name, fileId),
 		true,
 	)
 	if err != nil {

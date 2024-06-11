@@ -3,10 +3,10 @@ package pinecone
 import (
 	"os"
 
+	assistant "github.com/pinecone-io/cli/internal/pkg/cli/command/assistant"
 	collection "github.com/pinecone-io/cli/internal/pkg/cli/command/collection"
 	configCmd "github.com/pinecone-io/cli/internal/pkg/cli/command/config"
 	index "github.com/pinecone-io/cli/internal/pkg/cli/command/index"
-	"github.com/pinecone-io/cli/internal/pkg/cli/command/km"
 	login "github.com/pinecone-io/cli/internal/pkg/cli/command/login"
 	logout "github.com/pinecone-io/cli/internal/pkg/cli/command/logout"
 	target "github.com/pinecone-io/cli/internal/pkg/cli/command/target"
@@ -70,9 +70,9 @@ Get started by logging in with
 	rootCmd.AddCommand(index.NewIndexCmd())
 	rootCmd.AddCommand(collection.NewCollectionCmd())
 
-	// Knowledge engine group
-	rootCmd.AddGroup(help.GROUP_KNOWLEDGE_MODEL)
-	rootCmd.AddCommand(km.NewKmCommand())
+	// Assistant group
+	rootCmd.AddGroup(help.GROUP_ASSISTANT)
+	rootCmd.AddCommand(assistant.NewAssistantCommand())
 
 	// Misc group
 	rootCmd.AddCommand(version.NewVersionCmd())

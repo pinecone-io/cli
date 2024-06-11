@@ -1,4 +1,4 @@
-package km
+package assistant
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/pinecone-io/cli/internal/pkg/knowledge"
+	"github.com/pinecone-io/cli/internal/pkg/assistants"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -23,26 +23,26 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type KmTargetCmdOptions struct {
-	KmName      string
+type AssistantTargetCmdOptions struct {
+	name        string
 	json        bool
 	clear       bool
 	interactive bool
 }
 
-var kmTargetHelpPart1 string = text.WordWrap(`There are many knowledge model commands which target a specific
-knowledge model. This command allows you to set and clear the target knowledge model for performing operations.`, 80)
+var kmTargetHelpPart1 string = text.WordWrap(`There are many assistant commands which target a specific
+assistant. This command allows you to set and clear the target assistant for performing operations.`, 80)
 
 var targetHelp = pcio.Sprintf("%s\n", kmTargetHelpPart1)
 
-func NewKmTargetCmd() *cobra.Command {
-	options := KmTargetCmdOptions{}
+func NewAssistantTargetCmd() *cobra.Command {
+	options := AssistantTargetCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "target <flags>",
-		Short:   "Set the target knowledge model",
+		Short:   "Set the target assistant",
 		Long:    targetHelp,
-		GroupID: help.GROUP_KM_TARGETING.ID,
+		GroupID: help.GROUP_ASSISTANT_TARGETING.ID,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) > 0 {
 				return fmt.Errorf("positional arguments not accepted, please use flags")
@@ -51,39 +51,39 @@ func NewKmTargetCmd() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debug().
-				Str("kmName", options.KmName).
+				Str("Name", options.name).
 				Bool("json", options.json).
 				Bool("clear", options.clear).
-				Msg("km target command invoked")
+				Msg("assistant target command invoked")
 
 			// Clear targets
 			if options.clear {
-				state.TargetKm.Clear()
+				state.TargetAsst.Clear()
 
 				if !options.json {
-					msg.SuccessMsg("Target knowledge model cleared.\n")
+					msg.SuccessMsg("Target assistant cleared.\n")
 				}
 				printTarget(options.json)
 				return
 			}
 
-			// Print current target if no knowledge model is specified
-			if options.KmName == "" && !options.interactive {
+			// Print current target if no assistant is specified
+			if options.name == "" && !options.interactive {
 				printTarget(options.json)
 				return
 			}
 
 			// If model is specified, set target
-			modelList, err := knowledge.ListKnowledgeModels()
+			modelList, err := assistants.ListAssistants()
 			if err != nil {
-				msg.FailMsg("An error occured while attempting to fetch a list of knowledge models: %s\n", err)
+				msg.FailMsg("An error occured while attempting to fetch a list of assistants: %s\n", err)
 				exit.Error(err)
 			}
-			if options.KmName != "" {
+			if options.name != "" {
 				// Check if model exists
 				modelExists := false
 				for _, model := range modelList.KnowledgeModels {
-					if model.Name == options.KmName {
+					if model.Name == options.name {
 						modelExists = true
 						break
 					}
@@ -97,15 +97,15 @@ func NewKmTargetCmd() *cobra.Command {
 					sort.Strings(availableModels)
 					availableModelsStr := fmt.Sprintf("[%s]", strings.Join(availableModels, ", "))
 
-					msg.FailMsg("Knowledge model %s not found. Available models: %s\n", style.Emphasis(options.KmName), style.Emphasis(availableModelsStr))
-					exit.ErrorMsg("knowledge model not found")
+					msg.FailMsg("Assistant %s not found. Available models: %s\n", style.Emphasis(options.name), style.Emphasis(availableModelsStr))
+					exit.ErrorMsg("assistant not found")
 					return
 				}
 
-				state.TargetKm.Set(&state.TargetKnowledgeModel{Name: options.KmName})
+				state.TargetAsst.Set(&state.TargetAssistant{Name: options.name})
 
 				if !options.json {
-					msg.SuccessMsg("Target knowledge model set to %s\n", style.Emphasis(options.KmName))
+					msg.SuccessMsg("Target assistant set to %s\n", style.Emphasis(options.name))
 				}
 				printTarget(options.json)
 				return
@@ -113,8 +113,8 @@ func NewKmTargetCmd() *cobra.Command {
 
 			if options.interactive {
 				if len(modelList.KnowledgeModels) == 0 {
-					msg.InfoMsg("No knowledge models found. Create one with %s.\n", style.Code("pinecone km create"))
-					exit.ErrorMsg("No knowledge models found")
+					msg.InfoMsg("No assistants found. Create one with %s.\n", style.Code("pinecone assistant create"))
+					exit.ErrorMsg("no assistants found")
 				}
 
 				modelNames := make([]string, len(modelList.KnowledgeModels))
@@ -129,20 +129,20 @@ func NewKmTargetCmd() *cobra.Command {
 					exit.Success()
 				}
 
-				state.TargetKm.Set(&state.TargetKnowledgeModel{Name: selectedModel})
-				msg.SuccessMsg("Target knowledge model set to %s\n", style.Emphasis(selectedModel))
+				state.TargetAsst.Set(&state.TargetAssistant{Name: selectedModel})
+				msg.SuccessMsg("Target assistant set to %s\n", style.Emphasis(selectedModel))
 				printTarget(options.json)
 			} else {
-				msg.FailMsg("You must specify a knowledge model with %s or use the %s flag to choose one interactively\n", style.Code("--model"), style.Code("-i"))
-				exit.ErrorMsg("no knowledge model specified")
+				msg.FailMsg("You must specify an assistant with %s or use the %s flag to choose one interactively\n", style.Code("--model"), style.Code("-i"))
+				exit.ErrorMsg("no assistant specified")
 			}
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.KmName, "model", "m", "", "name of the knowledge model to target")
+	cmd.Flags().StringVarP(&options.name, "model", "m", "", "name of the assistant to target")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 	cmd.Flags().BoolVarP(&options.interactive, "interactive", "i", false, "choose a model interactively")
-	cmd.Flags().BoolVar(&options.clear, "clear", false, "clear the target knowledge model")
+	cmd.Flags().BoolVar(&options.clear, "clear", false, "clear the target assistant")
 
 	return cmd
 }
@@ -157,19 +157,19 @@ func printTarget(useJson bool) {
 
 func uiModelSelector(availableModels []string) string {
 	var targetModel string = ""
-	prompt := "Choose a model to target"
+	prompt := "Choose an assistant to target"
 	listHeight := len(availableModels) + 4
 	onQuit := func() {
-		pcio.Println("Exiting without targeting a model.")
-		pcio.Printf("You can always run %s to change model context later.\n", style.Code("pinecone km target -i"))
+		pcio.Println("Exiting without targeting an assistant.")
+		pcio.Printf("You can always run %s to change assistant context later.\n", style.Code("pinecone assistant target -i"))
 	}
 	onChoice := func(choice string) string {
 		targetModel = choice
-		return "Target model: " + choice
+		return "Target assistant: " + choice
 	}
 	m2 := NewList(availableModels, listHeight, prompt, onQuit, onChoice)
 	if _, err := tea.NewProgram(m2).Run(); err != nil {
-		pcio.Println("Error selecting knowledge model:", err)
+		pcio.Println("Error selecting assistant:", err)
 		exit.Error(err)
 	}
 	return targetModel
