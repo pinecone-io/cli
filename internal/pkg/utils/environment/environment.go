@@ -7,8 +7,8 @@ import (
 type EnvironmentConnectionSettings struct {
 	DashboardUrl             string
 	IndexControlPlaneUrl     string
-	KnowledgeControlPlaneUrl string
-	KnowledgeDataPlaneUrl    string
+	AssistantControlPlaneUrl string
+	AssistantDataPlaneUrl    string
 
 	Auth0ClientId string
 	Auth0URL      string
@@ -19,8 +19,8 @@ var (
 	Prod = EnvironmentConnectionSettings{
 		DashboardUrl:             "https://console-api.pinecone.io",
 		IndexControlPlaneUrl:     "https://api.pinecone.io",
-		KnowledgeControlPlaneUrl: "https://api.pinecone.io",
-		KnowledgeDataPlaneUrl:    "https://prod-1-data.ke.pinecone.io",
+		AssistantControlPlaneUrl: "https://api.pinecone.io",
+		AssistantDataPlaneUrl:    "https://prod-1-data.ke.pinecone.io",
 
 		Auth0ClientId: "A4ONXSaOGstwwir0zUztoI6zjyt9zsRH",
 		Auth0URL:      "https://login.pinecone.io",
@@ -30,8 +30,8 @@ var (
 	Staging = EnvironmentConnectionSettings{
 		DashboardUrl:             "https://staging.console-api.pinecone.io",
 		IndexControlPlaneUrl:     "https://api-staging.pinecone.io",
-		KnowledgeControlPlaneUrl: "https://api-staging.pinecone.io",
-		KnowledgeDataPlaneUrl:    "https://staging-data.ke.pinecone.io",
+		AssistantControlPlaneUrl: "https://api-staging.pinecone.io",
+		AssistantDataPlaneUrl:    "https://staging-data.ke.pinecone.io",
 
 		Auth0ClientId: "jnuhtpQxTzYw0zrpWdFUEMXS9Bx4FDAR",
 		Auth0URL:      "https://internal-beta-pinecone-io.us.auth0.com",

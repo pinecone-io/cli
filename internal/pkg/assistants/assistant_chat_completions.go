@@ -3,6 +3,7 @@ package assistants
 import (
 	"fmt"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/models"
@@ -10,8 +11,17 @@ import (
 )
 
 const (
-	URL_ASSISTANT_CHAT_COMPLETIONS = "/knowledge/chat/%s/chat/completions"
+	URL_ASSISTANT_CHAT_COMPLETIONS         = "/knowledge/chat/%s/chat/completions"
+	URL_ASSISTANT_CHAT_COMPLETIONS_STAGING = "/assistant/chat/%s/chat/completions"
 )
+
+func getAssistantChatCompletionsUrl() string {
+	if config.Environment.Get() == "production" {
+		return URL_ASSISTANT_CHAT_COMPLETIONS
+	} else {
+		return URL_ASSISTANT_CHAT_COMPLETIONS_STAGING
+	}
+}
 
 func GetAssistantChatCompletions(kmName string, msg string) (*models.ChatCompletionModel, error) {
 	outgoingMsg := models.ChatCompletionMessage{
@@ -32,14 +42,14 @@ func GetAssistantChatCompletions(kmName string, msg string) (*models.ChatComplet
 		Messages: chat.Messages,
 	}
 
-	knowledgeDataUrl, err := GetKnowledgeDataBaseUrl()
+	assistantDataUrl, err := GetAssistantDataBaseUrl()
 	if err != nil {
 		return nil, err
 	}
 
 	resp, err := network.PostAndDecode[models.ChatCompletionRequest, models.ChatCompletionModel](
-		knowledgeDataUrl,
-		fmt.Sprintf(URL_ASSISTANT_CHAT_COMPLETIONS, kmName),
+		assistantDataUrl,
+		fmt.Sprintf(getAssistantChatCompletionsUrl(), kmName),
 		true,
 		body,
 	)

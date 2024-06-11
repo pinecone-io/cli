@@ -3,13 +3,23 @@ package assistants
 import (
 	"encoding/json"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/network"
 )
 
 const (
-	URL_LIST_ASSISTANTS = "/knowledge/models"
+	URL_LIST_ASSISTANTS         = "/knowledge/models"
+	URL_LIST_ASSISTANTS_STAGING = "/assistant/assistants"
 )
+
+func getListAssistantsUrl() string {
+	if config.Environment.Get() == "production" {
+		return URL_LIST_ASSISTANTS
+	} else {
+		return URL_LIST_ASSISTANTS_STAGING
+	}
+}
 
 type AssistantModel struct {
 	Name      string               `json:"name"`
@@ -44,14 +54,14 @@ type ListAssistantsResponse struct {
 }
 
 func ListAssistants() (*ListAssistantsResponse, error) {
-	knowledgeControlUrl, err := GetKnowledgeControlBaseUrl()
+	assistantControlUrl, err := GetAssistantControlBaseUrl()
 	if err != nil {
 		return nil, err
 	}
 
 	resp, err := network.GetAndDecode[ListAssistantsResponse](
-		knowledgeControlUrl,
-		URL_LIST_ASSISTANTS,
+		assistantControlUrl,
+		getListAssistantsUrl(),
 		true,
 	)
 	if err != nil {
