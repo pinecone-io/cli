@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -66,6 +67,26 @@ func NewTargetCmd() *cobra.Command {
 				return
 			}
 
+			// Print current target if no org, project, or knowledge model is specified
+			if options.show {
+				if options.json {
+					log.Info().Msg("Outputting target context as JSON")
+					text.PrettyPrintJSON(state.GetTargetContext())
+					return
+				}
+				log.Info().
+					Msg("Outputting target context as table")
+				presenters.PrintTargetContext(state.GetTargetContext())
+				return
+			}
+
+			access_token := secrets.OAuth2Token.Get()
+			if access_token.AccessToken == "" {
+				msg.FailMsg("You must be logged in to set a target context. Run %s to log in.", style.Code("pinecone login"))
+				exit.ErrorMsg("You must be logged in to set a target context")
+			}
+
+			// Interactive targeting if logged in
 			if options.Org == "" && options.Project == "" && !options.show {
 				// Fetch the user's organizations and projects
 				orgsResponse, err := dashboard.ListOrganizations()
@@ -83,19 +104,6 @@ func NewTargetCmd() *cobra.Command {
 				// Ask the user to choose a target project
 				targetProject := postLoginSetupTargetProject(orgsResponse, targetOrg)
 				pcio.Printf(style.SuccessMsg("Target project set %s.\n"), style.Emphasis(targetProject))
-				return
-			}
-
-			// Print current target if no org, project, or knowledge model is specified
-			if options.show {
-				if options.json {
-					log.Info().Msg("Outputting target context as JSON")
-					text.PrettyPrintJSON(state.GetTargetContext())
-					return
-				}
-				log.Info().
-					Msg("Outputting target context as table")
-				presenters.PrintTargetContext(state.GetTargetContext())
 				return
 			}
 
