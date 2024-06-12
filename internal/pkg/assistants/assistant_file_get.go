@@ -3,24 +3,14 @@ package assistants
 import (
 	"fmt"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/network"
 )
 
 const (
-	URL_DESCRIBE_ASSISTANT_FILE         = "/knowledge/files/%s/%s"
-	URL_DESCRIBE_ASSISTANT_FILE_STAGING = "/assistant/files/%s/%s"
+	URL_DESCRIBE_ASSISTANT_FILE = "/assistant/files/%s/%s"
 )
-
-func getDescribeAssistantFileUrl() string {
-	if config.Environment.Get() == "production" {
-		return URL_DESCRIBE_ASSISTANT_FILE
-	} else {
-		return URL_DESCRIBE_ASSISTANT_FILE_STAGING
-	}
-}
 
 func DescribeAssistantFile(name string, fileId string) (*AssistantFileModel, error) {
 	assistantDataUrl, err := GetAssistantDataBaseUrl()
@@ -30,7 +20,7 @@ func DescribeAssistantFile(name string, fileId string) (*AssistantFileModel, err
 
 	resp, err := network.GetAndDecode[AssistantFileModel](
 		assistantDataUrl,
-		fmt.Sprintf(getDescribeAssistantFileUrl(), name, fileId),
+		fmt.Sprintf(URL_DESCRIBE_ASSISTANT_FILE, name, fileId),
 		true,
 	)
 	if err != nil {

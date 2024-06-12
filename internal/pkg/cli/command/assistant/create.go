@@ -28,6 +28,8 @@ func NewCreateAssistantCmd() *cobra.Command {
 				exit.Error(err)
 			}
 			msg.SuccessMsg("assistant %s created successfully.\n", style.Emphasis(model.Name))
+
+			// TODO Return model as JSON on successful create
 		},
 	}
 

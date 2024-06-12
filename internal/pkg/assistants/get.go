@@ -3,23 +3,13 @@ package assistants
 import (
 	"fmt"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/network"
 )
 
 const (
-	URL_DESCRIBE_ASSISTANT         = "/knowledge/models/%s"
-	URL_DESCRIBE_ASSISTANT_STAGING = "/assistant/assistants/%s"
+	URL_DESCRIBE_ASSISTANT = "/assistant/assistants/%s"
 )
-
-func getDescribeAssistantUrl() string {
-	if config.Environment.Get() == "production" {
-		return URL_DESCRIBE_ASSISTANT
-	} else {
-		return URL_DESCRIBE_ASSISTANT_STAGING
-	}
-}
 
 func DescribeAssistant(name string) (*AssistantModel, error) {
 	assistantControlUrl, err := GetAssistantControlBaseUrl()
@@ -29,7 +19,7 @@ func DescribeAssistant(name string) (*AssistantModel, error) {
 
 	resp, err := network.GetAndDecode[AssistantModel](
 		assistantControlUrl,
-		fmt.Sprintf(getDescribeAssistantUrl(), name),
+		fmt.Sprintf(URL_DESCRIBE_ASSISTANT, name),
 		true,
 	)
 	if err != nil {

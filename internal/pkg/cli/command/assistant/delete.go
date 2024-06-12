@@ -35,6 +35,8 @@ func NewDeleteAssistantCmd() *cobra.Command {
 			}
 
 			msg.SuccessMsg("Assistant %s deleted.\n", style.Emphasis(options.name))
+
+			// TODO - check to see if the current target is the delete assistant, if so we need to clear it
 		},
 	}
 
