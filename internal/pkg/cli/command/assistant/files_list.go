@@ -69,7 +69,7 @@ func NewListAssistantFilesCmd() *cobra.Command {
 func printTableFiles(files []assistants.AssistantFileModel) {
 	writer := tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
 
-	columns := []string{"NAME", "ID", "METADATA", "CREATED_ON", "UPDATED_ON", "STATUS"}
+	columns := []string{"NAME", "ID", "METADATA", "CREATED_ON", "UPDATED_ON", "STATUS", "SIZE"}
 	header := strings.Join(columns, "\t") + "\n"
 	pcio.Fprint(writer, header)
 
@@ -81,6 +81,7 @@ func printTableFiles(files []assistants.AssistantFileModel) {
 			file.CreatedOn,
 			file.UpdatedOn,
 			string(file.Status),
+			fmt.Sprintf("%d", file.Size),
 		}
 		pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
 	}

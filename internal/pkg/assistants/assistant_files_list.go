@@ -28,6 +28,7 @@ type AssistantFileModel struct {
 	CreatedOn string                   `json:"created_on"`
 	UpdatedOn string                   `json:"updated_on"`
 	Status    AssistantFileStatusState `json:"status"`
+	Size      int64                    `json:"size"`
 }
 
 type AssistantFileStatusState string
@@ -63,6 +64,7 @@ func ListAssistantFiles(name string) (*ListAssistantFilesResponse, error) {
 			Str("created_on", model.CreatedOn).
 			Str("updated_on", model.UpdatedOn).
 			Str("metadata", model.Metadata.ToString()).
+			Int64("size", model.Size).
 			Msg("found assistant")
 	}
 	return resp, nil

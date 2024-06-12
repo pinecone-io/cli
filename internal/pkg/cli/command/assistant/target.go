@@ -82,7 +82,7 @@ func NewAssistantTargetCmd() *cobra.Command {
 			if options.name != "" {
 				// Check if model exists
 				modelExists := false
-				for _, model := range modelList.KnowledgeModels {
+				for _, model := range modelList.Assistants {
 					if model.Name == options.name {
 						modelExists = true
 						break
@@ -90,8 +90,8 @@ func NewAssistantTargetCmd() *cobra.Command {
 				}
 
 				if !modelExists {
-					availableModels := make([]string, len(modelList.KnowledgeModels))
-					for i, model := range modelList.KnowledgeModels {
+					availableModels := make([]string, len(modelList.Assistants))
+					for i, model := range modelList.Assistants {
 						availableModels[i] = fmt.Sprintf("'%s'", model.Name)
 					}
 					sort.Strings(availableModels)
@@ -112,13 +112,13 @@ func NewAssistantTargetCmd() *cobra.Command {
 			}
 
 			if options.interactive {
-				if len(modelList.KnowledgeModels) == 0 {
+				if len(modelList.Assistants) == 0 {
 					msg.InfoMsg("No assistants found. Create one with %s.\n", style.Code("pinecone assistant create"))
 					exit.ErrorMsg("no assistants found")
 				}
 
-				modelNames := make([]string, len(modelList.KnowledgeModels))
-				for i, model := range modelList.KnowledgeModels {
+				modelNames := make([]string, len(modelList.Assistants))
+				for i, model := range modelList.Assistants {
 					modelNames[i] = model.Name
 				}
 				sort.Strings(modelNames)
