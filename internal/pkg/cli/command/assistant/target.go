@@ -67,6 +67,7 @@ func NewAssistantTargetCmd() *cobra.Command {
 				return
 			}
 
+			// TODO - move this into a show flag, allow interactive selection
 			// Print current target if no assistant is specified
 			if options.name == "" && !options.interactive {
 				printTarget(options.json)

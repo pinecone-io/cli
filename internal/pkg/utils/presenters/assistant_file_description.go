@@ -20,6 +20,7 @@ func PrintDescribeAssistantFileTable(file *assistants.AssistantFileModel) {
 	pcio.Fprintf(writer, "CreatedOn\t%s\n", file.CreatedOn)
 	pcio.Fprintf(writer, "UpdatedOn\t%s\n", file.UpdatedOn)
 	pcio.Fprintf(writer, "Status\t%s\n", file.Status)
+	pcio.Fprintf(writer, "Size\t%d\n", file.Size)
 
 	writer.Flush()
 }

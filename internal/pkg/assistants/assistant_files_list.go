@@ -3,23 +3,13 @@ package assistants
 import (
 	"fmt"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/network"
 )
 
 const (
-	URL_LIST_ASSISTANT_FILES         = "/knowledge/files/%s"
-	URL_LIST_ASSISTANT_FILES_STAGING = "/assistant/files/%s"
+	URL_LIST_ASSISTANT_FILES = "/assistant/files/%s"
 )
-
-func getListAssistantFilesUrl() string {
-	if config.Environment.Get() == "production" {
-		return URL_LIST_ASSISTANT_FILES
-	} else {
-		return URL_LIST_ASSISTANT_FILES_STAGING
-	}
-}
 
 type AssistantFileModel struct {
 	Name      string                   `json:"name"`
@@ -51,21 +41,21 @@ func ListAssistantFiles(name string) (*ListAssistantFilesResponse, error) {
 
 	resp, err := network.GetAndDecode[ListAssistantFilesResponse](
 		assistantDataUrl,
-		fmt.Sprintf(getListAssistantFilesUrl(), name),
+		fmt.Sprintf(URL_LIST_ASSISTANT_FILES, name),
 		true,
 	)
 	if err != nil {
 		return nil, err
 	}
-	for _, model := range resp.Files {
+	for _, file := range resp.Files {
 		log.Trace().
-			Str("name", model.Name).
-			Str("status", string(model.Status)).
-			Str("created_on", model.CreatedOn).
-			Str("updated_on", model.UpdatedOn).
-			Str("metadata", model.Metadata.ToString()).
-			Int64("size", model.Size).
-			Msg("found assistant")
+			Str("name", file.Name).
+			Str("status", string(file.Status)).
+			Str("created_on", file.CreatedOn).
+			Str("updated_on", file.UpdatedOn).
+			Str("metadata", file.Metadata.ToString()).
+			Int64("size", file.Size).
+			Msg("found file")
 	}
 	return resp, nil
 }
