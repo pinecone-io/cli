@@ -115,7 +115,7 @@ func sendMessage(kmName string, message string) (*models.ChatCompletionModel, er
 		response = chatResponse
 
 		for _, choice := range chatResponse.Choices {
-			presenters.PrintKnowledgeChatResponse(choice.Message.Content)
+			presenters.PrintAssistantChatResponse(choice.Message.Content)
 		}
 		return nil
 	})
