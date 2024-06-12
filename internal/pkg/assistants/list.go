@@ -23,9 +23,8 @@ type AssistantMetadata map[string]interface{}
 
 func (kmm *AssistantMetadata) ToString() string {
 	jsonData, err := json.Marshal(kmm)
-	// TODO : handle swallowing decoding error
 	if err != nil {
-		return ""
+		return "ERROR: could not parse AssistantMetadata to string"
 	}
 	return string(jsonData)
 }

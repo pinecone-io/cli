@@ -5,7 +5,9 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
+	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 )
 
@@ -22,14 +24,18 @@ func NewCreateAssistantCmd() *cobra.Command {
 		Short:   "Create an assistant",
 		GroupID: help.GROUP_ASSISTANT_MANAGEMENT.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			model, err := assistants.CreateAssistant(options.name)
+			assistant, err := assistants.CreateAssistant(options.name)
 			if err != nil {
 				msg.FailMsg("Failed to create assistant %s: %s\n", style.Emphasis(options.name), err)
 				exit.Error(err)
 			}
-			msg.SuccessMsg("assistant %s created successfully.\n", style.Emphasis(model.Name))
+			msg.SuccessMsg("assistant %s created successfully.\n", style.Emphasis(assistant.Name))
 
-			// TODO Return model as JSON on successful create
+			if options.json {
+				text.PrettyPrintJSON(assistant)
+			} else {
+				presenters.PrintDescribeAssistantTable(assistant)
+			}
 		},
 	}
 
