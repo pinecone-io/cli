@@ -37,13 +37,13 @@ func NewListAssistantsCmd() *cobra.Command {
 				return
 			}
 
-			modelCount := len(modelList.KnowledgeModels)
+			modelCount := len(modelList.Assistants)
 			if modelCount == 0 {
 				msg.InfoMsg("No assistants found. Create one with %s.\n", style.Code("pinecone assistant create"))
 				return
 			}
 
-			printTableModels(modelList.KnowledgeModels)
+			printTableModels(modelList.Assistants)
 		},
 	}
 

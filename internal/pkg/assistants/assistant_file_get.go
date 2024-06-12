@@ -43,6 +43,7 @@ func DescribeAssistantFile(name string, fileId string) (*AssistantFileModel, err
 		Str("created_on", resp.CreatedOn).
 		Str("updated_on", resp.UpdatedOn).
 		Str("status", string(resp.Status)).
+		Int64("size", resp.Size).
 		Msg("found file")
 
 	return resp, nil

@@ -50,7 +50,7 @@ const (
 )
 
 type ListAssistantsResponse struct {
-	KnowledgeModels []AssistantModel `json:"knowledge_models"`
+	Assistants []AssistantModel `json:"assistants"`
 }
 
 func ListAssistants() (*ListAssistantsResponse, error) {
@@ -67,7 +67,7 @@ func ListAssistants() (*ListAssistantsResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	for _, model := range resp.KnowledgeModels {
+	for _, model := range resp.Assistants {
 		log.Trace().
 			Str("name", model.Name).
 			Str("status", string(model.Status)).
