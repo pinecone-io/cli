@@ -13,7 +13,7 @@ const (
 
 type DeleteAssistantFileResponse string
 
-func DeleteKnowledgeFile(kmName string, fileId string) (*DeleteAssistantFileResponse, error) {
+func DeleteAssistantFile(kmName string, fileId string) (*DeleteAssistantFileResponse, error) {
 	assistantDataUrl, err := GetAssistantDataBaseUrl()
 	if err != nil {
 		return nil, err

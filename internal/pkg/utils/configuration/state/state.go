@@ -45,7 +45,7 @@ var (
 		},
 	}
 	TargetAsst = configuration.MarshaledProperty[TargetAssistant]{
-		KeyName:    "target_knowledge_model",
+		KeyName:    "target_assistant",
 		ViperStore: StateViper,
 		DefaultValue: &TargetAssistant{
 			Name: "",

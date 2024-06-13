@@ -103,7 +103,7 @@ func NewPineconeClientForUser(projectId string) *pinecone.Client {
 
 func NewClientForMachine(apiKey string) *pinecone.Client {
 	if apiKey == "" {
-		exit.Error(pcio.Errorf("API key not set. Please run %s", style.Code("pinecone auth set-api-key")))
+		exit.Error(pcio.Errorf("API key not set. Please run %s", style.Code("pinecone config set-api-key")))
 	}
 
 	pc, err := pinecone.NewClient(newClientParams(apiKey))
@@ -141,7 +141,7 @@ func NewPineconeClientForProjectById(orgId string, projectId string) *pinecone.C
 	}
 
 	if key == "" {
-		msg.FailMsg("API key not set. Please run %s", style.Code("pinecone auth login"))
+		msg.FailMsg("API key not set. Please run %s or %s", style.Code("pinecone login"), style.Code("pinecone config set-api-key"))
 		exit.Error(pcio.Errorf("API key not set."))
 	}
 

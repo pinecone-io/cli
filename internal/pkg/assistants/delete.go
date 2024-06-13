@@ -11,18 +11,18 @@ const (
 	URL_DELETE_ASSISTANT = "/assistant/assistants/%s"
 )
 
-type DeleteKnowledgeModelResponse struct {
+type DeleteAssistantResponse struct {
 	Success bool `json:"success"`
 }
 
-func DeleteAssistant(name string) (*DeleteKnowledgeModelResponse, error) {
+func DeleteAssistant(name string) (*DeleteAssistantResponse, error) {
 
 	assistantControlUrl, err := GetAssistantControlBaseUrl()
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := network.RequestWithoutBodyAndDecode[DeleteKnowledgeModelResponse](
+	resp, err := network.RequestWithoutBodyAndDecode[DeleteAssistantResponse](
 		assistantControlUrl,
 		pcio.Sprintf(URL_DELETE_ASSISTANT, name),
 		http.MethodDelete,

@@ -2,9 +2,11 @@ package assistant
 
 import (
 	"github.com/pinecone-io/cli/internal/pkg/assistants"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -29,14 +31,20 @@ func NewDeleteAssistantCmd() *cobra.Command {
 				exit.Error(err)
 			}
 
+			// Deleting targeted assistant, unset target
+			targetAsst := state.TargetAsst.Get()
+			if targetAsst.Name == options.name {
+				state.TargetAsst.Clear()
+				pcio.Printf("Target assistant %s deleted.\n", style.Emphasis(options.name))
+				pcio.Printf("Use %s to set a new target.\n", style.Code("pinecone assistant target"))
+			}
+
 			if options.json {
 				text.PrettyPrintJSON(resp)
 				return
 			}
 
 			msg.SuccessMsg("Assistant %s deleted.\n", style.Emphasis(options.name))
-
-			// TODO - check to see if the current target is the delete assistant, if so we need to clear it
 		},
 	}
 

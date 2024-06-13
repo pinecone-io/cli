@@ -67,7 +67,7 @@ func NewTargetCmd() *cobra.Command {
 				return
 			}
 
-			// Print current target if no org, project, or knowledge model is specified
+			// Print current target if show is set
 			if options.show {
 				if options.json {
 					log.Info().Msg("Outputting target context as JSON")

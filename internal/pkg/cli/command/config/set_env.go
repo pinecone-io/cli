@@ -69,7 +69,7 @@ func NewSetEnvCmd() *cobra.Command {
 
 			if state.TargetAsst.Get().Name != "" {
 				state.TargetAsst.Clear()
-				msg.InfoMsg("Target assistant cleared; to set a new target assistant, run %s", style.Code("pinecone assistant target -m myassistant"))
+				msg.InfoMsg("Target assistant cleared; to set a new target assistant, run %s", style.Code("pinecone assistant target -n myassistant"))
 			}
 		},
 	}
