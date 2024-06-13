@@ -25,16 +25,16 @@ func NewAssistantCommand() *cobra.Command {
 	cmd.AddGroup(help.GROUP_ASSISTANT_MANAGEMENT)
 	cmd.AddCommand(NewCreateAssistantCmd())
 	cmd.AddCommand(NewListAssistantsCmd())
-	cmd.AddCommand(NewDescribeAssistantCmd())
 	cmd.AddCommand(NewDeleteAssistantCmd())
 
 	// Assistant Operations
 	cmd.AddGroup(help.GROUP_ASSISTANT_OPERATIONS)
+	cmd.AddCommand(NewDescribeAssistantCmd())
 	cmd.AddCommand(NewAssistantChatCmd())
 	cmd.AddCommand(NewListAssistantFilesCmd())
-	cmd.AddCommand(NewDeleteKnowledgeFileCmd())
+	cmd.AddCommand(NewDeleteAssistantFileCmd())
 	cmd.AddCommand(NewUploadAssistantFileCmd())
-	cmd.AddCommand(NewDescribeKnowledgeFileCmd())
+	cmd.AddCommand(NewDescribeAssistantFileCmd())
 
 	return cmd
 }

@@ -17,13 +17,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type ListKnowledgeFilesCmdOptions struct {
+type ListAssistantFilesCmdOptions struct {
 	json bool
 	name string
 }
 
 func NewListAssistantFilesCmd() *cobra.Command {
-	options := ListKnowledgeFilesCmdOptions{}
+	options := ListAssistantFilesCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "files",
@@ -35,7 +35,7 @@ func NewListAssistantFilesCmd() *cobra.Command {
 				options.name = targetKm
 			}
 			if options.name == "" {
-				msg.FailMsg("You must target an assistant or specify one with the %s flag\n", style.Emphasis("--model"))
+				msg.FailMsg("You must target an assistant or specify one with the %s flag\n", style.Emphasis("--assistant"))
 				exit.Error(fmt.Errorf("no assistant specified"))
 			}
 
@@ -61,7 +61,7 @@ func NewListAssistantFilesCmd() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
-	cmd.Flags().StringVarP(&options.name, "model", "m", "", "name of the assistant to list files for")
+	cmd.Flags().StringVarP(&options.name, "assistant", "a", "", "name of the assistant to list files for")
 
 	return cmd
 }

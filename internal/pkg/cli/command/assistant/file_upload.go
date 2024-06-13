@@ -32,7 +32,7 @@ func NewUploadAssistantFileCmd() *cobra.Command {
 				options.name = targetKm
 			}
 			if options.name == "" {
-				msg.FailMsg("You must target a assistant or specify one with the %s flag\n", style.Emphasis("--model"))
+				msg.FailMsg("You must target an assistant or specify one with the %s flag\n", style.Emphasis("--assistant"))
 				exit.Error(fmt.Errorf("no assistant specified"))
 			}
 
@@ -52,7 +52,7 @@ func NewUploadAssistantFileCmd() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
-	cmd.Flags().StringVarP(&options.name, "model", "m", "", "name of the assistant to upload a file to")
+	cmd.Flags().StringVarP(&options.name, "assistant", "a", "", "name of the assistant to upload a file to")
 	cmd.Flags().StringVarP(&options.filePath, "file", "f", "", "the path of the file you want to upload")
 	cmd.MarkFlagRequired("file")
 

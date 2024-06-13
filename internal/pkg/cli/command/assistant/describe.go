@@ -23,7 +23,7 @@ func NewDescribeAssistantCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "describe",
 		Short:   "Describe an assistant",
-		GroupID: help.GROUP_ASSISTANT_MANAGEMENT.ID,
+		GroupID: help.GROUP_ASSISTANT_OPERATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			// If no name is provided, use the target assistant
 			if options.name == "" {
@@ -36,17 +36,17 @@ func NewDescribeAssistantCmd() *cobra.Command {
 				return
 			}
 
-			model, err := assistants.DescribeAssistant(options.name)
+			assistant, err := assistants.DescribeAssistant(options.name)
 			if err != nil {
 				msg.FailMsg("Failed to describe assistant %s: %s\n", style.Emphasis(options.name), err)
 				exit.Error(err)
 			}
 
 			if options.json {
-				text.PrettyPrintJSON(model)
+				text.PrettyPrintJSON(assistant)
 				return
 			} else {
-				presenters.PrintDescribeAssistantTable(model)
+				presenters.PrintDescribeAssistantTable(assistant)
 			}
 
 		},

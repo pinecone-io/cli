@@ -13,14 +13,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type DescribeKnowledgeFileCmdOptions struct {
+type DescribeAssistantFileCmdOptions struct {
 	name   string
 	fileId string
 	json   bool
 }
 
-func NewDescribeKnowledgeFileCmd() *cobra.Command {
-	options := DescribeKnowledgeFileCmdOptions{}
+func NewDescribeAssistantFileCmd() *cobra.Command {
+	options := DescribeAssistantFileCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "file-describe",
@@ -32,7 +32,7 @@ func NewDescribeKnowledgeFileCmd() *cobra.Command {
 				options.name = targetKm
 			}
 			if options.name == "" {
-				pcio.Printf("You must target an assistant or specify one with the %s flag\n", style.Emphasis("--model"))
+				pcio.Printf("You must target an assistant or specify one with the %s flag\n", style.Emphasis("--name"))
 				return
 			}
 
@@ -51,7 +51,7 @@ func NewDescribeKnowledgeFileCmd() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
-	cmd.Flags().StringVarP(&options.name, "model", "m", "", "name of the assistant to list files for")
+	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the assistant to list files for")
 	cmd.Flags().StringVarP(&options.fileId, "id", "i", "", "id of the file to describe")
 	cmd.MarkFlagRequired("id")
 

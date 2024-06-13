@@ -33,7 +33,7 @@ func PrintTargetContext(context *state.TargetContext) {
 	writer.Flush()
 }
 
-func PrintTargetKnowledgeModel(context *state.TargetContext) {
+func PrintTargetAssistant(context *state.TargetContext) {
 	log.Info().
 		Str("assistant", context.Assistant).
 		Msg("Printing target assistant")

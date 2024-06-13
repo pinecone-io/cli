@@ -56,13 +56,13 @@ func ListAssistants() (*ListAssistantsResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	for _, model := range resp.Assistants {
+	for _, assistant := range resp.Assistants {
 		log.Trace().
-			Str("name", model.Name).
-			Str("status", string(model.Status)).
-			Str("created_at", model.CreatedAt).
-			Str("updated_at", model.UpdatedAt).
-			Str("metadata", model.Metadata.ToString()).
+			Str("name", assistant.Name).
+			Str("status", string(assistant.Status)).
+			Str("created_at", assistant.CreatedAt).
+			Str("updated_at", assistant.UpdatedAt).
+			Str("metadata", assistant.Metadata.ToString()).
 			Msg("found assistant")
 	}
 	return resp, nil
