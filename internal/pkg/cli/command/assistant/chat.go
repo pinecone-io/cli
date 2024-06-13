@@ -34,9 +34,9 @@ func NewAssistantChatCmd() *cobra.Command {
 		Short:   "Chat with an assistant",
 		GroupID: help.GROUP_ASSISTANT_OPERATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			targetKm := state.TargetAsst.Get().Name
-			if targetKm != "" {
-				options.name = targetKm
+			targetAsst := state.TargetAsst.Get().Name
+			if targetAsst != "" {
+				options.name = targetAsst
 			}
 			if options.name == "" {
 				pcio.Printf("You must target an assistant or specify one with the %s flag\n", style.Emphasis("--name"))
@@ -64,20 +64,20 @@ func NewAssistantChatCmd() *cobra.Command {
 	return cmd
 }
 
-func startChat(kmName string) {
+func startChat(asstName string) {
 	reader := bufio.NewReader(os.Stdin)
 
 	// Display previous chat history up to 10 messages
-	displayChatHistory(kmName, 10)
+	displayChatHistory(asstName, 10)
 
-	pcio.Printf("\n\nNow chatting with assistant %s. Type your message and press Enter. Press CTRL+C to exit, or pass \"exit()\"\n\n", style.Emphasis(kmName))
+	pcio.Printf("\n\nNow chatting with assistant %s. Type your message and press Enter. Press CTRL+C to exit, or pass \"exit()\"\n\n", style.Emphasis(asstName))
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
 	go func() {
 		<-ctx.Done()
-		pcio.Printf("\nExiting chat with assistant %s.\n\n", style.Emphasis(kmName))
+		pcio.Printf("\nExiting chat with assistant %s.\n\n", style.Emphasis(asstName))
 		os.Exit(0)
 	}()
 
@@ -94,7 +94,7 @@ func startChat(kmName string) {
 		checkForChatCommands(text)
 
 		if text != "" {
-			_, err := sendMessage(kmName, text)
+			_, err := sendMessage(asstName, text)
 			if err != nil {
 				pcio.Printf("Error sending message: %s\n", err)
 				continue
@@ -103,11 +103,11 @@ func startChat(kmName string) {
 	}
 }
 
-func sendMessage(kmName string, message string) (*models.ChatCompletionModel, error) {
+func sendMessage(asstName string, message string) (*models.ChatCompletionModel, error) {
 	response := &models.ChatCompletionModel{}
 
 	err := style.Spinner("", func() error {
-		chatResponse, err := assistants.GetAssistantChatCompletions(kmName, message)
+		chatResponse, err := assistants.GetAssistantChatCompletions(asstName, message)
 		if err != nil {
 			exit.Error(err)
 		}
@@ -126,11 +126,11 @@ func sendMessage(kmName string, message string) (*models.ChatCompletionModel, er
 	return response, nil
 }
 
-func displayChatHistory(kmName string, maxNoMsgs int) {
+func displayChatHistory(asstName string, maxNoMsgs int) {
 	chatHistory := state.ChatHist.Get()
-	chat, ok := (*chatHistory.History)[kmName]
+	chat, ok := (*chatHistory.History)[asstName]
 	if !ok {
-		pcio.Printf("No chat history found for assistant %s\n", style.Emphasis(kmName))
+		pcio.Printf("No chat history found for assistant %s\n", style.Emphasis(asstName))
 		return
 	}
 

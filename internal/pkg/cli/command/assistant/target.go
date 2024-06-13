@@ -30,10 +30,10 @@ type AssistantTargetCmdOptions struct {
 	json  bool
 }
 
-var kmTargetHelpPart1 string = text.WordWrap(`There are many assistant commands which target a specific
+var asstTargetHelpPart1 string = text.WordWrap(`There are many assistant commands which target a specific
 assistant. This command allows you to set and clear the target assistant for performing operations.`, 80)
 
-var targetHelp = pcio.Sprintf("%s\n", kmTargetHelpPart1)
+var targetHelp = pcio.Sprintf("%s\n", asstTargetHelpPart1)
 
 func NewAssistantTargetCmd() *cobra.Command {
 	options := AssistantTargetCmdOptions{}
@@ -150,7 +150,7 @@ func printTarget(useJson bool) {
 }
 
 func uiModelSelector(availableAssistants []string) string {
-	var targetModel string = ""
+	var targetAssistant string = ""
 	prompt := "Choose an assistant to target"
 	listHeight := len(availableAssistants) + 4
 	onQuit := func() {
@@ -158,7 +158,7 @@ func uiModelSelector(availableAssistants []string) string {
 		pcio.Printf("You can always run %s to change assistant context later.\n", style.Code("pinecone assistant target"))
 	}
 	onChoice := func(choice string) string {
-		targetModel = choice
+		targetAssistant = choice
 		return "Target assistant: " + choice
 	}
 	m2 := NewList(availableAssistants, listHeight, prompt, onQuit, onChoice)
@@ -166,7 +166,7 @@ func uiModelSelector(availableAssistants []string) string {
 		pcio.Println("Error selecting assistant:", err)
 		exit.Error(err)
 	}
-	return targetModel
+	return targetAssistant
 }
 
 type ListModel struct {

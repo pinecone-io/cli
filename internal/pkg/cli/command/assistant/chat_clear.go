@@ -20,9 +20,9 @@ func NewAssistantChatClearCmd() *cobra.Command {
 		Use:   "clear",
 		Short: "Clear chat history",
 		Run: func(cmd *cobra.Command, args []string) {
-			targetKm := state.TargetAsst.Get().Name
-			if targetKm != "" {
-				options.name = targetKm
+			targetAsst := state.TargetAsst.Get().Name
+			if targetAsst != "" {
+				options.name = targetAsst
 			}
 			if options.name == "" {
 				pcio.Printf("You must target an assistant or specify one with the %s flag\n", style.Emphasis("--name"))

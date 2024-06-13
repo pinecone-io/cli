@@ -21,8 +21,8 @@ type AssistantModel struct {
 
 type AssistantMetadata map[string]interface{}
 
-func (kmm *AssistantMetadata) ToString() string {
-	jsonData, err := json.Marshal(kmm)
+func (am *AssistantMetadata) ToString() string {
+	jsonData, err := json.Marshal(am)
 	if err != nil {
 		return "ERROR: could not parse AssistantMetadata to string"
 	}

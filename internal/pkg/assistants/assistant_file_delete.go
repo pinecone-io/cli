@@ -13,7 +13,7 @@ const (
 
 type DeleteAssistantFileResponse string
 
-func DeleteAssistantFile(kmName string, fileId string) (*DeleteAssistantFileResponse, error) {
+func DeleteAssistantFile(asstName string, fileId string) (*DeleteAssistantFileResponse, error) {
 	assistantDataUrl, err := GetAssistantDataBaseUrl()
 	if err != nil {
 		return nil, err
@@ -21,7 +21,7 @@ func DeleteAssistantFile(kmName string, fileId string) (*DeleteAssistantFileResp
 
 	resp, err := network.RequestWithoutBodyAndDecode[DeleteAssistantFileResponse](
 		assistantDataUrl,
-		pcio.Sprintf(URL_DELETE_ASSISTANT_FILE, kmName, fileId),
+		pcio.Sprintf(URL_DELETE_ASSISTANT_FILE, asstName, fileId),
 		http.MethodDelete,
 		true,
 	)

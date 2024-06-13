@@ -10,8 +10,8 @@ import (
 )
 
 type AssistantChatDescribeCmdOptions struct {
-	json bool
-	name string
+	assistant string
+	json      bool
 }
 
 func NewAssistantChatDescribeCmd() *cobra.Command {
@@ -21,19 +21,19 @@ func NewAssistantChatDescribeCmd() *cobra.Command {
 		Use:   "describe",
 		Short: "Describe an assistant chat",
 		Run: func(cmd *cobra.Command, args []string) {
-			targetKm := state.TargetAsst.Get().Name
-			if targetKm != "" {
-				options.name = targetKm
+			targetAsst := state.TargetAsst.Get().Name
+			if targetAsst != "" {
+				options.assistant = targetAsst
 			}
-			if options.name == "" {
+			if options.assistant == "" {
 				pcio.Printf("You must target an assistant or specify one with the %s flag\n", style.Emphasis("--name"))
 				return
 			}
 
 			chatHistory := state.ChatHist.Get()
-			chat, ok := (*chatHistory.History)[options.name]
+			chat, ok := (*chatHistory.History)[options.assistant]
 			if !ok {
-				pcio.Printf("No chat history found for assistant %s\n", style.Emphasis(options.name))
+				pcio.Printf("No chat history found for assistant %s\n", style.Emphasis(options.assistant))
 				return
 			}
 
@@ -45,7 +45,7 @@ func NewAssistantChatDescribeCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the assistant chat to describe")
+	cmd.Flags().StringVarP(&options.assistant, "assistant", "a", "", "name of the assistant chat to describe")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	return cmd

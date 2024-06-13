@@ -14,9 +14,9 @@ import (
 )
 
 type DescribeAssistantFileCmdOptions struct {
-	name   string
-	fileId string
-	json   bool
+	assistant string
+	fileId    string
+	json      bool
 }
 
 func NewDescribeAssistantFileCmd() *cobra.Command {
@@ -27,16 +27,16 @@ func NewDescribeAssistantFileCmd() *cobra.Command {
 		Short:   "Describe a file in an assistant",
 		GroupID: help.GROUP_ASSISTANT_OPERATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			targetKm := state.TargetAsst.Get().Name
-			if targetKm != "" {
-				options.name = targetKm
+			targetAsst := state.TargetAsst.Get().Name
+			if targetAsst != "" {
+				options.assistant = targetAsst
 			}
-			if options.name == "" {
+			if options.assistant == "" {
 				pcio.Printf("You must target an assistant or specify one with the %s flag\n", style.Emphasis("--name"))
 				return
 			}
 
-			file, err := assistants.DescribeAssistantFile(options.name, options.fileId)
+			file, err := assistants.DescribeAssistantFile(options.assistant, options.fileId)
 			if err != nil {
 				msg.FailMsg("Failed to describe file %s in assistant: %s\n", style.Emphasis(options.fileId), err)
 				exit.Error(err)
@@ -51,7 +51,7 @@ func NewDescribeAssistantFileCmd() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the assistant to list files for")
+	cmd.Flags().StringVarP(&options.assistant, "assistant", "a", "", "name of the assistant to list files for")
 	cmd.Flags().StringVarP(&options.fileId, "id", "i", "", "id of the file to describe")
 	cmd.MarkFlagRequired("id")
 
