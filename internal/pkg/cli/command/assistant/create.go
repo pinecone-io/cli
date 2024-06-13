@@ -29,7 +29,7 @@ func NewCreateAssistantCmd() *cobra.Command {
 				msg.FailMsg("Failed to create assistant %s: %s\n", style.Emphasis(options.name), err)
 				exit.Error(err)
 			}
-			msg.SuccessMsg("assistant %s created successfully.\n", style.Emphasis(assistant.Name))
+			msg.SuccessMsg("Assistant %s created successfully.\n", style.Emphasis(assistant.Name))
 
 			if options.json {
 				text.PrettyPrintJSON(assistant)

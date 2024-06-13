@@ -14,9 +14,9 @@ import (
 )
 
 type UploadAssistantCmdOptions struct {
-	name     string
-	filePath string
-	json     bool
+	assistant string
+	filePath  string
+	json      bool
 }
 
 func NewUploadAssistantFileCmd() *cobra.Command {
@@ -27,18 +27,18 @@ func NewUploadAssistantFileCmd() *cobra.Command {
 		Short:   "Upload a file to an assistant",
 		GroupID: help.GROUP_ASSISTANT_OPERATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			targetKm := state.TargetAsst.Get().Name
-			if targetKm != "" {
-				options.name = targetKm
+			targetAsst := state.TargetAsst.Get().Name
+			if targetAsst != "" {
+				options.assistant = targetAsst
 			}
-			if options.name == "" {
+			if options.assistant == "" {
 				msg.FailMsg("You must target an assistant or specify one with the %s flag\n", style.Emphasis("--assistant"))
 				exit.Error(fmt.Errorf("no assistant specified"))
 			}
 
-			file, err := assistants.UploadAssistantFile(options.name, options.filePath)
+			file, err := assistants.UploadAssistantFile(options.assistant, options.filePath)
 			if err != nil {
-				msg.FailMsg("Failed to upload file %s to assistant %s: %s\n", style.Emphasis(options.filePath), style.Emphasis(options.name), err)
+				msg.FailMsg("Failed to upload file %s to assistant %s: %s\n", style.Emphasis(options.filePath), style.Emphasis(options.assistant), err)
 				exit.Error(err)
 			}
 
@@ -52,7 +52,7 @@ func NewUploadAssistantFileCmd() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
-	cmd.Flags().StringVarP(&options.name, "assistant", "a", "", "name of the assistant to upload a file to")
+	cmd.Flags().StringVarP(&options.assistant, "assistant", "a", "", "name of the assistant to upload a file to")
 	cmd.Flags().StringVarP(&options.filePath, "file", "f", "", "the path of the file you want to upload")
 	cmd.MarkFlagRequired("file")
 

@@ -18,8 +18,8 @@ import (
 )
 
 type ListAssistantFilesCmdOptions struct {
-	json bool
-	name string
+	assistant string
+	json      bool
 }
 
 func NewListAssistantFilesCmd() *cobra.Command {
@@ -30,18 +30,18 @@ func NewListAssistantFilesCmd() *cobra.Command {
 		Short:   "See the list of files in an assistant",
 		GroupID: help.GROUP_ASSISTANT_OPERATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			targetKm := state.TargetAsst.Get().Name
-			if targetKm != "" {
-				options.name = targetKm
+			targetAsst := state.TargetAsst.Get().Name
+			if targetAsst != "" {
+				options.assistant = targetAsst
 			}
-			if options.name == "" {
+			if options.assistant == "" {
 				msg.FailMsg("You must target an assistant or specify one with the %s flag\n", style.Emphasis("--assistant"))
 				exit.Error(fmt.Errorf("no assistant specified"))
 			}
 
-			fileList, err := assistants.ListAssistantFiles(options.name)
+			fileList, err := assistants.ListAssistantFiles(options.assistant)
 			if err != nil {
-				msg.FailMsg("Failed to list files for assistant %s: %s\n", style.Emphasis(options.name), err)
+				msg.FailMsg("Failed to list files for assistant %s: %s\n", style.Emphasis(options.assistant), err)
 				exit.Error(err)
 			}
 
@@ -52,7 +52,7 @@ func NewListAssistantFilesCmd() *cobra.Command {
 
 			fileCount := len(fileList.Files)
 			if fileCount == 0 {
-				msg.InfoMsg("No files found in assistant %s. Add one with %s.\n", style.Emphasis(options.name), style.Code("pinecone assistant file-upload"))
+				msg.InfoMsg("No files found in assistant %s. Add one with %s.\n", style.Emphasis(options.assistant), style.Code("pinecone assistant file-upload"))
 				return
 			}
 
@@ -60,8 +60,8 @@ func NewListAssistantFilesCmd() *cobra.Command {
 		},
 	}
 
+	cmd.Flags().StringVarP(&options.assistant, "assistant", "a", "", "name of the assistant to list files for")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
-	cmd.Flags().StringVarP(&options.name, "assistant", "a", "", "name of the assistant to list files for")
 
 	return cmd
 }

@@ -13,16 +13,16 @@ const (
 	URL_ASSISTANT_CHAT_COMPLETIONS = "/assistant/chat/%s/chat/completions"
 )
 
-func GetAssistantChatCompletions(kmName string, msg string) (*models.ChatCompletionModel, error) {
+func GetAssistantChatCompletions(asstName string, msg string) (*models.ChatCompletionModel, error) {
 	outgoingMsg := models.ChatCompletionMessage{
 		Role:    "user",
 		Content: msg,
 	}
 	chatHistory := state.ChatHist.Get()
-	chat, exists := (*chatHistory.History)[kmName]
+	chat, exists := (*chatHistory.History)[asstName]
 	if !exists {
 		chat = models.AssistantChat{}
-		(*chatHistory.History)[kmName] = chat
+		(*chatHistory.History)[asstName] = chat
 	}
 
 	// Add new outgoing messages to existing conversation, this becomes the body
@@ -39,7 +39,7 @@ func GetAssistantChatCompletions(kmName string, msg string) (*models.ChatComplet
 
 	resp, err := network.PostAndDecode[models.ChatCompletionRequest, models.ChatCompletionModel](
 		assistantDataUrl,
-		fmt.Sprintf(URL_ASSISTANT_CHAT_COMPLETIONS, kmName),
+		fmt.Sprintf(URL_ASSISTANT_CHAT_COMPLETIONS, asstName),
 		true,
 		body,
 	)
@@ -49,7 +49,7 @@ func GetAssistantChatCompletions(kmName string, msg string) (*models.ChatComplet
 
 	// If the request was successful, update the chat history
 	chat.Messages = append(chat.Messages, processChatCompletionModel(resp)...)
-	(*chatHistory.History)[kmName] = chat
+	(*chatHistory.History)[asstName] = chat
 	state.ChatHist.Set(&chatHistory)
 
 	return resp, nil

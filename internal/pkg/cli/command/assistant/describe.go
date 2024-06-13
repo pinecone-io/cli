@@ -27,8 +27,8 @@ func NewDescribeAssistantCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			// If no name is provided, use the target assistant
 			if options.name == "" {
-				targetKm := state.TargetAsst.Get().Name
-				options.name = targetKm
+				targetAsst := state.TargetAsst.Get().Name
+				options.name = targetAsst
 			}
 			if options.name == "" {
 				msg.FailMsg("You must target an assistant or specify one to describe with the %s flag\n", style.Emphasis("--name"))
