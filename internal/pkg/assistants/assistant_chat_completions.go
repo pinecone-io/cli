@@ -13,7 +13,7 @@ const (
 	URL_ASSISTANT_CHAT_COMPLETIONS = "/assistant/chat/%s/chat/completions"
 )
 
-func GetAssistantChatCompletions(asstName string, msg string) (*models.ChatCompletionModel, error) {
+func GetAssistantChatCompletions(asstName string, msg string, stream bool) (*models.ChatCompletionModel, error) {
 	outgoingMsg := models.ChatCompletionMessage{
 		Role:    "user",
 		Content: msg,
@@ -30,6 +30,7 @@ func GetAssistantChatCompletions(asstName string, msg string) (*models.ChatCompl
 
 	body := models.ChatCompletionRequest{
 		Messages: chat.Messages,
+		Stream:   stream,
 	}
 
 	assistantDataUrl, err := GetAssistantDataBaseUrl()
@@ -37,14 +38,27 @@ func GetAssistantChatCompletions(asstName string, msg string) (*models.ChatCompl
 		return nil, err
 	}
 
-	resp, err := network.PostAndDecode[models.ChatCompletionRequest, models.ChatCompletionModel](
-		assistantDataUrl,
-		fmt.Sprintf(URL_ASSISTANT_CHAT_COMPLETIONS, asstName),
-		true,
-		body,
-	)
-	if err != nil {
-		return nil, err
+	var resp *models.ChatCompletionModel
+	if !stream {
+		resp, err = network.PostAndDecode[models.ChatCompletionRequest, models.ChatCompletionModel](
+			assistantDataUrl,
+			fmt.Sprintf(URL_ASSISTANT_CHAT_COMPLETIONS, asstName),
+			true,
+			body,
+		)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		resp, err = network.PostAndStreamChatResponse[models.ChatCompletionRequest](
+			assistantDataUrl,
+			fmt.Sprintf(URL_ASSISTANT_CHAT_COMPLETIONS, asstName),
+			true,
+			body,
+		)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// If the request was successful, update the chat history

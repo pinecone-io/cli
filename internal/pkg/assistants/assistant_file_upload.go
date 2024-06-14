@@ -16,7 +16,7 @@ func UploadAssistantFile(name string, filePath string) (*AssistantFileModel, err
 		return nil, err
 	}
 
-	resp, err := network.PostAndDecodeMultipartFormData[AssistantFileModel](
+	resp, err := network.PostMultipartFormDataAndDecode[AssistantFileModel](
 		assistantDataUrl,
 		fmt.Sprintf(URL_ASSISTANT_FILE_UPLOAD, name),
 		true,

@@ -1,14 +1,19 @@
 package network
 
 import (
+	"bufio"
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
+	"github.com/pinecone-io/cli/internal/pkg/utils/models"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
@@ -16,7 +21,72 @@ func PostAndDecode[B any, R any](baseUrl string, path string, useApiKey bool, bo
 	return RequestWithBodyAndDecode[B, R](baseUrl, path, http.MethodPost, useApiKey, body)
 }
 
-func PostAndDecodeMultipartFormData[R any](baseUrl string, path string, useApiKey bool, bodyPath string) (*R, error) {
+func PostAndStreamChatResponse[B any](baseUrl string, path string, useApiKey bool, body B) (*models.ChatCompletionModel, error) {
+	resp, err := RequestWithBody[B](baseUrl, path, http.MethodPost, useApiKey, body)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var completeResponse string
+	var id string
+	var model string
+
+	scanner := bufio.NewScanner(resp.Body)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "data:") {
+			dataStr := strings.TrimPrefix(line, "data:")
+			dataStr = strings.TrimSpace(dataStr)
+
+			var chunkResp *models.StreamChatCompletionModel
+			if err := json.Unmarshal([]byte(dataStr), &chunkResp); err != nil {
+				return nil, pcio.Errorf("error unmarshaling chunk: %v", err)
+			}
+
+			for _, choice := range chunkResp.Choices {
+				fmt.Print(choice.Delta.Content)
+				os.Stdout.Sync()
+				completeResponse += choice.Delta.Content
+			}
+			id = chunkResp.Id
+			model = chunkResp.Model
+		}
+	}
+
+	completionResp := &models.ChatCompletionModel{
+		Id:    id,
+		Model: model,
+		Choices: []models.ChoiceModel{
+			{
+				FinishReason: "stop",
+				Index:        0,
+				Message: models.ChatCompletionMessage{
+					Content: completeResponse,
+					Role:    "assistant",
+				},
+			},
+		},
+	}
+
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("method", http.MethodPost).
+			Str("url", baseUrl+path).
+			Str("status", resp.Status).
+			Msg("Error decoding response")
+		return nil, pcio.Errorf("error decoding JSON: %v", err)
+	}
+
+	log.Info().
+		Str("method", http.MethodPost).
+		Str("url", baseUrl+path).
+		Msg("Request completed successfully")
+	return completionResp, nil
+}
+
+func PostMultipartFormDataAndDecode[R any](baseUrl string, path string, useApiKey bool, bodyPath string) (*R, error) {
 	url := baseUrl + path
 
 	var requestBody bytes.Buffer
