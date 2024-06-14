@@ -23,6 +23,7 @@ import (
 type AssistantChatCmdOptions struct {
 	name    string
 	message string
+	stream  bool
 	json    bool
 }
 
@@ -43,19 +44,20 @@ func NewAssistantChatCmd() *cobra.Command {
 				return
 			}
 
-			// If no message is provided drop them into chat
+			// If no message is provided drop them into interactive chat
 			if options.message == "" {
 				startChat(options.name)
 			} else {
 				// If message is provided, send it to the assistant
-				sendMessage(options.name, options.message)
+				sendMessage(options.name, options.message, options.stream)
 			}
 		},
 	}
 
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the assistant to chat with")
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 	cmd.Flags().StringVarP(&options.message, "message", "m", "", "your message to the assistant")
+	cmd.Flags().BoolVarP(&options.stream, "stream", "s", false, "stream chat message responses")
+	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 	cmd.MarkFlagRequired("content")
 
 	cmd.AddCommand(NewAssistantChatClearCmd())
@@ -94,7 +96,8 @@ func startChat(asstName string) {
 		checkForChatCommands(text)
 
 		if text != "" {
-			_, err := sendMessage(asstName, text)
+			// Stream here since we're in interactive chat mode
+			_, err := sendMessage(asstName, text, true)
 			if err != nil {
 				pcio.Printf("Error sending message: %s\n", err)
 				continue
@@ -103,27 +106,54 @@ func startChat(asstName string) {
 	}
 }
 
-func sendMessage(asstName string, message string) (*models.ChatCompletionModel, error) {
+func sendMessage(asstName string, message string, stream bool) (*models.ChatCompletionModel, error) {
 	response := &models.ChatCompletionModel{}
 
-	err := style.Spinner("", func() error {
-		chatResponse, err := assistants.GetAssistantChatCompletions(asstName, message)
-		if err != nil {
-			exit.Error(err)
-		}
+	var chatGetter func() error
+	if stream {
+		chatGetter = streamChatResponse(response, asstName, message, stream)
+	} else {
+		chatGetter = getChatResponse(response, asstName, message, stream)
+	}
 
-		response = chatResponse
-
-		for _, choice := range chatResponse.Choices {
-			presenters.PrintAssistantChatResponse(choice.Message.Content)
-		}
-		return nil
-	})
+	err := chatGetter()
 	if err != nil {
 		return nil, err
 	}
 
 	return response, nil
+}
+
+func getChatResponse(resp *models.ChatCompletionModel, asstName string, message string, stream bool) func() error {
+	return func() error {
+		chatResponse, err := assistants.GetAssistantChatCompletions(asstName, message, stream)
+		if err != nil {
+			exit.Error(err)
+		}
+
+		resp = chatResponse
+
+		for _, choice := range chatResponse.Choices {
+			presenters.PrintAssistantChatResponse(choice.Message.Content)
+		}
+		return nil
+	}
+}
+
+func streamChatResponse(resp *models.ChatCompletionModel, asstName string, message string, stream bool) func() error {
+	return func() error {
+		chatResponse, err := assistants.GetAssistantChatCompletions(asstName, message, stream)
+		if err != nil {
+			exit.Error(err)
+		}
+
+		resp = chatResponse
+
+		for _, choice := range chatResponse.Choices {
+			presenters.PrintAssistantChatResponse(choice.Message.Content)
+		}
+		return nil
+	}
 }
 
 func displayChatHistory(asstName string, maxNoMsgs int) {
@@ -137,7 +167,7 @@ func displayChatHistory(asstName string, maxNoMsgs int) {
 	presenters.PrintChatHistory(chat, maxNoMsgs)
 }
 
-// This function checks the input for accepted chat commands
+// Checks the input for accepted chat commands
 func checkForChatCommands(text string) {
 	switch text {
 	case "exit()":

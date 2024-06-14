@@ -85,6 +85,45 @@ func decodeResponse[T any](resp *http.Response, target *T) error {
 	return nil
 }
 
+func RequestWithBody[B any](baseUrl string, path string, method string, useApiKey bool, body B) (*http.Response, error) {
+	url := baseUrl + path
+
+	var bodyJson []byte
+	bodyJson, err := json.Marshal(body)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("method", method).
+			Str("url", url).
+			Msg("Error marshalling JSON")
+		return nil, pcio.Errorf("error marshalling JSON: %v", err)
+	}
+
+	req, err := buildRequest(method, url, bodyJson)
+	log.Info().
+		Str("method", method).
+		Str("url", url).
+		Msg("Fetching data from dashboard")
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("url", url).
+			Str("method", method).
+			Msg("Error building request")
+		return nil, pcio.Errorf("error building request: %v", err)
+	}
+
+	resp, err := performRequest(req, useApiKey)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("method", method).
+			Str("url", url)
+		return nil, pcio.Errorf("error performing request to %s: %v", url, err)
+	}
+	return resp, nil
+}
+
 func RequestWithBodyAndDecode[B any, R any](baseUrl string, path string, method string, useApiKey bool, body B) (*R, error) {
 	url := baseUrl + path
 
