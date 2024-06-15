@@ -13,8 +13,8 @@ import (
 )
 
 type DescribeAssistantCmdOptions struct {
-	name string
-	json bool
+	assistant string
+	json      bool
 }
 
 func NewDescribeAssistantCmd() *cobra.Command {
@@ -26,19 +26,19 @@ func NewDescribeAssistantCmd() *cobra.Command {
 		GroupID: help.GROUP_ASSISTANT_OPERATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			// If no name is provided, use the target assistant
-			if options.name == "" {
+			if options.assistant == "" {
 				targetAsst := state.TargetAsst.Get().Name
-				options.name = targetAsst
+				options.assistant = targetAsst
 			}
-			if options.name == "" {
+			if options.assistant == "" {
 				msg.FailMsg("You must target an assistant or specify one to describe with the %s flag\n", style.Emphasis("--name"))
 				exit.ErrorMsg("No assistant specified")
 				return
 			}
 
-			assistant, err := assistants.DescribeAssistant(options.name)
+			assistant, err := assistants.DescribeAssistant(options.assistant)
 			if err != nil {
-				msg.FailMsg("Failed to describe assistant %s: %s\n", style.Emphasis(options.name), err)
+				msg.FailMsg("Failed to describe assistant %s: %s\n", style.Emphasis(options.assistant), err)
 				exit.Error(err)
 			}
 
@@ -52,7 +52,7 @@ func NewDescribeAssistantCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the assistant to describe")
+	cmd.Flags().StringVarP(&options.assistant, "assistant", "a", "", "name of the assistant to describe")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	return cmd

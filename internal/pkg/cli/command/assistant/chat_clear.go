@@ -9,8 +9,8 @@ import (
 )
 
 type AssistantChatClearCmdOptions struct {
-	json bool
-	name string
+	assistant string
+	json      bool
 }
 
 func NewAssistantChatClearCmd() *cobra.Command {
@@ -22,23 +22,23 @@ func NewAssistantChatClearCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			targetAsst := state.TargetAsst.Get().Name
 			if targetAsst != "" {
-				options.name = targetAsst
+				options.assistant = targetAsst
 			}
-			if options.name == "" {
+			if options.assistant == "" {
 				pcio.Printf("You must target an assistant or specify one with the %s flag\n", style.Emphasis("--name"))
 				return
 			}
 
 			// Reset chat history for the specified assistant
 			chatHistory := state.ChatHist.Get()
-			(*chatHistory.History)[options.name] = models.AssistantChat{}
+			(*chatHistory.History)[options.assistant] = models.AssistantChat{}
 			state.ChatHist.Set(&chatHistory)
 
-			pcio.Printf("Chat history for assistant %s cleared.\n", options.name)
+			pcio.Printf("Chat history for assistant %s cleared.\n", options.assistant)
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the assistant chat to clear")
+	cmd.Flags().StringVarP(&options.assistant, "assistant", "a", "", "name of the assistant chat to clear")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	return cmd
