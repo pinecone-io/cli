@@ -23,7 +23,7 @@ func DeleteAssistantFile(asstName string, fileId string) (*DeleteAssistantFileRe
 		assistantDataUrl,
 		pcio.Sprintf(URL_DELETE_ASSISTANT_FILE, asstName, fileId),
 		http.MethodDelete,
-		true,
+		false,
 	)
 	if err != nil {
 		return nil, err

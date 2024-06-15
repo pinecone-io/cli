@@ -42,7 +42,7 @@ func ListAssistantFiles(name string) (*ListAssistantFilesResponse, error) {
 	resp, err := network.GetAndDecode[ListAssistantFilesResponse](
 		assistantDataUrl,
 		fmt.Sprintf(URL_LIST_ASSISTANT_FILES, name),
-		true,
+		false,
 	)
 	if err != nil {
 		return nil, err
