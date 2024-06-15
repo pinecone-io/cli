@@ -21,10 +21,10 @@ import (
 )
 
 type AssistantChatCmdOptions struct {
-	name    string
-	message string
-	stream  bool
-	json    bool
+	assistant string
+	message   string
+	stream    bool
+	json      bool
 }
 
 func NewAssistantChatCmd() *cobra.Command {
@@ -37,24 +37,24 @@ func NewAssistantChatCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			targetAsst := state.TargetAsst.Get().Name
 			if targetAsst != "" {
-				options.name = targetAsst
+				options.assistant = targetAsst
 			}
-			if options.name == "" {
+			if options.assistant == "" {
 				pcio.Printf("You must target an assistant or specify one with the %s flag\n", style.Emphasis("--name"))
 				return
 			}
 
 			// If no message is provided drop them into interactive chat
 			if options.message == "" {
-				startInteractiveChat(options.name)
+				startInteractiveChat(options.assistant)
 			} else {
 				// If message is provided, send it to the assistant
-				sendMessage(options.name, options.message, options.stream)
+				sendMessage(options.assistant, options.message, options.stream)
 			}
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the assistant to chat with")
+	cmd.Flags().StringVarP(&options.assistant, "assistant", "a", "", "name of the assistant to chat with")
 	cmd.Flags().StringVarP(&options.message, "message", "m", "", "your message to the assistant")
 	cmd.Flags().BoolVarP(&options.stream, "stream", "s", false, "stream chat message responses")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
