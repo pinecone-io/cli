@@ -21,7 +21,7 @@ func DescribeAssistantFile(name string, fileId string) (*AssistantFileModel, err
 	resp, err := network.GetAndDecode[AssistantFileModel](
 		assistantDataUrl,
 		fmt.Sprintf(URL_DESCRIBE_ASSISTANT_FILE, name, fileId),
-		true,
+		false,
 	)
 	if err != nil {
 		exit.Error(err)

@@ -20,7 +20,7 @@ func DescribeAssistant(name string) (*AssistantModel, error) {
 	resp, err := network.GetAndDecode[AssistantModel](
 		assistantControlUrl,
 		fmt.Sprintf(URL_DESCRIBE_ASSISTANT, name),
-		true,
+		false,
 	)
 	if err != nil {
 		return nil, err

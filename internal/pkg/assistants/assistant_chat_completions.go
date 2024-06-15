@@ -1,12 +1,18 @@
 package assistants
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"os"
+	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/models"
 	"github.com/pinecone-io/cli/internal/pkg/utils/network"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
 const (
@@ -50,10 +56,10 @@ func GetAssistantChatCompletions(asstName string, msg string, stream bool) (*mod
 			return nil, err
 		}
 	} else {
-		resp, err = network.PostAndStreamChatResponse[models.ChatCompletionRequest](
+		resp, err = PostAndStreamChatResponse[models.ChatCompletionRequest](
 			assistantDataUrl,
 			fmt.Sprintf(URL_ASSISTANT_CHAT_COMPLETIONS, asstName),
-			true,
+			false,
 			body,
 		)
 		if err != nil {
@@ -67,6 +73,61 @@ func GetAssistantChatCompletions(asstName string, msg string, stream bool) (*mod
 	state.ChatHist.Set(&chatHistory)
 
 	return resp, nil
+}
+
+func PostAndStreamChatResponse[B any](baseUrl string, path string, useApiKey bool, body B) (*models.ChatCompletionModel, error) {
+	resp, err := network.RequestWithBody[B](baseUrl, path, http.MethodPost, useApiKey, body)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var completeResponse string
+	var id string
+	var model string
+
+	scanner := bufio.NewScanner(resp.Body)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "data:") {
+			dataStr := strings.TrimPrefix(line, "data:")
+			dataStr = strings.TrimSpace(dataStr)
+
+			var chunkResp *models.StreamChatCompletionModel
+			if err := json.Unmarshal([]byte(dataStr), &chunkResp); err != nil {
+				return nil, pcio.Errorf("error unmarshaling chunk: %v", err)
+			}
+
+			for _, choice := range chunkResp.Choices {
+				fmt.Print(choice.Delta.Content)
+				os.Stdout.Sync()
+				completeResponse += choice.Delta.Content
+			}
+			id = chunkResp.Id
+			model = chunkResp.Model
+		}
+	}
+
+	completionResp := &models.ChatCompletionModel{
+		Id:    id,
+		Model: model,
+		Choices: []models.ChoiceModel{
+			{
+				FinishReason: "stop",
+				Index:        0,
+				Message: models.ChatCompletionMessage{
+					Content: completeResponse,
+					Role:    "assistant",
+				},
+			},
+		},
+	}
+
+	log.Info().
+		Str("method", http.MethodPost).
+		Str("url", baseUrl+path).
+		Msg("Request completed successfully")
+	return completionResp, nil
 }
 
 func processChatCompletionModel(resp *models.ChatCompletionModel) []models.ChatCompletionMessage {

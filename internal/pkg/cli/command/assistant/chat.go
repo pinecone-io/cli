@@ -46,7 +46,7 @@ func NewAssistantChatCmd() *cobra.Command {
 
 			// If no message is provided drop them into interactive chat
 			if options.message == "" {
-				startChat(options.name)
+				startInteractiveChat(options.name)
 			} else {
 				// If message is provided, send it to the assistant
 				sendMessage(options.name, options.message, options.stream)
@@ -66,7 +66,7 @@ func NewAssistantChatCmd() *cobra.Command {
 	return cmd
 }
 
-func startChat(asstName string) {
+func startInteractiveChat(asstName string) {
 	reader := bufio.NewReader(os.Stdin)
 
 	// Display previous chat history up to 10 messages
@@ -107,52 +107,44 @@ func startChat(asstName string) {
 }
 
 func sendMessage(asstName string, message string, stream bool) (*models.ChatCompletionModel, error) {
-	response := &models.ChatCompletionModel{}
-
-	var chatGetter func() error
+	var chatGetter func() (*models.ChatCompletionModel, error)
 	if stream {
-		chatGetter = streamChatResponse(response, asstName, message, stream)
+		chatGetter = streamChatResponse(asstName, message, stream)
 	} else {
-		chatGetter = getChatResponse(response, asstName, message, stream)
+		chatGetter = getChatResponse(asstName, message, stream)
 	}
 
-	err := chatGetter()
+	chatResp, err := chatGetter()
 	if err != nil {
 		return nil, err
 	}
 
-	return response, nil
+	return chatResp, nil
 }
 
-func getChatResponse(resp *models.ChatCompletionModel, asstName string, message string, stream bool) func() error {
-	return func() error {
+func getChatResponse(asstName string, message string, stream bool) func() (*models.ChatCompletionModel, error) {
+	return func() (*models.ChatCompletionModel, error) {
 		chatResponse, err := assistants.GetAssistantChatCompletions(asstName, message, stream)
 		if err != nil {
 			exit.Error(err)
 		}
 
-		resp = chatResponse
-
 		for _, choice := range chatResponse.Choices {
 			presenters.PrintAssistantChatResponse(choice.Message.Content)
 		}
-		return nil
+		return chatResponse, nil
 	}
 }
 
-func streamChatResponse(resp *models.ChatCompletionModel, asstName string, message string, stream bool) func() error {
-	return func() error {
+func streamChatResponse(asstName string, message string, stream bool) func() (*models.ChatCompletionModel, error) {
+	return func() (*models.ChatCompletionModel, error) {
 		chatResponse, err := assistants.GetAssistantChatCompletions(asstName, message, stream)
 		if err != nil {
 			exit.Error(err)
 		}
+		// We don't print the chat response since it's printed while streamed in assistants.PostAndStreamChatResponse
 
-		resp = chatResponse
-
-		for _, choice := range chatResponse.Choices {
-			presenters.PrintAssistantChatResponse(choice.Message.Content)
-		}
-		return nil
+		return chatResponse, nil
 	}
 }
 

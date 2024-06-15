@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/oauth2"
@@ -41,6 +42,8 @@ func buildRequest(verb string, path string, bodyJson []byte) (*http.Request, err
 
 	req.Header.Add("User-Agent", "Pinecone CLI")
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Project-Id", state.TargetProj.Get().Id)
+	req.Header.Set("X-Disable-Bearer-Auth", "true")
 
 	return req, nil
 }
