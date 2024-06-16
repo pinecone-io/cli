@@ -7,7 +7,9 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/models"
@@ -44,6 +46,9 @@ func GetAssistantChatCompletions(asstName string, msg string, stream bool) (*mod
 		return nil, err
 	}
 
+	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+	s.Start()
+
 	var resp *models.ChatCompletionModel
 	if !stream {
 		resp, err = network.PostAndDecode[models.ChatCompletionRequest, models.ChatCompletionModel](
@@ -51,6 +56,7 @@ func GetAssistantChatCompletions(asstName string, msg string, stream bool) (*mod
 			fmt.Sprintf(URL_ASSISTANT_CHAT_COMPLETIONS, asstName),
 			body,
 		)
+		s.Stop()
 		if err != nil {
 			return nil, err
 		}
@@ -59,6 +65,7 @@ func GetAssistantChatCompletions(asstName string, msg string, stream bool) (*mod
 			assistantDataUrl,
 			fmt.Sprintf(URL_ASSISTANT_CHAT_COMPLETIONS, asstName),
 			body,
+			s,
 		)
 		if err != nil {
 			return nil, err
@@ -73,12 +80,13 @@ func GetAssistantChatCompletions(asstName string, msg string, stream bool) (*mod
 	return resp, nil
 }
 
-func PostAndStreamChatResponse[B any](baseUrl string, path string, body B) (*models.ChatCompletionModel, error) {
+func PostAndStreamChatResponse[B any](baseUrl string, path string, body B, spinner *spinner.Spinner) (*models.ChatCompletionModel, error) {
 	resp, err := network.RequestWithBody[B](baseUrl, path, http.MethodPost, body)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
+	spinner.Stop()
 
 	var completeResponse string
 	var id string
