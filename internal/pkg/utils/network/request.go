@@ -40,12 +40,24 @@ func buildRequest(verb string, path string, bodyJson []byte) (*http.Request, err
 		}
 	}
 
-	req.Header.Add("User-Agent", "Pinecone CLI")
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Project-Id", state.TargetProj.Get().Id)
-	req.Header.Set("X-Disable-Bearer-Auth", "true")
+	applyHeaders(req, path)
 
 	return req, nil
+}
+
+func applyHeaders(req *http.Request, url string) {
+	// request-specific headers
+	if strings.Contains(url, "assistant") {
+		req.Header.Set("X-Project-Id", state.TargetProj.Get().Id)
+	}
+	if strings.Contains(url, "chat/completions") {
+		req.Header.Set("X-Disable-Bearer-Auth", "true")
+	}
+
+	// apply to all requests
+	req.Header.Add("User-Agent", "Pinecone CLI")
+	req.Header.Set("Content-Type", "application/json")
+
 }
 
 func performRequest(req *http.Request) (*http.Response, error) {
