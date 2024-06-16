@@ -26,7 +26,6 @@ func DeleteAssistant(name string) (*DeleteAssistantResponse, error) {
 		assistantControlUrl,
 		pcio.Sprintf(URL_DELETE_ASSISTANT, name),
 		http.MethodDelete,
-		false,
 	)
 	if err != nil {
 		return nil, err

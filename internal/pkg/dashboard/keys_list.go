@@ -31,5 +31,5 @@ func GetApiKeysById(projectId string) (*KeyResponse, error) {
 	}
 
 	url := pcio.Sprintf(URL_GET_API_KEYS, projectId)
-	return network.GetAndDecode[KeyResponse](dashboardUrl, url, false)
+	return network.GetAndDecode[KeyResponse](dashboardUrl, url)
 }

@@ -20,7 +20,7 @@ func DeleteProject(orgId string, projId string) (*DeletePostResponse, error) {
 		return nil, err
 	}
 
-	resp, err := network.DeleteAndDecode[DeletePostResponse](dashboardUrl, path, false)
+	resp, err := network.DeleteAndDecode[DeletePostResponse](dashboardUrl, path)
 	if err != nil {
 		return nil, err
 	}

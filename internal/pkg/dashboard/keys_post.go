@@ -28,7 +28,7 @@ func CreateApiKey(projId string, keyName string) (*CreateApiKeyResponse, error) 
 		return nil, err
 	}
 
-	resp, err := network.PostAndDecode[CreateApiKeyRequest, CreateApiKeyResponse](dashboardUrl, path, false, body)
+	resp, err := network.PostAndDecode[CreateApiKeyRequest, CreateApiKeyResponse](dashboardUrl, path, body)
 	if err != nil {
 		return nil, err
 	}

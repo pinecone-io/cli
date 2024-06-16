@@ -4,6 +4,6 @@ import (
 	"net/http"
 )
 
-func GetAndDecode[T any](baseUrl string, path string, useApiKey bool) (*T, error) {
-	return RequestWithoutBodyAndDecode[T](baseUrl, path, http.MethodGet, useApiKey)
+func GetAndDecode[T any](baseUrl string, path string) (*T, error) {
+	return RequestWithoutBodyAndDecode[T](baseUrl, path, http.MethodGet)
 }

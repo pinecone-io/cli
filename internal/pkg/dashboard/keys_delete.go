@@ -36,7 +36,6 @@ func DeleteApiKey(projId string, key Key) (*DeleteApiKeyResponse, error) {
 		dashboardUrl,
 		path,
 		http.MethodDelete,
-		false,
 		body,
 	)
 	if err != nil {

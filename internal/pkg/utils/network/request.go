@@ -48,11 +48,11 @@ func buildRequest(verb string, path string, bodyJson []byte) (*http.Request, err
 	return req, nil
 }
 
-func performRequest(req *http.Request, useApiKey bool) (*http.Response, error) {
+func performRequest(req *http.Request) (*http.Response, error) {
 	// This http client is built using our oauth configurations
 	// and is already configured with our access token
 	ctx := context.Background()
-	client, err := oauth2.GetHttpClient(ctx, useApiKey)
+	client, err := oauth2.GetHttpClient(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func decodeResponse[T any](resp *http.Response, target *T) error {
 	return nil
 }
 
-func RequestWithBody[B any](baseUrl string, path string, method string, useApiKey bool, body B) (*http.Response, error) {
+func RequestWithBody[B any](baseUrl string, path string, method string, body B) (*http.Response, error) {
 	url := baseUrl + path
 
 	var bodyJson []byte
@@ -116,7 +116,7 @@ func RequestWithBody[B any](baseUrl string, path string, method string, useApiKe
 		return nil, pcio.Errorf("error building request: %v", err)
 	}
 
-	resp, err := performRequest(req, useApiKey)
+	resp, err := performRequest(req)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -127,7 +127,7 @@ func RequestWithBody[B any](baseUrl string, path string, method string, useApiKe
 	return resp, nil
 }
 
-func RequestWithBodyAndDecode[B any, R any](baseUrl string, path string, method string, useApiKey bool, body B) (*R, error) {
+func RequestWithBodyAndDecode[B any, R any](baseUrl string, path string, method string, body B) (*R, error) {
 	url := baseUrl + path
 
 	var bodyJson []byte
@@ -155,7 +155,7 @@ func RequestWithBodyAndDecode[B any, R any](baseUrl string, path string, method 
 		return nil, pcio.Errorf("error building request: %v", err)
 	}
 
-	resp, err := performRequest(req, useApiKey)
+	resp, err := performRequest(req)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -183,7 +183,7 @@ func RequestWithBodyAndDecode[B any, R any](baseUrl string, path string, method 
 	return &parsedResponse, nil
 }
 
-func RequestWithoutBodyAndDecode[T any](baseUrl string, path string, method string, useApiKey bool) (*T, error) {
+func RequestWithoutBodyAndDecode[T any](baseUrl string, path string, method string) (*T, error) {
 	url := baseUrl + path
 
 	requestedService := "assistant engine"
@@ -205,7 +205,7 @@ func RequestWithoutBodyAndDecode[T any](baseUrl string, path string, method stri
 		return nil, pcio.Errorf("error building request: %v", err)
 	}
 
-	resp, err := performRequest(req, useApiKey)
+	resp, err := performRequest(req)
 	if err != nil {
 		log.Error().
 			Err(err).

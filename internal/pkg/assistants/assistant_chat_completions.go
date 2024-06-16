@@ -49,7 +49,6 @@ func GetAssistantChatCompletions(asstName string, msg string, stream bool) (*mod
 		resp, err = network.PostAndDecode[models.ChatCompletionRequest, models.ChatCompletionModel](
 			assistantDataUrl,
 			fmt.Sprintf(URL_ASSISTANT_CHAT_COMPLETIONS, asstName),
-			true,
 			body,
 		)
 		if err != nil {
@@ -59,7 +58,6 @@ func GetAssistantChatCompletions(asstName string, msg string, stream bool) (*mod
 		resp, err = PostAndStreamChatResponse[models.ChatCompletionRequest](
 			assistantDataUrl,
 			fmt.Sprintf(URL_ASSISTANT_CHAT_COMPLETIONS, asstName),
-			false,
 			body,
 		)
 		if err != nil {
@@ -75,8 +73,8 @@ func GetAssistantChatCompletions(asstName string, msg string, stream bool) (*mod
 	return resp, nil
 }
 
-func PostAndStreamChatResponse[B any](baseUrl string, path string, useApiKey bool, body B) (*models.ChatCompletionModel, error) {
-	resp, err := network.RequestWithBody[B](baseUrl, path, http.MethodPost, useApiKey, body)
+func PostAndStreamChatResponse[B any](baseUrl string, path string, body B) (*models.ChatCompletionModel, error) {
+	resp, err := network.RequestWithBody[B](baseUrl, path, http.MethodPost, body)
 	if err != nil {
 		return nil, err
 	}
