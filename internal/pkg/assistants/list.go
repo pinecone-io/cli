@@ -51,7 +51,6 @@ func ListAssistants() (*ListAssistantsResponse, error) {
 	resp, err := network.GetAndDecode[ListAssistantsResponse](
 		assistantControlUrl,
 		URL_LIST_ASSISTANTS,
-		false,
 	)
 	if err != nil {
 		return nil, err

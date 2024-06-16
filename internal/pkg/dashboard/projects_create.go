@@ -36,7 +36,6 @@ func CreateProject(orgId string, projName string, podQuota int32) (*CreateProjec
 	resp, err := network.PostAndDecode[CreateProjectRequest, CreateProjectResponse](
 		dashboardUrl,
 		path,
-		false,
 		body,
 	)
 	if err != nil {

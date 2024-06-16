@@ -82,7 +82,7 @@ func NewPineconeClientForUser(projectId string) *pinecone.Client {
 	headers["X-Project-Id"] = projectId
 
 	ctx := context.Background()
-	restClient, err := pc_oauth2.GetHttpClient(ctx, false)
+	restClient, err := pc_oauth2.GetHttpClient(ctx)
 	if err != nil {
 		msg.FailMsg("Failed to create OAuth2 client: %s", err)
 		exit.Error(err)

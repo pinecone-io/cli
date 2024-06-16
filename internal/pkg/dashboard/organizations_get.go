@@ -28,7 +28,7 @@ func DescribeOrganization(orgId string) (*DescribeOrganizationResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := network.GetAndDecode[DescribeOrganizationResponse](dashboardUrl, path, false)
+	resp, err := network.GetAndDecode[DescribeOrganizationResponse](dashboardUrl, path)
 	if err != nil {
 		return nil, err
 	}

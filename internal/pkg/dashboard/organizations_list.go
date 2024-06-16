@@ -38,7 +38,7 @@ func ListOrganizations() (*OrganizationsResponse, error) {
 		return nil, err
 	}
 
-	resp, err := network.GetAndDecode[OrganizationsResponse](dashboardUrl, URL_LIST_ORGANIZATIONS, false)
+	resp, err := network.GetAndDecode[OrganizationsResponse](dashboardUrl, URL_LIST_ORGANIZATIONS)
 	if err != nil {
 		return nil, err
 	}

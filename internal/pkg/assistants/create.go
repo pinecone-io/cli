@@ -26,7 +26,6 @@ func CreateAssistant(name string) (*AssistantModel, error) {
 	resp, err := network.PostAndDecode[CreateAssistantRequest, AssistantModel](
 		assistantControlUrl,
 		URL_CREATE_ASSISTANT,
-		false,
 		body,
 	)
 	if err != nil {

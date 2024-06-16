@@ -12,11 +12,11 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
-func PostAndDecode[B any, R any](baseUrl string, path string, useApiKey bool, body B) (*R, error) {
-	return RequestWithBodyAndDecode[B, R](baseUrl, path, http.MethodPost, useApiKey, body)
+func PostAndDecode[B any, R any](baseUrl string, path string, body B) (*R, error) {
+	return RequestWithBodyAndDecode[B, R](baseUrl, path, http.MethodPost, body)
 }
 
-func PostMultipartFormDataAndDecode[R any](baseUrl string, path string, useApiKey bool, bodyPath string) (*R, error) {
+func PostMultipartFormDataAndDecode[R any](baseUrl string, path string, bodyPath string) (*R, error) {
 	url := baseUrl + path
 
 	var requestBody bytes.Buffer
@@ -55,7 +55,7 @@ func PostMultipartFormDataAndDecode[R any](baseUrl string, path string, useApiKe
 		Str("multipart/form-data", bodyPath).
 		Msg("Sending multipart/form-data request")
 
-	resp, err := performRequest(req, useApiKey)
+	resp, err := performRequest(req)
 	if err != nil {
 		log.Error().
 			Err(err).
