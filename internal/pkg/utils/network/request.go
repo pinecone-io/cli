@@ -100,19 +100,18 @@ func decodeResponse[T any](resp *http.Response, target *T) error {
 func RequestWithBody[B any](baseUrl string, path string, method string, body B) (*http.Response, error) {
 	url := baseUrl + path
 
-	var bodyJson []byte
-	bodyJson, err := json.Marshal(body)
+	var buf bytes.Buffer
+	err := json.NewEncoder(&buf).Encode(body)
 	if err != nil {
 		log.Error().
 			Err(err).
 			Str("method", method).
 			Str("url", url).
-			Msg("Error marshalling JSON")
+			Msg("Error encoding body")
 		return nil, pcio.Errorf("error marshalling JSON: %v", err)
 	}
-	bodyBuffer := bytes.NewBuffer(bodyJson)
 
-	req, err := buildRequest(method, url, bodyBuffer)
+	req, err := buildRequest(method, url, &buf)
 	log.Info().
 		Str("method", method).
 		Str("url", url).
@@ -140,19 +139,18 @@ func RequestWithBody[B any](baseUrl string, path string, method string, body B) 
 func RequestWithBodyAndDecode[B any, R any](baseUrl string, path string, method string, body B) (*R, error) {
 	url := baseUrl + path
 
-	var bodyJson []byte
-	bodyJson, err := json.Marshal(body)
+	var buf bytes.Buffer
+	err := json.NewEncoder(&buf).Encode(body)
 	if err != nil {
 		log.Error().
 			Err(err).
 			Str("method", method).
 			Str("url", url).
-			Msg("Error marshalling JSON")
+			Msg("Error encoding body")
 		return nil, pcio.Errorf("error marshalling JSON: %v", err)
 	}
-	bodyBuffer := bytes.NewBuffer(bodyJson)
 
-	req, err := buildRequest(method, url, bodyBuffer)
+	req, err := buildRequest(method, url, &buf)
 	log.Info().
 		Str("method", method).
 		Str("url", url).
