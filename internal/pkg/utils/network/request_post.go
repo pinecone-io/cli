@@ -42,9 +42,10 @@ func PostMultipartFormDataAndDecode[R any](baseUrl string, path string, bodyPath
 		return nil, pcio.Errorf("error closing writer: %v", err)
 	}
 
-	req, err := http.NewRequest("POST", url, &requestBody)
+	// Override Content-Type to support multipart/form-data
+	req, err := buildRequest(http.MethodPost, url, &requestBody)
 	if err != nil {
-		return nil, pcio.Errorf("error creating request: %v", err)
+		return nil, pcio.Errorf("error building request: %v", err)
 	}
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
