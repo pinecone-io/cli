@@ -21,6 +21,8 @@ const (
 	URL_ASSISTANT_CHAT_COMPLETIONS = "/assistant/chat/%s/chat/completions"
 )
 
+const maxLineWidth = 80
+
 func GetAssistantChatCompletions(asstName string, msg string, stream bool) (*models.ChatCompletionModel, error) {
 	outgoingMsg := models.ChatCompletionMessage{
 		Role:    "user",
@@ -91,7 +93,10 @@ func PostAndStreamChatResponse[B any](baseUrl string, path string, body B, spinn
 	var completeResponse string
 	var id string
 	var model string
+	var currentLineLength int
 
+	// stream response and print as we go
+	fmt.Print("\n")
 	scanner := bufio.NewScanner(resp.Body)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -105,14 +110,24 @@ func PostAndStreamChatResponse[B any](baseUrl string, path string, body B, spinn
 			}
 
 			for _, choice := range chunkResp.Choices {
+				content := choice.Delta.Content
+				contentLength := len(content)
+
+				// would exceed max line length, push to new line
+				if currentLineLength+contentLength > maxLineWidth {
+					fmt.Print("\n")
+					currentLineLength = 0
+				}
 				fmt.Print(choice.Delta.Content)
 				os.Stdout.Sync()
+				currentLineLength += contentLength
 				completeResponse += choice.Delta.Content
 			}
 			id = chunkResp.Id
 			model = chunkResp.Model
 		}
 	}
+	fmt.Print("\n")
 
 	completionResp := &models.ChatCompletionModel{
 		Id:    id,
