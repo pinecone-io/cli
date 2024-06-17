@@ -18,11 +18,8 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 )
 
-func buildRequest(verb string, path string, bodyJson []byte) (*http.Request, error) {
-	var body *bytes.Buffer
-	if len(bodyJson) > 0 {
-		body = bytes.NewBuffer(bodyJson)
-	} else {
+func buildRequest(verb string, path string, body *bytes.Buffer) (*http.Request, error) {
+	if body == nil {
 		body = bytes.NewBuffer([]byte{})
 	}
 
@@ -113,8 +110,9 @@ func RequestWithBody[B any](baseUrl string, path string, method string, body B) 
 			Msg("Error marshalling JSON")
 		return nil, pcio.Errorf("error marshalling JSON: %v", err)
 	}
+	bodyBuffer := bytes.NewBuffer(bodyJson)
 
-	req, err := buildRequest(method, url, bodyJson)
+	req, err := buildRequest(method, url, bodyBuffer)
 	log.Info().
 		Str("method", method).
 		Str("url", url).
@@ -152,8 +150,9 @@ func RequestWithBodyAndDecode[B any, R any](baseUrl string, path string, method 
 			Msg("Error marshalling JSON")
 		return nil, pcio.Errorf("error marshalling JSON: %v", err)
 	}
+	bodyBuffer := bytes.NewBuffer(bodyJson)
 
-	req, err := buildRequest(method, url, bodyJson)
+	req, err := buildRequest(method, url, bodyBuffer)
 	log.Info().
 		Str("method", method).
 		Str("url", url).
