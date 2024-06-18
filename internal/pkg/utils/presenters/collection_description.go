@@ -1,39 +1,17 @@
 package presenters
 
 import (
-	"io"
-	"reflect"
 	"strings"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/go-pinecone/pinecone"
 )
 
-func printOptionalInt(writer io.Writer, label string, value interface{}) {
-	if value == nil {
-		pcio.Fprintf(writer, "%s\t%s\n", label, "N/A")
-		return
-	}
-
-	printValue := func(v interface{}) {
-		switch v := v.(type) {
-		case *int32, *int64:
-			if reflect.ValueOf(v).IsNil() {
-				pcio.Fprintf(writer, "%s\t%s\n", label, "null")
-			} else {
-				pcio.Fprintf(writer, "%s\t%d\n", label, reflect.Indirect(reflect.ValueOf(v)).Interface())
-			}
-		default:
-			pcio.Fprintf(writer, "%s\t%s\n", label, "Invalid type")
-		}
-	}
-
-	printValue(value)
-}
-
 func PrintDescribeCollectionTable(coll *pinecone.Collection) {
 	writer := NewTabWriter()
+	log.Debug().Str("name", coll.Name).Msg("Printing collection description")
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
 	header := strings.Join(columns, "\t") + "\n"
@@ -41,11 +19,9 @@ func PrintDescribeCollectionTable(coll *pinecone.Collection) {
 
 	pcio.Fprintf(writer, "Name\t%s\n", coll.Name)
 	pcio.Fprintf(writer, "State\t%s\n", ColorizeCollectionStatus(coll.Status))
-
-	printOptionalInt(writer, "Dimension", coll.Dimension)
-	printOptionalInt(writer, "Size", coll.Size)
-	printOptionalInt(writer, "VectorCount", coll.VectorCount)
-
+	pcio.Fprintf(writer, "Dimension\t%d\n", coll.Dimension)
+	pcio.Fprintf(writer, "Size\t%d\n", coll.Size)
+	pcio.Fprintf(writer, "VectorCount\t%d\n", coll.VectorCount)
 	pcio.Fprintf(writer, "Environment\t%s\n", coll.Environment)
 
 	writer.Flush()
