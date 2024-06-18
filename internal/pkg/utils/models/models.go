@@ -27,6 +27,7 @@ type ChatCompletionMessage struct {
 type AssistantChatHistory map[string]AssistantChat
 
 type AssistantChat struct {
+	Id        string                  `json:"id"`
 	Messages  []ChatCompletionMessage `json:"messages"`
 	CreatedOn time.Time               `json:"created_on"`
 }

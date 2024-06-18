@@ -1,6 +1,7 @@
 package assistant
 
 import (
+	assistant "github.com/pinecone-io/cli/internal/pkg/cli/command/assistant/chat"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -30,7 +31,7 @@ func NewAssistantCommand() *cobra.Command {
 	// Assistant Operations
 	cmd.AddGroup(help.GROUP_ASSISTANT_OPERATIONS)
 	cmd.AddCommand(NewDescribeAssistantCmd())
-	cmd.AddCommand(NewAssistantChatCmd())
+	cmd.AddCommand(assistant.NewAssistantChatCmd())
 	cmd.AddCommand(NewListAssistantFilesCmd())
 	cmd.AddCommand(NewDeleteAssistantFileCmd())
 	cmd.AddCommand(NewUploadAssistantFileCmd())

@@ -75,6 +75,7 @@ func GetAssistantChatCompletions(asstName string, msg string, stream bool) (*mod
 	}
 
 	// If the request was successful, update the chat history
+	chat.Id = resp.Id
 	chat.Messages = append(chat.Messages, processChatCompletionModel(resp)...)
 	(*chatHistory.History)[asstName] = chat
 	state.ChatHist.Set(&chatHistory)

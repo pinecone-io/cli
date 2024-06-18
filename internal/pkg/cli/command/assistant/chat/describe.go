@@ -11,6 +11,7 @@ import (
 
 type AssistantChatDescribeCmdOptions struct {
 	assistant string
+	id        bool
 	json      bool
 }
 
@@ -37,6 +38,13 @@ func NewAssistantChatDescribeCmd() *cobra.Command {
 				return
 			}
 
+			// If the chat ID was requested print that
+			if options.id {
+				pcio.Printf("id: %s\n", chat.Id)
+				return
+			}
+
+			// Otherwise print the chat history
 			if options.json {
 				text.PrettyPrintJSON(chat)
 			} else {
@@ -47,6 +55,7 @@ func NewAssistantChatDescribeCmd() *cobra.Command {
 
 	cmd.Flags().StringVarP(&options.assistant, "assistant", "a", "", "name of the assistant chat to describe")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVar(&options.id, "id", false, "output the ID of the chat")
 
 	return cmd
 }
