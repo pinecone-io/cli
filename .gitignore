@@ -29,3 +29,6 @@ secrets
 
 # Misc
 .DS_Store
+
+# Jetbrains IDE
+.idea/
