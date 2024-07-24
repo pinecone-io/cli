@@ -46,7 +46,7 @@ func NewDeleteKeyCmd() *cobra.Command {
 
 			// Verify key exists before trying to delete it.
 			// This lets us give a more helpful error message than just
-			// attempting to delete non-existant key and getting 500 error.
+			// attempting to delete non-existent key and getting 500 error.
 			existingKeys, err := dashboard.GetApiKeysById(projId)
 			if err != nil {
 				msg.FailMsg("Failed to list keys: %s", err)
