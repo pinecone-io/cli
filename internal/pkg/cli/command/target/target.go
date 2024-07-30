@@ -192,7 +192,7 @@ func getOrg(orgs *dashboard.OrganizationsResponse, orgName string) dashboard.Org
 	}
 
 	availableOrgs := strings.Join(orgNames, ", ")
-	log.Error().Str("orgName", orgName).Str("avialableOrgs", availableOrgs).Msg("Failed to find organization")
+	log.Error().Str("orgName", orgName).Str("availableOrgs", availableOrgs).Msg("Failed to find organization")
 	msg.FailMsg("Failed to find organization %s. Available organizations: %s.", style.Emphasis(orgName), availableOrgs)
 	exit.ErrorMsg(pcio.Sprintf("organization %s not found", style.Emphasis(orgName)))
 	return dashboard.Organization{}

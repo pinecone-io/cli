@@ -68,6 +68,10 @@ Some facts that could be useful:
 - You can enable debug output with the `PINECONE_LOG_LEVEL=DEBUG` env var
 - Are you pointed at the correct environment? The current value of the environment setting (i.e. prod or staging) is controlled through `pinecone config set-environment staging` is not clearly surfaced through the printed output. If things aren't working as you expect, you might be pointed in the wrong place. See `cat ~/.config/pinecone/config.yaml` to confirm.
 
+## Making a Pull Request
+Please fork this repo and make a PR with your changes. Run `gofmt` and `goimports` on all proposed
+code changes. Code that does not adhere to these formatters will not be merged.
+
 ## Releasing the CLI
 
 To make a new release, you simply tag a commit with a version and push it. The heavy lifting all happens in CI.

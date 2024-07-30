@@ -75,7 +75,7 @@ func NewAssistantTargetCmd() *cobra.Command {
 
 			assistantList, err := assistants.ListAssistants()
 			if err != nil {
-				msg.FailMsg("An error occured while attempting to fetch a list of assistants: %s\n", err)
+				msg.FailMsg("An error occurred while attempting to fetch a list of assistants: %s\n", err)
 				exit.Error(err)
 			}
 

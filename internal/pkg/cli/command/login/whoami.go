@@ -28,7 +28,7 @@ func NewWhoAmICmd() *cobra.Command {
 			claims, err := pc_oauth2.ParseClaimsUnverified(&accessToken)
 			if err != nil {
 				log.Error().Msg("Error parsing claims")
-				msg.FailMsg("An auth token was fetched but an error occured while parsing the token's claims: %s", err)
+				msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
 				exit.Error(pcio.Errorf("error parsing claims from access token: %s", err))
 				return
 			}

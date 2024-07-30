@@ -10,7 +10,7 @@ import (
 func PrintDescribeAssistantFileTable(file *assistants.AssistantFileModel) {
 	writer := NewTabWriter()
 
-	columns := []string{"ATTIRBUTE", "VALUE"}
+	columns := []string{"ATTRIBUTE", "VALUE"}
 	header := strings.Join(columns, "\t") + "\n"
 	pcio.Fprint(writer, header)
 
