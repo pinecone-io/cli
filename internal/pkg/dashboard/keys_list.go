@@ -20,7 +20,7 @@ const (
 	URL_GET_API_KEYS = "/v2/dashboard/projects/%s/api-keys"
 )
 
-func GetApiKeys(project GlobalProject) (*KeyResponse, error) {
+func GetApiKeys(project Project) (*KeyResponse, error) {
 	return GetApiKeysById(project.Id)
 }
 

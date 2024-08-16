@@ -112,7 +112,7 @@ func printTable(projects []dashboard.Project) {
 	pcio.Fprint(writer, header)
 
 	for _, proj := range projects {
-		values := []string{proj.GlobalProject.Id, proj.Name}
+		values := []string{proj.Id, proj.Name}
 		pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
 	}
 	writer.Flush()
@@ -127,7 +127,7 @@ func printTableAll(orgs *dashboard.OrganizationsResponse) {
 
 	for _, org := range orgs.Organizations {
 		for _, proj := range org.Projects {
-			values := []string{org.Id, org.Name, proj.Name, proj.GlobalProject.Id}
+			values := []string{org.Id, org.Name, proj.Name, proj.Id}
 			pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
 		}
 	}

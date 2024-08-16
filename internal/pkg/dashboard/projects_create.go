@@ -16,8 +16,8 @@ type CreateProjectRequest struct {
 }
 
 type CreateProjectResponse struct {
-	Success       bool          `json:"success"`
-	GlobalProject GlobalProject `json:"globalProject"`
+	Success bool    `json:"success"`
+	Project Project `json:"globalProject"`
 }
 
 func CreateProject(orgId string, projName string, podQuota int32) (*CreateProjectResponse, error) {

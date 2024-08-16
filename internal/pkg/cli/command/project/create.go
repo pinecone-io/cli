@@ -44,7 +44,7 @@ func NewCreateProjectCmd() *cobra.Command {
 				msg.FailMsg("Failed to create project %s\n", style.Emphasis(options.name))
 				exit.Error(pcio.Errorf("Create project call returned 200 but with success=false in the body%s", options.name))
 			}
-			msg.SuccessMsg("Project %s created successfully.\n", style.Emphasis(proj.GlobalProject.Name))
+			msg.SuccessMsg("Project %s created successfully.\n", style.Emphasis(proj.Project.Name))
 		},
 	}
 

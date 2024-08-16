@@ -153,7 +153,7 @@ func NewTargetCmd() *cobra.Command {
 				}
 				state.TargetProj.Set(&state.TargetProject{
 					Name: proj.Name,
-					Id:   proj.GlobalProject.Id,
+					Id:   proj.Id,
 				})
 			}
 
@@ -260,7 +260,7 @@ func postLoginSetupTargetProject(orgs *dashboard.OrganizationsResponse, targetOr
 			} else if len(org.Projects) == 1 {
 				state.TargetProj.Set(&state.TargetProject{
 					Name: org.Projects[0].Name,
-					Id:   org.Projects[0].GlobalProject.Id,
+					Id:   org.Projects[0].Id,
 				})
 				return org.Projects[0].Name
 			} else {
@@ -274,7 +274,7 @@ func postLoginSetupTargetProject(orgs *dashboard.OrganizationsResponse, targetOr
 					if proj.Name == projectName {
 						state.TargetProj.Set(&state.TargetProject{
 							Name: proj.Name,
-							Id:   proj.GlobalProject.Id,
+							Id:   proj.Id,
 						})
 						return proj.Name
 					}
