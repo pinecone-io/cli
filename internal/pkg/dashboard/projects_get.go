@@ -4,7 +4,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
-func GetProjectByName(orgName string, projName string) (*GlobalProject, error) {
+func GetProjectByName(orgName string, projName string) (*Project, error) {
 	orgs, err := ListOrganizations()
 	if err != nil {
 		return nil, err
@@ -12,8 +12,8 @@ func GetProjectByName(orgName string, projName string) (*GlobalProject, error) {
 	for _, org := range orgs.Organizations {
 		if org.Name == orgName {
 			for _, proj := range org.Projects {
-				if proj.GlobalProject.Name == projName {
-					return &proj.GlobalProject, nil
+				if proj.Name == projName {
+					return &proj, nil
 				}
 			}
 		}
@@ -21,7 +21,7 @@ func GetProjectByName(orgName string, projName string) (*GlobalProject, error) {
 	return nil, error(pcio.Errorf("project name %s not found in organization %s", projName, orgName))
 }
 
-func GetProjectById(orgId string, projId string) (*GlobalProject, error) {
+func GetProjectById(orgId string, projId string) (*Project, error) {
 	orgs, err := ListOrganizations()
 	if err != nil {
 		return nil, err
@@ -30,8 +30,8 @@ func GetProjectById(orgId string, projId string) (*GlobalProject, error) {
 	for _, org := range orgs.Organizations {
 		if org.Id == orgId {
 			for _, proj := range org.Projects {
-				if proj.GlobalProject.Id == projId {
-					return &proj.GlobalProject, nil
+				if proj.Id == projId {
+					return &proj, nil
 				}
 			}
 		}

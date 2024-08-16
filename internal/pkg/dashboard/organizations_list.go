@@ -10,7 +10,8 @@ const (
 )
 
 type OrganizationsResponse struct {
-	Organizations []Organization `json:"organizations"`
+	Organizations []Organization `json:"newOrgs"`
+	Projects      []Project      `json:"projects"`
 }
 
 type Organization struct {
@@ -20,16 +21,11 @@ type Organization struct {
 }
 
 type Project struct {
-	Id            string        `json:"id"`
-	Name          string        `json:"name"`
-	GlobalProject GlobalProject `json:"globalProject"`
-}
-
-type GlobalProject struct {
-	Id         string `json:"id"`
-	Name       string `json:"name"`
-	Quota      string `json:"quota"`
-	IndexQuota string `json:"indexQuota"`
+	Id             string `json:"id"`
+	Name           string `json:"name"`
+	OrganizationId string `json:"organization_id"`
+	Quota          string `json:"quota"`
+	IndexQuota     string `json:"index_quota"`
 }
 
 func ListOrganizations() (*OrganizationsResponse, error) {
@@ -42,10 +38,29 @@ func ListOrganizations() (*OrganizationsResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	for _, org := range resp.Organizations {
+
+	orgToProjectsMap := make(map[string][]Project)
+
+	// Organize projects into orgs to match the older data structure
+	for _, project := range resp.Projects {
+		if projects, ok := orgToProjectsMap[project.OrganizationId]; ok {
+			projects = append(projects, project)
+			orgToProjectsMap[project.OrganizationId] = projects
+		} else {
+			orgToProjectsMap[project.OrganizationId] = []Project{project}
+		}
+	}
+
+	// Modify the response to nest projects under their orgs
+	for i := range resp.Organizations {
+		org := &resp.Organizations[i]
+
 		log.Trace().
 			Str("org", string(org.Name)).
 			Msg("found org")
+
+		org.Projects = orgToProjectsMap[org.Id]
+
 		for _, proj := range org.Projects {
 			log.Trace().
 				Str("org", string(org.Name)).
@@ -53,5 +68,6 @@ func ListOrganizations() (*OrganizationsResponse, error) {
 				Msg("found project in org")
 		}
 	}
+
 	return resp, nil
 }
