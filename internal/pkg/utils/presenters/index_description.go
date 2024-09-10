@@ -23,6 +23,13 @@ func ColorizeState(state pinecone.IndexStatusState) string {
 	}
 }
 
+func ColorizeDeletionProtection(deletionProtection pinecone.DeletionProtection) string {
+	if deletionProtection == pinecone.DeletionProtectionEnabled {
+		return style.StatusGreen("enabled")
+	}
+	return style.StatusRed("disabled")
+}
+
 func PrintDescribeIndexTable(idx *pinecone.Index) {
 	writer := NewTabWriter()
 	log.Debug().Str("name", idx.Name).Msg("Printing index description")
@@ -34,6 +41,7 @@ func PrintDescribeIndexTable(idx *pinecone.Index) {
 	pcio.Fprintf(writer, "Name\t%s\n", idx.Name)
 	pcio.Fprintf(writer, "Dimension\t%d\n", idx.Dimension)
 	pcio.Fprintf(writer, "Metric\t%s\n", string(idx.Metric))
+	pcio.Fprintf(writer, "Deletion Protection\t%s\n", ColorizeDeletionProtection(idx.DeletionProtection))
 	pcio.Fprintf(writer, "\t\n")
 	pcio.Fprintf(writer, "State\t%s\n", ColorizeState(idx.Status.State))
 	pcio.Fprintf(writer, "Ready\t%s\n", ColorizeBool(idx.Status.Ready))

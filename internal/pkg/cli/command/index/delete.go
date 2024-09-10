@@ -29,6 +29,8 @@ func NewDeleteCmd() *cobra.Command {
 			if err != nil {
 				if strings.Contains(err.Error(), "not found") {
 					msg.FailMsg("The index %s does not exist\n", style.Emphasis(options.name))
+				} else {
+					msg.FailMsg("Failed to delete index %s: %s\n", style.Emphasis(options.name), err)
 				}
 				exit.Error(err)
 			}
