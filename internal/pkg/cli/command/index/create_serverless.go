@@ -2,6 +2,7 @@ package index
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -15,12 +16,14 @@ import (
 )
 
 type createServerlessOptions struct {
-	name      string
-	dimension int32
-	metric    string
-	cloud     string
-	region    string
-	json      bool
+	name               string
+	dimension          int32
+	metric             string
+	cloud              string
+	region             string
+	deletionProtection string
+
+	json bool
 }
 
 func NewCreateServerlessCmd() *cobra.Command {
@@ -46,6 +49,7 @@ func NewCreateServerlessCmd() *cobra.Command {
 
 	// Optional flags
 	cmd.Flags().StringVarP(&options.metric, "metric", "m", "cosine", "metric to use. One of: cosine, euclidean, dotproduct")
+	cmd.Flags().StringVarP(&options.deletionProtection, "deletion_protection", "p", "", "Whether to enable deletion protection for the index")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	return cmd
@@ -54,13 +58,15 @@ func NewCreateServerlessCmd() *cobra.Command {
 func runCreateServerlessCmd(cmd *cobra.Command, options createServerlessOptions) {
 	ctx := context.Background()
 	pc := sdk.NewPineconeClient()
+	fmt.Printf("Creating serverless index with deletion protection maybe enabled: %v\n", options.deletionProtection)
 
 	createRequest := &pinecone.CreateServerlessIndexRequest{
-		Name:      options.name,
-		Metric:    pinecone.IndexMetric(options.metric),
-		Dimension: options.dimension,
-		Cloud:     pinecone.Cloud(options.cloud),
-		Region:    options.region,
+		Name:               options.name,
+		Metric:             pinecone.IndexMetric(options.metric),
+		Dimension:          options.dimension,
+		Cloud:              pinecone.Cloud(options.cloud),
+		Region:             options.region,
+		DeletionProtection: pinecone.DeletionProtection(options.deletionProtection),
 	}
 
 	idx, err := pc.CreateServerlessIndex(ctx, createRequest)

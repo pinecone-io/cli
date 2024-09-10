@@ -15,14 +15,15 @@ import (
 )
 
 type createPodOptions struct {
-	name             string
-	dimension        int32
-	metric           string
-	environment      string
-	podType          string
-	shards           int32
-	replicas         int32
-	sourceCollection string
+	name               string
+	dimension          int32
+	metric             string
+	environment        string
+	podType            string
+	shards             int32
+	replicas           int32
+	sourceCollection   string
+	deletionProtection string
 	// metadataConfig   *PodSpecMetadataConfig
 
 	json bool
@@ -56,6 +57,7 @@ func NewCreatePodCmd() *cobra.Command {
 	cmd.Flags().Int32VarP(&options.shards, "shards", "s", 1, "shards of the index to create")
 	cmd.Flags().Int32VarP(&options.replicas, "replicas", "r", 1, "replicas of the index to create")
 	cmd.Flags().StringVarP(&options.sourceCollection, "source_collection", "c", "", "When creating a pod index using data from a collection, the name of the source collection")
+	cmd.Flags().StringVarP(&options.deletionProtection, "deletion_protection", "p", "", "Whether to enable deletion protection for the index")
 	cmd.MarkFlagRequired("sourceCollection")
 
 	return cmd
@@ -66,13 +68,14 @@ func runCreatePodCmd(cmd *cobra.Command, options createPodOptions) {
 	pc := sdk.NewPineconeClient()
 
 	createRequest := &pinecone.CreatePodIndexRequest{
-		Name:        options.name,
-		Metric:      pinecone.IndexMetric(options.metric),
-		Dimension:   options.dimension,
-		Environment: options.environment,
-		PodType:     options.podType,
-		Shards:      options.shards,
-		Replicas:    options.replicas,
+		Name:               options.name,
+		Metric:             pinecone.IndexMetric(options.metric),
+		Dimension:          options.dimension,
+		Environment:        options.environment,
+		PodType:            options.podType,
+		Shards:             options.shards,
+		Replicas:           options.replicas,
+		DeletionProtection: pinecone.DeletionProtection(options.deletionProtection),
 	}
 
 	idx, err := pc.CreatePodIndex(ctx, createRequest)
