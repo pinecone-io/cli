@@ -49,7 +49,7 @@ func newClientForUserFromTarget() *pinecone.Client {
 
 	if apiKey != "" {
 		if oauth2Token.AccessToken != "" {
-			msg.WarnMsg("You are currently logged in and also have an API key set in your configuration. The API key (which is linked to a specific project) will be used in preference to any user authentication and target context that may be present.\n")
+			msg.WarnMsg("You are currently logged in and also have an API key set in your environment and/or local configuration. The API key (which is linked to a specific project) will be used in preference to any user authentication and target context that may be present.\n")
 		}
 
 		log.Debug().Msg("Creating client for machine using stored API key")
