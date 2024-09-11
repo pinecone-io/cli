@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
+	"github.com/pinecone-io/cli/internal/pkg/utils/apikey"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
@@ -43,7 +44,7 @@ func newClientForUserFromTarget() *pinecone.Client {
 		Str("targetProjectId", targetProjectId).
 		Msg("Loading target context")
 
-	apiKey := secrets.ApiKey.Get()
+	apiKey := apikey.GetApiKey()
 	oauth2Token := secrets.OAuth2Token.Get()
 
 	if apiKey != "" {

@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/apikey"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -33,7 +34,7 @@ func buildRequest(verb string, path string, body *bytes.Buffer) (*http.Request, 
 		if secrets.OAuth2Token.Get().AccessToken != "" {
 			pcio.Printf("curl -X %s %s -H \"Content-Type: application/json\" -H \"User-Agent: Pinecone CLI\" -H \"Authorization: Bearer %s\"\n", verb, path, secrets.OAuth2Token.Get().AccessToken)
 		} else {
-			pcio.Printf("curl -X %s %s -H \"Content-Type: application/json\" -H \"User-Agent: Pinecone CLI\" -H \"Api-Key: %s\"\n", verb, path, secrets.ApiKey.Get())
+			pcio.Printf("curl -X %s %s -H \"Content-Type: application/json\" -H \"User-Agent: Pinecone CLI\" -H \"Api-Key: %s\"\n", verb, path, apikey.GetApiKey())
 		}
 	}
 
