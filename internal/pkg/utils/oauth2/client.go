@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/apikey"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 )
@@ -42,7 +41,7 @@ func GetHttpClient(ctx context.Context) (*http.Client, error) {
 	log.Debug().Msg("Creating http client without OAuth2 token handling")
 	return &http.Client{
 		Transport: &apiKeyTransport{
-			apiKey: apikey.GetApiKey(),
+			apiKey: secrets.ApiKey.Get(),
 			next:   http.DefaultTransport,
 		},
 	}, nil

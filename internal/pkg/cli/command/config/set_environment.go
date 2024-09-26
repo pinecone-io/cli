@@ -11,6 +11,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	ProductionEnv = "production"
+	StagingEnv    = "staging"
+)
+
 func NewSetEnvCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-environment <production|staging>",

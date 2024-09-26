@@ -2,6 +2,7 @@ package secrets
 
 import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration"
+	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 )
@@ -36,4 +37,10 @@ var ConfigFile = configuration.ConfigFile{
 
 func init() {
 	ConfigFile.Init()
+
+	SecretsViper.SetEnvPrefix("pinecone")
+	err := SecretsViper.BindEnv(ApiKey.KeyName)
+	if err != nil {
+		exit.Error(err)
+	}
 }
