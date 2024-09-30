@@ -34,18 +34,18 @@ To learn about the steps involved in building from source, see [CONTRIBUTING](./
 
 ## Usage
 
-In order to use the Pinecone CLI you will need to authenticate with Pinecone services. This can be done either with an API key, or using the `pinecone login` flow to authenticate with a Pinecone account and your browser and leverage an authentication token.
+In order to use the Pinecone CLI you will need to authenticate with Pinecone services. This can be done either with an API key, or using the `pinecone login` flow to authenticate with a Pinecone account via your browser.
 
 ```shell
 pinecone --help
 
-# If you have a Pinecone API set in your environment as PINECONE_API_KEY you can begin working with the CLI
+# If you have PINECONE_API_KEY set in your environment you can begin working with the CLI
 pinecone index list
 
 # To set an API key manually, you can use the config command
 pinecone config set-api-key "YOUR_API_KEY"
 
-# Additionally, you can authenticate manually using the login command
+# Additionally, you can authenticate through the browser using the login command
 pinecone login
 
 # To clear your current login state or configured API key, you can use the logout command
