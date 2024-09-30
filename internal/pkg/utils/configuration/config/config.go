@@ -1,7 +1,11 @@
 package config
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration"
+	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/spf13/viper"
 )
 
@@ -33,4 +37,30 @@ var configFile = configuration.ConfigFile{
 
 func init() {
 	configFile.Init()
+
+	ConfigViper.SetEnvPrefix("pinecone")
+	err := ConfigViper.BindEnv(Environment.KeyName)
+	if err != nil {
+		exit.Error(err)
+	}
+
+	err = validateEnvironment(Environment.Get())
+	fmt.Printf("ERROR? %v\n", err)
+	if err != nil {
+		exit.Error(err)
+	}
+}
+
+func validateEnvironment(env string) error {
+	validEnvs := []string{"production", "staging"}
+	for _, validEnv := range validEnvs {
+		if env == validEnv {
+			return nil
+		}
+	}
+	quotedEnvs := make([]string, len(validEnvs))
+	for i, validEnv := range validEnvs {
+		quotedEnvs[i] = fmt.Sprintf("\"%s\"", validEnv)
+	}
+	return fmt.Errorf("invalid environment: \"%s\", must be one of %s", env, strings.Join(quotedEnvs, ", "))
 }

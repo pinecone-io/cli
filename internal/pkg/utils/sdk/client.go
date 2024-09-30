@@ -43,16 +43,15 @@ func newClientForUserFromTarget() *pinecone.Client {
 		Str("targetProjectId", targetProjectId).
 		Msg("Loading target context")
 
-	apiKey := secrets.ApiKey.Get()
 	oauth2Token := secrets.OAuth2Token.Get()
 
-	if apiKey != "" {
+	if secrets.ApiKey.Get() != "" {
 		if oauth2Token.AccessToken != "" {
-			msg.WarnMsg("You are currently logged in and also have an API key set in your configuration. The API key (which is linked to a specific project) will be used in preference to any user authentication and target context that may be present.\n")
+			msg.WarnMsg("You are currently logged in and also have an API key set in your environment and/or local configuration. The API key (which is linked to a specific project) will be used in preference to any user authentication and target context that may be present.\n")
 		}
 
 		log.Debug().Msg("Creating client for machine using stored API key")
-		return NewClientForMachine(apiKey)
+		return NewClientForMachine(secrets.ApiKey.Get())
 	}
 
 	log.Debug().Msg("No API key is stored in configuration, so attempting to create a client using user access token")
