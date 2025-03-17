@@ -1,5 +1,7 @@
 # Pinecone CLI
 
+> ⚠️ **Warning:** This SDK is still in an alpha state. While it is mostly built out and functional, it may undergo changes as we continue to improve the UX. Please try it out and give us your feedback, but be aware that updates may introduce breaking changes.
+
 `pinecone` is Pinecone on the command line.
 
 This CLI is still in an alpha state and does not support every operation available through our REST apis. Please try it out and give us your feedback, but also be prepared to upgrade as we continue building out the feature set and improving the UX.
