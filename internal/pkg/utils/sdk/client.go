@@ -15,7 +15,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 
-	"github.com/pinecone-io/go-pinecone/pinecone"
+	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 )
 
 func newClientParams(key string) pinecone.NewClientParams {

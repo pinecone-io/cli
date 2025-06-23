@@ -10,7 +10,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
-	"github.com/pinecone-io/go-pinecone/pinecone"
+	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 	"github.com/spf13/cobra"
 )
 
@@ -67,15 +67,17 @@ func runCreatePodCmd(cmd *cobra.Command, options createPodOptions) {
 	ctx := context.Background()
 	pc := sdk.NewPineconeClient()
 
+	metric := pinecone.IndexMetric(options.metric)
+	deletionProtection := pinecone.DeletionProtection(options.deletionProtection)
 	createRequest := &pinecone.CreatePodIndexRequest{
 		Name:               options.name,
-		Metric:             pinecone.IndexMetric(options.metric),
+		Metric:             &metric,
 		Dimension:          options.dimension,
 		Environment:        options.environment,
 		PodType:            options.podType,
 		Shards:             options.shards,
 		Replicas:           options.replicas,
-		DeletionProtection: pinecone.DeletionProtection(options.deletionProtection),
+		DeletionProtection: &deletionProtection,
 	}
 
 	idx, err := pc.CreatePodIndex(ctx, createRequest)

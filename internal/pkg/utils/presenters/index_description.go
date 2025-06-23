@@ -7,7 +7,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
-	"github.com/pinecone-io/go-pinecone/pinecone"
+	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 )
 
 func ColorizeState(state pinecone.IndexStatusState) string {
@@ -39,7 +39,11 @@ func PrintDescribeIndexTable(idx *pinecone.Index) {
 	pcio.Fprint(writer, header)
 
 	pcio.Fprintf(writer, "Name\t%s\n", idx.Name)
-	pcio.Fprintf(writer, "Dimension\t%d\n", idx.Dimension)
+	if idx.Dimension != nil {
+		pcio.Fprintf(writer, "Dimension\t%d\n", *idx.Dimension)
+	} else {
+		pcio.Fprintf(writer, "Dimension\tnil\n")
+	}
 	pcio.Fprintf(writer, "Metric\t%s\n", string(idx.Metric))
 	pcio.Fprintf(writer, "Deletion Protection\t%s\n", ColorizeDeletionProtection(idx.DeletionProtection))
 	pcio.Fprintf(writer, "\t\n")

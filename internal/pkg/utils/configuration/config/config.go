@@ -45,7 +45,6 @@ func init() {
 	}
 
 	err = validateEnvironment(Environment.Get())
-	fmt.Printf("ERROR? %v\n", err)
 	if err != nil {
 		exit.Error(err)
 	}

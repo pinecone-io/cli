@@ -2,7 +2,6 @@ package index
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -11,7 +10,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
-	"github.com/pinecone-io/go-pinecone/pinecone"
+	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 	"github.com/spf13/cobra"
 )
 
@@ -67,6 +66,5 @@ func runConfigureIndexCmd(cmd *cobra.Command, options configureIndexOptions) {
 
 	describeCommand := pcio.Sprintf("pinecone index describe --name %s", idx.Name)
 	msg.SuccessMsg("Index %s configured successfully. Run %s to check status. \n\n", style.Emphasis(idx.Name), style.Code(describeCommand))
-	fmt.Printf("Index model on configure return: %+v\n", idx.Spec.Pod)
 	presenters.PrintDescribeIndexTable(idx)
 }
