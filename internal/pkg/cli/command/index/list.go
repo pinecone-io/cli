@@ -14,7 +14,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 
-	"github.com/pinecone-io/go-pinecone/pinecone"
+	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 )
 
 type ListIndexCmdOptions struct {
@@ -63,13 +63,17 @@ func printTable(idxs []*pinecone.Index) {
 	pcio.Fprint(writer, header)
 
 	for _, idx := range idxs {
+		dimension := "nil"
+		if idx.Dimension != nil {
+			dimension = pcio.Sprintf("%d", *idx.Dimension)
+		}
 		if idx.Spec.Serverless == nil {
 			// Pod index
-			values := []string{idx.Name, string(idx.Status.State), idx.Host, pcio.Sprintf("%d", idx.Dimension), string(idx.Metric), "pod"}
+			values := []string{idx.Name, string(idx.Status.State), idx.Host, dimension, string(idx.Metric), "pod"}
 			pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
 		} else {
 			// Serverless index
-			values := []string{idx.Name, string(idx.Status.State), idx.Host, pcio.Sprintf("%d", idx.Dimension), string(idx.Metric), "serverless"}
+			values := []string{idx.Name, string(idx.Status.State), idx.Host, dimension, string(idx.Metric), "serverless"}
 			pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
 		}
 	}
