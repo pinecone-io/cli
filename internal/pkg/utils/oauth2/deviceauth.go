@@ -3,7 +3,6 @@ package oauth2
 import (
 	"context"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"golang.org/x/oauth2"
 )
 
@@ -25,7 +24,6 @@ func (da *DeviceAuth) GetAuthResponse(ctx context.Context, orgId *string) (*oaut
 	if orgId != nil && *orgId != "" {
 		opts = append(opts, oauth2.SetAuthURLParam("orgId", *orgId))
 	}
-	pcio.Printf("OPTS: %v\n", opts)
 
 	return conf.DeviceAuth(ctx, opts...)
 }
@@ -37,15 +35,7 @@ func (da *DeviceAuth) GetDeviceAccessToken(ctx context.Context, orgId *string, d
 	}
 	deviceAuthResponse.Interval += 1 // Add 1 second to the poll interval to avoid slow_down error
 
-	pcio.Printf("AUTH RESPONSE: %+v\n", deviceAuthResponse)
-
-	opts := []oauth2.AuthCodeOption{}
-	opts = append(opts, oauth2.AccessTypeOffline)
-	if orgId != nil && *orgId != "" {
-		opts = append(opts, oauth2.SetAuthURLParam("orgId", *orgId))
-	}
-
-	token, err := conf.DeviceAccessToken(ctx, deviceAuthResponse, opts...)
+	token, err := conf.DeviceAccessToken(ctx, deviceAuthResponse)
 	if err != nil {
 		return nil, err
 	}
