@@ -38,7 +38,6 @@ func buildRequest(verb string, path string, body *bytes.Buffer) (*http.Request, 
 	}
 
 	applyHeaders(req, path)
-
 	return req, nil
 }
 
@@ -54,7 +53,7 @@ func applyHeaders(req *http.Request, url string) {
 	// apply to all requests
 	req.Header.Add("User-Agent", "Pinecone CLI")
 	req.Header.Set("Content-Type", "application/json")
-
+	req.Header.Add("X-Pinecone-Api-Version", "unstable")
 }
 
 func performRequest(req *http.Request) (*http.Response, error) {

@@ -116,6 +116,9 @@ func NewTargetCmd() *cobra.Command {
 			// Update the organization target
 			var org dashboard.Organization
 			if options.Org != "" {
+				// TODO: this is where we need to determine if we need to fetch a new JWT token if the org ID provided is different
+				// from the one currently in the token.
+
 				// User passed an org flag, need to verify it exists and
 				// lookup the id for it.
 				org = getOrg(orgs, options.Org)
@@ -157,6 +160,7 @@ func NewTargetCmd() *cobra.Command {
 				})
 			}
 
+			// Output JSON if the option was passed
 			if options.json {
 				text.PrettyPrintJSON(state.GetTargetContext())
 				return
@@ -199,20 +203,26 @@ func getOrg(orgs *dashboard.OrganizationsResponse, orgName string) dashboard.Org
 }
 
 func getProject(org dashboard.Organization, projectName string) dashboard.Project {
-	for _, project := range org.Projects {
-		if project.Name == projectName {
-			return project
+	if org.Projects != nil {
+		orgProjects := *org.Projects
+		for _, project := range orgProjects {
+			if project.Name == projectName {
+				return project
+			}
 		}
-	}
 
-	availableProjects := make([]string, len(org.Projects))
-	for i, project := range org.Projects {
-		availableProjects[i] = project.Name
+		availableProjects := make([]string, len(orgProjects))
+		for i, project := range orgProjects {
+			availableProjects[i] = project.Name
+		}
+		msg.FailMsg("Failed to find project %s in org %s. Available projects: %s.", style.Emphasis(projectName), style.Emphasis(org.Name), strings.Join(availableProjects, ", "))
+		exit.Error(pcio.Errorf("project %s not found in organization %s", projectName, org.Name))
+		return dashboard.Project{}
+	} else {
+		msg.FailMsg("Cannot load projects for current organization. Please log into organization to retrieve projects.")
+		exit.Error(pcio.Errorf("project %s not found in organization %s", projectName, org.Name))
+		return dashboard.Project{}
 	}
-
-	msg.FailMsg("Failed to find project %s in org %s. Available projects: %s.", style.Emphasis(projectName), style.Emphasis(org.Name), strings.Join(availableProjects, ", "))
-	exit.Error(pcio.Errorf("project %s not found in organization %s", projectName, org.Name))
-	return dashboard.Project{}
 }
 
 func postLoginSetTargetOrg(orgsResponse *dashboard.OrganizationsResponse) string {
@@ -253,30 +263,37 @@ func postLoginSetTargetOrg(orgsResponse *dashboard.OrganizationsResponse) string
 func postLoginSetupTargetProject(orgs *dashboard.OrganizationsResponse, targetOrg string) string {
 	for _, org := range orgs.Organizations {
 		if org.Name == targetOrg {
-			if len(org.Projects) < 1 {
-				log.Debug().Msg("No projects found. Please create a project before proceeding.")
-				exit.ErrorMsg("No projects found. Please create a project before proceeding.")
+			if org.Projects == nil {
+				log.Debug().Msg("No projects available for organization. Please target & login with the organization to retrieve projects.")
+				exit.ErrorMsg("No projects available for organization. Please target & login with the organization to retrieve projects.")
 				return ""
-			} else if len(org.Projects) == 1 {
-				state.TargetProj.Set(&state.TargetProject{
-					Name: org.Projects[0].Name,
-					Id:   org.Projects[0].Id,
-				})
-				return org.Projects[0].Name
 			} else {
-				projectItems := []string{}
-				for _, proj := range org.Projects {
-					projectItems = append(projectItems, proj.Name)
-				}
-				projectName := uiProjectSelector(projectItems)
+				orgProjects := *org.Projects
+				if len(orgProjects) < 1 {
+					log.Debug().Msg("No projects found. Please create a project before proceeding.")
+					exit.ErrorMsg("No projects found. Please create a project before proceeding.")
+					return ""
+				} else if len(orgProjects) == 1 {
+					state.TargetProj.Set(&state.TargetProject{
+						Name: orgProjects[0].Name,
+						Id:   orgProjects[0].Id,
+					})
+					return orgProjects[0].Name
+				} else {
+					projectItems := []string{}
+					for _, proj := range orgProjects {
+						projectItems = append(projectItems, proj.Name)
+					}
+					projectName := uiProjectSelector(projectItems)
 
-				for _, proj := range org.Projects {
-					if proj.Name == projectName {
-						state.TargetProj.Set(&state.TargetProject{
-							Name: proj.Name,
-							Id:   proj.Id,
-						})
-						return proj.Name
+					for _, proj := range orgProjects {
+						if proj.Name == projectName {
+							state.TargetProj.Set(&state.TargetProject{
+								Name: proj.Name,
+								Id:   proj.Id,
+							})
+							return proj.Name
+						}
 					}
 				}
 			}

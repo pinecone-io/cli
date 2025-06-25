@@ -11,10 +11,14 @@ func GetProjectByName(orgName string, projName string) (*Project, error) {
 	}
 	for _, org := range orgs.Organizations {
 		if org.Name == orgName {
-			for _, proj := range org.Projects {
-				if proj.Name == projName {
-					return &proj, nil
+			if org.Projects != nil {
+				for _, proj := range *org.Projects {
+					if proj.Name == projName {
+						return &proj, nil
+					}
 				}
+			} else {
+				return nil, error(pcio.Errorf("organization projects have not been fetched, please log in with the organization to retrieve projects"))
 			}
 		}
 	}
@@ -29,10 +33,14 @@ func GetProjectById(orgId string, projId string) (*Project, error) {
 
 	for _, org := range orgs.Organizations {
 		if org.Id == orgId {
-			for _, proj := range org.Projects {
-				if proj.Id == projId {
-					return &proj, nil
+			if org.Projects != nil {
+				for _, proj := range *org.Projects {
+					if proj.Id == projId {
+						return &proj, nil
+					}
 				}
+			} else {
+				return nil, error(pcio.Errorf("organization projects have not been fetched, please log in with the organization to retrieve projects"))
 			}
 		}
 	}

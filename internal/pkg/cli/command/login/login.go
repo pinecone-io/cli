@@ -51,6 +51,7 @@ func NewLoginCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
+
 				secrets.OAuth2Token.Set(token)
 				return nil
 			})
@@ -64,7 +65,7 @@ func NewLoginCmd() *cobra.Command {
 				exit.Error(pcio.Errorf("error parsing claims from access token: %s", err))
 				return
 			}
-			msg.SuccessMsg("Logged in as " + style.Emphasis(claims.Email))
+			msg.SuccessMsg("Logged in as " + style.Emphasis(claims.Email) + ". Defaulted to organization ID: " + style.Emphasis(claims.OrgId))
 
 			// Fetch the user's organizations and projects
 			orgsResponse, err := dashboard.ListOrganizations()
@@ -74,7 +75,15 @@ func NewLoginCmd() *cobra.Command {
 				return
 			}
 
-			targetOrg := orgsResponse.Organizations[0]
+			// target organization is whatever the JWT token's orgId is - defaults on first login currently
+			var targetOrg *dashboard.Organization
+			for _, org := range orgsResponse.Organizations {
+				if org.Id == claims.OrgId {
+					targetOrg = &org
+					break
+				}
+			}
+
 			state.TargetOrg.Set(&state.TargetOrganization{
 				Name: targetOrg.Name,
 				Id:   targetOrg.Id,
@@ -82,13 +91,20 @@ func NewLoginCmd() *cobra.Command {
 			pcio.Println()
 			pcio.Printf(style.InfoMsg("Target org set to %s.\n"), style.Emphasis(targetOrg.Name))
 
-			targetProj := targetOrg.Projects[0]
-			state.TargetProj.Set(&state.TargetProject{
-				Name: targetProj.Name,
-				Id:   targetProj.Id,
-			})
+			if targetOrg.Projects != nil {
+				if len(*targetOrg.Projects) == 0 {
+					pcio.Printf(style.InfoMsg("No projects found for organization %s.\n"), style.Emphasis(targetOrg.Name))
+					pcio.Println(style.InfoMsg("Please create a project for this organization to work with project resources."))
+				} else {
+					targetProj := (*targetOrg.Projects)[0]
+					state.TargetProj.Set(&state.TargetProject{
+						Name: targetProj.Name,
+						Id:   targetProj.Id,
+					})
 
-			pcio.Printf(style.InfoMsg("Target project set %s.\n"), style.Emphasis(targetProj.Name))
+					pcio.Printf(style.InfoMsg("Target project set %s.\n"), style.Emphasis(targetProj.Name))
+				}
+			}
 
 			pcio.Println()
 			pcio.Println(style.CodeHint("Run %s to change the target context.", "pinecone target"))

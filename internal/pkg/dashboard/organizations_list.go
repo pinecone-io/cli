@@ -1,8 +1,13 @@
 package dashboard
 
 import (
-	"github.com/pinecone-io/cli/internal/pkg/utils/log"
+	"fmt"
+
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/network"
+	pc_oauth2 "github.com/pinecone-io/cli/internal/pkg/utils/oauth2"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -11,21 +16,12 @@ const (
 
 type OrganizationsResponse struct {
 	Organizations []Organization `json:"newOrgs"`
-	Projects      []Project      `json:"projects"`
 }
 
 type Organization struct {
-	Id       string    `json:"id"`
-	Name     string    `json:"name"`
-	Projects []Project `json:"projects"`
-}
-
-type Project struct {
-	Id             string `json:"id"`
-	Name           string `json:"name"`
-	OrganizationId string `json:"organization_id"`
-	Quota          string `json:"quota"`
-	IndexQuota     string `json:"index_quota"`
+	Id       string     `json:"id"`
+	Name     string     `json:"name"`
+	Projects *[]Project `json:"projects"`
 }
 
 func ListOrganizations() (*OrganizationsResponse, error) {
@@ -39,33 +35,26 @@ func ListOrganizations() (*OrganizationsResponse, error) {
 		return nil, err
 	}
 
-	orgToProjectsMap := make(map[string][]Project)
-
-	// Organize projects into orgs to match the older data structure
-	for _, project := range resp.Projects {
-		if projects, ok := orgToProjectsMap[project.OrganizationId]; ok {
-			projects = append(projects, project)
-			orgToProjectsMap[project.OrganizationId] = projects
-		} else {
-			orgToProjectsMap[project.OrganizationId] = []Project{project}
-		}
+	accessToken := secrets.OAuth2Token.Get()
+	claims, err := pc_oauth2.ParseClaimsUnverified(&accessToken)
+	if err != nil {
+		return nil, err
 	}
 
-	// Modify the response to nest projects under their orgs
+	// Match the organization to the jwt token's orgId if possible
 	for i := range resp.Organizations {
-		org := &resp.Organizations[i]
-
-		log.Trace().
-			Str("org", string(org.Name)).
-			Msg("found org")
-
-		org.Projects = orgToProjectsMap[org.Id]
-
-		for _, proj := range org.Projects {
-			log.Trace().
-				Str("org", string(org.Name)).
-				Str("project", proj.Name).
-				Msg("found project in org")
+		if resp.Organizations[i].Id == claims.OrgId {
+			org := &resp.Organizations[i]
+			projects, err := ListProjects(org.Id)
+			if err != nil {
+				log.Err(err).
+					Msg(fmt.Sprintf("Error listing projects for organization %s. Please create an organization if your account is not associated with one.", org.Name))
+				pcio.Printf("Error listing projects for organization %s: %s\n", org.Name, err)
+			} else {
+				org.Projects = &projects.Projects
+			}
+		} else {
+			log.Error()
 		}
 	}
 

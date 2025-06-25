@@ -13,6 +13,7 @@ import (
 type MyCustomClaims struct {
 	Scope string `json:"scope"`
 	Email string `json:"https://pinecone.io/email"`
+	OrgId string `json:"https://pinecone.io/orgId"`
 	jwt.RegisteredClaims
 }
 
