@@ -12,3 +12,11 @@ func GetDashboardBaseURL() (string, error) {
 	}
 	return connectionConfigs.DashboardUrl, nil
 }
+
+func GetPineconeBaseURL() (string, error) {
+	connectionConfigs, err := environment.GetEnvConfig(config.Environment.Get())
+	if err != nil {
+		return "", err
+	}
+	return connectionConfigs.IndexControlPlaneUrl, nil
+}

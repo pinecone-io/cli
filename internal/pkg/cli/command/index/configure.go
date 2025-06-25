@@ -31,7 +31,7 @@ func NewConfigureIndexCmd() *cobra.Command {
 		Short:   "Configure an existing index with the specified configuration",
 		Example: "",
 		Run: func(cmd *cobra.Command, args []string) {
-			runConfigureIndexCmd(cmd, options)
+			runConfigureIndexCmd(options)
 		},
 	}
 
@@ -46,7 +46,7 @@ func NewConfigureIndexCmd() *cobra.Command {
 	return cmd
 }
 
-func runConfigureIndexCmd(cmd *cobra.Command, options configureIndexOptions) {
+func runConfigureIndexCmd(options configureIndexOptions) {
 	ctx := context.Background()
 	pc := sdk.NewPineconeClient()
 
@@ -60,7 +60,8 @@ func runConfigureIndexCmd(cmd *cobra.Command, options configureIndexOptions) {
 		exit.Error(err)
 	}
 	if options.json {
-		text.PrettyPrintJSON(idx)
+		json := text.IndentJSON(idx)
+		pcio.Println(json)
 		return
 	}
 

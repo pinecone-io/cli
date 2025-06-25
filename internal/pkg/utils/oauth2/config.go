@@ -21,6 +21,14 @@ func newOauth2Config() (*oauth2.Config, error) {
 		return nil, err
 	}
 
+	// TODO: figure out if we need to actually modify these urls
+	// authURLPath := "/oauth/authorize"
+	// deviceAuthURLPath := "/oauth/device/code"
+	// if orgId != nil && *orgId != "" {
+	// 	authURLPath = authURLPath + "orgId=" + *orgId
+	// 	deviceAuthURLPath = deviceAuthURLPath + "orgId=" + *orgId
+	// }
+
 	return &oauth2.Config{
 		ClientID: connectionConfig.Auth0ClientId,
 		Endpoint: oauth2.Endpoint{

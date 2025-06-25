@@ -143,7 +143,8 @@ func NewAssistantTargetCmd() *cobra.Command {
 
 func printTarget(useJson bool) {
 	if useJson {
-		text.PrettyPrintJSON(state.GetTargetContext())
+		json := text.IndentJSON(state.GetTargetContext())
+		pcio.Println(json)
 		return
 	}
 	presenters.PrintTargetAssistant(state.GetTargetContext())

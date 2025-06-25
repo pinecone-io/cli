@@ -38,7 +38,6 @@ func buildRequest(verb string, path string, body *bytes.Buffer) (*http.Request, 
 	}
 
 	applyHeaders(req, path)
-
 	return req, nil
 }
 
@@ -54,14 +53,16 @@ func applyHeaders(req *http.Request, url string) {
 	// apply to all requests
 	req.Header.Add("User-Agent", "Pinecone CLI")
 	req.Header.Set("Content-Type", "application/json")
-
+	req.Header.Add("X-Pinecone-Api-Version", "unstable")
 }
 
 func performRequest(req *http.Request) (*http.Response, error) {
 	// This http client is built using our oauth configurations
 	// and is already configured with our access token
 	ctx := context.Background()
-	client, err := oauth2.GetHttpClient(ctx)
+
+	targetOrgId := state.TargetOrg.Get().Id
+	client, err := oauth2.GetHttpClient(ctx, &targetOrgId)
 	if err != nil {
 		return nil, err
 	}

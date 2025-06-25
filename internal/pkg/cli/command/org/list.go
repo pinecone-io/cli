@@ -30,7 +30,8 @@ func NewListOrgsCmd() *cobra.Command {
 			}
 
 			if options.json {
-				text.PrettyPrintJSON(orgs)
+				json := text.IndentJSON(orgs)
+				pcio.Println(json)
 				return
 			}
 
@@ -51,7 +52,11 @@ func printTable(orgs []dashboard.Organization) {
 	pcio.Fprint(writer, header)
 
 	for _, org := range orgs {
-		values := []string{org.Id, org.Name, pcio.Sprintf("%d", len(org.Projects))}
+		projects := 0
+		if org.Projects != nil {
+			projects = len(*org.Projects)
+		}
+		values := []string{org.Id, org.Name, pcio.Sprintf("%d", projects)}
 		pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
 	}
 	writer.Flush()

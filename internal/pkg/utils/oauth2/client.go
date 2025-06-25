@@ -18,7 +18,7 @@ func (akt *apiKeyTransport) RoundTrip(req *http.Request) (*http.Response, error)
 	return akt.next.RoundTrip(req)
 }
 
-func GetHttpClient(ctx context.Context) (*http.Client, error) {
+func GetHttpClient(ctx context.Context, orgId *string) (*http.Client, error) {
 	token := secrets.OAuth2Token.Get()
 
 	if token.AccessToken != "" {

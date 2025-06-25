@@ -43,7 +43,8 @@ func NewListCmd() *cobra.Command {
 			})
 
 			if options.json {
-				text.PrettyPrintJSON(idxs)
+				json := text.IndentJSON(idxs)
+				pcio.Println(json)
 			} else {
 				printTable(idxs)
 			}

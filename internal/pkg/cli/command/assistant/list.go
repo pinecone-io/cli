@@ -33,7 +33,8 @@ func NewListAssistantsCmd() *cobra.Command {
 			}
 
 			if options.json {
-				text.PrettyPrintJSON(assistantList)
+				json := text.IndentJSON(assistantList)
+				pcio.Println(json)
 				return
 			}
 

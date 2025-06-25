@@ -37,7 +37,7 @@ func NewDeleteCollectionCmd() *cobra.Command {
 
 	// required flags
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of collection to delete")
-	cmd.MarkFlagRequired("name")
+	_ = cmd.MarkFlagRequired("name")
 
 	return cmd
 }

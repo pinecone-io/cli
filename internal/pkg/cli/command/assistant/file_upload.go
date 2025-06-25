@@ -8,6 +8,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -43,7 +44,8 @@ func NewUploadAssistantFileCmd() *cobra.Command {
 			}
 
 			if options.json {
-				text.PrettyPrintJSON(file)
+				json := text.IndentJSON(file)
+				pcio.Println(json)
 				return
 			}
 

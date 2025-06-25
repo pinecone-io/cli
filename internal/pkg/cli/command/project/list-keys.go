@@ -71,7 +71,8 @@ func NewListKeysCmd() *cobra.Command {
 				for _, key := range keysToShow {
 					presentedKeys = append(presentedKeys, presentKey(key))
 				}
-				text.PrettyPrintJSON(presentedKeys)
+				json := text.IndentJSON(presentedKeys)
+				pcio.Println(json)
 			} else {
 				pcio.Printf("org: %s\n", style.Emphasis(state.TargetOrg.Get().Name))
 				pcio.Printf("project: %s\n", style.Emphasis(state.TargetProj.Get().Name))

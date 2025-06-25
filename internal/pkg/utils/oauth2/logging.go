@@ -13,6 +13,7 @@ import (
 type MyCustomClaims struct {
 	Scope string `json:"scope"`
 	Email string `json:"https://pinecone.io/email"`
+	OrgId string `json:"https://pinecone.io/orgId"`
 	jwt.RegisteredClaims
 }
 
@@ -25,13 +26,17 @@ func LogTokenClaims(token *oauth2.Token, msg string) {
 	}
 
 	p.ParseUnverified(token.AccessToken, &claims)
+	exp := "<missing>"
+	if claims.ExpiresAt != nil {
+		exp = claims.ExpiresAt.String()
+	}
 	log.Debug().
 		Str("scope", claims.Scope).
 		Str("email", claims.Email).
 		Str("sub", claims.Subject).
 		Str("iss", claims.Issuer).
 		Str("aud", strings.Join(claims.Audience, " ")).
-		Str("exp", claims.ExpiresAt.String()).
+		Str("exp", exp).
 		Msg(msg)
 }
 

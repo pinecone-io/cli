@@ -38,7 +38,8 @@ func NewListProjectsCmd() *cobra.Command {
 			}
 
 			if options.json {
-				text.PrettyPrintJSON(orgs)
+				json := text.IndentJSON(orgs)
+				pcio.Println(json)
 				return
 			}
 
@@ -49,10 +50,12 @@ func NewListProjectsCmd() *cobra.Command {
 
 			if options.orgName != "" {
 				for _, org := range orgs.Organizations {
-					if org.Name == options.orgName {
-						sortProjectsByName(org.Projects)
-						printTable(org.Projects)
-						return
+					if org.Projects != nil {
+						if org.Name == options.orgName {
+							sortProjectsByName(*org.Projects)
+							printTable(*org.Projects)
+							return
+						}
 					}
 				}
 				exit.Error(pcio.Errorf("organization %s not found", options.orgName))
@@ -60,10 +63,12 @@ func NewListProjectsCmd() *cobra.Command {
 
 			if options.orgId != "" {
 				for _, org := range orgs.Organizations {
-					if org.Id == options.orgId {
-						sortProjectsByName(org.Projects)
-						printTable(org.Projects)
-						return
+					if org.Projects != nil {
+						if org.Id == options.orgId {
+							sortProjectsByName(*org.Projects)
+							printTable(*org.Projects)
+							return
+						}
 					}
 				}
 				exit.Error(pcio.Errorf("organization %s not found", options.orgId))
@@ -75,10 +80,12 @@ func NewListProjectsCmd() *cobra.Command {
 			}
 
 			for _, org := range orgs.Organizations {
-				if org.Name == targetOrg {
-					sortProjectsByName(org.Projects)
-					printTable(org.Projects)
-					return
+				if org.Projects != nil {
+					if org.Name == targetOrg {
+						sortProjectsByName(*org.Projects)
+						printTable(*org.Projects)
+						return
+					}
 				}
 			}
 			// Since the target org is not found, clear the invalid target context
@@ -126,9 +133,11 @@ func printTableAll(orgs *dashboard.OrganizationsResponse) {
 	pcio.Fprint(writer, header)
 
 	for _, org := range orgs.Organizations {
-		for _, proj := range org.Projects {
-			values := []string{org.Id, org.Name, proj.Name, proj.Id}
-			pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
+		if org.Projects != nil {
+			for _, proj := range *org.Projects {
+				values := []string{org.Id, org.Name, proj.Name, proj.Id}
+				pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
+			}
 		}
 	}
 	writer.Flush()

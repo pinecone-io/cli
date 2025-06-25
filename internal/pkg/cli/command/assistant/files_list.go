@@ -46,7 +46,8 @@ func NewListAssistantFilesCmd() *cobra.Command {
 			}
 
 			if options.json {
-				text.PrettyPrintJSON(fileList)
+				json := text.IndentJSON(fileList)
+				pcio.Println(json)
 				return
 			}
 

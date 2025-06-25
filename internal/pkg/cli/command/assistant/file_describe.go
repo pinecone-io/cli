@@ -43,7 +43,8 @@ func NewDescribeAssistantFileCmd() *cobra.Command {
 			}
 
 			if options.json {
-				text.PrettyPrintJSON(file)
+				json := text.IndentJSON(file)
+				pcio.Println(json)
 			} else {
 				presenters.PrintDescribeAssistantFileTable(file)
 			}

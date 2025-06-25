@@ -8,7 +8,7 @@ import (
 
 type DeviceAuth struct{}
 
-func (da *DeviceAuth) GetAuthResponse(ctx context.Context) (*oauth2.DeviceAuthResponse, error) {
+func (da *DeviceAuth) GetAuthResponse(ctx context.Context, orgId *string) (*oauth2.DeviceAuthResponse, error) {
 	conf, err := newOauth2Config()
 	if err != nil {
 		return nil, err
@@ -19,9 +19,13 @@ func (da *DeviceAuth) GetAuthResponse(ctx context.Context) (*oauth2.DeviceAuthRe
 		return nil, err
 	}
 
-	opts := oauth2.SetAuthURLParam("audience", audience)
+	opts := []oauth2.AuthCodeOption{}
+	opts = append(opts, oauth2.SetAuthURLParam("audience", audience))
+	if orgId != nil && *orgId != "" {
+		opts = append(opts, oauth2.SetAuthURLParam("orgId", *orgId))
+	}
 
-	return conf.DeviceAuth(ctx, opts)
+	return conf.DeviceAuth(ctx, opts...)
 }
 
 func (da *DeviceAuth) GetDeviceAccessToken(ctx context.Context, deviceAuthResponse *oauth2.DeviceAuthResponse) (*oauth2.Token, error) {
@@ -31,7 +35,7 @@ func (da *DeviceAuth) GetDeviceAccessToken(ctx context.Context, deviceAuthRespon
 	}
 	deviceAuthResponse.Interval += 1 // Add 1 second to the poll interval to avoid slow_down error
 
-	token, err := conf.DeviceAccessToken(ctx, deviceAuthResponse, oauth2.AccessTypeOffline)
+	token, err := conf.DeviceAccessToken(ctx, deviceAuthResponse)
 	if err != nil {
 		return nil, err
 	}
