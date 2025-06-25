@@ -9,6 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/login"
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
@@ -16,6 +17,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	pc_oauth2 "github.com/pinecone-io/cli/internal/pkg/utils/oauth2"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -60,14 +62,14 @@ func NewTargetCmd() *cobra.Command {
 				Bool("json", options.json).
 				Msg("target command invoked")
 
-			// Clear targets
+			// Clear targets if clear flag is set
 			if options.clear {
 				state.ConfigFile.Clear()
 				msg.SuccessMsg("Target context has been cleared")
 				return
 			}
 
-			// Print current target if show is set
+			// Print current target if show flag is set
 			if options.show {
 				if options.json {
 					log.Info().Msg("Outputting target context as JSON")
@@ -84,7 +86,16 @@ func NewTargetCmd() *cobra.Command {
 			if access_token.AccessToken == "" {
 				msg.FailMsg("You must be logged in to set a target context. Run %s to log in.", style.Code("pinecone login"))
 				exit.ErrorMsg("You must be logged in to set a target context")
+				return
 			}
+			claims, err := pc_oauth2.ParseClaimsUnverified(&access_token)
+			if err != nil {
+				log.Error().Msg("Error parsing claims from access token")
+				msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
+				exit.Error(pcio.Errorf("error parsing claims from access token: %w", err))
+				return
+			}
+			currentTokenOrgId := claims.OrgId
 
 			// Interactive targeting if logged in
 			if options.Org == "" && options.Project == "" && !options.show {
@@ -99,10 +110,30 @@ func NewTargetCmd() *cobra.Command {
 				// Ask the user to choose a target org
 				targetOrg := postLoginSetTargetOrg(orgsResponse)
 				pcio.Println()
-				pcio.Printf(style.SuccessMsg("Target org set to %s.\n"), style.Emphasis(targetOrg))
+				pcio.Printf(style.SuccessMsg("Target org set to %s.\n"), style.Emphasis(targetOrg.Name))
+
+				// If the org chosen differs from the current orgId in the token, we need to login again
+				if currentTokenOrgId != targetOrg.Id {
+					pcio.Printf("GETTING AND SETTING NEW ACCESS TOKEN for target org %s\n", targetOrg.Name)
+					err = login.GetAndSetAccessToken(&targetOrg.Id)
+					if err != nil {
+						msg.FailMsg("Failed to get access token: %s", err)
+						exit.Error(pcio.Errorf("error getting access token: %w", err))
+						return
+					}
+				}
+
+				// Fetch orgs again since this currently also populates projects
+				// TODO: uncouple the org and project fetching
+				orgsResponse, err = dashboard.ListOrganizations()
+				if err != nil {
+					log.Error().Msg("Error fetching organizations")
+					exit.Error(pcio.Errorf("error fetching organizations: %s", err))
+					return
+				}
 
 				// Ask the user to choose a target project
-				targetProject := postLoginSetupTargetProject(orgsResponse, targetOrg)
+				targetProject := postLoginSetupTargetProject(orgsResponse, targetOrg.Name)
 				pcio.Printf(style.SuccessMsg("Target project set %s.\n"), style.Emphasis(targetProject))
 				return
 			}
@@ -111,6 +142,7 @@ func NewTargetCmd() *cobra.Command {
 			if err != nil {
 				msg.FailMsg("Failed to get organizations: %s", err)
 				exit.Error(err)
+				return
 			}
 
 			// Update the organization target
@@ -121,11 +153,28 @@ func NewTargetCmd() *cobra.Command {
 
 				// User passed an org flag, need to verify it exists and
 				// lookup the id for it.
-				org = getOrg(orgs, options.Org)
+				org, err = getOrg(orgs, options.Org)
+				if err != nil {
+					msg.FailMsg("Failed to get organization: %s", err)
+					exit.Error(err)
+					return
+				}
 				if !options.json {
 					msg.SuccessMsg("Target org updated to %s", style.Emphasis(org.Name))
 				}
 				var oldOrg = state.TargetOrg.Get().Name
+
+				// If the org has changed, we need to swap to a new access token
+				// If the org chosen differs from the current orgId in the token, we need to login again
+				if currentTokenOrgId != org.Id {
+					pcio.Printf("GET/SET NEW ACCESS TOKEN FOR ORG %s WITH ID %s\n", org.Name, org.Id)
+					err = login.GetAndSetAccessToken(&org.Id)
+					if err != nil {
+						msg.FailMsg("Failed to get access token: %s", err)
+						exit.Error(pcio.Errorf("error getting access token: %w", err))
+						return
+					}
+				}
 
 				// Save the new target org
 				state.TargetOrg.Set(&state.TargetOrganization{
@@ -143,7 +192,12 @@ func NewTargetCmd() *cobra.Command {
 			} else {
 				// Read the current target org if no org is specified
 				// with flags
-				org = getOrg(orgs, state.TargetOrg.Get().Name)
+				org, err = getOrg(orgs, state.TargetOrg.Get().Name)
+				if err != nil {
+					msg.FailMsg("Failed to get organization: %s", err)
+					exit.Error(err)
+					return
+				}
 			}
 
 			// Update the project target
@@ -182,10 +236,10 @@ func NewTargetCmd() *cobra.Command {
 	return cmd
 }
 
-func getOrg(orgs *dashboard.OrganizationsResponse, orgName string) dashboard.Organization {
+func getOrg(orgs *dashboard.OrganizationsResponse, orgName string) (dashboard.Organization, error) {
 	for _, org := range orgs.Organizations {
 		if org.Name == orgName {
-			return org
+			return org, nil
 		}
 	}
 
@@ -199,7 +253,7 @@ func getOrg(orgs *dashboard.OrganizationsResponse, orgName string) dashboard.Org
 	log.Error().Str("orgName", orgName).Str("availableOrgs", availableOrgs).Msg("Failed to find organization")
 	msg.FailMsg("Failed to find organization %s. Available organizations: %s.", style.Emphasis(orgName), availableOrgs)
 	exit.ErrorMsg(pcio.Sprintf("organization %s not found", style.Emphasis(orgName)))
-	return dashboard.Organization{}
+	return dashboard.Organization{}, pcio.Errorf("organization %s not found", orgName)
 }
 
 func getProject(org dashboard.Organization, projectName string) dashboard.Project {
@@ -225,7 +279,7 @@ func getProject(org dashboard.Organization, projectName string) dashboard.Projec
 	}
 }
 
-func postLoginSetTargetOrg(orgsResponse *dashboard.OrganizationsResponse) string {
+func postLoginSetTargetOrg(orgsResponse *dashboard.OrganizationsResponse) dashboard.Organization {
 	if len(orgsResponse.Organizations) < 1 {
 		log.Debug().Msg("No organizations found. Please create an organization before proceeding.")
 		exit.ErrorMsg("No organizations found. Please create an organization before proceeding.")
@@ -233,6 +287,7 @@ func postLoginSetTargetOrg(orgsResponse *dashboard.OrganizationsResponse) string
 
 	// var org dashboard.Organization
 	var orgName string
+	var organization dashboard.Organization
 	if len(orgsResponse.Organizations) == 1 {
 		orgName = orgsResponse.Organizations[0].Name
 		log.Info().Msgf("Only 1 org present so target org set to %s", orgName)
@@ -253,22 +308,32 @@ func postLoginSetTargetOrg(orgsResponse *dashboard.OrganizationsResponse) string
 					Name: org.Name,
 					Id:   org.Id,
 				})
+				organization = org
 				break
 			}
 		}
 	}
-	return orgName
+	return organization
 }
 
 func postLoginSetupTargetProject(orgs *dashboard.OrganizationsResponse, targetOrg string) string {
 	for _, org := range orgs.Organizations {
 		if org.Name == targetOrg {
-			if org.Projects == nil {
-				log.Debug().Msg("No projects available for organization. Please target & login with the organization to retrieve projects.")
-				exit.ErrorMsg("No projects available for organization. Please target & login with the organization to retrieve projects.")
+			// Attempt to fetch projects for a given org. We assume the token retrieved from the
+			// device auth flow is valid for listing projects for the given org.
+			projectsList, err := dashboard.ListProjects(org.Id)
+			if err != nil {
+				log.Error().Msg("Error fetching projects")
+				exit.Error(pcio.Errorf("error fetching projects: %w", err))
+				return ""
+			}
+
+			orgProjects := projectsList.Projects
+			if len(orgProjects) < 1 {
+				log.Debug().Msg("No projects available for organization. Please create a project before proceeding.")
+				exit.ErrorMsg("No projects found. Please create a project before proceeding.")
 				return ""
 			} else {
-				orgProjects := *org.Projects
 				if len(orgProjects) < 1 {
 					log.Debug().Msg("No projects found. Please create a project before proceeding.")
 					exit.ErrorMsg("No projects found. Please create a project before proceeding.")

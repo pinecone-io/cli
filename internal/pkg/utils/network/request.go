@@ -60,7 +60,9 @@ func performRequest(req *http.Request) (*http.Response, error) {
 	// This http client is built using our oauth configurations
 	// and is already configured with our access token
 	ctx := context.Background()
-	client, err := oauth2.GetHttpClient(ctx)
+
+	targetOrgId := state.TargetOrg.Get().Id
+	client, err := oauth2.GetHttpClient(ctx, &targetOrgId)
 	if err != nil {
 		return nil, err
 	}

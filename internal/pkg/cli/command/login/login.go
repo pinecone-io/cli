@@ -25,53 +25,27 @@ func NewLoginCmd() *cobra.Command {
 		Short:   "Login to Pinecone CLI",
 		GroupID: help.GROUP_START.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			ctx := context.Background()
-
-			da := pc_oauth2.DeviceAuth{}
-			authResponse, err := da.GetAuthResponse(ctx)
+			err := GetAndSetAccessToken(nil)
 			if err != nil {
-				pcio.Println(err)
-				return
+				exit.Error(pcio.Errorf("error acquiring access token while logging in: %w", err))
 			}
 
-			pcio.Printf("Visit %s to authorize the CLI.\n", style.Underline(authResponse.VerificationURIComplete))
-			pcio.Println()
-			pcio.Printf("The code %s should be displayed on the authorization page.\n", style.HeavyEmphasis(authResponse.UserCode))
-			pcio.Println()
-
-			// Press enter to launch the browser
-			pcio.Printf("Press %s to open the browser.\n", style.Code("[Enter]"))
-			bufio.NewReader(os.Stdin).ReadBytes('\n')
-			browser.OpenBrowser(authResponse.VerificationURIComplete)
-
-			pcio.Println("After you approve in the browser, it may take a few seconds for the next step to complete.")
-
-			style.Spinner("Waiting for authorization...", func() error {
-				token, err := da.GetDeviceAccessToken(ctx, authResponse)
-				if err != nil {
-					return err
-				}
-
-				secrets.OAuth2Token.Set(token)
-				return nil
-			})
-
-			pcio.Println()
+			// Parse token claims to get orgId
 			accessToken := secrets.OAuth2Token.Get()
 			claims, err := pc_oauth2.ParseClaimsUnverified(&accessToken)
 			if err != nil {
 				log.Error().Msg("Error parsing claims")
 				msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
-				exit.Error(pcio.Errorf("error parsing claims from access token: %s", err))
+				exit.Error(pcio.Errorf("error parsing claims from access token: %w", err))
 				return
 			}
 			msg.SuccessMsg("Logged in as " + style.Emphasis(claims.Email) + ". Defaulted to organization ID: " + style.Emphasis(claims.OrgId))
 
-			// Fetch the user's organizations and projects
+			// Fetch the user's organizations and projects for the default org associated with the JWT token (if it exists)
 			orgsResponse, err := dashboard.ListOrganizations()
 			if err != nil {
 				log.Error().Msg("Error fetching organizations")
-				exit.Error(pcio.Errorf("error fetching organizations: %s", err))
+				exit.Error(pcio.Errorf("error fetching organizations: %w", err))
 				return
 			}
 
@@ -115,4 +89,64 @@ func NewLoginCmd() *cobra.Command {
 	}
 
 	return cmd
+}
+
+// Takes an optional orgId, and attempts to acquire an access token scoped to the orgId if provided
+// If a token is successfully acquired it's set in the secrets store, and the user is considered logged in
+func GetAndSetAccessToken(orgId *string) error {
+	ctx := context.Background()
+
+	da := pc_oauth2.DeviceAuth{}
+	orgIdStr := "nil"
+	if orgId != nil {
+		orgIdStr = *orgId
+	}
+	pcio.Printf("Getting auth response for orgId %s\n", style.Emphasis(orgIdStr))
+	authResponse, err := da.GetAuthResponse(ctx, orgId)
+	if err != nil {
+		pcio.Println(err)
+		return err
+	}
+
+	pcio.Printf("Visit %s to authorize the CLI.\n", style.Underline(authResponse.VerificationURIComplete))
+	pcio.Println()
+	pcio.Printf("The code %s should be displayed on the authorization page.\n", style.HeavyEmphasis(authResponse.UserCode))
+	pcio.Println()
+
+	// Press enter to launch the browser
+	pcio.Printf("Press %s to open the browser.\n", style.Code("[Enter]"))
+	_, err = bufio.NewReader(os.Stdin).ReadBytes('\n')
+	if err != nil {
+		exit.Error(pcio.Errorf("error reading input: %w", err))
+		return err
+	}
+
+	err = browser.OpenBrowser(authResponse.VerificationURIComplete)
+	if err != nil {
+		exit.Error(pcio.Errorf("error opening browser: %w", err))
+		return err
+	}
+
+	pcio.Println("After you approve in the browser, it may take a few seconds for the next step to complete.")
+
+	err = style.Spinner("Waiting for authorization...", func() error {
+		token, err := da.GetDeviceAccessToken(ctx, orgId, authResponse)
+		if err != nil {
+			return err
+		}
+		pcio.Printf("TOKEN FROM GetAndSetAccessToken: %s\n", style.Emphasis(token.AccessToken))
+		claims, err := pc_oauth2.ParseClaimsUnverified(token)
+		if err != nil {
+			return err
+		}
+		pcio.Printf("Parsed claims for orgId %s\n", style.Emphasis(claims.OrgId))
+		secrets.OAuth2Token.Set(token)
+		return nil
+	})
+	if err != nil {
+		exit.Error(pcio.Errorf("error waiting for authorization: %w", err))
+		return err
+	}
+
+	return nil
 }

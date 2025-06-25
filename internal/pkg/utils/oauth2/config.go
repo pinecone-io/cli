@@ -15,18 +15,25 @@ func getAudience() (string, error) {
 	return connectionConfig.Auth0Audience, nil
 }
 
-func newOauth2Config() (*oauth2.Config, error) {
+func newOauth2Config(orgId *string) (*oauth2.Config, error) {
 	connectionConfig, err := environment.GetEnvConfig(config.Environment.Get())
 	if err != nil {
 		return nil, err
 	}
 
+	authURLPath := "/oauth/authorize"
+	deviceAuthURLPath := "/oauth/device/code"
+	if orgId != nil && *orgId != "" {
+		authURLPath = authURLPath + "orgId=" + *orgId
+		deviceAuthURLPath = deviceAuthURLPath + "orgId=" + *orgId
+	}
+
 	return &oauth2.Config{
 		ClientID: connectionConfig.Auth0ClientId,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:       connectionConfig.Auth0URL + "/oauth/authorize",
+			AuthURL:       connectionConfig.Auth0URL + authURLPath,
 			TokenURL:      connectionConfig.Auth0URL + "/oauth/token",
-			DeviceAuthURL: connectionConfig.Auth0URL + "/oauth/device/code",
+			DeviceAuthURL: connectionConfig.Auth0URL + deviceAuthURLPath,
 		},
 		Scopes:      []string{"openid", "profile", "email", "offline_access"},
 		RedirectURL: "http://localhost:59049",
