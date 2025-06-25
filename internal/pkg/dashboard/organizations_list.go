@@ -53,8 +53,6 @@ func ListOrganizations() (*OrganizationsResponse, error) {
 			} else {
 				org.Projects = &projects.Projects
 			}
-		} else {
-			log.Error()
 		}
 	}
 

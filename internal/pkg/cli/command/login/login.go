@@ -134,12 +134,7 @@ func GetAndSetAccessToken(orgId *string) error {
 		if err != nil {
 			return err
 		}
-		pcio.Printf("TOKEN FROM GetAndSetAccessToken: %s\n", style.Emphasis(token.AccessToken))
-		claims, err := pc_oauth2.ParseClaimsUnverified(token)
-		if err != nil {
-			return err
-		}
-		pcio.Printf("Parsed claims for orgId %s\n", style.Emphasis(claims.OrgId))
+
 		secrets.OAuth2Token.Set(token)
 		return nil
 	})
