@@ -97,11 +97,7 @@ func GetAndSetAccessToken(orgId *string) error {
 	ctx := context.Background()
 
 	da := pc_oauth2.DeviceAuth{}
-	orgIdStr := "nil"
-	if orgId != nil {
-		orgIdStr = *orgId
-	}
-	pcio.Printf("Getting auth response for orgId %s\n", style.Emphasis(orgIdStr))
+
 	authResponse, err := da.GetAuthResponse(ctx, orgId)
 	if err != nil {
 		pcio.Println(err)
