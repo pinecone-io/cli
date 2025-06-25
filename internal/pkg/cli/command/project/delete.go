@@ -56,7 +56,7 @@ func NewDeleteProjectCmd() *cobra.Command {
 			verifyNoCollections(orgName, projToDelete.Id, projToDelete.Name)
 
 			if !options.yes {
-				confirmDelete(options.name, orgId)
+				confirmDelete(options.name)
 			}
 
 			resp, err := dashboard.DeleteProject(orgId, projToDelete.Id)
@@ -103,7 +103,7 @@ func getTargetProjectId() (string, error) {
 	return projId, nil
 }
 
-func confirmDelete(projectName, orgId string) {
+func confirmDelete(projectName string) {
 	msg.WarnMsg("This will delete the project %s in organization %s.", style.Emphasis(projectName), style.Emphasis(state.TargetOrg.Get().Name))
 	msg.WarnMsg("This action cannot be undone.")
 

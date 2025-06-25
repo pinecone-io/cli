@@ -15,7 +15,7 @@ func getAudience() (string, error) {
 	return connectionConfig.Auth0Audience, nil
 }
 
-func newOauth2Config(orgId *string) (*oauth2.Config, error) {
+func newOauth2Config() (*oauth2.Config, error) {
 	connectionConfig, err := environment.GetEnvConfig(config.Environment.Get())
 	if err != nil {
 		return nil, err

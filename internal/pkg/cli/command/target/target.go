@@ -73,7 +73,8 @@ func NewTargetCmd() *cobra.Command {
 			if options.show {
 				if options.json {
 					log.Info().Msg("Outputting target context as JSON")
-					text.PrettyPrintJSON(state.GetTargetContext())
+					json := text.IndentJSON(state.GetTargetContext())
+					pcio.Println(json)
 					return
 				}
 				log.Info().
@@ -216,7 +217,8 @@ func NewTargetCmd() *cobra.Command {
 
 			// Output JSON if the option was passed
 			if options.json {
-				text.PrettyPrintJSON(state.GetTargetContext())
+				json := text.IndentJSON(state.GetTargetContext())
+				pcio.Println(json)
 				return
 			}
 

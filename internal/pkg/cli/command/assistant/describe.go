@@ -6,6 +6,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -43,7 +44,8 @@ func NewDescribeAssistantCmd() *cobra.Command {
 			}
 
 			if options.json {
-				text.PrettyPrintJSON(assistant)
+				json := text.IndentJSON(assistant)
+				pcio.Println(json)
 				return
 			} else {
 				presenters.PrintDescribeAssistantTable(assistant)

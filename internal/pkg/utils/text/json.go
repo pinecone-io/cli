@@ -14,11 +14,11 @@ func InlineJSON(data interface{}) string {
 	return string(jsonData)
 }
 
-func PrettyPrintJSON(data interface{}) (string, error) {
+func IndentJSON(data interface{}) string {
 	jsonData, err := json.MarshalIndent(data, "", "    ")
 	if err != nil {
-		return "", err
+		return ""
 	}
 	pcio.Println(string(jsonData))
-	return string(jsonData), nil
+	return string(jsonData)
 }

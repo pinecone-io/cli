@@ -30,7 +30,8 @@ func NewListOrgsCmd() *cobra.Command {
 			}
 
 			if options.json {
-				text.PrettyPrintJSON(orgs)
+				json := text.IndentJSON(orgs)
+				pcio.Println(json)
 				return
 			}
 

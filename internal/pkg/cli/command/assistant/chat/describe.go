@@ -46,7 +46,8 @@ func NewAssistantChatDescribeCmd() *cobra.Command {
 
 			// Otherwise print the chat history
 			if options.json {
-				text.PrettyPrintJSON(chat)
+				json := text.IndentJSON(chat)
+				pcio.Println(json)
 			} else {
 				presenters.PrintChatHistory(chat, 100)
 			}

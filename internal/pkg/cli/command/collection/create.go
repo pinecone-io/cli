@@ -42,7 +42,8 @@ func NewCreateCollectionCmd() *cobra.Command {
 			}
 
 			if options.json {
-				text.PrettyPrintJSON(collection)
+				json := text.IndentJSON(collection)
+				pcio.Println(json)
 			} else {
 				describeCommand := pcio.Sprintf("pinecone collection describe --name %s", collection.Name)
 				msg.SuccessMsg("Collection %s created successfully. Run %s to check status. \n\n", style.Emphasis(collection.Name), style.Code(describeCommand))
@@ -53,9 +54,9 @@ func NewCreateCollectionCmd() *cobra.Command {
 
 	// Required flags
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name you want to give the collection")
-	cmd.MarkFlagRequired("name")
+	_ = cmd.MarkFlagRequired("name")
 	cmd.Flags().StringVarP(&options.sourceIndex, "source", "s", "", "name of the index to use as the source for the collection")
-	cmd.MarkFlagRequired("source")
+	_ = cmd.MarkFlagRequired("source")
 
 	// Optional flags
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")

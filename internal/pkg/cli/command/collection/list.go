@@ -44,7 +44,8 @@ func NewListCollectionsCmd() *cobra.Command {
 			})
 
 			if options.json {
-				text.PrettyPrintJSON(collections)
+				json := text.IndentJSON(collections)
+				pcio.Println(json)
 			} else {
 				printTable(collections)
 			}
@@ -55,20 +56,6 @@ func NewListCollectionsCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	return cmd
-}
-
-func int32ToString(i *int32) string {
-	if i == nil {
-		return ""
-	}
-	return strconv.FormatInt(int64(*i), 10)
-}
-
-func int64ToString(i *int64) string {
-	if i == nil {
-		return ""
-	}
-	return strconv.FormatInt(*i, 10)
 }
 
 func printTable(collections []*pinecone.Collection) {

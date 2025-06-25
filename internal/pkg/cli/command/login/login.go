@@ -130,7 +130,7 @@ func GetAndSetAccessToken(orgId *string) error {
 	pcio.Println("After you approve in the browser, it may take a few seconds for the next step to complete.")
 
 	err = style.Spinner("Waiting for authorization...", func() error {
-		token, err := da.GetDeviceAccessToken(ctx, orgId, authResponse)
+		token, err := da.GetDeviceAccessToken(ctx, authResponse)
 		if err != nil {
 			return err
 		}

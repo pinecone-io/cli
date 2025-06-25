@@ -5,6 +5,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -32,7 +33,8 @@ func NewCreateAssistantCmd() *cobra.Command {
 			msg.SuccessMsg("Assistant %s created successfully.\n", style.Emphasis(assistant.Name))
 
 			if options.json {
-				text.PrettyPrintJSON(assistant)
+				json := text.IndentJSON(assistant)
+				pcio.Println(json)
 			} else {
 				presenters.PrintDescribeAssistantTable(assistant)
 			}

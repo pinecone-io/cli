@@ -9,7 +9,7 @@ import (
 type DeviceAuth struct{}
 
 func (da *DeviceAuth) GetAuthResponse(ctx context.Context, orgId *string) (*oauth2.DeviceAuthResponse, error) {
-	conf, err := newOauth2Config(orgId)
+	conf, err := newOauth2Config()
 	if err != nil {
 		return nil, err
 	}
@@ -28,8 +28,8 @@ func (da *DeviceAuth) GetAuthResponse(ctx context.Context, orgId *string) (*oaut
 	return conf.DeviceAuth(ctx, opts...)
 }
 
-func (da *DeviceAuth) GetDeviceAccessToken(ctx context.Context, orgId *string, deviceAuthResponse *oauth2.DeviceAuthResponse) (*oauth2.Token, error) {
-	conf, err := newOauth2Config(orgId)
+func (da *DeviceAuth) GetDeviceAccessToken(ctx context.Context, deviceAuthResponse *oauth2.DeviceAuthResponse) (*oauth2.Token, error) {
+	conf, err := newOauth2Config()
 	if err != nil {
 		return nil, err
 	}

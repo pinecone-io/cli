@@ -5,6 +5,7 @@ import (
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -33,7 +34,8 @@ func NewDescribeCollectionCmd() *cobra.Command {
 			}
 
 			if options.json {
-				text.PrettyPrintJSON(collection)
+				json := text.IndentJSON(collection)
+				pcio.Println(json)
 			} else {
 				presenters.PrintDescribeCollectionTable(collection)
 			}
@@ -42,7 +44,7 @@ func NewDescribeCollectionCmd() *cobra.Command {
 
 	// required flags
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of collection to describe")
-	cmd.MarkFlagRequired("name")
+	_ = cmd.MarkFlagRequired("name")
 
 	// optional flags
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")

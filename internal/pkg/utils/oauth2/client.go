@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
-	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 )
 
@@ -21,10 +20,10 @@ func (akt *apiKeyTransport) RoundTrip(req *http.Request) (*http.Response, error)
 
 func GetHttpClient(ctx context.Context, orgId *string) (*http.Client, error) {
 	token := secrets.OAuth2Token.Get()
-	targetOrgId := state.TargetOrg.Get().Id
+
 	if token.AccessToken != "" {
 		log.Debug().Msg("Creating http client with OAuth2 token handling")
-		config, err := newOauth2Config(&targetOrgId)
+		config, err := newOauth2Config()
 		if err != nil {
 			log.Error().Err(err).Msg("Error creating OAuth2 config")
 			return nil, err

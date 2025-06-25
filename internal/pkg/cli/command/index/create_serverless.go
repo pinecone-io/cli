@@ -32,7 +32,7 @@ func NewCreateServerlessCmd() *cobra.Command {
 		Use:   "create-serverless",
 		Short: "Create a serverless index with the specified configuration",
 		Run: func(cmd *cobra.Command, args []string) {
-			runCreateServerlessCmd(cmd, options)
+			runCreateServerlessCmd(options)
 		},
 	}
 
@@ -54,7 +54,7 @@ func NewCreateServerlessCmd() *cobra.Command {
 	return cmd
 }
 
-func runCreateServerlessCmd(cmd *cobra.Command, options createServerlessOptions) {
+func runCreateServerlessCmd(options createServerlessOptions) {
 	ctx := context.Background()
 	pc := sdk.NewPineconeClient()
 
@@ -89,7 +89,8 @@ func runCreateServerlessCmd(cmd *cobra.Command, options createServerlessOptions)
 		exit.Error(err)
 	}
 	if options.json {
-		text.PrettyPrintJSON(idx)
+		json := text.IndentJSON(idx)
+		pcio.Println(json)
 		return
 	}
 

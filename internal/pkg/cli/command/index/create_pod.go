@@ -37,7 +37,7 @@ func NewCreatePodCmd() *cobra.Command {
 		Short:   "Create a pod index with the specified configuration",
 		Example: "",
 		Run: func(cmd *cobra.Command, args []string) {
-			runCreatePodCmd(cmd, options)
+			runCreatePodCmd(options)
 		},
 	}
 
@@ -63,7 +63,7 @@ func NewCreatePodCmd() *cobra.Command {
 	return cmd
 }
 
-func runCreatePodCmd(cmd *cobra.Command, options createPodOptions) {
+func runCreatePodCmd(options createPodOptions) {
 	ctx := context.Background()
 	pc := sdk.NewPineconeClient()
 
@@ -86,7 +86,8 @@ func runCreatePodCmd(cmd *cobra.Command, options createPodOptions) {
 		exit.Error(err)
 	}
 	if options.json {
-		text.PrettyPrintJSON(idx)
+		json := text.IndentJSON(idx)
+		pcio.Println(json)
 		return
 	}
 

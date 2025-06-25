@@ -40,7 +40,8 @@ func NewDeleteAssistantCmd() *cobra.Command {
 			}
 
 			if options.json {
-				text.PrettyPrintJSON(resp)
+				json := text.IndentJSON(resp)
+				pcio.Println(json)
 				return
 			}
 
