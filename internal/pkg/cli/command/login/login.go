@@ -3,6 +3,9 @@ package login
 import (
 	"bufio"
 	"context"
+	"crypto/rand"
+	"encoding/base64"
+	"net/http"
 	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
@@ -96,20 +99,21 @@ func NewLoginCmd() *cobra.Command {
 func GetAndSetAccessToken(orgId *string) error {
 	ctx := context.Background()
 
-	da := pc_oauth2.DeviceAuth{}
+	// da := pc_oauth2.DeviceAuth{}
+	a := pc_oauth2.Auth{}
 
-	authResponse, err := da.GetAuthResponse(ctx, orgId)
+	// CSRF state
+	csrfState := randomState()
+
+	authURL, err := a.GetAuthURL(ctx, csrfState, orgId)
 	if err != nil {
-		pcio.Println(err)
+		exit.Error(pcio.Errorf("error getting auth URL: %w", err))
 		return err
 	}
 
-	pcio.Printf("Visit %s to authorize the CLI.\n", style.Underline(authResponse.VerificationURIComplete))
-	pcio.Println()
-	pcio.Printf("The code %s should be displayed on the authorization page.\n", style.HeavyEmphasis(authResponse.UserCode))
+	pcio.Printf("Visit %s to authorize the CLI.\n", style.Underline(authURL))
 	pcio.Println()
 
-	// Press enter to launch the browser
 	pcio.Printf("Press %s to open the browser.\n", style.Code("[Enter]"))
 	_, err = bufio.NewReader(os.Stdin).ReadBytes('\n')
 	if err != nil {
@@ -117,21 +121,50 @@ func GetAndSetAccessToken(orgId *string) error {
 		return err
 	}
 
-	err = browser.OpenBrowser(authResponse.VerificationURIComplete)
+	err = browser.OpenBrowser(authURL)
 	if err != nil {
 		exit.Error(pcio.Errorf("error opening browser: %w", err))
 		return err
 	}
-
 	pcio.Println("After you approve in the browser, it may take a few seconds for the next step to complete.")
 
-	err = style.Spinner("Waiting for authorization...", func() error {
-		token, err := da.GetDeviceAccessToken(ctx, authResponse)
-		if err != nil {
-			return err
+	// Spin up a local server to handle receiving the authorization code from auth0
+	var code string
+	err = style.Spinner("Waiting for authorization...\n", func() error {
+		codeCh := make(chan string)
+
+		// start server to receive the auth code
+		mux := http.NewServeMux()
+		mux.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
+			code := r.URL.Query().Get("code")
+			state := r.URL.Query().Get("state")
+
+			if state != csrfState {
+				exit.Error(pcio.Errorf("State mismatch on authentication"))
+				return
+			}
+			codeCh <- code
+		})
+		serve := &http.Server{Addr: "127.0.0.1:59049", Handler: mux}
+
+		go func() {
+			if err := serve.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				exit.Error(pcio.Errorf("error listening for auth code: %w", err))
+				return
+			}
+		}()
+
+		select {
+		case code = <-codeCh:
+		case <-ctx.Done():
+			_ = serve.Shutdown(ctx)
+			if ctx.Err() != nil {
+				exit.Error(pcio.Errorf("error waiting for authorization: %w", ctx.Err()))
+				return ctx.Err()
+			}
 		}
 
-		secrets.OAuth2Token.Set(token)
+		_ = serve.Shutdown(ctx)
 		return nil
 	})
 	if err != nil {
@@ -139,5 +172,24 @@ func GetAndSetAccessToken(orgId *string) error {
 		return err
 	}
 
-	return nil
+	// Exchange auth code for access token
+	if code != "" {
+		token, err := a.ExchangeAuthCode(ctx, code)
+		if err != nil {
+			exit.Error(pcio.Errorf("error exchanging auth code for access token: %w", err))
+			return err
+		}
+		secrets.OAuth2Token.Set(token)
+		return nil
+	}
+
+	// if we're here, it means we were not able to authenticate with the auth0 server
+	exit.Error(pcio.Errorf("error authenticating CLI and retrieving oauth2 access token"))
+	return pcio.Errorf("error authenticating CLI and retrieving oauth2 access token")
+}
+
+func randomState() string {
+	b := make([]byte, 32)
+	_, _ = rand.Read(b)
+	return base64.RawURLEncoding.EncodeToString(b)
 }

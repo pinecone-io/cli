@@ -149,9 +149,6 @@ func NewTargetCmd() *cobra.Command {
 			// Update the organization target
 			var org dashboard.Organization
 			if options.Org != "" {
-				// TODO: this is where we need to determine if we need to fetch a new JWT token if the org ID provided is different
-				// from the one currently in the token.
-
 				// User passed an org flag, need to verify it exists and
 				// lookup the id for it.
 				org, err = getOrg(orgs, options.Org)

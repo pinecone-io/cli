@@ -51,7 +51,7 @@ func init() {
 }
 
 func validateEnvironment(env string) error {
-	validEnvs := []string{"production", "staging"}
+	validEnvs := []string{"production", "staging", "dev-dan"}
 	for _, validEnv := range validEnvs {
 		if env == validEnv {
 			return nil
