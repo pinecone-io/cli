@@ -105,7 +105,10 @@ func GetAndSetAccessToken(orgId *string) error {
 	// CSRF state
 	csrfState := randomState()
 
-	authURL, err := a.GetAuthURL(ctx, csrfState, orgId)
+	// PKCE verifier and challenge
+	verifier, challenge, err := a.CreateNewVerifierAndChallenge()
+
+	authURL, err := a.GetAuthURL(ctx, csrfState, verifier, orgId)
 	if err != nil {
 		exit.Error(pcio.Errorf("error getting auth URL: %w", err))
 		return err
@@ -174,7 +177,7 @@ func GetAndSetAccessToken(orgId *string) error {
 
 	// Exchange auth code for access token
 	if code != "" {
-		token, err := a.ExchangeAuthCode(ctx, code)
+		token, err := a.ExchangeAuthCode(ctx, challenge, code)
 		if err != nil {
 			exit.Error(pcio.Errorf("error exchanging auth code for access token: %w", err))
 			return err
