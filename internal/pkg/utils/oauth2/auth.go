@@ -11,7 +11,7 @@ import (
 
 type Auth struct{}
 
-func (a *Auth) GetAuthURL(ctx context.Context, csrfState string, verifier string, orgId *string) (string, error) {
+func (a *Auth) GetAuthURL(ctx context.Context, csrfState string, codeChallenge string, orgId *string) (string, error) {
 	conf, err := newOauth2Config()
 	if err != nil {
 		return "", err
@@ -24,7 +24,8 @@ func (a *Auth) GetAuthURL(ctx context.Context, csrfState string, verifier string
 
 	opts := []oauth2.AuthCodeOption{}
 	opts = append(opts, oauth2.SetAuthURLParam("audience", audience))
-	opts = append(opts, oauth2.SetAuthURLParam("code_verifier", verifier))
+	opts = append(opts, oauth2.SetAuthURLParam("code_challenge", codeChallenge))
+	opts = append(opts, oauth2.SetAuthURLParam("code_challenge_method", "S256"))
 	if orgId != nil && *orgId != "" {
 		opts = append(opts, oauth2.SetAuthURLParam("orgId", *orgId))
 	}
@@ -32,15 +33,14 @@ func (a *Auth) GetAuthURL(ctx context.Context, csrfState string, verifier string
 	return conf.AuthCodeURL(csrfState, opts...), nil
 }
 
-func (a *Auth) ExchangeAuthCode(ctx context.Context, challenge string, authCode string) (*oauth2.Token, error) {
+func (a *Auth) ExchangeAuthCode(ctx context.Context, codeVerifier string, authCode string) (*oauth2.Token, error) {
 	conf, err := newOauth2Config()
 	if err != nil {
 		return nil, err
 	}
 
 	opts := []oauth2.AuthCodeOption{}
-	opts = append(opts, oauth2.SetAuthURLParam("code_challenge", challenge))
-	opts = append(opts, oauth2.SetAuthURLParam("code_challenge_method", "S256"))
+	opts = append(opts, oauth2.SetAuthURLParam("code_verifier", codeVerifier))
 
 	token, err := conf.Exchange(ctx, authCode, opts...)
 	if err != nil {
