@@ -29,6 +29,6 @@ func newOauth2Config() (*oauth2.Config, error) {
 			DeviceAuthURL: connectionConfig.Auth0URL + "/oauth/device/code",
 		},
 		Scopes:      []string{"openid", "profile", "email", "offline_access"},
-		RedirectURL: "http://localhost:59049/callback",
+		RedirectURL: "http://127.0.0.1:59049/callback",
 	}, nil
 }
