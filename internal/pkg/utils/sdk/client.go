@@ -25,8 +25,6 @@ func newClientParams(key string) pinecone.NewClientParams {
 	switch env {
 	case "production":
 		clientControllerHostUrl = environment.Prod.IndexControlPlaneUrl
-	case "dev-dan":
-		clientControllerHostUrl = environment.DevDan.IndexControlPlaneUrl
 	case "staging":
 		clientControllerHostUrl = environment.Staging.IndexControlPlaneUrl
 	default:

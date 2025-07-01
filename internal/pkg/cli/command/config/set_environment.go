@@ -13,8 +13,8 @@ import (
 
 func NewSetEnvCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "set-environment <production|staging|dev-dan>",
-		Short: "Configure the environment (production, staging, or dev-dan)",
+		Use:   "set-environment <production|staging>",
+		Short: "Configure the environment (production, or staging)",
 		Example: help.Examples([]string{
 			"pinecone config set-environment production",
 			"pinecone config set-environment staging",
@@ -33,8 +33,6 @@ func NewSetEnvCmd() *cobra.Command {
 				settingValue = "staging"
 			case "production", "prod":
 				settingValue = "production"
-			case "dev-dan":
-				settingValue = "dev-dan"
 			default:
 				msg.FailMsg("Invalid environment. Please use %s or %s.", style.Emphasis("staging"), style.Emphasis("production"))
 				exit.ErrorMsg("Invalid environment " + envArg)
