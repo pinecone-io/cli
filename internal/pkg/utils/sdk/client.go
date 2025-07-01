@@ -31,6 +31,7 @@ func newClientParams(key string) pinecone.NewClientParams {
 		clientControllerHostUrl = environment.Staging.IndexControlPlaneUrl
 	default:
 		exit.Error(pcio.Errorf("invalid environment: %s", env))
+		return pinecone.NewClientParams{}
 	}
 
 	return pinecone.NewClientParams{
