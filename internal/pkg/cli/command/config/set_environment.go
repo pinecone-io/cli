@@ -14,7 +14,7 @@ import (
 func NewSetEnvCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-environment <production|staging>",
-		Short: "Configure the environment (production, or staging)",
+		Short: "Configure the environment (production or staging)",
 		Example: help.Examples([]string{
 			"pinecone config set-environment production",
 			"pinecone config set-environment staging",
