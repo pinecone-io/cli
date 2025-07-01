@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"crypto/rand"
+	_ "embed"
 	"encoding/base64"
 	"net/http"
 	"os"
@@ -21,6 +22,12 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
 )
+
+//go:embed assets/redirect_success.html
+var successHTML string
+
+//go:embed assets/redirect_error.html
+var errorHTML string
 
 func NewLoginCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -135,12 +142,7 @@ func GetAndSetAccessToken(orgId *string) error {
 	pcio.Println("After you approve in the browser, it may take a few seconds for the next step to complete.")
 
 	// Spin up a local server to handle receiving the authorization code from auth0
-	var code string
-	err = style.Spinner("Waiting for authorization...\n", func() error {
-		var err error
-		code, err = ServeAuthCodeListener(ctx, csrfState)
-		return err
-	})
+	code, err := ServeAuthCodeListener(ctx, csrfState)
 	if err != nil {
 		exit.Error(pcio.Errorf("error waiting for authorization: %w", err))
 		return err
@@ -175,6 +177,19 @@ func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error
 			exit.Error(pcio.Errorf("State mismatch on authentication"))
 			return
 		}
+
+		// Code is empty, there was an error authenticating, return error HTML
+		if code == "" {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(errorHTML))
+		} else {
+			// Code is present, return success HTML
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(successHTML))
+		}
+		w.(http.Flusher).Flush()
 		codeCh <- code
 	})
 
