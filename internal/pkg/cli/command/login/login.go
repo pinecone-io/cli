@@ -103,10 +103,13 @@ func GetAndSetAccessToken(orgId *string) error {
 	a := pc_oauth2.Auth{}
 
 	// CSRF state
-	csrfState := randomState()
+	csrfState := randomCSRFState()
 
 	// PKCE verifier and challenge
 	verifier, challenge, err := a.CreateNewVerifierAndChallenge()
+	if err != nil {
+		exit.Error(pcio.Error("error creating new auth verifier and challenge"))
+	}
 
 	authURL, err := a.GetAuthURL(ctx, csrfState, challenge, orgId)
 	if err != nil {
@@ -134,41 +137,9 @@ func GetAndSetAccessToken(orgId *string) error {
 	// Spin up a local server to handle receiving the authorization code from auth0
 	var code string
 	err = style.Spinner("Waiting for authorization...\n", func() error {
-		codeCh := make(chan string)
-
-		// start server to receive the auth code
-		mux := http.NewServeMux()
-		mux.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
-			code := r.URL.Query().Get("code")
-			state := r.URL.Query().Get("state")
-
-			if state != csrfState {
-				exit.Error(pcio.Errorf("State mismatch on authentication"))
-				return
-			}
-			codeCh <- code
-		})
-		serve := &http.Server{Addr: "127.0.0.1:59049", Handler: mux}
-
-		go func() {
-			if err := serve.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				exit.Error(pcio.Errorf("error listening for auth code: %w", err))
-				return
-			}
-		}()
-
-		select {
-		case code = <-codeCh:
-		case <-ctx.Done():
-			_ = serve.Shutdown(ctx)
-			if ctx.Err() != nil {
-				exit.Error(pcio.Errorf("error waiting for authorization: %w", ctx.Err()))
-				return ctx.Err()
-			}
-		}
-
-		_ = serve.Shutdown(ctx)
-		return nil
+		var err error
+		code, err = ServeAuthCodeListener(ctx, csrfState)
+		return err
 	})
 	if err != nil {
 		exit.Error(pcio.Errorf("error waiting for authorization: %w", err))
@@ -191,7 +162,50 @@ func GetAndSetAccessToken(orgId *string) error {
 	return pcio.Errorf("error authenticating CLI and retrieving oauth2 access token")
 }
 
-func randomState() string {
+func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error) {
+	codeCh := make(chan string)
+
+	// start server to receive the auth code
+	mux := http.NewServeMux()
+	mux.HandleFunc("/auth-callback", func(w http.ResponseWriter, r *http.Request) {
+		code := r.URL.Query().Get("code")
+		state := r.URL.Query().Get("state")
+
+		if state != csrfState {
+			exit.Error(pcio.Errorf("State mismatch on authentication"))
+			return
+		}
+		codeCh <- code
+	})
+
+	// Start server and listen for auth code response
+	serve := &http.Server{
+		Addr:    "127.0.0.1:59049",
+		Handler: mux,
+	}
+	go func() {
+		if err := serve.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			exit.Error(pcio.Errorf("error listening for auth code: %w", err))
+			return
+		}
+	}()
+
+	select {
+	case code := <-codeCh:
+		_ = serve.Shutdown(ctx)
+		return code, nil
+	case <-ctx.Done():
+		_ = serve.Shutdown(ctx)
+		if ctx.Err() != nil {
+			exit.Error(pcio.Errorf("error waiting for authorization: %w", ctx.Err()))
+			return "", ctx.Err()
+		}
+	}
+
+	return "", pcio.Error("error waiting for authentication response")
+}
+
+func randomCSRFState() string {
 	b := make([]byte, 32)
 	_, _ = rand.Read(b)
 	return base64.RawURLEncoding.EncodeToString(b)
