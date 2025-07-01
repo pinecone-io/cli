@@ -2,8 +2,6 @@ package text
 
 import (
 	"encoding/json"
-
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
 func InlineJSON(data interface{}) string {
@@ -19,6 +17,5 @@ func IndentJSON(data interface{}) string {
 	if err != nil {
 		return ""
 	}
-	pcio.Println(string(jsonData))
 	return string(jsonData)
 }

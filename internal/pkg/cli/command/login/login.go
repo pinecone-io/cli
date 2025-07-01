@@ -3,6 +3,10 @@ package login
 import (
 	"bufio"
 	"context"
+	"crypto/rand"
+	_ "embed"
+	"encoding/base64"
+	"net/http"
 	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
@@ -18,6 +22,12 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
 )
+
+//go:embed assets/redirect_success.html
+var successHTML string
+
+//go:embed assets/redirect_error.html
+var errorHTML string
 
 func NewLoginCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -96,20 +106,27 @@ func NewLoginCmd() *cobra.Command {
 func GetAndSetAccessToken(orgId *string) error {
 	ctx := context.Background()
 
-	da := pc_oauth2.DeviceAuth{}
+	// da := pc_oauth2.DeviceAuth{}
+	a := pc_oauth2.Auth{}
 
-	authResponse, err := da.GetAuthResponse(ctx, orgId)
+	// CSRF state
+	csrfState := randomCSRFState()
+
+	// PKCE verifier and challenge
+	verifier, challenge, err := a.CreateNewVerifierAndChallenge()
 	if err != nil {
-		pcio.Println(err)
+		exit.Error(pcio.Error("error creating new auth verifier and challenge"))
+	}
+
+	authURL, err := a.GetAuthURL(ctx, csrfState, challenge, orgId)
+	if err != nil {
+		exit.Error(pcio.Errorf("error getting auth URL: %w", err))
 		return err
 	}
 
-	pcio.Printf("Visit %s to authorize the CLI.\n", style.Underline(authResponse.VerificationURIComplete))
-	pcio.Println()
-	pcio.Printf("The code %s should be displayed on the authorization page.\n", style.HeavyEmphasis(authResponse.UserCode))
+	pcio.Printf("Visit %s to authorize the CLI.\n", style.Underline(authURL))
 	pcio.Println()
 
-	// Press enter to launch the browser
 	pcio.Printf("Press %s to open the browser.\n", style.Code("[Enter]"))
 	_, err = bufio.NewReader(os.Stdin).ReadBytes('\n')
 	if err != nil {
@@ -117,27 +134,94 @@ func GetAndSetAccessToken(orgId *string) error {
 		return err
 	}
 
-	err = browser.OpenBrowser(authResponse.VerificationURIComplete)
+	err = browser.OpenBrowser(authURL)
 	if err != nil {
 		exit.Error(pcio.Errorf("error opening browser: %w", err))
 		return err
 	}
-
 	pcio.Println("After you approve in the browser, it may take a few seconds for the next step to complete.")
 
-	err = style.Spinner("Waiting for authorization...", func() error {
-		token, err := da.GetDeviceAccessToken(ctx, authResponse)
-		if err != nil {
-			return err
-		}
-
-		secrets.OAuth2Token.Set(token)
-		return nil
-	})
+	// Spin up a local server to handle receiving the authorization code from auth0
+	code, err := ServeAuthCodeListener(ctx, csrfState)
 	if err != nil {
 		exit.Error(pcio.Errorf("error waiting for authorization: %w", err))
 		return err
 	}
 
-	return nil
+	// Exchange auth code for access token
+	if code != "" {
+		token, err := a.ExchangeAuthCode(ctx, verifier, code)
+		if err != nil {
+			exit.Error(pcio.Errorf("error exchanging auth code for access token: %w", err))
+			return err
+		}
+		secrets.OAuth2Token.Set(token)
+		return nil
+	}
+
+	// if we're here, it means we were not able to authenticate with the auth0 server
+	exit.Error(pcio.Errorf("error authenticating CLI and retrieving oauth2 access token"))
+	return pcio.Errorf("error authenticating CLI and retrieving oauth2 access token")
+}
+
+func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error) {
+	codeCh := make(chan string)
+
+	// start server to receive the auth code
+	mux := http.NewServeMux()
+	mux.HandleFunc("/auth-callback", func(w http.ResponseWriter, r *http.Request) {
+		code := r.URL.Query().Get("code")
+		state := r.URL.Query().Get("state")
+
+		if state != csrfState {
+			exit.Error(pcio.Errorf("State mismatch on authentication"))
+			return
+		}
+
+		// Code is empty, there was an error authenticating, return error HTML
+		if code == "" {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(errorHTML))
+		} else {
+			// Code is present, return success HTML
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(successHTML))
+		}
+		w.(http.Flusher).Flush()
+		codeCh <- code
+	})
+
+	// Start server and listen for auth code response
+	serve := &http.Server{
+		Addr:    "127.0.0.1:59049",
+		Handler: mux,
+	}
+	go func() {
+		if err := serve.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			exit.Error(pcio.Errorf("error listening for auth code: %w", err))
+			return
+		}
+	}()
+
+	select {
+	case code := <-codeCh:
+		_ = serve.Shutdown(ctx)
+		return code, nil
+	case <-ctx.Done():
+		_ = serve.Shutdown(ctx)
+		if ctx.Err() != nil {
+			exit.Error(pcio.Errorf("error waiting for authorization: %w", ctx.Err()))
+			return "", ctx.Err()
+		}
+	}
+
+	return "", pcio.Error("error waiting for authentication response")
+}
+
+func randomCSRFState() string {
+	b := make([]byte, 32)
+	_, _ = rand.Read(b)
+	return base64.RawURLEncoding.EncodeToString(b)
 }

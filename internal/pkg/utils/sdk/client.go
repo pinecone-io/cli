@@ -22,10 +22,14 @@ func newClientParams(key string) pinecone.NewClientParams {
 	env := config.Environment.Get()
 
 	var clientControllerHostUrl string
-	if env == "production" {
+	switch env {
+	case "production":
 		clientControllerHostUrl = environment.Prod.IndexControlPlaneUrl
-	} else {
+	case "staging":
 		clientControllerHostUrl = environment.Staging.IndexControlPlaneUrl
+	default:
+		exit.Error(pcio.Errorf("invalid environment: %s", env))
+		return pinecone.NewClientParams{}
 	}
 
 	return pinecone.NewClientParams{

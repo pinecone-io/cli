@@ -25,7 +25,11 @@ func LogTokenClaims(token *oauth2.Token, msg string) {
 		return
 	}
 
-	p.ParseUnverified(token.AccessToken, &claims)
+	// TODO: make sure we verify elsewhere in the stack if we're using unverified here to print
+	_, _, err := p.ParseUnverified(token.AccessToken, &claims)
+	if err != nil {
+		log.Error().Msg("unable to ")
+	}
 	exp := "<missing>"
 	if claims.ExpiresAt != nil {
 		exp = claims.ExpiresAt.String()

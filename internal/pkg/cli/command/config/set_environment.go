@@ -19,7 +19,7 @@ func NewSetEnvCmd() *cobra.Command {
 			"pinecone config set-environment production",
 			"pinecone config set-environment staging",
 		}),
-		Hidden: true,
+		Hidden: false,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 				msg.FailMsg("Please provide a value for environment. Accepted values are %s, %s", style.Emphasis("production"), style.Emphasis("staging"))

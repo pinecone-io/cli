@@ -30,32 +30,26 @@ func Spinner(text string, fn func() error) error {
 }
 
 func loading(initialMsg, doneMsg, failMsg string, fn func() error) error {
-	done := make(chan struct{})
-	errc := make(chan error)
-	go func() {
-		defer close(done)
+	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+	s.Prefix = initialMsg
+	s.FinalMSG = doneMsg
+	s.HideCursor = true
+	s.Writer = pcio.Messages
 
-		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond, spinner.WithWriter(pcio.Messages))
-		s.Prefix = initialMsg
-		s.FinalMSG = doneMsg
-		s.HideCursor = true
-		s.Writer = pcio.Messages
+	if err := s.Color(spinnerColor); err != nil {
+		exit.Error(err)
+	}
 
-		if err := s.Color(spinnerColor); err != nil {
-			exit.Error(err)
-		}
-
-		s.Start()
-		err := <-errc
-		if err != nil {
-			s.FinalMSG = failMsg
-		}
-
-		s.Stop()
-	}()
-
+	s.Start()
 	err := fn()
-	errc <- err
-	<-done
-	return err
+	if err != nil {
+		s.FinalMSG = failMsg
+	}
+	s.Stop()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

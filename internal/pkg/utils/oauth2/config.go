@@ -21,14 +21,6 @@ func newOauth2Config() (*oauth2.Config, error) {
 		return nil, err
 	}
 
-	// TODO: figure out if we need to actually modify these urls
-	// authURLPath := "/oauth/authorize"
-	// deviceAuthURLPath := "/oauth/device/code"
-	// if orgId != nil && *orgId != "" {
-	// 	authURLPath = authURLPath + "orgId=" + *orgId
-	// 	deviceAuthURLPath = deviceAuthURLPath + "orgId=" + *orgId
-	// }
-
 	return &oauth2.Config{
 		ClientID: connectionConfig.Auth0ClientId,
 		Endpoint: oauth2.Endpoint{
@@ -37,6 +29,6 @@ func newOauth2Config() (*oauth2.Config, error) {
 			DeviceAuthURL: connectionConfig.Auth0URL + "/oauth/device/code",
 		},
 		Scopes:      []string{"openid", "profile", "email", "offline_access"},
-		RedirectURL: "http://localhost:59049",
+		RedirectURL: "http://127.0.0.1:59049/auth-callback",
 	}, nil
 }
