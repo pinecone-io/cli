@@ -4,19 +4,57 @@
     <meta charset="UTF-8" />
     <title>Pinecone CLI Authentication Complete</title>
     <style>
-        body {
-            font-family: sans-serif;
-            text-align: center;
-            margin-top: 5em;
-            background: #f9f9f9;
-        }
-        .message {
-            display: inline-block;
-            padding: 1em 2em;
-            background: #e0ffe0;
-            border: 1px solid #c0c0c0;
-            border-radius: 8px;
-        }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+    :root {
+        /* Must match variables in Console/RegistrationPage */
+        --hero-background-color: #01004B;
+        --hero-foreground-color: white;
+        --pinecone-blue: #8CF1FF;
+        --link-color: #121142;
+        --secondary-text-color: #72788D;
+        --social-button-background-color: #F0F0F0;
+        --social-button-border-color: #dee0e2;
+        --error-color: #E31957;
+        font-size: 12px;
+    }
+
+    .message {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+    }
+
+    /* Display managed by JS */
+    #login-links,
+    #sso-links,
+        .cloud-provider-logos>svg,
+        .cloud-provider-header {
+        display: none;
+    }
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: "Inter", sans-serif;
+        margin: 0;
+    }
+
+    main {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr;
+        min-height: 100vh;
+        width: 100vw;
+        position: relative;
+        background: var(--hero-background-color);
+    }
     </style>
 </head>
 <body>
