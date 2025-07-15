@@ -191,7 +191,7 @@ func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error
 			// Code is present, return success HTML
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte(strings.Replace(errorHTML, "{{LOGO_SVG}}", logoSVG, 1)))
+			_, _ = w.Write([]byte(strings.Replace(successHTML, "{{LOGO_SVG}}", logoSVG, 1)))
 		}
 		w.(http.Flusher).Flush()
 		codeCh <- code
