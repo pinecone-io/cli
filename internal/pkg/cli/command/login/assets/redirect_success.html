@@ -10,57 +10,86 @@
         /* Must match variables in Console/RegistrationPage */
         --hero-background-color: #01004B;
         --hero-foreground-color: white;
+        --divider-color: #E5E5E5;
         --pinecone-blue: #8CF1FF;
         --link-color: #121142;
         --secondary-text-color: #72788D;
-        --social-button-background-color: #F0F0F0;
-        --social-button-border-color: #dee0e2;
+        --text-color: #0A0A0A;
         --error-color: #E31957;
+        --success-color: #15B077;
         font-size: 12px;
     }
 
-    .message {
+    main {
         display: flex;
-        flex-direction: column;
-        align-items: center;
         justify-content: center;
+        align-items: center;
         height: 100vh;
-    }
-
-    /* Display managed by JS */
-    #login-links,
-    #sso-links,
-        .cloud-provider-logos>svg,
-        .cloud-provider-header {
-        display: none;
-    }
-
-    *,
-    *::before,
-    *::after {
-        box-sizing: border-box;
+        width: 100vw;
     }
 
     body {
         font-family: "Inter", sans-serif;
         margin: 0;
+        color: var(--text-color);
+        background-color: var(--hero-background-color);
     }
 
-    main {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: 1fr;
-        min-height: 100vh;
-        width: 100vw;
-        position: relative;
-        background: var(--hero-background-color);
+    .content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+    }
+
+    .message {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--divider-color);
+        padding: 24px;
+        background-color: var(--hero-foreground-color);
+        color: var(--text-color);
+        max-width: 600px;
+    }
+
+    .message-header {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+        border: 1px solid var(--success-color);
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+    .message-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 12px;
+    }
+
+    .logo-container svg {
+        display: block;
+        width: auto;
+        height: 48px;
+        margin-bottom: 24px;
     }
     </style>
 </head>
 <body>
-    <div class="message">
-        <h1>✅ Success!</h1>
-        <p>You may now return to the CLI. This window can be closed.</p>
+    <main>
+    <div class="content">
+        <div class="logo-container">{{LOGO_SVG}}</div>
+        <div class="message">
+            <div class="message-header">
+                <h1 class="message-title">✅ Request Approved</h1>
+                <p>Pinecone CLI has been given the requested permissions.</p>
+            </div>
+            <div class="message-body">
+                <p>You may now return to the Pinecone CLI. This window can be closed.</p>
+            </div>
+        </div>
     </div>
+    </main>
 </body>
 </html>

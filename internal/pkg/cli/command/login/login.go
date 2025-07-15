@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
 	"github.com/pinecone-io/cli/internal/pkg/utils/browser"
@@ -28,6 +29,9 @@ var successHTML string
 
 //go:embed assets/redirect_error.html
 var errorHTML string
+
+//go:embed assets/Pinecone-Primary-Logo-White.svg
+var logoSVG string
 
 func NewLoginCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -182,12 +186,12 @@ func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error
 		if code == "" {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte(errorHTML))
+			_, _ = w.Write([]byte(strings.Replace(errorHTML, "{{LOGO_SVG}}", logoSVG, 1)))
 		} else {
 			// Code is present, return success HTML
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte(successHTML))
+			_, _ = w.Write([]byte(strings.Replace(errorHTML, "{{LOGO_SVG}}", logoSVG, 1)))
 		}
 		w.(http.Flusher).Flush()
 		codeCh <- code
