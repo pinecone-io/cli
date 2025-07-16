@@ -25,13 +25,13 @@ func NewCreateApiKeyCmd() *cobra.Command {
 		Short:   "create an API key in a project",
 		GroupID: help.GROUP_PROJECTS_API_KEYS.ID,
 		Example: help.Examples([]string{
-			"pinecone target -o \"my-org\" -p \"my-project\"",
-			"pinecone create-key -n \"my-key\" --reveal",
+			"pc target -o \"my-org\" -p \"my-project\"",
+			"pc create-key -n \"my-key\" --reveal",
 		}),
 		Run: func(cmd *cobra.Command, args []string) {
 			projId, err := getTargetProjectId()
 			if err != nil {
-				msg.FailMsg("No target project set. Use %s to set the target project.", style.Code("pinecone target -o <org> -p <project>"))
+				msg.FailMsg("No target project set. Use %s to set the target project.", style.Code("pc target -o <org> -p <project>"))
 				exit.ErrorMsg("No project context set")
 			}
 
@@ -48,7 +48,7 @@ func NewCreateApiKeyCmd() *cobra.Command {
 			for _, key := range existingKeys.Keys {
 				if key.UserLabel == options.name {
 					msg.FailMsg("Key with name %s already exists", style.Emphasis(options.name))
-					msg.HintMsg("See existing keys with %s", style.Code("pinecone project list-keys"))
+					msg.HintMsg("See existing keys with %s", style.Code("pc project list-keys"))
 					exit.ErrorMsg(pcio.Sprintf("Key with name %s already exists", style.Emphasis(options.name)))
 				}
 			}
@@ -78,7 +78,7 @@ func NewCreateApiKeyCmd() *cobra.Command {
 			} else {
 				msg.SuccessMsg("Key %s created\n", keysResponse.Key.UserLabel)
 				if !options.reveal {
-					msg.HintMsg("Run %s to see the key value\n", style.Code("pinecone project list-keys --reveal"))
+					msg.HintMsg("Run %s to see the key value\n", style.Code("pc project list-keys --reveal"))
 				}
 
 				printKeysTable(keysToShow)

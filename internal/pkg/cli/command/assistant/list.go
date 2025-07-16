@@ -40,7 +40,7 @@ func NewListAssistantsCmd() *cobra.Command {
 
 			modelCount := len(assistantList.Assistants)
 			if modelCount == 0 {
-				msg.InfoMsg("No assistants found. Create one with %s.\n", style.Code("pinecone assistant create"))
+				msg.InfoMsg("No assistants found. Create one with %s.\n", style.Code("pc assistant create"))
 				return
 			}
 

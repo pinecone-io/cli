@@ -31,16 +31,16 @@ func NewDeleteProjectCmd() *cobra.Command {
 		Use:   "delete",
 		Short: "delete a project in the target org",
 		Example: help.Examples([]string{
-			"pinecone target -o \"my-org\"",
-			"pinecone project delete --name=\"demo\"",
-			"pinecone project delete --name=\"demo\" --yes",
+			"pc target -o \"my-org\"",
+			"pc project delete --name=\"demo\"",
+			"pc project delete --name=\"demo\" --yes",
 		}),
 		GroupID: help.GROUP_PROJECTS_CRUD.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			orgId, err := getTargetOrgId()
 			orgName := state.TargetOrg.Get().Name
 			if err != nil {
-				msg.FailMsg("No target organization set. Use %s to set the organization context.", style.Code("pinecone target -o <org>"))
+				msg.FailMsg("No target organization set. Use %s to set the organization context.", style.Code("pc target -o <org>"))
 				cmd.Help()
 				exit.ErrorMsg("No organization context set")
 			}
@@ -48,7 +48,7 @@ func NewDeleteProjectCmd() *cobra.Command {
 			projToDelete, err := dashboard.GetProjectByName(orgName, options.name)
 			if err != nil {
 				msg.FailMsg("Failed to retrieve project information: %s\n", err)
-				msg.HintMsg("To see a list of projects in the organization, run %s", style.Code("pinecone project list"))
+				msg.HintMsg("To see a list of projects in the organization, run %s", style.Code("pc project list"))
 				exit.Error(err)
 			}
 
@@ -142,7 +142,7 @@ func verifyNoIndexes(orgId string, projectId string, projectName string) {
 	}
 	if len(idxs) > 0 {
 		msg.FailMsg("Project %s contains indexes. Delete the indexes before deleting the project.", style.Emphasis(projectName))
-		msg.HintMsg("To see indexes in this project, run %s", pcio.Sprintf(style.Code("pinecone target -p \"%s\" && pinecone index list"), projectName))
+		msg.HintMsg("To see indexes in this project, run %s", pcio.Sprintf(style.Code("pc target -p \"%s\" && pc index list"), projectName))
 		exit.Error(pcio.Errorf("project contains indexes"))
 	}
 }
@@ -159,7 +159,7 @@ func verifyNoCollections(orgId string, projectId string, projectName string) {
 	}
 	if len(collections) > 0 {
 		msg.FailMsg("Project %s contains collections. Delete the collections before deleting the project.", style.Emphasis(projectName))
-		msg.HintMsg("To see collections in this project, run %s", pcio.Sprintf(style.Code("pinecone target -p \"%s\" && pinecone collection list"), projectName))
+		msg.HintMsg("To see collections in this project, run %s", pcio.Sprintf(style.Code("pc target -p \"%s\" && pc collection list"), projectName))
 		exit.Error(pcio.Errorf("project contains collections"))
 	}
 }

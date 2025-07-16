@@ -53,7 +53,7 @@ func NewListAssistantFilesCmd() *cobra.Command {
 
 			fileCount := len(fileList.Files)
 			if fileCount == 0 {
-				msg.InfoMsg("No files found in assistant %s. Add one with %s.\n", style.Emphasis(options.assistant), style.Code("pinecone assistant file-upload"))
+				msg.InfoMsg("No files found in assistant %s. Add one with %s.\n", style.Emphasis(options.assistant), style.Code("pc assistant file-upload"))
 				return
 			}
 

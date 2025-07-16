@@ -13,7 +13,7 @@ before:
 builds:
   - env:
       - CGO_ENABLED=0
-    main: ./cmd/pinecone
+    main: ./cmd/pc
     binary: pc
     ldflags:
       - -X github.com/pinecone-io/cli/internal/build.Date={{.Date}}

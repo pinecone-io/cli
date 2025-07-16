@@ -30,7 +30,7 @@ var successHTML string
 //go:embed assets/redirect_error.html
 var errorHTML string
 
-//go:embed assets/Pinecone-Primary-Logo-White.svg
+//go:embed assets/pinecone_logo.svg
 var logoSVG string
 
 func NewLoginCmd() *cobra.Command {
@@ -95,10 +95,10 @@ func NewLoginCmd() *cobra.Command {
 			}
 
 			pcio.Println()
-			pcio.Println(style.CodeHint("Run %s to change the target context.", "pinecone target"))
+			pcio.Println(style.CodeHint("Run %s to change the target context.", "pc target"))
 
 			pcio.Println()
-			pcio.Printf("Now try %s to learn about index operations.\n", style.Code("pinecone index -h"))
+			pcio.Printf("Now try %s to learn about index operations.\n", style.Code("pc index -h"))
 		},
 	}
 
