@@ -3,7 +3,6 @@ package pinecone
 import (
 	"os"
 
-	assistant "github.com/pinecone-io/cli/internal/pkg/cli/command/assistant"
 	collection "github.com/pinecone-io/cli/internal/pkg/cli/command/collection"
 	configCmd "github.com/pinecone-io/cli/internal/pkg/cli/command/config"
 	index "github.com/pinecone-io/cli/internal/pkg/cli/command/index"
@@ -69,10 +68,6 @@ Get started by logging in with
 	rootCmd.AddGroup(help.GROUP_VECTORDB)
 	rootCmd.AddCommand(index.NewIndexCmd())
 	rootCmd.AddCommand(collection.NewCollectionCmd())
-
-	// Assistant group
-	rootCmd.AddGroup(help.GROUP_ASSISTANT)
-	rootCmd.AddCommand(assistant.NewAssistantCommand())
 
 	// Misc group
 	rootCmd.AddCommand(version.NewVersionCmd())

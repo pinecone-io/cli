@@ -32,18 +32,3 @@ func PrintTargetContext(context *state.TargetContext) {
 
 	writer.Flush()
 }
-
-func PrintTargetAssistant(context *state.TargetContext) {
-	log.Info().
-		Str("assistant", context.Assistant).
-		Msg("Printing target assistant")
-	writer := NewTabWriter()
-
-	columns := []string{"ATTRIBUTE", "VALUE"}
-	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
-
-	pcio.Fprintf(writer, "Assistant\t%s\n", labelUnsetIfEmpty(context.Assistant))
-
-	writer.Flush()
-}
