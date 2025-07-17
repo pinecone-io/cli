@@ -188,9 +188,9 @@ func RequestWithBodyAndDecode[B any, R any](baseUrl string, path string, method 
 func RequestWithoutBodyAndDecode[T any](baseUrl string, path string, method string) (*T, error) {
 	url := baseUrl + path
 
-	requestedService := ""
+	requestedService := "pinecone-api"
 	if strings.Contains(url, "console") {
-		requestedService = "dashboard"
+		requestedService = "dashboard-api"
 	}
 
 	req, err := buildRequest(method, url, nil)
