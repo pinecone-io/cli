@@ -17,7 +17,7 @@
         --text-color: #0A0A0A;
         --error-color: #E31957;
         --success-color: #15B077;
-        font-size: 12px;
+        font-size: 100%;
     }
 
     main {
@@ -46,10 +46,10 @@
         display: flex;
         flex-direction: column;
         border: 1px solid var(--divider-color);
-        padding: 24px;
+        padding: 1.5rem;
         background-color: var(--hero-foreground-color);
         color: var(--text-color);
-        max-width: 600px;
+        max-width: 38rem;
     }
 
     .message-header {
@@ -58,14 +58,19 @@
         align-items: flex-start;
         text-align: left;
         border: 1px solid var(--error-color);
-        padding: 12px;
-        margin-bottom: 12px;
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
     }
 
     .message-title {
         font-size: 1.5rem;
         font-weight: bold;
-        margin-bottom: 12px;
+        margin-bottom: 0.75rem;
+    }
+
+    .message-body {
+        font-size: 0.75rem;
+        text-align: center;
     }
 
     .logo-container svg {
@@ -79,7 +84,7 @@
 <body>
     <main>
     <div class="content">
-        <div class="logo-container">{{LOGO_SVG}}</div>
+        <div class="logo-container">{{.LogoSVG}}</div>
         <div class="message">
             <div class="message-header">
                 <h1 class="message-title">❌ Unable to authenticate</h1>

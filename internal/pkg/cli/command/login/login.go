@@ -6,9 +6,9 @@ import (
 	"crypto/rand"
 	_ "embed"
 	"encoding/base64"
+	"html/template"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
 	"github.com/pinecone-io/cli/internal/pkg/utils/browser"
@@ -120,6 +120,7 @@ func GetAndSetAccessToken(orgId *string) error {
 	verifier, challenge, err := a.CreateNewVerifierAndChallenge()
 	if err != nil {
 		exit.Error(pcio.Error("error creating new auth verifier and challenge"))
+		return err
 	}
 
 	authURL, err := a.GetAuthURL(ctx, csrfState, challenge, orgId)
@@ -178,20 +179,22 @@ func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error
 		state := r.URL.Query().Get("state")
 
 		if state != csrfState {
-			exit.Error(pcio.Errorf("State mismatch on authentication"))
+			exit.Error(pcio.Errorf("state mismatch on authentication"))
 			return
 		}
 
 		// Code is empty, there was an error authenticating, return error HTML
+		templateData := map[string]template.HTML{"LogoSVG": template.HTML(logoSVG)}
 		if code == "" {
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte(strings.Replace(errorHTML, "{{LOGO_SVG}}", logoSVG, 1)))
+			if err := renderHTML(w, errorHTML, templateData); err != nil {
+				exit.Error(pcio.Errorf("error rendering authentication response HTML: %w", err))
+				return
+			}
 		} else {
-			// Code is present, return success HTML
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte(strings.Replace(successHTML, "{{LOGO_SVG}}", logoSVG, 1)))
+			if err := renderHTML(w, successHTML, templateData); err != nil {
+				exit.Error(pcio.Errorf("error rendering authentication response HTML: %w", err))
+				return
+			}
 		}
 		w.(http.Flusher).Flush()
 		codeCh <- code
@@ -222,6 +225,22 @@ func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error
 	}
 
 	return "", pcio.Error("error waiting for authentication response")
+}
+
+func renderHTML(w http.ResponseWriter, htmlTemplate string, data map[string]template.HTML) error {
+	tmpl, err := template.New("auth-response").Parse(htmlTemplate)
+	if err != nil {
+		exit.Error(pcio.Errorf("error parsing auth response HTML template: %w", err))
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return err
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	if err := tmpl.Execute(w, data); err != nil {
+		exit.Error(pcio.Errorf("error executing auth response HTML template: %w", err))
+		return err
+	}
+	return nil
 }
 
 func randomCSRFState() string {
