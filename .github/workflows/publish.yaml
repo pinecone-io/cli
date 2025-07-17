@@ -6,37 +6,39 @@ on:
       - 'v*'
 
 jobs:
-    publish:
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
-          with:
-            fetch-depth: 0
-        - name: Set up Go
-          uses: actions/setup-go@v5
-        - name: Setup Google service account creds
-          id: setup-google
-          run: |
-            echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDS_JSON_BASE64 }}" | base64 -d > /tmp/gcp_key.json
-        - name: Run GoReleaser
-          id: goreleaser
-          uses: goreleaser/goreleaser-action@v6
-          with:
-            version: '~> v2'
-            args: release --clean
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            GOOGLE_APPLICATION_CREDENTIALS: "/tmp/gcp_key.json"
-            HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_GITHUB_API_TOKEN }}
-        
-        - name: Trigger update-dev-formula workflow
-          run: |
-            version=$(echo '${{ steps.goreleaser.outputs.metadata }}' | jq -r ".version")
-            echo "Version is $version"
+  publish:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v5
+      - name: Setup Google service account creds
+        id: setup-google
+        run: |
+          echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_CREDS_JSON_BASE64 }}" | base64 -d > /tmp/gcp_key.json
+      - name: Run GoReleaser
+        id: goreleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: '~> v2'
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GOOGLE_APPLICATION_CREDENTIALS: '/tmp/gcp_key.json'
+          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_GITHUB_API_TOKEN }}
 
-            curl -L -X POST \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: bearer ${{ secrets.JEN_PAT }}" \
-              https://api.github.com/repos/pinecone-io/homebrew-pinecone/actions/workflows/update-dev-formula.yaml/dispatches \
-              -d "{\"ref\": \"main\", \"inputs\": {\"version\":\"$version\"}}"
+      - name: Trigger update-dev-formula workflow
+        run: |
+          version=$(echo '${{ steps.goreleaser.outputs.metadata }}' | jq -r ".version")
+          echo "Version is $version"
+
+          curl -L -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: bearer ${{ secrets.JEN_PAT }}" \
+            https://api.github.com/repos/pinecone-io/homebrew-pinecone/actions/workflows/update-dev-formula.yaml/dispatches \
+            -d "{\"ref\": \"main\", \"inputs\": {\"version\":\"$version\"}}"

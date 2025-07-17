@@ -91,7 +91,7 @@ func runCreatePodCmd(options createPodOptions) {
 		return
 	}
 
-	describeCommand := pcio.Sprintf("pinecone index describe --name %s", idx.Name)
+	describeCommand := pcio.Sprintf("pc index describe --name %s", idx.Name)
 	msg.SuccessMsg("Index %s created successfully. Run %s to check status. \n\n", style.Emphasis(idx.Name), style.Code(describeCommand))
 	presenters.PrintDescribeIndexTable(idx)
 }

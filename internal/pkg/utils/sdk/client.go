@@ -61,12 +61,12 @@ func newClientForUserFromTarget() *pinecone.Client {
 	log.Debug().Msg("No API key is stored in configuration, so attempting to create a client using user access token")
 
 	if oauth2Token.AccessToken == "" {
-		msg.FailMsg("Please set an API key with %s or login with %s before attempting this operation.", style.Code("pinecone config set-api-key"), style.Code("pinecone login"))
+		msg.FailMsg("Please set an API key with %s or login with %s before attempting this operation.", style.Code("pc config set-api-key"), style.Code("pc login"))
 		exit.ErrorMsg("User is not logged in")
 	}
 
 	if targetOrgId == "" || targetProjectId == "" {
-		msg.FailMsg("You are logged in, but need to target a project with %s", style.Code("pinecone target"))
+		msg.FailMsg("You are logged in, but need to target a project with %s", style.Code("pc target"))
 		exit.ErrorMsg("No target organization set")
 	}
 
@@ -107,7 +107,7 @@ func NewPineconeClientForUser(projectId string) *pinecone.Client {
 
 func NewClientForMachine(apiKey string) *pinecone.Client {
 	if apiKey == "" {
-		exit.Error(pcio.Errorf("API key not set. Please run %s", style.Code("pinecone config set-api-key")))
+		exit.Error(pcio.Errorf("API key not set. Please run %s", style.Code("pc config set-api-key")))
 	}
 
 	pc, err := pinecone.NewClient(newClientParams(apiKey))
@@ -145,7 +145,7 @@ func NewPineconeClientForProjectById(orgId string, projectId string) *pinecone.C
 	}
 
 	if key == "" {
-		msg.FailMsg("API key not set. Please run %s or %s", style.Code("pinecone login"), style.Code("pinecone config set-api-key"))
+		msg.FailMsg("API key not set. Please run %s or %s", style.Code("pc login"), style.Code("pc config set-api-key"))
 		exit.Error(pcio.Errorf("API key not set."))
 	}
 

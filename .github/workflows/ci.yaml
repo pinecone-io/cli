@@ -5,39 +5,42 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
-    tests:
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
-          with:
-            fetch-depth: 0
-        - name: Set up Go
-          uses: actions/setup-go@v5
-        - name: Run tests
-          run: go test -v ./...
-    
-    goreleaser-build:
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
-          with:
-            fetch-depth: 0
-        - name: Set up Go
-          uses: actions/setup-go@v5
-        - name: Run GoReleaser
-          uses: goreleaser/goreleaser-action@v6
-          with:
-            distribution: goreleaser
-            version: '~> v2'
-            args: build --snapshot --clean
-        - uses: actions/upload-artifact@v4
-          with:
-            name: pinecone_snapshot_${{ github.sha}}_macos
-            path: dist/pinecone_darwin_amd64_v1/pinecone
-            if-no-files-found: error
-            retention-days: 7
-            compression-level: 0
-            overwrite: true
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v5
+      - name: Run tests
+        run: go test -v ./...
+
+  goreleaser-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v5
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: '~> v2'
+          args: build --snapshot --clean
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pc_snapshot_${{ github.sha}}_macos
+          path: dist/pc_darwin_amd64_v1/pc
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+          overwrite: true

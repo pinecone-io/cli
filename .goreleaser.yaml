@@ -3,7 +3,7 @@
 
 version: 2
 
-project_name: pinecone
+project_name: pc
 
 before:
   hooks:
@@ -13,8 +13,8 @@ before:
 builds:
   - env:
       - CGO_ENABLED=0
-    main: ./cmd/pinecone
-    binary: pinecone
+    main: ./cmd/pc
+    binary: pc
     ldflags:
       - -X github.com/pinecone-io/cli/internal/build.Date={{.Date}}
       - -X github.com/pinecone-io/cli/internal/build.Commit={{.Commit}}
@@ -27,7 +27,7 @@ builds:
 # This basically staples the two mac binaries together so users don't
 # have to make a decision about which one they need.
 universal_binaries:
-- replace: true
+  - replace: true
 
 archives:
   - format: tar.gz
@@ -78,9 +78,12 @@ brews:
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
-    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+    commit_msg_template: "Brew formula update for pinecone version {{ .Tag }}"
     skip_upload: auto
     directory: Formula
     license: "Apache-2.0"
     test: |
-      system "#{bin} --help"
+      system "#{bin}/pc --help"
+    install: |
+      bin.install "pc"
+      bin.install_symlink "pc" => "pinecone"

@@ -32,22 +32,22 @@ func Execute() {
 func init() {
 	globalOptions := GlobalOptions{}
 	rootCmd = &cobra.Command{
-		Use:   "pinecone",
+		Use:   "pc",
 		Short: "Work seamlessly with Pinecone from the command line.",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			pcio.SetQuiet(globalOptions.quiet)
 		},
 		Example: help.Examples([]string{
-			"pinecone login",
-			"pinecone target",
-			"pinecone index create-serverless --help",
+			"pc login",
+			"pc target",
+			"pc index create-serverless --help",
 		}),
-		Long: pcio.Sprintf(`pinecone is a CLI tool for managing your Pinecone resources
+		Long: pcio.Sprintf(`pc is a CLI tool for managing your Pinecone resources
 
 Get started by logging in with
 
   %s
-		`, style.CodeWithPrompt("pinecone login")),
+		`, style.CodeWithPrompt("pc login")),
 	}
 
 	rootCmd.SetUsageTemplate(help.HelpTemplate)

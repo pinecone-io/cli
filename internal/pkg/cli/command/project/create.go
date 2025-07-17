@@ -24,13 +24,13 @@ func NewCreateProjectCmd() *cobra.Command {
 		Short:   "create a project in the target org",
 		GroupID: help.GROUP_PROJECTS_CRUD.ID,
 		Example: help.Examples([]string{
-			"pinecone target -o \"my-org\"",
-			"pinecone project create --name=\"demo\"",
+			"pc target -o \"my-org\"",
+			"pc project create --name=\"demo\"",
 		}),
 		Run: func(cmd *cobra.Command, args []string) {
 			orgId, err := getTargetOrgId()
 			if err != nil {
-				msg.FailMsg("No target organization set. Use %s to set the organization context.", style.Code("pinecone target -o <org>"))
+				msg.FailMsg("No target organization set. Use %s to set the organization context.", style.Code("pc target -o <org>"))
 				cmd.Help()
 				exit.ErrorMsg("No organization context set")
 			}
