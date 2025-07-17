@@ -127,7 +127,7 @@ func NewAssistantTargetCmd() *cobra.Command {
 				msg.SuccessMsg("Target assistant set to %s\n", style.Emphasis(selectedModel))
 				printTarget(options.json)
 			} else {
-				msg.InfoMsg("No assistants found. Create one with %s.\n", style.Code("pinecone assistant create"))
+				msg.InfoMsg("No assistants found. Create one with %s.\n", style.Code("pc assistant create"))
 				exit.ErrorMsg("no assistants found")
 			}
 		},
@@ -156,7 +156,7 @@ func uiModelSelector(availableAssistants []string) string {
 	listHeight := len(availableAssistants) + 4
 	onQuit := func() {
 		pcio.Println("Exiting without targeting an assistant.")
-		pcio.Printf("You can always run %s to change assistant context later.\n", style.Code("pinecone assistant target"))
+		pcio.Printf("You can always run %s to change assistant context later.\n", style.Code("pc assistant target"))
 	}
 	onChoice := func(choice string) string {
 		targetAssistant = choice

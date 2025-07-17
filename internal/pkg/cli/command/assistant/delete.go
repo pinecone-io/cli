@@ -36,7 +36,7 @@ func NewDeleteAssistantCmd() *cobra.Command {
 			if targetAsst.Name == options.name {
 				state.TargetAsst.Clear()
 				pcio.Printf("Target assistant %s deleted.\n", style.Emphasis(options.name))
-				pcio.Printf("Use %s to set a new target.\n", style.Code("pinecone assistant target"))
+				pcio.Printf("Use %s to set a new target.\n", style.Code("pc assistant target"))
 			}
 
 			if options.json {

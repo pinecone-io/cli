@@ -76,7 +76,7 @@ func NewListProjectsCmd() *cobra.Command {
 
 			targetOrg := state.GetTargetContext().Org
 			if targetOrg == "" {
-				exit.Error(pcio.Errorf("no target organization set. Please run %s or specify org via flags.", style.Code("pinecone target")))
+				exit.Error(pcio.Errorf("no target organization set. Please run %s or specify org via flags.", style.Code("pc target")))
 			}
 
 			for _, org := range orgs.Organizations {
@@ -93,7 +93,7 @@ func NewListProjectsCmd() *cobra.Command {
 			// via some other method (e.g. web, SDK, etc.) and then run this command
 			// with saved state that is now stale.
 			state.ConfigFile.Clear()
-			exit.ErrorMsg(pcio.Sprintf("The target organization %s is not found. Clearing invalid target context. Run %s to see available orgs and %s to set your target context.", style.Emphasis(targetOrg), style.Code("pinecone org list"), style.Code("pinecone target")))
+			exit.ErrorMsg(pcio.Sprintf("The target organization %s is not found. Clearing invalid target context. Run %s to see available orgs and %s to set your target context.", style.Emphasis(targetOrg), style.Code("pc org list"), style.Code("pc target")))
 		},
 	}
 

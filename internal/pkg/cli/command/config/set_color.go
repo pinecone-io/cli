@@ -15,8 +15,8 @@ func NewSetColorCmd() *cobra.Command {
 		Use:   "set-color",
 		Short: "Configure whether the CLI prints output with color",
 		Example: help.Examples([]string{
-			"pinecone config set-color true",
-			"pinecone config set-color false",
+			"pc config set-color true",
+			"pc config set-color false",
 		}),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {

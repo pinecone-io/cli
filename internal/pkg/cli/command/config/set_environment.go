@@ -16,8 +16,8 @@ func NewSetEnvCmd() *cobra.Command {
 		Use:   "set-environment <production|staging>",
 		Short: "Configure the environment (production or staging)",
 		Example: help.Examples([]string{
-			"pinecone config set-environment production",
-			"pinecone config set-environment staging",
+			"pc config set-environment production",
+			"pc config set-environment staging",
 		}),
 		Hidden: false,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -49,27 +49,27 @@ func NewSetEnvCmd() *cobra.Command {
 
 			if secrets.OAuth2Token.Get().AccessToken != "" {
 				secrets.OAuth2Token.Clear()
-				msg.InfoMsg("You have been logged out; to login again, run %s", style.Code("pinecone login"))
+				msg.InfoMsg("You have been logged out; to login again, run %s", style.Code("pc login"))
 			} else {
-				msg.InfoMsg("To login, run %s", style.Code("pinecone login"))
+				msg.InfoMsg("To login, run %s", style.Code("pc login"))
 			}
 
 			if secrets.ApiKey.Get() != "" {
 				secrets.ApiKey.Clear()
-				msg.InfoMsg("API key cleared; to set a new API key, run %s", style.Code("pinecone config set-api-key"))
+				msg.InfoMsg("API key cleared; to set a new API key, run %s", style.Code("pc config set-api-key"))
 			} else {
-				msg.InfoMsg("To set a new API key, run %s", style.Code("pinecone config set-api-key"))
+				msg.InfoMsg("To set a new API key, run %s", style.Code("pc config set-api-key"))
 			}
 
 			if (state.TargetOrg.Get().Name != "" || state.TargetProj.Get().Name != "") && state.TargetAsst.Get().Name != "" {
 				state.TargetOrg.Clear()
 				state.TargetProj.Clear()
-				msg.InfoMsg("Target organization and project cleared; to set a new target, run %s", style.Code("pinecone target -o myorg -p myproj"))
+				msg.InfoMsg("Target organization and project cleared; to set a new target, run %s", style.Code("pc target -o myorg -p myproj"))
 			}
 
 			if state.TargetAsst.Get().Name != "" {
 				state.TargetAsst.Clear()
-				msg.InfoMsg("Target assistant cleared; to set a new target assistant, run %s", style.Code("pinecone assistant target -n myassistant"))
+				msg.InfoMsg("Target assistant cleared; to set a new target assistant, run %s", style.Code("pc assistant target -n myassistant"))
 			}
 		},
 	}

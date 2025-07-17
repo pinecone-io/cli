@@ -29,13 +29,13 @@ func NewDeleteKeyCmd() *cobra.Command {
 		Short:   "delete an API key in a project",
 		GroupID: help.GROUP_PROJECTS_API_KEYS.ID,
 		Example: help.Examples([]string{
-			"pinecone target -o \"my-org\" -p \"my-project\"",
-			"pinecone delete-key -n \"my-key\"",
+			"pc target -o \"my-org\" -p \"my-project\"",
+			"pc delete-key -n \"my-key\"",
 		}),
 		Run: func(cmd *cobra.Command, args []string) {
 			projId, err := getTargetProjectId()
 			if err != nil {
-				msg.FailMsg("No target project set. Use %s to set the target project.", style.Code("pinecone target -o <org> -p <project>"))
+				msg.FailMsg("No target project set. Use %s to set the target project.", style.Code("pc target -o <org> -p <project>"))
 				exit.ErrorMsg("No project context set")
 			}
 
@@ -62,7 +62,7 @@ func NewDeleteKeyCmd() *cobra.Command {
 			}
 			if !keyExists {
 				msg.FailMsg("Key with name %s does not exist", style.Emphasis(options.name))
-				msg.HintMsg("See existing keys with %s", style.Code("pinecone project list-keys"))
+				msg.HintMsg("See existing keys with %s", style.Code("pc project list-keys"))
 				exit.ErrorMsg(pcio.Sprintf("Key with name %s does not exist", style.Emphasis(options.name)))
 			}
 

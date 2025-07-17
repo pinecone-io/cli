@@ -21,7 +21,7 @@ func NewWhoAmICmd() *cobra.Command {
 
 			accessToken := secrets.OAuth2Token.Get()
 			if accessToken.AccessToken == "" {
-				msg.InfoMsg("You are not logged in. Please run %s to log in.", style.Code("pinecone login"))
+				msg.InfoMsg("You are not logged in. Please run %s to log in.", style.Code("pc login"))
 				return
 			}
 

@@ -85,7 +85,7 @@ func NewTargetCmd() *cobra.Command {
 
 			access_token := secrets.OAuth2Token.Get()
 			if access_token.AccessToken == "" {
-				msg.FailMsg("You must be logged in to set a target context. Run %s to log in.", style.Code("pinecone login"))
+				msg.FailMsg("You must be logged in to set a target context. Run %s to log in.", style.Code("pc login"))
 				exit.ErrorMsg("You must be logged in to set a target context")
 				return
 			}
@@ -370,7 +370,7 @@ func uiProjectSelector(projectItems []string) string {
 	var targetProject string = ""
 	m2 := NewList(projectItems, len(projectItems)+6, "Choose a project to target", func() {
 		pcio.Println("Exiting without targeting a project.")
-		pcio.Printf("You can always run %s to set or change a project context later.\n", style.Code("pinecone target"))
+		pcio.Printf("You can always run %s to set or change a project context later.\n", style.Code("pc target"))
 		exit.Success()
 	}, func(choice string) string {
 		targetProject = choice
@@ -387,7 +387,7 @@ func uiOrgSelector(orgNames []string) string {
 	var orgName string
 	m := NewList(orgNames, len(orgNames)+6, "Choose an organization to target", func() {
 		pcio.Println("Exiting without targeting an organization.")
-		pcio.Printf("You can always run %s to set or change a project context later.\n", style.Code("pinecone target"))
+		pcio.Printf("You can always run %s to set or change a project context later.\n", style.Code("pc target"))
 		exit.Success()
 	}, func(choice string) string {
 		orgName = choice

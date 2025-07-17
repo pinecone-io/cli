@@ -28,14 +28,14 @@ func NewListKeysCmd() *cobra.Command {
 		Use:   "list-keys",
 		Short: "list the API keys in a project",
 		Example: help.Examples([]string{
-			"pinecone target -o \"my-org\" -p \"my-project\"",
-			"pinecone list-keys --reveal",
+			"pc target -o \"my-org\" -p \"my-project\"",
+			"pc list-keys --reveal",
 		}),
 		GroupID: help.GROUP_PROJECTS_API_KEYS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			projId, err := getTargetProjectId()
 			if err != nil {
-				msg.FailMsg("No target project set. Use %s to set the target project.", style.Code("pinecone target -o <org> -p <project>"))
+				msg.FailMsg("No target project set. Use %s to set the target project.", style.Code("pc target -o <org> -p <project>"))
 				exit.ErrorMsg("No project context set")
 			}
 
