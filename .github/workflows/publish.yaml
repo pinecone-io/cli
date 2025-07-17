@@ -9,8 +9,6 @@ jobs:
   publish:
     permissions:
       contents: write
-      packages: write
-      actions: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
