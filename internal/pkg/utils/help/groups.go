@@ -26,20 +26,4 @@ var (
 		ID:    "projects",
 		Title: style.Heading("Project Management"),
 	}
-	GROUP_ASSISTANT = &cobra.Group{
-		ID:    "assistant",
-		Title: style.Heading("Assistant Commands"),
-	}
-	GROUP_ASSISTANT_TARGETING = &cobra.Group{
-		ID:    "assistant_targeting",
-		Title: style.Heading("Target Assistant"),
-	}
-	GROUP_ASSISTANT_MANAGEMENT = &cobra.Group{
-		ID:    "assistant_management",
-		Title: style.Heading("Assistant Management"),
-	}
-	GROUP_ASSISTANT_OPERATIONS = &cobra.Group{
-		ID:    "assistant_operations",
-		Title: style.Heading("Assistant Operations"),
-	}
 )

@@ -1,7 +1,5 @@
 package models
 
-import "time"
-
 type ChatCompletionRequest struct {
 	Stream   bool                    `json:"stream"`
 	Messages []ChatCompletionMessage `json:"messages"`
@@ -22,14 +20,6 @@ type ChoiceModel struct {
 type ChatCompletionMessage struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
-}
-
-type AssistantChatHistory map[string]AssistantChat
-
-type AssistantChat struct {
-	Id        string                  `json:"id"`
-	Messages  []ChatCompletionMessage `json:"messages"`
-	CreatedOn time.Time               `json:"created_on"`
 }
 
 type ChatFinishReason string

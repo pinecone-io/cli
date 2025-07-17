@@ -42,14 +42,6 @@ func buildRequest(verb string, path string, body *bytes.Buffer) (*http.Request, 
 }
 
 func applyHeaders(req *http.Request, url string) {
-	// request-specific headers
-	if strings.Contains(url, "assistant") {
-		req.Header.Set("X-Project-Id", state.TargetProj.Get().Id)
-	}
-	if strings.Contains(url, "chat/completions") {
-		req.Header.Set("X-Disable-Bearer-Auth", "true")
-	}
-
 	// apply to all requests
 	req.Header.Add("User-Agent", "Pinecone CLI")
 	req.Header.Set("Content-Type", "application/json")
@@ -196,9 +188,9 @@ func RequestWithBodyAndDecode[B any, R any](baseUrl string, path string, method 
 func RequestWithoutBodyAndDecode[T any](baseUrl string, path string, method string) (*T, error) {
 	url := baseUrl + path
 
-	requestedService := "assistant engine"
+	requestedService := "pinecone-api"
 	if strings.Contains(url, "console") {
-		requestedService = "dashboard"
+		requestedService = "dashboard-api"
 	}
 
 	req, err := buildRequest(method, url, nil)
