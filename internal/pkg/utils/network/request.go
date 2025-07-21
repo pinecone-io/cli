@@ -37,11 +37,11 @@ func buildRequest(verb string, path string, body *bytes.Buffer) (*http.Request, 
 		}
 	}
 
-	applyHeaders(req, path)
+	applyHeaders(req)
 	return req, nil
 }
 
-func applyHeaders(req *http.Request, url string) {
+func applyHeaders(req *http.Request) {
 	// apply to all requests
 	req.Header.Add("User-Agent", "Pinecone CLI")
 	req.Header.Set("Content-Type", "application/json")
