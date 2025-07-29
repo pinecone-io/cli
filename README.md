@@ -34,6 +34,8 @@ We have pre-built binaries for many platforms available on the [Releases](https:
 
 To learn about the steps involved in building from source, see [CONTRIBUTING](./CONTRIBUTING.md)
 
+For contributors, we also provide a `pcdev` script that automatically detects your OS and runs the correct development binary. See the [CONTRIBUTING](./CONTRIBUTING.md) guide for details.
+
 ## Usage
 
 In order to use the Pinecone CLI you will need to authenticate with Pinecone services. This can be done either with an API key, or using the `pc login` flow to authenticate with a Pinecone account via your browser.
