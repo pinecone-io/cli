@@ -18,6 +18,8 @@ brew install --cask goreleaser
 goreleaser build --single-target --snapshot --clean
 ```
 
+## Manual testing
+
 For manual testing in development, you can run commands like this
 
 ```shell
@@ -26,38 +28,68 @@ For manual testing in development, you can run commands like this
 # etc
 ```
 
+**Note:** The actual folder names in `./dist/` may differ from what's shown above. Modern GoReleaser versions create folders like `pc_darwin_all` (universal binary) and `pc_darwin_arm64_v8.0` (architecture-specific). The `pcdev` script handles this automatically.
+
+### Using the `pcdev` script (Recommended)
+
+For easier development testing, you can use the `pcdev` script which automatically detects your OS and runs the correct binary:
+
+```shell
+# Make the script executable (first time only)
+chmod +x pcdev
+
+# Run any pc command
+./pcdev --help
+./pcdev login
+./pcdev index list
+./pcdev version
+```
+
+The script works on:
+
+- **macOS**: Uses the universal binary (`pc_darwin_all`) when available, falls back to architecture-specific binaries
+- **Linux**: Detects architecture and uses the appropriate binary
+- **Windows**: Works in Git Bash, MSYS2, Cygwin, and WSL. For PowerShell, use `pcdev.ps1`
+
+**Windows PowerShell users:**
+
+```powershell
+.\pcdev.ps1 --help
+.\pcdev.ps1 login
+```
+
 ## Usage
 
 ```shell
 # See help
-./dist/pc_darwin_arm64/pc --help
+./pcdev --help
 
 # Set authorization credentials - set an API key directly, or log in via the OAuth flow
-./dist/pc_darwin_arm64/pc config set-api-key
-./dist/pc_darwin_arm64/pc login
+./pcdev config set-api-key
+./pcdev login
 
 # Check currently configured API key
-./dist/pc_darwin_arm64/pc config get-api-key
+./pcdev config get-api-key
 
 # Do index operations
-./dist/pc_darwin_arm64/pc index --help
+./pcdev index --help
 
 # Create serverless indexes.
-./dist/pc_darwin_arm64/pc index create-serverless --help
-./dist/pc_darwin_arm64/pc index create-serverless --name example-index --dimension 1536 --metric cosine --cloud aws --region us-west-2
-./dist/pc_darwin_arm64/pc index create-serverless --name="example-index" --dimension=1536 --metric="cosine" --cloud="aws" --region="us-west-2"
-./dist/pc_darwin_arm64/pc index create-serverless -n example-index -d 1536 -m cosine -c aws -r us-west-2
+./pcdev index create-serverless --help
+./pcdev index create-serverless --name example-index --dimension 1536 --metric cosine --cloud aws --region us-west-2
+./pcdev index create-serverless --name="example-index" --dimension=1536 --metric="cosine" --cloud="aws" --region="us-west-2"
+./pcdev index create-serverless -n example-index -d 1536 -m cosine -c aws -r us-west-2
 
 # Describe index
-./dist/pc_darwin_arm64/pc index describe --name "example-index"
-./dist/pc_darwin_arm64/pc index describe --name "example-index" --json
+./pcdev index describe --name "example-index"
+./pcdev index describe --name "example-index" --json
 
 # List indexes
-./dist/pc_darwin_arm64/pc index list
-./dist/pc_darwin_arm64/pc index list --json
+./pcdev index list
+./pcdev index list --json
 
 # Delete index
-./dist/pc_darwin_arm64/pc index delete --name "example-index"
+./pcdev index delete --name "example-index"
 ```
 
 ## Troubleshooting

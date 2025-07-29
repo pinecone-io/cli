@@ -1,0 +1,126 @@
+#!/bin/bash
+
+# pcdev - Development script to run the Pinecone CLI from dist folder
+# Automatically detects OS and architecture to run the correct binary
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+print_status() {
+    echo -e "${GREEN}[pcdev]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[pcdev]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[pcdev]${NC} $1"
+}
+
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DIST_DIR="$SCRIPT_DIR/dist"
+
+# Check if dist directory exists
+if [ ! -d "$DIST_DIR" ]; then
+    print_error "dist directory not found. Please run 'goreleaser build --single-target --snapshot --clean' first."
+    exit 1
+fi
+
+# Detect OS and architecture
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+ARCH=$(uname -m)
+
+print_status "Detected OS: $OS, Architecture: $ARCH"
+
+# Determine the correct binary path
+BINARY_PATH=""
+
+case "$OS" in
+    "darwin")
+        # On macOS, prefer the universal binary if available
+        if [ -f "$DIST_DIR/pc_darwin_all/pc" ]; then
+            BINARY_PATH="$DIST_DIR/pc_darwin_all/pc"
+            print_status "Using universal binary (works on both Intel and Apple Silicon)"
+        elif [ -f "$DIST_DIR/pc_darwin_arm64_v8.0/pc" ]; then
+            BINARY_PATH="$DIST_DIR/pc_darwin_arm64_v8.0/pc"
+            print_status "Using ARM64 binary"
+        elif [ -f "$DIST_DIR/pc_darwin_amd64/pc" ]; then
+            BINARY_PATH="$DIST_DIR/pc_darwin_amd64/pc"
+            print_status "Using AMD64 binary"
+        else
+            print_error "No suitable macOS binary found in dist directory"
+            print_status "Available binaries:"
+            ls -la "$DIST_DIR"/*/pc 2>/dev/null || echo "No binaries found"
+            exit 1
+        fi
+        ;;
+    "linux")
+        case "$ARCH" in
+            "x86_64"|"amd64")
+                if [ -f "$DIST_DIR/pc_linux_amd64/pc" ]; then
+                    BINARY_PATH="$DIST_DIR/pc_linux_amd64/pc"
+                elif [ -f "$DIST_DIR/pc_linux_x86_64/pc" ]; then
+                    BINARY_PATH="$DIST_DIR/pc_linux_x86_64/pc"
+                fi
+                ;;
+            "aarch64"|"arm64")
+                if [ -f "$DIST_DIR/pc_linux_arm64/pc" ]; then
+                    BINARY_PATH="$DIST_DIR/pc_linux_arm64/pc"
+                fi
+                ;;
+            "armv7l"|"arm")
+                if [ -f "$DIST_DIR/pc_linux_arm/pc" ]; then
+                    BINARY_PATH="$DIST_DIR/pc_linux_arm/pc"
+                fi
+                ;;
+        esac
+        
+        if [ -z "$BINARY_PATH" ]; then
+            print_error "No suitable Linux binary found for architecture $ARCH"
+            print_status "Available binaries:"
+            ls -la "$DIST_DIR"/*/pc 2>/dev/null || echo "No binaries found"
+            exit 1
+        fi
+        ;;
+    "mingw64_nt"*|"msys_nt"*|"cygwin"*)
+        # Windows (Git Bash, MSYS2, Cygwin)
+        if [ -f "$DIST_DIR/pc_windows_amd64/pc.exe" ]; then
+            BINARY_PATH="$DIST_DIR/pc_windows_amd64/pc.exe"
+        elif [ -f "$DIST_DIR/pc_windows_x86_64/pc.exe" ]; then
+            BINARY_PATH="$DIST_DIR/pc_windows_x86_64/pc.exe"
+        else
+            print_error "No suitable Windows binary found"
+            print_status "Available binaries:"
+            ls -la "$DIST_DIR"/*/pc.exe 2>/dev/null || echo "No binaries found"
+            exit 1
+        fi
+        ;;
+    *)
+        print_error "Unsupported operating system: $OS"
+        exit 1
+        ;;
+esac
+
+# Check if binary exists and is executable
+if [ ! -f "$BINARY_PATH" ]; then
+    print_error "Binary not found: $BINARY_PATH"
+    exit 1
+fi
+
+if [ ! -x "$BINARY_PATH" ]; then
+    print_warning "Binary is not executable, making it executable..."
+    chmod +x "$BINARY_PATH"
+fi
+
+print_status "Running: $BINARY_PATH $*"
+
+# Execute the binary with all passed arguments
+exec "$BINARY_PATH" "$@" 
