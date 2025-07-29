@@ -9,7 +9,7 @@
 2. Install goreleaser
 
 ```
-brew install goreleaser/tap/goreleaser
+brew install --cask goreleaser
 ```
 
 3. Build the CLI
