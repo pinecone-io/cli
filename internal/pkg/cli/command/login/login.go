@@ -42,6 +42,7 @@ func NewLoginCmd() *cobra.Command {
 			err := GetAndSetAccessToken(nil)
 			if err != nil {
 				exit.Error(pcio.Errorf("error acquiring access token while logging in: %w", err))
+				return
 			}
 
 			// Parse token claims to get orgId

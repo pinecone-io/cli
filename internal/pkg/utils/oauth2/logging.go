@@ -45,7 +45,6 @@ func LogTokenClaims(token *oauth2.Token, msg string) {
 }
 
 func ParseClaimsUnverified(token *oauth2.Token) (*MyCustomClaims, error) {
-
 	var p = &jwt.Parser{}
 	var claims MyCustomClaims
 	if token.AccessToken == "" {
