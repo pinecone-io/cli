@@ -2,8 +2,6 @@ package index
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
@@ -140,7 +138,6 @@ func runCreateIndexCmd(options createIndexOptions) {
 	switch idxType {
 	case indexTypeServerless:
 		// create serverless index
-		fmt.Printf("dimension %d\n", options.dimension)
 		args := pinecone.CreateServerlessIndexRequest{
 			Name:               options.name,
 			Cloud:              pinecone.Cloud(options.cloud),
@@ -260,7 +257,7 @@ func (c *createIndexOptions) deriveIndexType() (indexType, error) {
 	if c.environment != "" {
 		return indexTypePod, nil
 	}
-	return "", errors.New("invalid index type. Please provide either environment, or cloud and region")
+	return "", pcio.Error("invalid index type. Please provide either environment, or cloud and region")
 }
 
 func pointerOrNil[T comparable](value T) *T {
