@@ -229,7 +229,7 @@ func renderSuccessOutput(idx *pinecone.Index, options createIndexOptions) {
 	presenters.PrintDescribeIndexTable(idx)
 }
 
-// use the derived index type to validate specific input params by index type
+// validate specific input params
 func (c *createIndexOptions) validate() error {
 	// name required for all index types
 	if c.name == "" {
@@ -245,32 +245,7 @@ func (c *createIndexOptions) validate() error {
 		return err
 	}
 
-	idxType, err := c.deriveIndexType()
-	if err != nil {
-		return err
-	}
-
-	switch idxType {
-	case indexTypeServerless:
-		// validate serverless
-
-		return nil
-	case indexTypePod:
-		// validate pod
-
-		// if user passed environment, and embed - ERROR
-		// if vectorType is "sparse" for pods - ERROR
-
-		return nil
-	case indexTypeIntegrated:
-		// validate integrated
-
-		return nil
-	default:
-		err := pcio.Errorf("invalid index type")
-		log.Error().Err(err).Msg("Error validating index configuration")
-		return err
-	}
+	return nil
 }
 
 // determine the type of index being created based on high level input params
@@ -285,7 +260,7 @@ func (c *createIndexOptions) deriveIndexType() (indexType, error) {
 	if c.environment != "" {
 		return indexTypePod, nil
 	}
-	return "", errors.New("invalid index. Please provide either environment, or cloud and region")
+	return "", errors.New("invalid index type. Please provide either environment, or cloud and region")
 }
 
 func pointerOrNil[T comparable](value T) *T {
