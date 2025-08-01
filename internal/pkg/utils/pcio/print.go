@@ -29,28 +29,28 @@ func Print(a any) {
 	}
 }
 
-func Printf(format string, a ...interface{}) {
+func Printf(format string, a ...any) {
 	if !quiet {
 		fmt.Printf(format, a...)
 		return
 	}
 }
 
-func Fprintf(w io.Writer, format string, a ...interface{}) {
+func Fprintf(w io.Writer, format string, a ...any) {
 	if !quiet {
 		fmt.Fprintf(w, format, a...)
 		return
 	}
 }
 
-func Fprintln(w io.Writer, a ...interface{}) {
+func Fprintln(w io.Writer, a ...any) {
 	if !quiet {
 		fmt.Fprintln(w, a...)
 		return
 	}
 }
 
-func Fprint(w io.Writer, a ...interface{}) {
+func Fprint(w io.Writer, a ...any) {
 	if !quiet {
 		fmt.Fprint(w, a...)
 		return
@@ -58,16 +58,16 @@ func Fprint(w io.Writer, a ...interface{}) {
 }
 
 // alias Sprintf to fmt.Sprintf
-func Sprintf(format string, a ...interface{}) string {
+func Sprintf(format string, a ...any) string {
 	return fmt.Sprintf(format, a...)
 }
 
 // alias Errorf to fmt.Errorf
-func Errorf(format string, a ...interface{}) error {
+func Errorf(format string, a ...any) error {
 	return fmt.Errorf(format, a...)
 }
 
 // alias Error to fmt.Errorf
-func Error(a ...interface{}) error {
+func Error(a ...any) error {
 	return fmt.Errorf(fmt.Sprint(a...))
 }

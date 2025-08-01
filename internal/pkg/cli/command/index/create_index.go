@@ -268,12 +268,12 @@ func pointerOrNil[T comparable](value T) *T {
 	return &value
 }
 
-func toInterfaceMap(in map[string]string) map[string]interface{} {
+func toInterfaceMap(in map[string]string) map[string]any {
 	if in == nil {
 		return nil
 	}
 
-	interfaceMap := make(map[string]interface{}, len(in))
+	interfaceMap := make(map[string]any, len(in))
 	for k, v := range in {
 		interfaceMap[k] = v
 	}

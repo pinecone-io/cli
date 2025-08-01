@@ -13,7 +13,7 @@ func ColorizeBool(b bool) string {
 	return style.StatusRed("false")
 }
 
-func DisplayOrNone(val interface{}) interface{} {
+func DisplayOrNone(val any) any {
 	if val == nil {
 		return "<none>"
 	}
