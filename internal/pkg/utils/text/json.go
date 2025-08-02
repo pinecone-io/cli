@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 )
 
-func InlineJSON(data interface{}) string {
+func InlineJSON(data any) string {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return ""
@@ -12,7 +12,7 @@ func InlineJSON(data interface{}) string {
 	return string(jsonData)
 }
 
-func IndentJSON(data interface{}) string {
+func IndentJSON(data any) string {
 	jsonData, err := json.MarshalIndent(data, "", "    ")
 	if err != nil {
 		return ""

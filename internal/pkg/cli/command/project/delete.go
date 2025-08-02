@@ -83,7 +83,7 @@ func NewDeleteProjectCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 	cmd.Flags().BoolVar(&options.yes, "yes", false, "skip confirmation prompt")
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the project")
-	cmd.MarkFlagRequired("name")
+	_ = cmd.MarkFlagRequired("name")
 	return cmd
 }
 

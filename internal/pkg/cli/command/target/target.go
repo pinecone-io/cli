@@ -115,7 +115,6 @@ func NewTargetCmd() *cobra.Command {
 
 				// If the org chosen differs from the current orgId in the token, we need to login again
 				if currentTokenOrgId != targetOrg.Id {
-					pcio.Printf("GETTING AND SETTING NEW ACCESS TOKEN for target org %s\n", targetOrg.Name)
 					err = login.GetAndSetAccessToken(&targetOrg.Id)
 					if err != nil {
 						msg.FailMsg("Failed to get access token: %s", err)

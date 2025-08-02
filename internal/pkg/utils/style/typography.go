@@ -43,7 +43,7 @@ func InfoMsg(s string) string {
 	return applyStyle("[INFO] ", color.FgHiWhite) + s
 }
 
-func FailMsg(s string, a ...interface{}) string {
+func FailMsg(s string, a ...any) string {
 	return applyStyle("[ERROR] ", color.FgRed) + fmt.Sprintf(s, a...)
 }
 

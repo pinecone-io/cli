@@ -39,17 +39,15 @@ func PrintDescribeIndexTable(idx *pinecone.Index) {
 	pcio.Fprint(writer, header)
 
 	pcio.Fprintf(writer, "Name\t%s\n", idx.Name)
-	if idx.Dimension != nil {
-		pcio.Fprintf(writer, "Dimension\t%d\n", *idx.Dimension)
-	} else {
-		pcio.Fprintf(writer, "Dimension\tnil\n")
-	}
+	pcio.Fprintf(writer, "Dimension\t%v\n", DisplayOrNone(idx.Dimension))
 	pcio.Fprintf(writer, "Metric\t%s\n", string(idx.Metric))
 	pcio.Fprintf(writer, "Deletion Protection\t%s\n", ColorizeDeletionProtection(idx.DeletionProtection))
+	pcio.Fprintf(writer, "Vector Type\t%s\n", DisplayOrNone(idx.VectorType))
 	pcio.Fprintf(writer, "\t\n")
 	pcio.Fprintf(writer, "State\t%s\n", ColorizeState(idx.Status.State))
 	pcio.Fprintf(writer, "Ready\t%s\n", ColorizeBool(idx.Status.Ready))
 	pcio.Fprintf(writer, "Host\t%s\n", style.Emphasis(idx.Host))
+	pcio.Fprintf(writer, "Private Host\t%s\n", DisplayOrNone(idx.PrivateHost))
 	pcio.Fprintf(writer, "\t\n")
 
 	var specType string
@@ -62,11 +60,25 @@ func PrintDescribeIndexTable(idx *pinecone.Index) {
 		pcio.Fprintf(writer, "ShardCount\t%d\n", idx.Spec.Pod.ShardCount)
 		pcio.Fprintf(writer, "PodCount\t%d\n", idx.Spec.Pod.PodCount)
 		pcio.Fprintf(writer, "MetadataConfig\t%s\n", text.InlineJSON(idx.Spec.Pod.MetadataConfig))
+		pcio.Fprintf(writer, "Source Collection\t%s\n", DisplayOrNone(idx.Spec.Pod.SourceCollection))
 	} else {
 		specType = "serverless"
 		pcio.Fprintf(writer, "Spec\t%s\n", specType)
 		pcio.Fprintf(writer, "Cloud\t%s\n", idx.Spec.Serverless.Cloud)
 		pcio.Fprintf(writer, "Region\t%s\n", idx.Spec.Serverless.Region)
+		pcio.Fprintf(writer, "Source Collection\t%s\n", DisplayOrNone(idx.Spec.Serverless.SourceCollection))
+	}
+	pcio.Fprintf(writer, "\t\n")
+
+	if idx.Embed != nil {
+		pcio.Fprintf(writer, "Model\t%s\n", idx.Embed.Model)
+		pcio.Fprintf(writer, "Field Map\t%s\n", text.InlineJSON(idx.Embed.FieldMap))
+		pcio.Fprintf(writer, "Read Parameters\t%s\n", text.InlineJSON(idx.Embed.ReadParameters))
+		pcio.Fprintf(writer, "Write Parameters\t%s\n", text.InlineJSON(idx.Embed.WriteParameters))
+	}
+
+	if idx.Tags != nil {
+		pcio.Fprintf(writer, "Tags\t%s\n", text.InlineJSON(idx.Tags))
 	}
 
 	writer.Flush()
