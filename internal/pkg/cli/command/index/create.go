@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/pinecone-io/cli/internal/pkg/utils/docslinks"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -75,8 +76,8 @@ func NewCreateIndexCmd() *cobra.Command {
 			- Pod
 
 		For detailed documentation, see:
-			https://docs.pinecone.io/guides/index-data/create-an-index
-		`, style.Code("pc index create")),
+		%s
+		`, style.Code("pc index create"), style.URL(docslinks.DocsIndexCreate)),
 		Example: heredoc.Doc(`
 		# create a serverless index
 		$ pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1
