@@ -82,10 +82,10 @@ func NewCreateIndexCmd() *cobra.Command {
 		$ pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1
 
 		# create a pod index
-		$ pc index create --name my-index --dimension 1536 --metric cosine --environment prod --pod-type s1 --shards 2 --replicas 2
+		$ pc index create --name my-index --dimension 1536 --metric cosine --environment us-east-1-aws --pod-type p1.x1 --shards 2 --replicas 2
 
 		# create an integrated index
-		$ pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1 --model multilingual-e5-large
+		$ pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1 --model multilingual-e5-large --field_map text=chunk_text
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runCreateIndexCmd(options)
