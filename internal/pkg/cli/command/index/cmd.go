@@ -1,6 +1,7 @@
 package index
 
 import (
+	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -13,9 +14,15 @@ its contents.`, 80)
 
 func NewIndexCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "index <command>",
-		Short:   "Work with indexes",
-		Long:    helpText,
+		Use:   "index",
+		Short: "Work with indexes",
+		Long:  helpText,
+		Example: heredoc.Doc(`
+			$ pc index list
+			$ pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1
+			$ pc index describe --name my-index
+			$ pc index delete --name my-index
+		`),
 		GroupID: help.GROUP_VECTORDB.ID,
 	}
 

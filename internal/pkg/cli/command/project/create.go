@@ -50,7 +50,7 @@ func NewCreateProjectCmd() *cobra.Command {
 
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the project")
-	cmd.MarkFlagRequired("name")
+	_ = cmd.MarkFlagRequired("name")
 	cmd.Flags().Int32VarP(&options.pod_quota, "pod_quota", "p", 5, "maximum number of pods allowed in the project across all indexes")
 	return cmd
 }

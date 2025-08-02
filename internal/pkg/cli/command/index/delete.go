@@ -41,7 +41,7 @@ func NewDeleteCmd() *cobra.Command {
 
 	// required flags
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of index to delete")
-	cmd.MarkFlagRequired("name")
+	_ = cmd.MarkFlagRequired("name")
 
 	return cmd
 }

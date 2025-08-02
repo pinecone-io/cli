@@ -2,6 +2,7 @@ package index
 
 import (
 	"context"
+	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -38,13 +39,13 @@ func NewCreateServerlessCmd() *cobra.Command {
 
 	// Required flags
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the index")
-	cmd.MarkFlagRequired("name")
+	_ = cmd.MarkFlagRequired("name")
 	cmd.Flags().StringVarP(&options.cloud, "cloud", "c", "", "cloud provider where you would like to deploy")
-	cmd.MarkFlagRequired("cloud")
+	_ = cmd.MarkFlagRequired("cloud")
 	cmd.Flags().StringVarP(&options.region, "region", "r", "", "cloud region where you would like to deploy")
-	cmd.MarkFlagRequired("region")
+	_ = cmd.MarkFlagRequired("region")
 	cmd.Flags().Int32VarP(&options.dimension, "dimension", "d", 0, "dimension of the index to create")
-	cmd.MarkFlagRequired("dimension")
+	_ = cmd.MarkFlagRequired("dimension")
 
 	// Optional flags
 	cmd.Flags().StringVarP(&options.metric, "metric", "m", "cosine", "metric to use. One of: cosine, euclidean, dotproduct")
@@ -57,6 +58,9 @@ func NewCreateServerlessCmd() *cobra.Command {
 func runCreateServerlessCmd(options createServerlessOptions) {
 	ctx := context.Background()
 	pc := sdk.NewPineconeClient()
+
+	// Deprecation warning
+	pcio.Fprintf(os.Stderr, "⚠️  Warning: The '%s' command is deprecated. Please use '%s' instead.", style.Code("index create-serverless"), style.Code("index create"))
 
 	// Create variables for optional fields that need pointers
 	var indexMetric *pinecone.IndexMetric

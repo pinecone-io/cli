@@ -12,15 +12,15 @@ func TestDisplayOrNone(t *testing.T) {
 	var nilStr *string
 	var nilInt *int
 	var nilBool *bool
-	var nilInterface interface{}
-	var nonNilInterface interface{} = "wrapped"
+	var nilInterface any
+	var nonNilInterface any = "wrapped"
 
 	emptyReplacement := "<none>"
 
 	tests := []struct {
 		name     string
-		input    interface{}
-		expected interface{}
+		input    any
+		expected any
 	}{
 		{
 			name:     "string",

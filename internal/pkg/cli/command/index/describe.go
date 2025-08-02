@@ -50,7 +50,7 @@ func NewDescribeCmd() *cobra.Command {
 
 	// required flags
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of index to describe")
-	cmd.MarkFlagRequired("name")
+	_ = cmd.MarkFlagRequired("name")
 
 	// optional flags
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")

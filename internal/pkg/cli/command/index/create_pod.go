@@ -2,6 +2,7 @@ package index
 
 import (
 	"context"
+	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -43,13 +44,13 @@ func NewCreatePodCmd() *cobra.Command {
 
 	// Required flags
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of index to create")
-	cmd.MarkFlagRequired("name")
+	_ = cmd.MarkFlagRequired("name")
 	cmd.Flags().Int32VarP(&options.dimension, "dimension", "d", 0, "dimension of the index to create")
-	cmd.MarkFlagRequired("dimension")
+	_ = cmd.MarkFlagRequired("dimension")
 	cmd.Flags().StringVarP(&options.environment, "environment", "e", "", "environment of the index to create")
-	cmd.MarkFlagRequired("environment")
+	_ = cmd.MarkFlagRequired("environment")
 	cmd.Flags().StringVarP(&options.podType, "pod_type", "t", "", "type of pod to use")
-	cmd.MarkFlagRequired("pod_type")
+	_ = cmd.MarkFlagRequired("pod_type")
 
 	// Optional flags
 	cmd.Flags().StringVarP(&options.metric, "metric", "m", "cosine", "metric to use. One of: cosine, euclidean, dotproduct")
@@ -58,7 +59,7 @@ func NewCreatePodCmd() *cobra.Command {
 	cmd.Flags().Int32VarP(&options.replicas, "replicas", "r", 1, "replicas of the index to create")
 	cmd.Flags().StringVarP(&options.sourceCollection, "source_collection", "c", "", "When creating a pod index using data from a collection, the name of the source collection")
 	cmd.Flags().StringVarP(&options.deletionProtection, "deletion_protection", "p", "", "Whether to enable deletion protection for the index")
-	cmd.MarkFlagRequired("sourceCollection")
+	_ = cmd.MarkFlagRequired("sourceCollection")
 
 	return cmd
 }
@@ -66,6 +67,9 @@ func NewCreatePodCmd() *cobra.Command {
 func runCreatePodCmd(options createPodOptions) {
 	ctx := context.Background()
 	pc := sdk.NewPineconeClient()
+
+	// Deprecation warning
+	pcio.Fprintf(os.Stderr, "⚠️  Warning: The '%s' command is deprecated. Please use '%s' instead.", style.Code("index create-pod"), style.Code("index create"))
 
 	metric := pinecone.IndexMetric(options.metric)
 	deletionProtection := pinecone.DeletionProtection(options.deletionProtection)

@@ -3,6 +3,7 @@ package index
 import (
 	"context"
 
+	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -63,48 +64,68 @@ func NewCreateIndexCmd() *cobra.Command {
 	options := createIndexOptions{}
 
 	cmd := &cobra.Command{
-		Use:     "create",
-		Short:   "Create a new index with the specified configuration",
-		Example: "",
+		Use:   "create",
+		Short: "Create a new index with the specified configuration",
+		Long: heredoc.Docf(`
+		The %s command creates a new index with the specified configuration. There are several different types of indexes
+		you can create depending on the configuration provided:
+
+			- Serverless (dense or sparse)
+			- Integrated 
+			- Pod
+
+		For detailed documentation, see:
+			https://docs.pinecone.io/guides/index-data/create-an-index
+		`, style.Code("pc index create")),
+		Example: heredoc.Doc(`
+		# create a serverless index
+		$ pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1
+
+		# create a pod index
+		$ pc index create --name my-index --dimension 1536 --metric cosine --environment prod --pod-type s1 --shards 2 --replicas 2
+
+		# create an integrated index
+		$ pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1 --model multilingual-e5-large
+		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runCreateIndexCmd(options)
 		},
 	}
 
 	// Required flags
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of index to create")
-	cmd.MarkFlagRequired("name")
+	cmd.Flags().StringVarP(&options.name, "name", "n", "", "Name of index to create")
+	_ = cmd.MarkFlagRequired("name")
 
 	// Serverless & Pods
-	cmd.Flags().StringVar(&options.sourceCollection, "source_collection", "", "when creating an index from a collection")
+	cmd.Flags().StringVar(&options.sourceCollection, "source_collection", "", "When creating an index from a collection")
 
 	// Serverless & Integrated
-	cmd.Flags().StringVarP(&options.cloud, "cloud", "c", "", "cloud provider where you would like to deploy your index")
-	cmd.Flags().StringVarP(&options.region, "region", "r", "", "cloud region where you would like to deploy your index")
+	cmd.Flags().StringVarP(&options.cloud, "cloud", "c", "", "Cloud provider where you would like to deploy your index")
+	cmd.Flags().StringVarP(&options.region, "region", "r", "", "Cloud region where you would like to deploy your index")
 
 	// Serverless flags
-	cmd.Flags().StringVarP(&options.vectorType, "vector_type", "v", "", "vector type to use. One of: dense, sparse")
+	cmd.Flags().StringVarP(&options.vectorType, "vector_type", "v", "", "Vector type to use. One of: dense, sparse")
 
 	// Pod flags
-	cmd.Flags().StringVar(&options.environment, "environment", "", "environment of the index to create")
-	cmd.Flags().StringVar(&options.podType, "pod_type", "", "type of pod to use")
-	cmd.Flags().Int32Var(&options.shards, "shards", 1, "shards of the index to create")
-	cmd.Flags().Int32Var(&options.replicas, "replicas", 1, "replicas of the index to create")
-	cmd.Flags().StringSliceVar(&options.metadataConfig, "metadata_config", []string{}, "metadata configuration to limit the fields that are indexed for search")
+	cmd.Flags().StringVar(&options.environment, "environment", "", "Environment of the index to create")
+	cmd.Flags().StringVar(&options.podType, "pod_type", "", "Type of pod to use")
+	cmd.Flags().Int32Var(&options.shards, "shards", 1, "Shards of the index to create")
+	cmd.Flags().Int32Var(&options.replicas, "replicas", 1, "Replicas of the index to create")
+	cmd.Flags().StringSliceVar(&options.metadataConfig, "metadata_config", []string{}, "Metadata configuration to limit the fields that are indexed for search")
 
 	// Integrated flags
-	cmd.Flags().StringVar(&options.model, "model", "", "the name of the embedding model to use for the index")
-	cmd.Flags().StringToStringVar(&options.fieldMap, "field_map", map[string]string{}, "identifies the name of the text field from your document model that will be embedded")
-	cmd.Flags().StringToStringVar(&options.readParameters, "read_parameters", map[string]string{}, "the read parameters for the embedding model")
-	cmd.Flags().StringToStringVar(&options.writeParameters, "write_parameters", map[string]string{}, "the write parameters for the embedding model")
+	cmd.Flags().StringVar(&options.model, "model", "", "The name of the embedding model to use for the index")
+	cmd.Flags().StringToStringVar(&options.fieldMap, "field_map", map[string]string{}, "Identifies the name of the text field from your document model that will be embedded")
+	cmd.Flags().StringToStringVar(&options.readParameters, "read_parameters", map[string]string{}, "The read parameters for the embedding model")
+	cmd.Flags().StringToStringVar(&options.writeParameters, "write_parameters", map[string]string{}, "The write parameters for the embedding model")
 
 	// Optional flags
-	cmd.Flags().Int32VarP(&options.dimension, "dimension", "d", 0, "dimension of the index to create")
-	cmd.Flags().StringVarP(&options.metric, "metric", "m", "cosine", "metric to use. One of: cosine, euclidean, dotproduct")
-	cmd.Flags().StringVar(&options.deletionProtection, "deletion_protection", "", "whether to enable deletion protection for the index. One of: enabled, disabled")
-	cmd.Flags().StringToStringVar(&options.tags, "tags", map[string]string{}, "custom user tags to add to an index")
+	cmd.Flags().Int32VarP(&options.dimension, "dimension", "d", 0, "Dimension of the index to create")
+	cmd.Flags().StringVarP(&options.metric, "metric", "m", "cosine", "Metric to use. One of: cosine, euclidean, dotproduct")
+	cmd.Flags().StringVar(&options.deletionProtection, "deletion_protection", "", "Whether to enable deletion protection for the index. One of: enabled, disabled")
+	cmd.Flags().StringToStringVar(&options.tags, "tags", map[string]string{}, "Custom user tags to add to an index")
 
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 
 	return cmd
 }
