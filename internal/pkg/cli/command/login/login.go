@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
 	"github.com/pinecone-io/cli/internal/pkg/utils/browser"
@@ -41,18 +42,17 @@ func NewLoginCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			err := GetAndSetAccessToken(nil)
 			if err != nil {
+				log.Error().Err(err).Msg("Error fetching authentication token")
 				exit.Error(pcio.Errorf("error acquiring access token while logging in: %w", err))
-				return
 			}
 
 			// Parse token claims to get orgId
 			accessToken := secrets.OAuth2Token.Get()
 			claims, err := pc_oauth2.ParseClaimsUnverified(&accessToken)
 			if err != nil {
-				log.Error().Msg("Error parsing claims")
+				log.Error().Err(err).Msg("Error parsing authentication token claims")
 				msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
 				exit.Error(pcio.Errorf("error parsing claims from access token: %w", err))
-				return
 			}
 			msg.SuccessMsg("Logged in as " + style.Emphasis(claims.Email) + ". Defaulted to organization ID: " + style.Emphasis(claims.OrgId))
 
@@ -61,7 +61,6 @@ func NewLoginCmd() *cobra.Command {
 			if err != nil {
 				log.Error().Msg("Error fetching organizations")
 				exit.Error(pcio.Errorf("error fetching organizations: %w", err))
-				return
 			}
 
 			// target organization is whatever the JWT token's orgId is - defaults on first login currently
@@ -110,8 +109,6 @@ func NewLoginCmd() *cobra.Command {
 // If a token is successfully acquired it's set in the secrets store, and the user is considered logged in
 func GetAndSetAccessToken(orgId *string) error {
 	ctx := context.Background()
-
-	// da := pc_oauth2.DeviceAuth{}
 	a := pc_oauth2.Auth{}
 
 	// CSRF state
@@ -130,44 +127,69 @@ func GetAndSetAccessToken(orgId *string) error {
 		return err
 	}
 
+	// Spin up a local server in a goroutine to handle receiving the authorization code from auth0
+	codeCh := make(chan string, 1)
+	serverCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+
+	go func() {
+		code, err := ServeAuthCodeListener(serverCtx, csrfState)
+		if err != nil {
+			log.Error().Err(err).Msg("Error waiting for authorization")
+			codeCh <- ""
+			return
+		}
+		codeCh <- code
+	}()
+
 	pcio.Printf("Visit %s to authorize the CLI.\n", style.Underline(authURL))
 	pcio.Println()
+	pcio.Printf("Press %s to open the browser, or manually paste the URL above.\n", style.Code("[Enter]"))
 
-	pcio.Printf("Press %s to open the browser.\n", style.Code("[Enter]"))
-	_, err = bufio.NewReader(os.Stdin).ReadBytes('\n')
-	if err != nil {
-		exit.Error(pcio.Errorf("error reading input: %w", err))
-		return err
-	}
+	// spawn a goroutine to optionally wait for [Enter] as input
+	go func(ctx context.Context) {
+		// inner channel to signal that [Enter] was pressed
+		inputCh := make(chan struct{}, 1)
 
-	err = browser.OpenBrowser(authURL)
-	if err != nil {
-		exit.Error(pcio.Errorf("error opening browser: %w", err))
-		return err
-	}
-	pcio.Println("After you approve in the browser, it may take a few seconds for the next step to complete.")
+		// spawn inner goroutine to read stdin (blocking)
+		go func() {
+			_, err := bufio.NewReader(os.Stdin).ReadBytes('\n')
+			if err != nil {
+				log.Error().Err(err).Msg("stdin error: unable to open browser")
+				return
+			}
+			close(inputCh)
+		}()
 
-	// Spin up a local server to handle receiving the authorization code from auth0
-	code, err := ServeAuthCodeListener(ctx, csrfState)
-	if err != nil {
-		exit.Error(pcio.Errorf("error waiting for authorization: %w", err))
-		return err
-	}
-
-	// Exchange auth code for access token
-	if code != "" {
-		token, err := a.ExchangeAuthCode(ctx, verifier, code)
-		if err != nil {
-			exit.Error(pcio.Errorf("error exchanging auth code for access token: %w", err))
-			return err
+		// wait for [Enter], auth code, or timeout
+		select {
+		case <-ctx.Done():
+			return
+		case <-inputCh:
+			err = browser.OpenBrowser(authURL)
+			if err != nil {
+				log.Error().Err(err).Msg("error opening browser")
+				return
+			}
+		case <-time.After(5 * time.Minute):
+			// extra precaution to prevent hanging indefinitel on stdin
+			return
 		}
-		secrets.OAuth2Token.Set(token)
-		return nil
+	}(serverCtx)
+
+	// Wait for auth code and exchange for access token
+	code := <-codeCh
+	if code == "" {
+		return pcio.Error("error authenticating CLI and retrieving oauth2 access token")
 	}
 
-	// if we're here, it means we were not able to authenticate with the auth0 server
-	exit.Error(pcio.Errorf("error authenticating CLI and retrieving oauth2 access token"))
-	return pcio.Errorf("error authenticating CLI and retrieving oauth2 access token")
+	token, err := a.ExchangeAuthCode(ctx, verifier, code)
+	if err != nil {
+		exit.Error(pcio.Errorf("error exchanging auth code for access token: %w", err))
+	}
+
+	secrets.OAuth2Token.Set(token)
+	return nil
 }
 
 func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error) {
