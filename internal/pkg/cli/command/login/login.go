@@ -147,19 +147,36 @@ func GetAndSetAccessToken(orgId *string) error {
 	pcio.Printf("Press %s to open the browser, or manually paste the URL above.\n", style.Code("[Enter]"))
 
 	// spawn a goroutine to optionally wait for [Enter] as input
-	go func() {
-		_, err := bufio.NewReader(os.Stdin).ReadBytes('\n')
-		if err != nil {
-			log.Error().Err(err).Msg("stdin error: unable to open browser")
-			return
-		}
+	go func(ctx context.Context) {
+		// inner channel to signal that [Enter] was pressed
+		inputCh := make(chan struct{}, 1)
 
-		err = browser.OpenBrowser(authURL)
-		if err != nil {
-			log.Error().Err(err).Msg("error opening browser")
+		// spawn inner goroutine to read stdin (blocking)
+		go func() {
+			_, err := bufio.NewReader(os.Stdin).ReadBytes('\n')
+			if err != nil {
+				log.Error().Err(err).Msg("stdin error: unable to open browser")
+				return
+			}
+			select {
+			case inputCh <- struct{}{}:
+			case <-ctx.Done():
+				return
+			}
+		}()
+
+		// wait for [Enter] or auth code
+		select {
+		case <-ctx.Done():
 			return
+		case <-inputCh:
+			err = browser.OpenBrowser(authURL)
+			if err != nil {
+				log.Error().Err(err).Msg("error opening browser")
+				return
+			}
 		}
-	}()
+	}(serverCtx)
 
 	// Wait for auth code and exchange for access token
 	code := <-codeCh
