@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
 	"github.com/pinecone-io/cli/internal/pkg/utils/browser"
@@ -126,9 +127,9 @@ func GetAndSetAccessToken(orgId *string) error {
 		return err
 	}
 
-	// Spin up a local server to handle receiving the authorization code from auth0
+	// Spin up a local server in a goroutine to handle receiving the authorization code from auth0
 	codeCh := make(chan string)
-	serverCtx, cancel := context.WithCancel(ctx)
+	serverCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 
 	go func() {
@@ -145,19 +146,30 @@ func GetAndSetAccessToken(orgId *string) error {
 	pcio.Println()
 	pcio.Printf("Press %s to open the browser, or manually paste the URL above.\n", style.Code("[Enter]"))
 
-	// open a thread to wait for [Enter] as input
-	go func() {
-		_, err := bufio.NewReader(os.Stdin).ReadBytes('\n')
-		if err != nil {
-			log.Error().Err(err).Msg("stdin error: unable to open browser")
-			return
+	// spawn a goroutine to wait for [Enter] as input
+	go func(ctx context.Context) {
+		input := make(chan struct{})
+
+		go func() {
+			_, err := bufio.NewReader(os.Stdin).ReadBytes('\n')
+			if err != nil {
+				log.Error().Err(err).Msg("stdin error: unable to open browser")
+				return
+			}
+			input <- struct{}{}
+		}()
+
+		select {
+		case <-ctx.Done():
+			return // Auth completed,  no need to open browser
+		case <-input:
+			err = browser.OpenBrowser(authURL)
+			if err != nil {
+				log.Error().Err(err).Msg("error opening browser")
+				return
+			}
 		}
-		err = browser.OpenBrowser(authURL)
-		if err != nil {
-			log.Error().Err(err).Msg("error opening browser")
-			return
-		}
-	}()
+	}(serverCtx)
 
 	// Wait for auth code and exchange for access token
 	code := <-codeCh
