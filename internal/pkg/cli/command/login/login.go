@@ -151,12 +151,17 @@ func GetAndSetAccessToken(orgId *string) error {
 		input := make(chan struct{})
 
 		go func() {
+			defer close(input)
 			_, err := bufio.NewReader(os.Stdin).ReadBytes('\n')
 			if err != nil {
 				log.Error().Err(err).Msg("stdin error: unable to open browser")
 				return
 			}
-			input <- struct{}{}
+			select {
+			case input <- struct{}{}:
+			case <-ctx.Done():
+				return // context cancelled, no need to open browser
+			}
 		}()
 
 		select {
