@@ -158,14 +158,10 @@ func GetAndSetAccessToken(orgId *string) error {
 				log.Error().Err(err).Msg("stdin error: unable to open browser")
 				return
 			}
-			select {
-			case inputCh <- struct{}{}:
-			case <-ctx.Done():
-				return
-			}
+			close(inputCh)
 		}()
 
-		// wait for [Enter] or auth code
+		// wait for [Enter], auth code, or timeout
 		select {
 		case <-ctx.Done():
 			return
@@ -175,6 +171,9 @@ func GetAndSetAccessToken(orgId *string) error {
 				log.Error().Err(err).Msg("error opening browser")
 				return
 			}
+		case <-time.After(5 * time.Minute):
+			// extra precaution to prevent hanging indefinitel on stdin
+			return
 		}
 	}(serverCtx)
 
