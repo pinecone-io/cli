@@ -2,6 +2,7 @@ package index
 
 import (
 	"context"
+	"strings"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/docslinks"
@@ -150,6 +151,9 @@ func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []st
 		return
 	}
 
+	// Print preview of what will be created
+	printCreatePreview(name, options, idxType)
+
 	// index tags
 	var indexTags *pinecone.IndexTags
 	if len(options.tags) > 0 {
@@ -237,6 +241,79 @@ func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []st
 	}
 
 	renderSuccessOutput(idx, options)
+}
+
+// printCreatePreview prints a preview of the index configuration that will be created
+func printCreatePreview(name string, options createIndexOptions, idxType indexType) {
+	pcio.Println()
+	pcio.Printf("Creating %s index '%s' with the following configuration:\n\n", style.Emphasis(string(idxType)), style.Emphasis(name))
+
+	writer := presenters.NewTabWriter()
+	log.Debug().Str("name", name).Msg("Printing index creation preview")
+
+	columns := []string{"ATTRIBUTE", "VALUE"}
+	header := strings.Join(columns, "\t") + "\n"
+	pcio.Fprint(writer, header)
+
+	pcio.Fprintf(writer, "Name\t%s\n", name)
+	pcio.Fprintf(writer, "Type\t%s\n", string(idxType))
+
+	if options.dimension > 0 {
+		pcio.Fprintf(writer, "Dimension\t%d\n", options.dimension)
+	}
+
+	pcio.Fprintf(writer, "Metric\t%s\n", options.metric)
+
+	if options.deletionProtection != "" {
+		pcio.Fprintf(writer, "Deletion Protection\t%s\n", options.deletionProtection)
+	}
+
+	if options.vectorType != "" {
+		pcio.Fprintf(writer, "Vector Type\t%s\n", options.vectorType)
+	}
+
+	pcio.Fprintf(writer, "\t\n")
+
+	switch idxType {
+	case indexTypeServerless:
+		pcio.Fprintf(writer, "Cloud\t%s\n", options.cloud)
+		pcio.Fprintf(writer, "Region\t%s\n", options.region)
+		if options.sourceCollection != "" {
+			pcio.Fprintf(writer, "Source Collection\t%s\n", options.sourceCollection)
+		}
+	case indexTypePod:
+		pcio.Fprintf(writer, "Environment\t%s\n", options.environment)
+		pcio.Fprintf(writer, "Pod Type\t%s\n", options.podType)
+		pcio.Fprintf(writer, "Replicas\t%d\n", options.replicas)
+		pcio.Fprintf(writer, "Shards\t%d\n", options.shards)
+		if len(options.metadataConfig) > 0 {
+			pcio.Fprintf(writer, "Metadata Config\t%s\n", text.InlineJSON(options.metadataConfig))
+		}
+		if options.sourceCollection != "" {
+			pcio.Fprintf(writer, "Source Collection\t%s\n", options.sourceCollection)
+		}
+	case indexTypeIntegrated:
+		pcio.Fprintf(writer, "Cloud\t%s\n", options.cloud)
+		pcio.Fprintf(writer, "Region\t%s\n", options.region)
+		pcio.Fprintf(writer, "Model\t%s\n", options.model)
+		if len(options.fieldMap) > 0 {
+			pcio.Fprintf(writer, "Field Map\t%s\n", text.InlineJSON(options.fieldMap))
+		}
+		if len(options.readParameters) > 0 {
+			pcio.Fprintf(writer, "Read Parameters\t%s\n", text.InlineJSON(options.readParameters))
+		}
+		if len(options.writeParameters) > 0 {
+			pcio.Fprintf(writer, "Write Parameters\t%s\n", text.InlineJSON(options.writeParameters))
+		}
+	}
+
+	if len(options.tags) > 0 {
+		pcio.Fprintf(writer, "\t\n")
+		pcio.Fprintf(writer, "Tags\t%s\n", text.InlineJSON(options.tags))
+	}
+
+	writer.Flush()
+	pcio.Println()
 }
 
 func renderSuccessOutput(idx *pinecone.Index, options createIndexOptions) {
