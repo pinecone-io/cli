@@ -2,6 +2,7 @@ package index
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/docslinks"
@@ -26,9 +27,6 @@ const (
 )
 
 type createIndexOptions struct {
-	// required for all index types
-	name string
-
 	// serverless only
 	vectorType string
 
@@ -65,8 +63,14 @@ func NewCreateIndexCmd() *cobra.Command {
 	options := createIndexOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "create",
+		Use:   "create [name]",
 		Short: "Create a new index with the specified configuration",
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) < 1 {
+				return fmt.Errorf("index name is required")
+			}
+			return nil
+		},
 		Long: heredoc.Docf(`
 		The %s command creates a new index with the specified configuration. There are several different types of indexes
 		you can create depending on the configuration provided:
@@ -80,22 +84,19 @@ func NewCreateIndexCmd() *cobra.Command {
 		`, style.Code("pc index create"), style.URL(docslinks.DocsIndexCreate)),
 		Example: heredoc.Doc(`
 		# create a serverless index
-		$ pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1
+		$ pc index create my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1
 
 		# create a pod index
-		$ pc index create --name my-index --dimension 1536 --metric cosine --environment us-east-1-aws --pod-type p1.x1 --shards 2 --replicas 2
+		$ pc index create my-index --dimension 1536 --metric cosine --environment us-east-1-aws --pod-type p1.x1 --shards 2 --replicas 2
 
 		# create an integrated index
-		$ pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1 --model multilingual-e5-large --field_map text=chunk_text
+		$ pc index create my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1 --model multilingual-e5-large --field_map text=chunk_text
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			runCreateIndexCmd(options)
+			name := args[0]
+			runCreateIndexCmd(name, options)
 		},
 	}
-
-	// Required flags
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "Name of index to create")
-	_ = cmd.MarkFlagRequired("name")
 
 	// Serverless & Pods
 	cmd.Flags().StringVar(&options.sourceCollection, "source_collection", "", "When creating an index from a collection")
@@ -131,18 +132,20 @@ func NewCreateIndexCmd() *cobra.Command {
 	return cmd
 }
 
-func runCreateIndexCmd(options createIndexOptions) {
+func runCreateIndexCmd(name string, options createIndexOptions) {
 	ctx := context.Background()
 	pc := sdk.NewPineconeClient()
 
 	// validate and derive index type from arguments
 	err := options.validate()
 	if err != nil {
+		msg.FailMsg("Validation failed: %s", err)
 		exit.Error(err)
 		return
 	}
 	idxType, err := options.deriveIndexType()
 	if err != nil {
+		msg.FailMsg("Configuration error: %s", err)
 		exit.Error(err)
 		return
 	}
@@ -161,7 +164,7 @@ func runCreateIndexCmd(options createIndexOptions) {
 	case indexTypeServerless:
 		// create serverless index
 		args := pinecone.CreateServerlessIndexRequest{
-			Name:               options.name,
+			Name:               name,
 			Cloud:              pinecone.Cloud(options.cloud),
 			Region:             options.region,
 			Metric:             pointerOrNil(pinecone.IndexMetric(options.metric)),
@@ -174,7 +177,7 @@ func runCreateIndexCmd(options createIndexOptions) {
 
 		idx, err = pc.CreateServerlessIndex(ctx, &args)
 		if err != nil {
-			msg.FailMsg("Failed to create serverless index %s: %s\n", style.Emphasis(options.name), err)
+			msg.FailMsg("Failed to create serverless index %s: %s\n", style.Emphasis(name), err)
 			exit.Error(err)
 		}
 	case indexTypePod:
@@ -186,7 +189,7 @@ func runCreateIndexCmd(options createIndexOptions) {
 			}
 		}
 		args := pinecone.CreatePodIndexRequest{
-			Name:               options.name,
+			Name:               name,
 			Dimension:          options.dimension,
 			Environment:        options.environment,
 			PodType:            options.podType,
@@ -201,7 +204,7 @@ func runCreateIndexCmd(options createIndexOptions) {
 
 		idx, err = pc.CreatePodIndex(ctx, &args)
 		if err != nil {
-			msg.FailMsg("Failed to create pod index %s: %s\n", style.Emphasis(options.name), err)
+			msg.FailMsg("Failed to create pod index %s: %s\n", style.Emphasis(name), err)
 			exit.Error(err)
 		}
 	case indexTypeIntegrated:
@@ -210,7 +213,7 @@ func runCreateIndexCmd(options createIndexOptions) {
 		writeParams := toInterfaceMap(options.writeParameters)
 
 		args := pinecone.CreateIndexForModelRequest{
-			Name:               options.name,
+			Name:               name,
 			Cloud:              pinecone.Cloud(options.cloud),
 			Region:             options.region,
 			DeletionProtection: pointerOrNil(pinecone.DeletionProtection(options.deletionProtection)),
@@ -224,7 +227,7 @@ func runCreateIndexCmd(options createIndexOptions) {
 
 		idx, err = pc.CreateIndexForModel(ctx, &args)
 		if err != nil {
-			msg.FailMsg("Failed to create integrated index %s: %s\n", style.Emphasis(options.name), err)
+			msg.FailMsg("Failed to create integrated index %s: %s\n", style.Emphasis(name), err)
 			exit.Error(err)
 		}
 	default:
@@ -243,20 +246,13 @@ func renderSuccessOutput(idx *pinecone.Index, options createIndexOptions) {
 		return
 	}
 
-	describeCommand := pcio.Sprintf("pc index describe --name %s", idx.Name)
+	describeCommand := pcio.Sprintf("pc index describe %s", idx.Name)
 	msg.SuccessMsg("Index %s created successfully. Run %s to check status. \n\n", style.Emphasis(idx.Name), style.Code(describeCommand))
 	presenters.PrintDescribeIndexTable(idx)
 }
 
 // validate specific input params
 func (c *createIndexOptions) validate() error {
-	// name required for all index types
-	if c.name == "" {
-		err := pcio.Errorf("name is required")
-		log.Error().Err(err).Msg("Error creating index")
-		return err
-	}
-
 	// environment and cloud/region cannot be provided together
 	if c.cloud != "" && c.region != "" && c.environment != "" {
 		err := pcio.Errorf("cloud, region, and environment cannot be provided together")
@@ -279,7 +275,7 @@ func (c *createIndexOptions) deriveIndexType() (indexType, error) {
 	if c.environment != "" {
 		return indexTypePod, nil
 	}
-	return "", pcio.Error("invalid index type. Please provide either environment, or cloud and region")
+	return "", pcio.Error("invalid index type. Please provide either:\n  - --environment for pod indexes\n  - --cloud and --region for serverless or integrated indexes")
 }
 
 func pointerOrNil[T comparable](value T) *T {
