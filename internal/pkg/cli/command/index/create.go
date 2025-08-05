@@ -102,7 +102,10 @@ func NewCreateIndexCmd() *cobra.Command {
 		# create a serverless index with custom configuration
 		$ pc index create my-index --dimension 768 --metric euclidean --cloud aws --region us-east-1
 
-		# create a pod index
+		# create a pod index (with defaults)
+		$ pc index create my-index --pod
+
+		# create a pod index with custom configuration
 		$ pc index create my-index --pod --environment us-east-1-aws --pod_type p1.x1 --shards 2 --replicas 2
 
 		# create an integrated index
@@ -410,14 +413,7 @@ func (c *createIndexOptions) validate() error {
 		}
 
 	case indexTypePod:
-		// Pod requires environment
-		if c.environment == "" {
-			return pcio.Error("--environment is required for pod indexes")
-		}
-		// Pod requires pod_type
-		if c.podType == "" {
-			return pcio.Error("--pod_type is required for pod indexes")
-		}
+		// No additional validation needed - defaults are provided
 		// Pod cannot have serverless/integrated-specific flags
 		if c.cloud != "" {
 			return pcio.Error("--cloud cannot be used with pod indexes")
@@ -514,6 +510,14 @@ func (c *createIndexOptions) deriveIndexType() (indexType, error) {
 	}
 
 	if c.pod {
+		// Default to a common environment if none specified
+		if c.environment == "" {
+			c.environment = "us-east-1-aws"
+		}
+		// Default to a common pod type if none specified
+		if c.podType == "" {
+			c.podType = "p1.x1"
+		}
 		return indexTypePod, nil
 	}
 
