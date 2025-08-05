@@ -2,6 +2,7 @@ package index
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -15,7 +16,6 @@ import (
 )
 
 type DescribeCmdOptions struct {
-	name string
 	json bool
 }
 
@@ -23,18 +23,25 @@ func NewDescribeCmd() *cobra.Command {
 	options := DescribeCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "describe",
+		Use:   "describe [name]",
 		Short: "Get configuration and status information for an index",
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) < 1 {
+				return fmt.Errorf("index name is required")
+			}
+			return nil
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()
 			pc := sdk.NewPineconeClient()
 
-			idx, err := pc.DescribeIndex(ctx, options.name)
+			name := args[0]
+			idx, err := pc.DescribeIndex(ctx, name)
 			if err != nil {
 				if strings.Contains(err.Error(), "not found") {
-					msg.FailMsg("The index %s does not exist\n", style.Emphasis(options.name))
+					msg.FailMsg("The index %s does not exist\n", style.Emphasis(name))
 				} else {
-					msg.FailMsg("Failed to describe index %s: %s\n", style.Emphasis(options.name), err)
+					msg.FailMsg("Failed to describe index %s: %s\n", style.Emphasis(name), err)
 				}
 				exit.Error(err)
 			}
@@ -47,10 +54,6 @@ func NewDescribeCmd() *cobra.Command {
 			}
 		},
 	}
-
-	// required flags
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of index to describe")
-	_ = cmd.MarkFlagRequired("name")
 
 	// optional flags
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
