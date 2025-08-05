@@ -17,6 +17,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 type indexType string
@@ -116,7 +117,7 @@ func NewCreateIndexCmd() *cobra.Command {
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
-			runCreateIndexCmd(name, options)
+			runCreateIndexCmd(name, options, cmd)
 		},
 	}
 
@@ -160,12 +161,12 @@ func NewCreateIndexCmd() *cobra.Command {
 	return cmd
 }
 
-func runCreateIndexCmd(name string, options createIndexOptions) {
+func runCreateIndexCmd(name string, options createIndexOptions, cmd *cobra.Command) {
 	ctx := context.Background()
 	pc := sdk.NewPineconeClient()
 
 	// validate and derive index type from arguments
-	err := options.validate()
+	err := options.validate(cmd)
 	if err != nil {
 		msg.FailMsg("Validation failed: %s", err)
 		exit.Error(err)
@@ -382,88 +383,54 @@ func renderSuccessOutput(idx *pinecone.Index, options createIndexOptions) {
 }
 
 // validate specific input params
-func (c *createIndexOptions) validate() error {
+func (c *createIndexOptions) validate(cmd *cobra.Command) error {
 	// Determine index type for validation
 	idxType, err := c.deriveIndexType()
 	if err != nil {
 		return err
 	}
 
-	switch idxType {
-	case indexTypeServerless:
-		// Serverless requires cloud and region
-		if c.cloud == "" {
-			return pcio.Error("--cloud is required for serverless indexes")
-		}
-		if c.region == "" {
-			return pcio.Error("--region is required for serverless indexes")
-		}
-		// Serverless cannot have pod-specific flags
-		if c.environment != "" {
-			return pcio.Error("--environment cannot be used with serverless indexes")
-		}
-		if c.podType != "" {
-			return pcio.Error("--pod_type cannot be used with serverless indexes")
-		}
-		if c.shards != 1 {
-			return pcio.Error("--shards cannot be used with serverless indexes")
-		}
-		if c.replicas != 1 {
-			return pcio.Error("--replicas cannot be used with serverless indexes")
-		}
-		if len(c.metadataConfig) > 0 {
-			return pcio.Error("--metadata_config cannot be used with serverless indexes")
-		}
-
-	case indexTypePod:
-		// No additional validation needed - defaults are provided
-		// Pod cannot have serverless/integrated-specific flags
-		if c.cloud != "" {
-			return pcio.Error("--cloud cannot be used with pod indexes")
-		}
-		if c.region != "" {
-			return pcio.Error("--region cannot be used with pod indexes")
-		}
-		if c.vectorType != "" {
-			return pcio.Error("--vector_type cannot be used with pod indexes")
-		}
-		if c.model != "" {
-			return pcio.Error("--model cannot be used with pod indexes")
-		}
-		if len(c.fieldMap) > 0 {
-			return pcio.Error("--field_map cannot be used with pod indexes")
-		}
-		if len(c.readParameters) > 0 {
-			return pcio.Error("--read_parameters cannot be used with pod indexes")
-		}
-		if len(c.writeParameters) > 0 {
-			return pcio.Error("--write_parameters cannot be used with pod indexes")
-		}
-
-	case indexTypeIntegrated:
-		// No additional validation needed - defaults are provided
-		// Integrated cannot have pod-specific flags
-		if c.environment != "" {
-			return pcio.Error("--environment cannot be used with integrated indexes")
-		}
-		if c.podType != "" {
-			return pcio.Error("--pod_type cannot be used with integrated indexes")
-		}
-		if c.shards != 1 {
-			return pcio.Error("--shards cannot be used with integrated indexes")
-		}
-		if c.replicas != 1 {
-			return pcio.Error("--replicas cannot be used with integrated indexes")
-		}
-		if len(c.metadataConfig) > 0 {
-			return pcio.Error("--metadata_config cannot be used with integrated indexes")
-		}
-		if c.vectorType != "" {
-			return pcio.Error("--vector_type cannot be used with integrated indexes")
-		}
+	// Define which flags are invalid for each index type
+	invalidFlags := map[indexType]map[string]string{
+		indexTypeServerless: {
+			"environment":      "--environment cannot be used with serverless indexes",
+			"pod_type":         "--pod_type cannot be used with serverless indexes",
+			"metadata_config":  "--metadata_config cannot be used with serverless indexes",
+			"shards":           "--shards cannot be used with serverless indexes",
+			"replicas":         "--replicas cannot be used with serverless indexes",
+			"model":            "--model cannot be used with serverless indexes",
+			"field_map":        "--field_map cannot be used with serverless indexes",
+			"read_parameters":  "--read_parameters cannot be used with serverless indexes",
+			"write_parameters": "--write_parameters cannot be used with serverless indexes",
+		},
+		indexTypePod: {
+			"cloud":            "--cloud cannot be used with pod indexes",
+			"region":           "--region cannot be used with pod indexes",
+			"vector_type":      "--vector_type cannot be used with pod indexes",
+			"model":            "--model cannot be used with pod indexes",
+			"field_map":        "--field_map cannot be used with pod indexes",
+			"read_parameters":  "--read_parameters cannot be used with pod indexes",
+			"write_parameters": "--write_parameters cannot be used with pod indexes",
+		},
+		indexTypeIntegrated: {
+			"environment":     "--environment cannot be used with integrated indexes",
+			"pod_type":        "--pod_type cannot be used with integrated indexes",
+			"metadata_config": "--metadata_config cannot be used with integrated indexes",
+			"shards":          "--shards cannot be used with integrated indexes",
+			"replicas":        "--replicas cannot be used with integrated indexes",
+			"vector_type":     "--vector_type cannot be used with integrated indexes",
+		},
 	}
 
-	return nil
+	// Check only flags that were explicitly set by the user
+	var validationError error
+	cmd.Flags().Visit(func(flag *pflag.Flag) {
+		if errorMsg, exists := invalidFlags[idxType][flag.Name]; exists {
+			validationError = pcio.Error(errorMsg)
+		}
+	})
+
+	return validationError
 }
 
 // determine the type of index being created based on high level input params
