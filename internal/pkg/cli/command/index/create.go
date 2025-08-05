@@ -62,6 +62,9 @@ type createIndexOptions struct {
 	deletionProtection string
 	tags               map[string]string
 
+	// confirmation
+	yes bool
+
 	json bool
 }
 
@@ -146,6 +149,7 @@ func NewCreateIndexCmd() *cobra.Command {
 	cmd.Flags().StringToStringVar(&options.tags, "tags", map[string]string{}, "Custom user tags to add to an index")
 
 	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
+	cmd.Flags().BoolVarP(&options.yes, "yes", "y", false, "Skip confirmation prompt")
 
 	return cmd
 }
@@ -170,6 +174,14 @@ func runCreateIndexCmd(name string, options createIndexOptions) {
 
 	// Print preview of what will be created
 	printCreatePreview(name, options, idxType)
+
+	// Ask for confirmation unless --yes flag is used
+	if !options.yes {
+		if !confirmCreation(name) {
+			msg.InfoMsg("Index creation cancelled.")
+			return
+		}
+	}
 
 	// index tags
 	var indexTags *pinecone.IndexTags
@@ -331,6 +343,24 @@ func printCreatePreview(name string, options createIndexOptions, idxType indexTy
 
 	writer.Flush()
 	pcio.Println()
+}
+
+// confirmCreation prompts the user for confirmation to create the index
+func confirmCreation(name string) bool {
+	pcio.Printf("Create index '%s'? [y/N]: ", style.Emphasis(name))
+
+	var response string
+	_, err := fmt.Scanln(&response)
+	if err != nil {
+		// If there's an error reading input, assume no
+		return false
+	}
+
+	// Convert to lowercase and trim whitespace
+	response = strings.ToLower(strings.TrimSpace(response))
+
+	// Accept y, yes, Y, YES
+	return response == "y" || response == "yes"
 }
 
 func renderSuccessOutput(idx *pinecone.Index, options createIndexOptions) {
