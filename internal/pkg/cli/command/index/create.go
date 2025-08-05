@@ -3,6 +3,7 @@ package index
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/MakeNowJust/heredoc"
@@ -29,6 +30,9 @@ const (
 )
 
 type createIndexOptions struct {
+	// index name
+	name string
+
 	// index type flags
 	serverless bool
 	pod        bool
@@ -66,6 +70,9 @@ type createIndexOptions struct {
 	// confirmation
 	yes bool
 
+	// interactive mode
+	interactive bool
+
 	json bool
 }
 
@@ -75,12 +82,7 @@ func NewCreateIndexCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create [name]",
 		Short: "Create a new index with the specified configuration",
-		Args: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				return fmt.Errorf("index name is required")
-			}
-			return nil
-		},
+		// No Args validation - we handle missing name in Run function
 		Long: heredoc.Docf(`
 		The %s command creates a new index with the specified configuration. By default, it creates a serverless index
 		with sensible defaults. You can explicitly specify the index type using the appropriate flag:
@@ -91,6 +93,10 @@ func NewCreateIndexCmd() *cobra.Command {
 			  %s
 			- Integrated: Use --integrated flag
 			  %s
+
+		Interactive Mode:
+		Use --interactive or run without an index name to enter interactive mode, where you'll be prompted
+		for each configuration value with sensible defaults.
 
 		`, style.Code("pc index create"),
 			style.URL(docslinks.DocsIndexCreate),
@@ -116,7 +122,13 @@ func NewCreateIndexCmd() *cobra.Command {
 		$ pc index create my-index --integrated --cloud aws --region us-east-1 --model multilingual-e5-large --field_map text=chunk_text
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			name := args[0]
+			var name string
+			if len(args) > 0 {
+				name = args[0]
+			} else {
+				// Automatically enable interactive mode if no name is provided
+				options.interactive = true
+			}
 			runCreateIndexCmd(name, options, cmd)
 		},
 	}
@@ -157,6 +169,7 @@ func NewCreateIndexCmd() *cobra.Command {
 
 	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 	cmd.Flags().BoolVarP(&options.yes, "yes", "y", false, "Skip confirmation prompt")
+	cmd.Flags().BoolVarP(&options.interactive, "interactive", "i", false, "Interactive mode - prompt for values")
 
 	return cmd
 }
@@ -164,6 +177,12 @@ func NewCreateIndexCmd() *cobra.Command {
 func runCreateIndexCmd(name string, options createIndexOptions, cmd *cobra.Command) {
 	ctx := context.Background()
 	pc := sdk.NewPineconeClient()
+
+	// Handle interactive mode
+	if options.interactive || name == "" {
+		options = runInteractiveMode(options)
+		name = options.name // Get the name from interactive mode
+	}
 
 	// validate and derive index type from arguments
 	err := options.validate(cmd)
@@ -352,6 +371,246 @@ func printCreatePreview(name string, options createIndexOptions, idxType indexTy
 	pcio.Println()
 }
 
+// Configuration map for interactive mode
+// getRequiredFieldsForIndexType returns which fields should be prompted for in interactive mode
+// based on the index type and vector type
+func getRequiredFieldsForIndexType(idxType indexType, vectorType string) []string {
+	switch idxType {
+	case indexTypeServerless:
+		fields := []string{"metric", "vectorType", "cloud", "region"}
+		if vectorType == "dense" {
+			fields = append(fields, "dimension")
+		}
+		return fields
+	case indexTypePod:
+		return []string{"dimension", "metric", "environment", "podType", "shards", "replicas"}
+	case indexTypeIntegrated:
+		fields := []string{"metric", "cloud", "region", "model", "fieldMap"}
+		if vectorType == "dense" {
+			fields = append(fields, "dimension")
+		}
+		return fields
+	default:
+		return []string{}
+	}
+}
+
+// handleRegionPrompt prompts the user for region selection based on index type and cloud
+func handleRegionPrompt(options *createIndexOptions, idxType indexType) {
+	// Determine which region map to use based on index type
+	var regionsMap map[string][]string
+	if idxType == indexTypePod {
+		regionsMap = podCloudRegions
+	} else {
+		// Serverless or integrated
+		regionsMap = serverlessCloudRegions
+	}
+
+	// Show available regions for the selected cloud
+	if regions, exists := regionsMap[options.cloud]; exists && len(regions) > 0 {
+		defaultRegion := regions[0] // First region is the default
+
+		pcio.Printf("Available regions for %s:\n", options.cloud)
+		for i, region := range regions {
+			if region == defaultRegion {
+				pcio.Printf("  %d. %s (default)\n", i+1, region)
+			} else {
+				pcio.Printf("  %d. %s\n", i+1, region)
+			}
+		}
+		pcio.Printf("Enter region [%s]: ", defaultRegion)
+
+		var response string
+		fmt.Scanln(&response)
+
+		if response == "" {
+			options.region = defaultRegion
+		} else {
+			// Check if user entered a number (choice) or region name
+			if choiceIndex, err := strconv.Atoi(response); err == nil && choiceIndex > 0 && choiceIndex <= len(regions) {
+				options.region = regions[choiceIndex-1]
+			} else {
+				options.region = response
+			}
+		}
+	} else {
+		// Fallback if no regions found for the cloud
+		pcio.Printf("Region: ")
+		fmt.Scanln(&options.region)
+	}
+}
+
+// Valid regions for serverless/integrated indexes for each cloud provider
+var serverlessCloudRegions = map[string][]string{
+	"aws":   {"us-east-1", "us-west-2", "eu-west-1"},
+	"gcp":   {"us-central1", "europe-west4"},
+	"azure": {"eastus2"},
+}
+
+// Valid regions for pod indexes for each cloud provider
+var podCloudRegions = map[string][]string{
+	"aws":   {"us-east-1"},
+	"gcp":   {"us-west1-gcp", "us-central1-gcp", "us-west4-gcp", "us-east4-gcp", "northamerica-northeast1-gcp", "asia-northeast1-gcp", "asia-southeast1-gcp", "us-east1-gcp", "eu-west1-gcp", "eu-west4-gcp"},
+	"azure": {"eastus-azure"},
+}
+
+// Available embedding models for integrated indexes
+var denseEmbeddingModels = []string{
+	"multilingual-e5-large",
+	"llama-text-embed-v2",
+}
+
+var sparseEmbeddingModels = []string{
+	"pinecone-sparse-english-v0",
+}
+
+// runInteractiveMode prompts the user for index configuration values
+func runInteractiveMode(options createIndexOptions) createIndexOptions {
+	pcio.Println("===================================")
+	pcio.Println("| Interactive index creation mode |")
+	pcio.Println("===================================")
+	pcio.Println()
+
+	// Get index name
+	options.name = promptForString("Index name", "")
+
+	// Get index type
+	indexType := promptForChoice("Index type", []string{"serverless", "pod", "integrated"}, "serverless")
+	switch indexType {
+	case "serverless":
+		options.serverless = true
+	case "pod":
+		options.pod = true
+	case "integrated":
+		options.integrated = true
+	}
+
+	// Get vector type for serverless and integrated
+	var vectorType string
+	if options.serverless || options.integrated {
+		vectorType = promptForChoice("Vector type", []string{"dense", "sparse"}, "dense")
+		options.vectorType = vectorType
+	}
+
+	// Determine index type for field requirements
+	idxType, _ := options.deriveIndexType()
+	requiredFields := getRequiredFieldsForIndexType(idxType, vectorType)
+
+	// Prompt for each required field
+	for _, field := range requiredFields {
+		switch field {
+		case "dimension":
+			options.dimension = int32(promptForInt("Dimension", int(options.dimension)))
+		case "metric":
+			options.metric = promptForChoice("Metric", []string{"cosine", "euclidean", "dotproduct"}, options.metric)
+		case "vectorType":
+			// Already handled above
+		case "cloud":
+			options.cloud = promptForChoice("Cloud provider", []string{"aws", "gcp", "azure"}, "aws")
+		case "region":
+			// Handle region prompting with cloud-specific options
+			handleRegionPrompt(&options, idxType)
+		case "environment":
+			// For pod indexes, we need to prompt for environment (which includes cloud and region)
+			// Show available environments based on the documentation
+			environments := []string{
+				"us-west1-gcp", "us-central1-gcp", "us-west4-gcp", "us-east4-gcp",
+				"northamerica-northeast1-gcp", "asia-northeast1-gcp", "asia-southeast1-gcp",
+				"us-east1-gcp", "eu-west1-gcp", "eu-west4-gcp", "us-east-1-aws", "eastus-azure",
+			}
+			options.environment = promptForChoice("Environment", environments, "us-east-1-aws")
+		case "podType":
+			options.podType = promptForChoice("Pod type", []string{"p1.x1", "p1.x2", "p1.x4", "p1.x8", "s1.x1", "s1.x2", "s1.x4", "s1.x8", "p2.x1", "p2.x2", "p2.x4", "p2.x8"}, "p1.x1")
+		case "shards":
+			options.shards = int32(promptForInt("Shards", int(options.shards)))
+		case "replicas":
+			options.replicas = int32(promptForInt("Replicas", int(options.replicas)))
+		case "model":
+			// Show appropriate models based on vector type
+			var models []string
+			var defaultModel string
+			if vectorType == "dense" {
+				models = denseEmbeddingModels
+				defaultModel = "multilingual-e5-large"
+			} else {
+				models = sparseEmbeddingModels
+				defaultModel = "pinecone-sparse-english-v0"
+			}
+			options.model = promptForChoice("Model", models, defaultModel)
+		case "fieldMap":
+			// For now, use a simple default field map
+			options.fieldMap = map[string]string{"text": "chunk_text"}
+		}
+	}
+
+	pcio.Println()
+	return options
+}
+
+// promptForString prompts the user for a string value
+func promptForString(prompt string, defaultValue string) string {
+	if defaultValue != "" {
+		pcio.Printf("%s [%s]: ", prompt, defaultValue)
+	} else {
+		pcio.Printf("%s: ", prompt)
+	}
+
+	var response string
+	fmt.Scanln(&response)
+
+	if response == "" && defaultValue != "" {
+		return defaultValue
+	}
+	return response
+}
+
+// promptForInt prompts the user for an integer value
+func promptForInt(prompt string, defaultValue int) int {
+	pcio.Printf("%s [%d]: ", prompt, defaultValue)
+
+	var response string
+	fmt.Scanln(&response)
+
+	if response == "" {
+		return defaultValue
+	}
+
+	val, err := strconv.Atoi(response)
+	if err != nil {
+		pcio.Printf("Invalid number, using default %d\n", defaultValue)
+		return defaultValue
+	}
+	return val
+}
+
+// promptForChoice prompts the user to choose from a list of options
+func promptForChoice(prompt string, choices []string, defaultValue string) string {
+	pcio.Printf("%s:\n", prompt)
+	for i, choice := range choices {
+		if choice == defaultValue {
+			pcio.Printf("  %d. %s (default)\n", i+1, choice)
+		} else {
+			pcio.Printf("  %d. %s\n", i+1, choice)
+		}
+	}
+
+	pcio.Printf("Enter choice [%s]: ", defaultValue)
+	var response string
+	fmt.Scanln(&response)
+
+	if response == "" {
+		return defaultValue
+	}
+
+	choiceIndex, err := strconv.Atoi(response)
+	if err != nil || choiceIndex < 1 || choiceIndex > len(choices) {
+		pcio.Printf("Invalid choice, using default %s\n", defaultValue)
+		return defaultValue
+	}
+
+	return choices[choiceIndex-1]
+}
+
 // confirmCreation prompts the user for confirmation to create the index
 func confirmCreation(name string) bool {
 	pcio.Printf("Create index '%s'? [y/N]: ", style.Emphasis(name))
@@ -418,7 +677,6 @@ func (c *createIndexOptions) validate(cmd *cobra.Command) error {
 			"metadata_config": "--metadata_config cannot be used with integrated indexes",
 			"shards":          "--shards cannot be used with integrated indexes",
 			"replicas":        "--replicas cannot be used with integrated indexes",
-			"vector_type":     "--vector_type cannot be used with integrated indexes",
 		},
 	}
 
@@ -429,6 +687,30 @@ func (c *createIndexOptions) validate(cmd *cobra.Command) error {
 			validationError = pcio.Error(errorMsg)
 		}
 	})
+
+	// Additional validation for integrated indexes
+	if idxType == indexTypeIntegrated && c.model != "" {
+		// Validate model based on vector type
+		var validModels []string
+		if c.vectorType == "dense" {
+			validModels = denseEmbeddingModels
+		} else if c.vectorType == "sparse" {
+			validModels = sparseEmbeddingModels
+		}
+
+		// Check if the model is valid
+		modelValid := false
+		for _, validModel := range validModels {
+			if c.model == validModel {
+				modelValid = true
+				break
+			}
+		}
+
+		if !modelValid {
+			validationError = pcio.Error(fmt.Sprintf("invalid model '%s' for vector type '%s'. Valid models are: %s", c.model, c.vectorType, strings.Join(validModels, ", ")))
+		}
+	}
 
 	return validationError
 }
