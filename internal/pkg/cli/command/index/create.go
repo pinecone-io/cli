@@ -108,7 +108,10 @@ func NewCreateIndexCmd() *cobra.Command {
 		# create a pod index with custom configuration
 		$ pc index create my-index --pod --environment us-east-1-aws --pod_type p1.x1 --shards 2 --replicas 2
 
-		# create an integrated index
+		# create an integrated index (with defaults)
+		$ pc index create my-index --integrated
+
+		# create an integrated index with custom configuration
 		$ pc index create my-index --integrated --cloud aws --region us-east-1 --model multilingual-e5-large --field_map text=chunk_text
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -438,17 +441,7 @@ func (c *createIndexOptions) validate() error {
 		}
 
 	case indexTypeIntegrated:
-		// Integrated requires cloud and region
-		if c.cloud == "" {
-			return pcio.Error("--cloud is required for integrated indexes")
-		}
-		if c.region == "" {
-			return pcio.Error("--region is required for integrated indexes")
-		}
-		// Integrated requires model
-		if c.model == "" {
-			return pcio.Error("--model is required for integrated indexes")
-		}
+		// No additional validation needed - defaults are provided
 		// Integrated cannot have pod-specific flags
 		if c.environment != "" {
 			return pcio.Error("--environment cannot be used with integrated indexes")
@@ -522,6 +515,21 @@ func (c *createIndexOptions) deriveIndexType() (indexType, error) {
 	}
 
 	if c.integrated {
+		// Default to common cloud and region if none specified
+		if c.cloud == "" {
+			c.cloud = "aws"
+		}
+		if c.region == "" {
+			c.region = "us-east-1"
+		}
+		// Default to a common model if none specified
+		if c.model == "" {
+			c.model = "multilingual-e5-large"
+		}
+		// Default to a common field_map if none specified
+		if len(c.fieldMap) == 0 {
+			c.fieldMap = map[string]string{"text": "chunk_text"}
+		}
 		return indexTypeIntegrated, nil
 	}
 
