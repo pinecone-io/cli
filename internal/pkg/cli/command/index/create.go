@@ -28,6 +28,11 @@ const (
 )
 
 type createIndexOptions struct {
+	// index type flags
+	serverless bool
+	pod        bool
+	integrated bool
+
 	// serverless only
 	vectorType string
 
@@ -73,31 +78,43 @@ func NewCreateIndexCmd() *cobra.Command {
 			return nil
 		},
 		Long: heredoc.Docf(`
-		The %s command creates a new index with the specified configuration. There are several different types of indexes
-		you can create depending on the configuration provided:
+		The %s command creates a new index with the specified configuration. By default, it creates a serverless index
+		with sensible defaults. You can explicitly specify the index type using the appropriate flag:
 
-			- Serverless (dense or sparse)
-			- Integrated 
-			- Pod
+			- Serverless (default): Use --serverless or no flag
+			  %s
+			- Pod: Use --pod flag
+			  %s
+			- Integrated: Use --integrated flag
+			  %s
 
-		For detailed documentation, see:
-		%s
-		`, style.Code("pc index create"), style.URL(docslinks.DocsIndexCreate)),
+		`, style.Code("pc index create"),
+			style.URL(docslinks.DocsIndexCreate),
+			style.URL(docslinks.DocsPodTypes),
+			style.URL(docslinks.DocsIntegratedEmbedding)),
 		Example: heredoc.Doc(`
-		# create a serverless index
-		$ pc index create my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1
+		# create a serverless index (default)
+		$ pc index create my-index
+
+		# create a serverless index with custom configuration
+		$ pc index create my-index --dimension 768 --metric euclidean --cloud aws --region us-east-1
 
 		# create a pod index
-		$ pc index create my-index --dimension 1536 --metric cosine --environment us-east-1-aws --pod-type p1.x1 --shards 2 --replicas 2
+		$ pc index create my-index --pod --environment us-east-1-aws --pod_type p1.x1 --shards 2 --replicas 2
 
 		# create an integrated index
-		$ pc index create my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1 --model multilingual-e5-large --field_map text=chunk_text
+		$ pc index create my-index --integrated --cloud aws --region us-east-1 --model multilingual-e5-large --field_map text=chunk_text
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
 			runCreateIndexCmd(name, options)
 		},
 	}
+
+	// Index type flags
+	cmd.Flags().BoolVar(&options.serverless, "serverless", false, "Create a serverless index (default)")
+	cmd.Flags().BoolVar(&options.pod, "pod", false, "Create a pod index")
+	cmd.Flags().BoolVar(&options.integrated, "integrated", false, "Create an integrated index")
 
 	// Serverless & Pods
 	cmd.Flags().StringVar(&options.sourceCollection, "source_collection", "", "When creating an index from a collection")
@@ -123,7 +140,7 @@ func NewCreateIndexCmd() *cobra.Command {
 	cmd.Flags().StringToStringVar(&options.writeParameters, "write_parameters", map[string]string{}, "The write parameters for the embedding model")
 
 	// Optional flags
-	cmd.Flags().Int32VarP(&options.dimension, "dimension", "d", 0, "Dimension of the index to create")
+	cmd.Flags().Int32VarP(&options.dimension, "dimension", "d", 1536, "Dimension of the index to create")
 	cmd.Flags().StringVarP(&options.metric, "metric", "m", "cosine", "Metric to use. One of: cosine, euclidean, dotproduct")
 	cmd.Flags().StringVar(&options.deletionProtection, "deletion_protection", "", "Whether to enable deletion protection for the index. One of: enabled, disabled")
 	cmd.Flags().StringToStringVar(&options.tags, "tags", map[string]string{}, "Custom user tags to add to an index")
@@ -330,11 +347,101 @@ func renderSuccessOutput(idx *pinecone.Index, options createIndexOptions) {
 
 // validate specific input params
 func (c *createIndexOptions) validate() error {
-	// environment and cloud/region cannot be provided together
-	if c.cloud != "" && c.region != "" && c.environment != "" {
-		err := pcio.Errorf("cloud, region, and environment cannot be provided together")
-		log.Error().Err(err).Msg("Error creating index")
+	// Determine index type for validation
+	idxType, err := c.deriveIndexType()
+	if err != nil {
 		return err
+	}
+
+	switch idxType {
+	case indexTypeServerless:
+		// Serverless requires cloud and region
+		if c.cloud == "" {
+			return pcio.Error("--cloud is required for serverless indexes")
+		}
+		if c.region == "" {
+			return pcio.Error("--region is required for serverless indexes")
+		}
+		// Serverless cannot have pod-specific flags
+		if c.environment != "" {
+			return pcio.Error("--environment cannot be used with serverless indexes")
+		}
+		if c.podType != "" {
+			return pcio.Error("--pod_type cannot be used with serverless indexes")
+		}
+		if c.shards != 1 {
+			return pcio.Error("--shards cannot be used with serverless indexes")
+		}
+		if c.replicas != 1 {
+			return pcio.Error("--replicas cannot be used with serverless indexes")
+		}
+		if len(c.metadataConfig) > 0 {
+			return pcio.Error("--metadata_config cannot be used with serverless indexes")
+		}
+
+	case indexTypePod:
+		// Pod requires environment
+		if c.environment == "" {
+			return pcio.Error("--environment is required for pod indexes")
+		}
+		// Pod requires pod_type
+		if c.podType == "" {
+			return pcio.Error("--pod_type is required for pod indexes")
+		}
+		// Pod cannot have serverless/integrated-specific flags
+		if c.cloud != "" {
+			return pcio.Error("--cloud cannot be used with pod indexes")
+		}
+		if c.region != "" {
+			return pcio.Error("--region cannot be used with pod indexes")
+		}
+		if c.vectorType != "" {
+			return pcio.Error("--vector_type cannot be used with pod indexes")
+		}
+		if c.model != "" {
+			return pcio.Error("--model cannot be used with pod indexes")
+		}
+		if len(c.fieldMap) > 0 {
+			return pcio.Error("--field_map cannot be used with pod indexes")
+		}
+		if len(c.readParameters) > 0 {
+			return pcio.Error("--read_parameters cannot be used with pod indexes")
+		}
+		if len(c.writeParameters) > 0 {
+			return pcio.Error("--write_parameters cannot be used with pod indexes")
+		}
+
+	case indexTypeIntegrated:
+		// Integrated requires cloud and region
+		if c.cloud == "" {
+			return pcio.Error("--cloud is required for integrated indexes")
+		}
+		if c.region == "" {
+			return pcio.Error("--region is required for integrated indexes")
+		}
+		// Integrated requires model
+		if c.model == "" {
+			return pcio.Error("--model is required for integrated indexes")
+		}
+		// Integrated cannot have pod-specific flags
+		if c.environment != "" {
+			return pcio.Error("--environment cannot be used with integrated indexes")
+		}
+		if c.podType != "" {
+			return pcio.Error("--pod_type cannot be used with integrated indexes")
+		}
+		if c.shards != 1 {
+			return pcio.Error("--shards cannot be used with integrated indexes")
+		}
+		if c.replicas != 1 {
+			return pcio.Error("--replicas cannot be used with integrated indexes")
+		}
+		if len(c.metadataConfig) > 0 {
+			return pcio.Error("--metadata_config cannot be used with integrated indexes")
+		}
+		if c.vectorType != "" {
+			return pcio.Error("--vector_type cannot be used with integrated indexes")
+		}
 	}
 
 	return nil
@@ -342,17 +449,49 @@ func (c *createIndexOptions) validate() error {
 
 // determine the type of index being created based on high level input params
 func (c *createIndexOptions) deriveIndexType() (indexType, error) {
-	if c.cloud != "" && c.region != "" {
-		if c.model != "" {
-			return indexTypeIntegrated, nil
-		} else {
-			return indexTypeServerless, nil
-		}
+	// Count how many index types are specified
+	typeCount := 0
+	if c.serverless {
+		typeCount++
 	}
-	if c.environment != "" {
+	if c.pod {
+		typeCount++
+	}
+	if c.integrated {
+		typeCount++
+	}
+
+	// If multiple types are specified, that's an error
+	if typeCount > 1 {
+		return "", pcio.Error("only one index type can be specified. Use --serverless, --pod, or --integrated")
+	}
+
+	// If no type is explicitly specified, default to serverless
+	if typeCount == 0 {
+		c.serverless = true
+	}
+
+	// Determine type based on explicit flags
+	if c.serverless {
+		// Default to serverless index with common defaults
+		if c.cloud == "" {
+			c.cloud = "aws"
+		}
+		if c.region == "" {
+			c.region = "us-east-1"
+		}
+		return indexTypeServerless, nil
+	}
+
+	if c.pod {
 		return indexTypePod, nil
 	}
-	return "", pcio.Error("invalid index type. Please provide either:\n  - --environment for pod indexes\n  - --cloud and --region for serverless or integrated indexes")
+
+	if c.integrated {
+		return indexTypeIntegrated, nil
+	}
+
+	return "", pcio.Error("invalid index type")
 }
 
 func pointerOrNil[T comparable](value T) *T {
