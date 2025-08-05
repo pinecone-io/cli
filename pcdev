@@ -27,8 +27,61 @@ print_error() {
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DIST_DIR="$SCRIPT_DIR/dist"
+CACHE_FILE="$SCRIPT_DIR/.pcdev_cache"
 
-# Check if dist directory exists
+# Function to check if rebuild is needed
+check_rebuild_needed() {
+    # If dist doesn't exist, definitely need to build
+    if [ ! -d "$DIST_DIR" ]; then
+        return 0
+    fi
+    
+    # If cache file doesn't exist, need to build
+    if [ ! -f "$CACHE_FILE" ]; then
+        return 0
+    fi
+    
+    # Check if any Go files have been modified since last build
+    local last_build_time=$(cat "$CACHE_FILE" 2>/dev/null || echo "0")
+    
+    # Use stat to get the most recent modification time of Go files
+    local latest_file_time=0
+    if command -v stat >/dev/null 2>&1; then
+        # Find the most recent Go file modification time
+        latest_file_time=$(find "$SCRIPT_DIR" -name "*.go" -type f -exec stat -f "%m" {} \; 2>/dev/null | sort -n | tail -1)
+        if [ -z "$latest_file_time" ]; then
+            latest_file_time=0
+        fi
+    else
+        # Fallback for systems without stat
+        latest_file_time=$(find "$SCRIPT_DIR" -name "*.go" -type f -printf '%T@\n' 2>/dev/null | sort -n | tail -1)
+        if [ -z "$latest_file_time" ]; then
+            latest_file_time=0
+        fi
+    fi
+    
+    # Compare timestamps (using integer comparison)
+    if [ "$latest_file_time" -gt "$last_build_time" ]; then
+        return 0
+    fi
+    
+    return 1
+}
+
+# Function to update cache
+update_cache() {
+    echo "$(date +%s)" > "$CACHE_FILE"
+}
+
+# Check if rebuild is needed
+if check_rebuild_needed; then
+    print_warning "Source files have changed or dist directory missing. Building..."
+    goreleaser build --single-target --snapshot --clean
+    update_cache
+    print_status "Build completed successfully!"
+fi
+
+# Check if dist directory exists (final check)
 if [ ! -d "$DIST_DIR" ]; then
     print_error "dist directory not found. Please run 'goreleaser build --single-target --snapshot --clean' first."
     exit 1

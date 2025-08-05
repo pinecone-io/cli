@@ -32,3 +32,4 @@ secrets
 
 # Jetbrains IDE
 .idea/
+.pcdev_cache
