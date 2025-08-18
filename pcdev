@@ -11,17 +11,59 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Function to print colored output
+# Parse command line arguments
+DEBUG=false
+ARGS=()
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --pcdev-debug)
+            DEBUG=true
+            shift
+            ;;
+        --pcdev-help)
+            echo "Usage: pcdev [OPTIONS] [COMMAND_ARGS...]"
+            echo ""
+            echo "Options:"
+            echo "  --pcdev-debug    Show pcdev debug messages"
+            echo "  --pcdev-help     Show this help message"
+            echo ""
+            echo "Environment variables:"
+            echo "  PCDEV_DEBUG    Set to '1' or 'true' to show debug messages"
+            echo ""
+            echo "Examples:"
+            echo "  pcdev --pcdev-debug index list"
+            echo "  PCDEV_DEBUG=1 pcdev index list"
+            exit 0
+            ;;
+        *)
+            ARGS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+# Check environment variable for debug mode
+if [[ "$PCDEV_DEBUG" == "1" || "$PCDEV_DEBUG" == "true" ]]; then
+    DEBUG=true
+fi
+
+# Function to print colored output (respects debug mode)
 print_status() {
-    echo -e "${GREEN}[pcdev]${NC} $1"
+    if [[ "$DEBUG" == "true" ]]; then
+        echo -e "${GREEN}[pcdev]${NC} $1" >&2
+    fi
 }
 
 print_warning() {
-    echo -e "${YELLOW}[pcdev]${NC} $1"
+    if [[ "$DEBUG" == "true" ]]; then
+        echo -e "${YELLOW}[pcdev]${NC} $1" >&2
+    fi
 }
 
 print_error() {
-    echo -e "${RED}[pcdev]${NC} $1"
+    # Always show errors, even in debug mode
+    echo -e "${RED}[pcdev]${NC} $1" >&2
 }
 
 # Get script directory
@@ -173,7 +215,7 @@ if [ ! -x "$BINARY_PATH" ]; then
     chmod +x "$BINARY_PATH"
 fi
 
-print_status "Running: $BINARY_PATH $*"
+print_status "Running: $BINARY_PATH ${ARGS[*]}"
 
 # Execute the binary with all passed arguments
-exec "$BINARY_PATH" "$@" 
+exec "$BINARY_PATH" "${ARGS[@]}" 
