@@ -1,0 +1,17 @@
+{
+  "name": "__NAME__",
+  "host": "__HOST__",
+  "metric": "cosine",
+  "vector_type": "sparse",
+  "deletion_protection": "disabled",
+  "spec": {
+    "serverless": {
+      "cloud": "aws",
+      "region": "us-east-1"
+    }
+  },
+  "status": {
+    "ready": true,
+    "state": "Ready"
+  }
+}

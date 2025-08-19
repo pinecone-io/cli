@@ -36,6 +36,20 @@ To learn about the steps involved in building from source, see [CONTRIBUTING](./
 
 For contributors, we also provide a `pcdev` script that automatically detects your OS and runs the correct development binary. See the [CONTRIBUTING](./CONTRIBUTING.md) guide for details.
 
+### Running tests
+
+To run the test suite, you'll need to install test dependencies first:
+
+```bash
+# Install test dependencies
+test/install-deps.sh
+
+# Run tests
+test/bats test/tests/
+```
+
+See the [test documentation](./test/README.md) for more details.
+
 ## Usage
 
 In order to use the Pinecone CLI you will need to authenticate with Pinecone services. This can be done either with an API key, or using the `pc login` flow to authenticate with a Pinecone account via your browser.

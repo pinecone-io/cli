@@ -1,0 +1,1 @@
+bats-core/bin/bats

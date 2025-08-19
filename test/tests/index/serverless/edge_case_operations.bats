@@ -1,0 +1,110 @@
+#!/usr/bin/env bats
+
+# =============================================================================
+# Load helpers
+#
+# -----------------------------------------------------------------------------
+load "$BATS_ROOT/../helpers/custom/all.bash"
+# =============================================================================
+
+# =============================================================================
+# Set tags for all tests in this file
+#
+# -----------------------------------------------------------------------------
+# bats file_tags=scope:index, index-type:serverless, scenario:edge_cases
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Setup and teardown
+# -----------------------------------------------------------------------------
+
+# If something needs to be done before all tests in this file, do it here.
+setup_file() {
+    :
+}
+
+# If something needs to be done after all tests in this file, do it here.
+teardown_file() {
+    :
+}
+
+# If something needs to be done before each test in this file, do it here.
+setup() {
+    # Generate a unique index name for this test
+    export TEST_INDEX_NAME=$(generate_index_name)
+}
+
+# If something needs to be done after each test in this file, do it here.
+teardown() {
+    # Attempt to clean up the index created by this test
+    # This may fail if the test didn't actually create an index, which is fine
+    if [ -n "$TEST_INDEX_NAME" ]; then
+        $CLI index delete "$TEST_INDEX_NAME" 2>/dev/null || true
+    fi
+}
+
+# -----------------------------------------------------------------------------
+# Tests
+# -----------------------------------------------------------------------------
+
+# bats test_tags=action:create, vector-type:dense  
+@test "Serverless index with boundary dimension values" {
+    # Test minimum valid dimension
+    run $CLI index create ${TEST_INDEX_NAME} --serverless --dimension 1 --yes
+    assert_success
+    
+    # Verify the dimension was set correctly
+    local index_json=$(index_describe_wait_for_ready ${TEST_INDEX_NAME})
+    local dimension=$(echo "$index_json" | jq -r '.dimension')
+    [ "$dimension" = "1" ]
+}
+
+# bats test_tags=action:create, vector-type:dense
+@test "Serverless index with maximum valid dimension" {
+    # Test maximum valid dimension (assuming 2048 is max)
+    run $CLI index create ${TEST_INDEX_NAME} --serverless --dimension 2048 --yes
+    assert_success
+    
+    # Verify the dimension was set correctly
+    local index_json=$(index_describe_wait_for_ready ${TEST_INDEX_NAME})
+    local dimension=$(echo "$index_json" | jq -r '.dimension')
+    [ "$dimension" = "2048" ]
+}
+
+# bats test_tags=action:create, vector-type:dense
+@test "Serverless index with edge case names" {
+    # Test very short but valid name
+    local short_name="a"
+    run $CLI index create ${short_name} --serverless --yes
+    assert_success
+    
+    # Clean up
+    $CLI index delete ${short_name}
+    
+    # Test name with maximum valid length (44 characters, just under the 45 limit)
+    local long_name=$(printf 'a%.0s' {1..44})
+    run $CLI index create ${long_name} --serverless --yes
+    assert_success
+    
+    # Clean up
+    $CLI index delete ${long_name}
+}
+
+# bats test_tags=action:create, vector-type:dense
+@test "Serverless index with edge case tags" {
+    # Test edge case tag values using the correct comma-separated format
+    # Note: This test expects that empty tag values (like "key=") should be saved and returned
+    # The current CLI failure indicates a bug where empty tag values are being dropped
+    run $CLI index create ${TEST_INDEX_NAME} --serverless --tags "key=,empty-value=,special-chars=test-value" --yes
+    assert_success
+    
+    # Verify the tags were set correctly
+    local index_json=$(index_describe_wait_for_ready ${TEST_INDEX_NAME})
+    local tags=$(echo "$index_json" | jq -r '.tags | to_entries[] | "\(.key)=\(.value)"' | sort)
+    
+    # Check that our edge case tags are present
+    # Expected: all three tags should be saved, including empty values
+    echo "$tags" | grep -q "key="
+    echo "$tags" | grep -q "empty-value="
+    echo "$tags" | grep -q "special-chars=test-value"
+}

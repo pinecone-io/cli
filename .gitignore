@@ -22,6 +22,7 @@ go.work
 
 # Build outputs
 bin/
+!test/helpers/bin/
 
 dist/
 .env
