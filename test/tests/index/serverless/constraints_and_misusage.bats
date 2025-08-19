@@ -206,3 +206,22 @@ teardown() {
     assert_failure
     assert_output --partial "Must be greater than 0 and less than 20,000"
 }
+
+# bats test_tags=action:create, validation:constraints
+@test "Serverless index with sparse vector type must use dotproduct metric" {
+    # Test that sparse vectors with non-dotproduct metrics fail
+    run $CLI index create ${TEST_INDEX_NAME} --serverless --vector_type sparse --metric cosine --yes
+    assert_failure
+    assert_output --partial "sparse vector type requires dotproduct metric"
+    
+    run $CLI index create ${TEST_INDEX_NAME} --serverless --vector_type sparse --metric euclidean --yes
+    assert_failure
+    assert_output --partial "sparse vector type requires dotproduct metric"
+    
+    # Test that sparse vectors with dotproduct metric succeed
+    run $CLI index create ${TEST_INDEX_NAME} --serverless --vector_type sparse --metric dotproduct --yes
+    assert_success
+    
+    # Clean up
+    $CLI index delete ${TEST_INDEX_NAME}
+}

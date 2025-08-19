@@ -1,7 +1,7 @@
 {
   "name": "__NAME__",
   "host": "__HOST__",
-  "metric": "cosine",
+  "metric": "dotproduct",
   "vector_type": "sparse",
   "deletion_protection": "disabled",
   "spec": {

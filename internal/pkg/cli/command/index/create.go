@@ -712,6 +712,22 @@ func (c *createIndexOptions) validate(cmd *cobra.Command) error {
 		}
 	}
 
+	// Handle dimension logic for different vector types
+	if c.vectorType == "sparse" {
+		// Check if dimension flag was explicitly set by user
+		if cmd.Flags().Changed("dimension") {
+			validationError = pcio.Error("--dimension cannot be used with sparse vector type. Sparse vectors have variable dimensions determined at runtime.")
+		} else {
+			// For sparse vectors without explicit dimension, set to 0 so pointerOrNil returns nil
+			c.dimension = 0
+		}
+
+		// Check that sparse vectors use dotproduct metric
+		if c.metric != "" && c.metric != "dotproduct" {
+			validationError = pcio.Error("sparse vector type requires dotproduct metric")
+		}
+	}
+
 	return validationError
 }
 
