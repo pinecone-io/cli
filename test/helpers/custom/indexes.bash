@@ -1,18 +1,14 @@
+# Get machine identifier for unique naming
 get_machine_id() {
     echo "$(head -c 12 /etc/machine-id 2>/dev/null || hostname | sha1sum | cut -c1-12)"
 }
 
-# Generate a unique index name with format: t-{timestamp}-{base64-uuid}
-# The name only contains lowercase alphanumeric characters and dashes
-# - t: prefix for test
-# - timestamp: Unix timestamp for chronological ordering
-# - base64-uuid: base64-encoded UUID with unsafe characters removed (for uniqueness)
+# Generate unique test index name: t-{machine-id}-{timestamp}-{uuid}
 generate_index_name() {
     echo "t-$(get_machine_id)-$(date +%s)-$(uuidgen | xxd -r -p | base64 | tr -d '=/+' | cut -c1-10 | tr '[:upper:]' '[:lower:]')"
 }
 
-# Helper function to extract JSON from CLI output
-# This function finds the line that starts with { and extracts from there
+# Extract JSON from CLI output (finds line starting with {)
 extract_json_from_output() {
     local output="$1"
     # Find the line that starts with { and extract from there
@@ -20,36 +16,12 @@ extract_json_from_output() {
 }
 
 
-# Helper function to wait for index to be ready
-# 
-# This function polls an index until it reaches a "Ready" state or encounters a terminal error.
-# It handles various index statuses appropriately:
-# - Success: Returns 0 and outputs the index JSON to stdout when status is "Ready"
-# - Error: Returns 1 for terminal states like "Failed", "InitializationFailed", "Terminating", "Disabled"
-# - Wait: Continues polling for transient states like "Initializing", "ScalingUp", "ScalingDown", etc.
-# 
-# The function also handles binary call failures gracefully:
-# - Fails fast for permanent errors (not found, unauthorized)
-# - Retries transient errors up to 3 times before giving up
-# - Times out after 1 minute (12 attempts × 5 seconds)
+# Wait for index to reach Ready state
+# Polls index status until Ready, Failed, or timeout (1 minute)
+# Handles binary call failures with retry logic
 #
-# Usage:
-#   index_json=$(index_describe_wait_for_ready "index-name")
-#   if [ $? -eq 0 ]; then
-#       # Process the JSON output
-#       index_id=$(echo "$index_json" | jq -r '.id')
-#   fi
-#
-# Parameters:
-#   $1: index_name - The name of the index to monitor
-#
-# Returns:
-#   0: Index is ready (JSON output to stdout)
-#   1: Index failed, terminated, or other error
-#
-# Output:
-#   - JSON representation of the index to stdout on success
-#   - Status messages and errors to stderr
+# Usage: index_json=$(index_describe_wait_for_ready "index-name")
+# Returns: 0 on success (JSON to stdout), 1 on failure
 index_describe_wait_for_ready() {
     local index_name="$1"
     local max_attempts=12  # 1 minute (12 attempts * 5 seconds)
@@ -110,33 +82,12 @@ index_describe_wait_for_ready() {
 }
 
 # =============================================================================
-# JSON Comparison and Validation Functions
+# JSON Template Validation Functions
 # =============================================================================
 
-# Compare an actual index JSON response with an expected template
-# This function validates the structure and key values while allowing for
-# dynamic values like names, hosts, and timestamps
-#
-# Usage:
-#   assert_index_json_matches_template "$actual_json" "$expected_template"
-#   assert_index_json_matches_template "$actual_json" "serverless_default"
-#   assert_index_json_matches_template "$actual_json" "$(load_index_template 'serverless_default')"
-#
-# Parameters:
-#   $1: actual_json - The actual JSON response from the CLI
-#   $2: expected_template - Either a template name (to load from file) or a JSON string
-#
-# Returns:
-#   0: JSON matches expected template
-#   1: JSON does not match (with detailed error message)
-#
-# Note: The function automatically detects whether the input is a template name
-# (to load from file) or a JSON string. Template names that don't exist will
-# cause the function to fail.
-#
-# This function now uses jd-based validation for efficient template matching.
-# Expected values can be passed as a third parameter to replace placeholders.
-assert_index_json_matches_template() {
+# Validate JSON against template from file
+# Usage: assert_index_json_matches_template_file "$actual_json" "serverless_default"
+# Returns: 0 on match, 1 on mismatch
     local actual_json="$1"
     local expected_template="$2"
     local placeholders_values="$3"
@@ -175,19 +126,10 @@ assert_index_json_matches_template() {
     fi
 }
 
-# Load a JSON template from a file
-# This allows for more complex templates and easier maintenance
-#
-# Usage:
-#   template_json=$(load_index_template "serverless_default")
-#   assert_index_json_matches_template "$actual_json" "$template_json"
-#
-# Parameters:
-#   $1: template_name - The name of the template file (without .json extension)
-#
-# Returns:
-#   JSON template string to stdout on success
-#   Exits with error message if template file not found or invalid
+
+# Load JSON template from file or full path
+# Usage: template_json=$(load_index_template "serverless_default")
+# Returns: JSON string on success, error message on failure
 load_index_template() {
     local template_name="$1"
     # Use relative path from the test directory
@@ -211,19 +153,10 @@ load_index_template() {
 }
 
 
-# Recursively validate JSON against a template
-# This function treats every field in the template as required and checks if values match
-#
-# Usage:
-#   assert_json_matches_template_recursive "$actual_json" "$template_json"
-#
-# Parameters:
-#   $1: actual_json - The JSON data to validate
-#   $2: template_json - The template JSON to validate against
-#
-# Returns:
-#   0: JSON matches template structure and values
-#   1: JSON does not match template (with detailed error message)
+# Core JSON validation using jd tool
+# Handles placeholder replacement and template matching
+# Usage: assert_json_matches_template_jd "$actual_json" "$template_json" "$placeholders_values"
+# Returns: 0 on match, 1 on mismatch
 assert_json_matches_template_jd() {
     local actual_json="$1"
     local template_json="$2"
@@ -272,19 +205,9 @@ assert_json_matches_template_jd() {
     fi
 }
 
-# Extract CLI parameters from a JSON template
-# This function reads a template file and converts it to CLI command flags
-#
-# Usage:
-#   cli_params=$(extract_cli_params_from_template "serverless_aws")
-#   $CLI index create ${NAME} $cli_params -y
-#
-# Parameters:
-#   $1: template_name - The name of the template file (without .json extension)
-#
-# Returns:
-#   CLI flags string to stdout on success
-#   Exits with error message if template file not found or invalid
+# Convert JSON template to CLI flags
+# Usage: cli_params=$(extract_cli_params_from_template "serverless_aws")
+# Returns: CLI flags string on success, error message on failure
 extract_cli_params_from_template() {
     local template_name="$1"
     local template_json
