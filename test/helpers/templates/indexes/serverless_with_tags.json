@@ -1,0 +1,22 @@
+{
+  "name": "__NAME__",
+  "host": "__HOST__",
+  "metric": "cosine",
+  "vector_type": "dense",
+  "deletion_protection": "disabled",
+  "dimension": 1536,
+  "tags": {
+    "env": "test",
+    "team": "qa"
+  },
+  "spec": {
+    "serverless": {
+      "cloud": "aws",
+      "region": "us-east-1"
+    }
+  },
+  "status": {
+    "ready": true,
+    "state": "Ready"
+  }
+}
