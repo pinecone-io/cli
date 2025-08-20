@@ -166,27 +166,13 @@ teardown() {
     run $CLI index create ${TEST_INDEX_NAME} --serverless --tags "=value" --yes
     assert_failure
     assert_output --partial "Keys must not be empty"
-    
-    # Test multiple separate tag arguments (should fail - CLI expects comma-separated format)
-    run $CLI index create ${TEST_INDEX_NAME} --serverless --tags "key1=value1" "key2=value2" --yes
-    assert_failure
-    assert_output --partial "unknown flag"
 }
 
 # bats test_tags=action:create, validation:flags
 @test "Serverless index with invalid tags argument format" {
-    # Test that --tags with separate arguments fails (CLI expects comma-separated format)
-    # Note: Current CLI behavior is to accept only the first tag and ignore subsequent arguments
-    # This test documents the expected behavior that should reject multiple separate arguments
-    # The current behavior could be confusing for users and should be fixed
     run $CLI index create ${TEST_INDEX_NAME} --serverless --tags "key1=value1" "key2=value2" --yes
     assert_failure
-    assert_output --partial "unknown flag"
-    
-    # Test that --tags with mixed format fails
-    run $CLI index create ${TEST_INDEX_NAME} --serverless --tags "key1=value1,key2=value2" "key3=value3" --yes
-    assert_failure
-    assert_output --partial "unknown flag"
+    assert_output --partial "Too many arguments provided"
 }
 
 # bats test_tags=action:create, validation:flags

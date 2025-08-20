@@ -123,12 +123,19 @@ func NewCreateIndexCmd() *cobra.Command {
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			var name string
-			if len(args) > 0 {
+			if len(args) == 0 {
+				// No name provided, enable interactive mode
+				options.interactive = true
+			} else if len(args) == 1 {
+				// One argument provided, use it as the name
 				name = args[0]
 			} else {
-				// Automatically enable interactive mode if no name is provided
-				options.interactive = true
+				// Too many arguments
+				msg.FailMsg("Too many arguments provided: %v. The 'index create' command expects only one argument (the index name).", args[1:])
+				exit.Error(fmt.Errorf("too many arguments"))
+				return
 			}
+
 			runCreateIndexCmd(name, options, cmd)
 		},
 	}
