@@ -219,6 +219,18 @@ func runCreateIndexCmd(name string, options createIndexOptions, cmd *cobra.Comma
 	// index tags
 	var indexTags *pinecone.IndexTags
 	if len(options.tags) > 0 {
+		// Check for empty tag values and warn users
+		var emptyTagKeys []string
+		for key, value := range options.tags {
+			if value == "" {
+				emptyTagKeys = append(emptyTagKeys, key)
+			}
+		}
+
+		if len(emptyTagKeys) > 0 {
+			msg.WarnMsg("Warning: Empty tag values for keys '%s' will be dropped by Pinecone. Only tags with values are stored.", strings.Join(emptyTagKeys, ", "))
+		}
+
 		tags := pinecone.IndexTags(options.tags)
 		indexTags = &tags
 	}
