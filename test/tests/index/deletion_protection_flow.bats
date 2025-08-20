@@ -71,10 +71,9 @@ teardown() {
     
     # Now delete the index - this should succeed
     $CLI index delete ${TEST_INDEX_NAME}
-        
-    # Verify the index was actually deleted
-    run $CLI index describe ${TEST_INDEX_NAME}
-    assert_failure
+    
+    # Assert that index has been deleted
+    assert_index_doesnt_exist ${TEST_INDEX_NAME}
 }
 
 # bats test_tags=action:CRUD, mode:flags
@@ -113,7 +112,8 @@ teardown() {
     # Now delete the index
     $CLI index delete ${TEST_INDEX_NAME}
     
-    # Verify the index was actually deleted
-    run $CLI index describe ${TEST_INDEX_NAME}
-    assert_failure
+    # Assert that index has been deleted
+    assert_index_doesnt_exist ${TEST_INDEX_NAME}
 }
+
+

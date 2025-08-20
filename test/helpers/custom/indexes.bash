@@ -81,6 +81,32 @@ index_describe_wait_for_ready() {
     return 1
 }
 
+# Assert that an index does not exist
+# Polls index status with retries to handle asynchronous deletion
+# Fails the test if index still exists after timeout
+#
+# Usage: assert_index_doesnt_exist "index-name"
+# Returns: 0 if index doesn't exist, fails test otherwise
+assert_index_doesnt_exist() {
+    local index_name="$1"
+    local max_retries=6
+    local retry=0
+    
+    while [ $retry -lt $max_retries ]; do
+        sleep 2
+        run $CLI index describe "$index_name"
+        
+        if [ $status -ne 0 ] && echo "$output" | grep -q "does not exist" 2>/dev/null; then
+            return 0 
+        fi
+        
+        retry=$((retry + 1))
+    done
+    
+    echo "Index $index_name exists" >&2
+    return 1
+}
+
 # =============================================================================
 # JSON Template Validation Functions
 # =============================================================================
