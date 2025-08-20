@@ -47,7 +47,7 @@ teardown() {
 
 @test "load template from file" {
     local template_json=$(load_index_template "serverless_default")
-    [ -n "$template_json" ]
+    assert [ -n "$template_json" ]
     
     # Verify it's valid JSON
     echo "$template_json" | jq . >/dev/null
@@ -56,7 +56,7 @@ teardown() {
 @test "fail when template file is missing" {
     run load_index_template "nonexistent_template" 2>&1
     assert_failure
-    [[ "$output" == *"Template file not found"* ]]
+    assert_output --partial "Template file not found"
 }
 
 @test "fail when template file has invalid JSON" {
@@ -65,9 +65,9 @@ teardown() {
     local invalid_template="$temp_dir/invalid.json"
     echo '{"invalid": json}' > "$invalid_template"
     
-    run load_index_template "$temp_dir/invalid" 2>&1
+    run load_index_template "$invalid_template" 2>&1
     assert_failure
-    [[ "$output" == *"Invalid JSON in template file"* ]]
+    assert_output --partial "Invalid JSON in template file"
     
     rm -rf "$temp_dir"
 }
@@ -76,7 +76,18 @@ teardown() {
     local valid_json='{"name": "test", "metric": "cosine"}'
     
     # Use a non-existent template name - should fail to load
-    run assert_index_json_matches_template "$valid_json" "nonexistent_template"
+    run assert_index_json_matches_template_file "$valid_json" "nonexistent_template"
     assert_failure
-    [[ "$output" == *"Failed to load template 'nonexistent_template' from file"* ]]
+    assert_output --partial "Failed to load template 'nonexistent_template' from file"
 }
+
+@test "validate JSON against JSON template string" {
+    local actual_json='{"name": "test-index", "metric": "cosine", "dimension": 1536}'
+    local template_json='{"name": "test-index", "metric": "cosine", "dimension": 1536}'
+    
+    # Should succeed with exact match
+    run assert_index_json_matches_template_json "$actual_json" "$template_json"
+    assert_success
+}
+
+

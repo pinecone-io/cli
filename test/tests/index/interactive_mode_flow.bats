@@ -72,6 +72,6 @@ teardown() {
         __HOST__:$host_value
     "
     local template_name="serverless_aws"
-    assert_index_json_matches_template "$index_json" "$template_name" "$placeholders_values"
+    assert_index_json_matches_template_file "$index_json" "$template_name" "$placeholders_values"
 
 }

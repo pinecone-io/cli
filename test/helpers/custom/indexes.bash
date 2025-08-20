@@ -88,8 +88,9 @@ index_describe_wait_for_ready() {
 # Validate JSON against template from file
 # Usage: assert_index_json_matches_template_file "$actual_json" "serverless_default"
 # Returns: 0 on match, 1 on mismatch
+assert_index_json_matches_template_file() {
     local actual_json="$1"
-    local expected_template="$2"
+    local template_name="$2"
     local placeholders_values="$3"
     
     # Check if actual_json is valid JSON
@@ -98,32 +99,42 @@ index_describe_wait_for_ready() {
         return 1
     fi
     
-    # Get the expected template JSON
+    # Load the template from file
     local expected_json
-    
-    # First, try to load as a template file
-    expected_json=$(load_index_template "$expected_template" 2>/dev/null)
-    if [ $? -eq 0 ] && [ -n "$expected_json" ]; then
-        # Successfully loaded template from file
-        :
-    else
-        # Check if it looks like a JSON string (starts with { or [)
-        if [[ "$expected_template" =~ ^[[:space:]]*[{\[] ]]; then
-            # Assume it's a direct JSON string
-            expected_json="$expected_template"
-        else
-            # Failed to load template and doesn't look like JSON
-            echo "Error: Failed to load template '$expected_template' from file" >&2
-            return 1
-        fi
+    expected_json=$(load_index_template "$template_name" 2>/dev/null)
+    if [ $? -ne 0 ] || [ -z "$expected_json" ]; then
+        echo "Error: Failed to load template '$template_name' from file" >&2
+        return 1
     fi
     
     # Use jd-based template matching for simple and efficient validation
-    if assert_json_matches_template_jd "$actual_json" "$expected_json" "$placeholders_values"; then
-        return 0
-    else
+    assert_json_matches_template_jd "$actual_json" "$expected_json" "$placeholders_values"
+    return $?
+}
+
+# Validate JSON against template string
+# Usage: assert_index_json_matches_template_json "$actual_json" '{"name": "test", "metric": "cosine"}'
+# Returns: 0 on match, 1 on mismatch
+assert_index_json_matches_template_json() {
+    local actual_json="$1"
+    local template_json="$2"
+    local placeholders_values="$3"
+    
+    # Check if actual_json is valid JSON
+    if ! echo "$actual_json" | jq . >/dev/null 2>&1; then
+        echo "Error: actual_json is not valid JSON" >&2
         return 1
     fi
+    
+    # Check if template_json is valid JSON
+    if ! echo "$template_json" | jq . >/dev/null 2>&1; then
+        echo "Error: template_json is not valid JSON" >&2
+        return 1
+    fi
+    
+    # Use jd-based template matching for simple and efficient validation
+    assert_json_matches_template_jd "$actual_json" "$template_json" "$placeholders_values"
+    return $?
 }
 
 
@@ -132,8 +143,15 @@ index_describe_wait_for_ready() {
 # Returns: JSON string on success, error message on failure
 load_index_template() {
     local template_name="$1"
-    # Use relative path from the test directory
-    local template_file="$BATS_ROOT/../helpers/templates/indexes/${template_name}.json"
+    local template_file
+    
+    # Check if template_name is a full path or just a template name
+    if [[ "$template_name" == /* ]]; then
+        template_file="$template_name"
+    else
+        # Template name provided - use relative path from the test directory
+        template_file="$BATS_ROOT/../helpers/templates/indexes/${template_name}.json"
+    fi
     
     if [ ! -f "$template_file" ]; then
         echo "Error: Template file not found: $template_file" >&2

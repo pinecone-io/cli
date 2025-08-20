@@ -59,7 +59,7 @@ teardown() {
         __NAME__:${TEST_INDEX_NAME} 
         __HOST__:$host_value
     "
-    assert_index_json_matches_template "$index_json" "serverless_default" "$placeholders_values"
+    assert_index_json_matches_template_file "$index_json" "serverless_default" "$placeholders_values"
     
 }
 
@@ -88,6 +88,6 @@ teardown() {
         __NAME__:${TEST_INDEX_NAME} 
         __HOST__:$host_value
     "
-    assert_index_json_matches_template "$index_json" "serverless_default" "$placeholders_values"
+    assert_index_json_matches_template_file "$index_json" "serverless_default" "$placeholders_values"
 
 }
