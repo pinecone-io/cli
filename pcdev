@@ -117,10 +117,14 @@ update_cache() {
 
 # Check if rebuild is needed
 if check_rebuild_needed; then
-    print_warning "Source files have changed or dist directory missing. Building..."
-    goreleaser build --single-target --snapshot --clean
-    update_cache
-    print_status "Build completed successfully!"
+    if [ "$SKIP_PCDEV_BUILD" = "true" ]; then
+        print_status "SKIP_PCDEV_BUILD is set, skipping build step"
+    else
+        print_warning "Source files have changed or dist directory missing. Building..."
+        goreleaser build --single-target --snapshot --clean
+        update_cache
+        print_status "Build completed successfully!"
+    fi
 fi
 
 # Check if dist directory exists (final check)
@@ -134,6 +138,7 @@ OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 ARCH=$(uname -m)
 
 print_status "Detected OS: $OS, Architecture: $ARCH"
+print_status "Looking for binary in dist directory: $DIST_DIR"
 
 # Determine the correct binary path
 BINARY_PATH=""
@@ -160,19 +165,39 @@ case "$OS" in
     "linux")
         case "$ARCH" in
             "x86_64"|"amd64")
-                if [ -f "$DIST_DIR/pc_linux_amd64/pc" ]; then
+                # Try goreleaser v2 naming first (pc_Linux_x86_64)
+                if [ -f "$DIST_DIR/pc_Linux_x86_64/pc" ]; then
+                    BINARY_PATH="$DIST_DIR/pc_Linux_x86_64/pc"
+                # Fallback to older naming conventions
+                elif [ -f "$DIST_DIR/pc_linux_amd64/pc" ]; then
                     BINARY_PATH="$DIST_DIR/pc_linux_amd64/pc"
                 elif [ -f "$DIST_DIR/pc_linux_x86_64/pc" ]; then
                     BINARY_PATH="$DIST_DIR/pc_linux_x86_64/pc"
                 fi
                 ;;
-            "aarch64"|"arm64")
-                if [ -f "$DIST_DIR/pc_linux_arm64/pc" ]; then
+            "aarch64"|"arm64"|"arm64_v8.0")
+                # Try goreleaser v2 naming first (pc_Linux_arm64 or pc_Linux_arm64_v8.0)
+                if [ -f "$DIST_DIR/pc_Linux_arm64_v8.0/pc" ]; then
+                    BINARY_PATH="$DIST_DIR/pc_Linux_arm64_v8.0/pc"
+                elif [ -f "$DIST_DIR/pc_Linux_arm64/pc" ]; then
+                    BINARY_PATH="$DIST_DIR/pc_Linux_arm64/pc"
+                # Fallback to older naming conventions
+                elif [ -f "$DIST_DIR/pc_linux_arm64_v8.0/pc" ]; then
+                    BINARY_PATH="$DIST_DIR/pc_linux_arm64_v8.0/pc"
+                elif [ -f "$DIST_DIR/pc_linux_arm64/pc" ]; then
                     BINARY_PATH="$DIST_DIR/pc_linux_arm64/pc"
                 fi
                 ;;
             "armv7l"|"arm")
-                if [ -f "$DIST_DIR/pc_linux_arm/pc" ]; then
+                # Try goreleaser v2 naming first (pc_Linux_arm or pc_Linux_arm_v7)
+                if [ -f "$DIST_DIR/pc_Linux_arm_v7/pc" ]; then
+                    BINARY_PATH="$DIST_DIR/pc_Linux_arm_v7/pc"
+                elif [ -f "$DIST_DIR/pc_Linux_arm/pc" ]; then
+                    BINARY_PATH="$DIST_DIR/pc_Linux_arm/pc"
+                # Fallback to older naming conventions
+                elif [ -f "$DIST_DIR/pc_linux_arm_v7/pc" ]; then
+                    BINARY_PATH="$DIST_DIR/pc_linux_arm_v7/pc"
+                elif [ -f "$DIST_DIR/pc_linux_arm/pc" ]; then
                     BINARY_PATH="$DIST_DIR/pc_linux_arm/pc"
                 fi
                 ;;

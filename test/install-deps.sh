@@ -63,6 +63,18 @@ check_jd() {
     fi
 }
 
+# Function to install jd using Go
+install_jd_go() {
+    go install github.com/josephburnett/jd@latest
+    local status=$?
+    if [ $status -eq 0 ]; then
+        print_status "SUCCESS" "jd installed via Go"
+    else
+        print_status "ERROR" "Failed to install jd via Go"
+    fi
+    return $status
+}
+
 # Function to check if BATS submodules are initialized
 check_bats_submodules() {
     # BATS submodules are always relative to the script location
@@ -125,6 +137,19 @@ case "$PACKAGE_MANAGER" in
             print_status "SUCCESS" "GNU parallel installed via Homebrew"
         fi
         
+        # Install uuidgen and xxd (available by default on most systems)
+        if ! command -v uuidgen >/dev/null 2>&1; then
+            print_status "INFO" "Installing uuidgen..."
+            brew install uuid
+            print_status "SUCCESS" "uuidgen installed via Homebrew"
+        fi
+        
+        if ! command -v xxd >/dev/null 2>&1; then
+            print_status "INFO" "Installing xxd..."
+            brew install xxd
+            print_status "SUCCESS" "xxd installed via Homebrew"
+        fi
+        
         if ! check_jd; then
             print_status "INFO" "Installing jd..."
             brew install jd
@@ -146,9 +171,20 @@ case "$PACKAGE_MANAGER" in
             print_status "SUCCESS" "GNU parallel installed via apt-get"
         fi
         
+        # Install uuidgen and xxd (part of uuid-runtime and xxd packages)
+        if ! command -v uuidgen >/dev/null 2>&1; then
+            sudo apt-get install -y uuid-runtime
+            print_status "SUCCESS" "uuidgen installed via apt-get (uuid-runtime)"
+        fi
+        
+        if ! command -v xxd >/dev/null 2>&1; then
+            sudo apt-get install -y xxd
+            print_status "SUCCESS" "xxd installed via apt-get"
+        fi
+        
         if ! check_jd; then
-            sudo apt-get install -y jd
-            print_status "SUCCESS" "jd installed via apt-get"
+            print_status "INFO" "jd not available in apt repositories, installing via Go..."
+            install_jd_go
         fi
         ;;
     "yum")
@@ -165,9 +201,20 @@ case "$PACKAGE_MANAGER" in
             print_status "SUCCESS" "GNU parallel installed via yum"
         fi
         
+        # Install uuidgen and xxd (part of uuid and vim-common packages)
+        if ! command -v uuidgen >/dev/null 2>&1; then
+            sudo yum install -y uuid
+            print_status "SUCCESS" "uuidgen installed via yum (uuid)"
+        fi
+        
+        if ! command -v xxd >/dev/null 2>&1; then
+            sudo yum install -y vim-common
+            print_status "SUCCESS" "xxd installed via yum (vim-common)"
+        fi
+        
         if ! check_jd; then
-            sudo yum install -y jd
-            print_status "SUCCESS" "jd installed via yum"
+            print_status "jd not available in yum repositories, installing via Go..."
+            install_jd_go
         fi
         ;;
 esac
