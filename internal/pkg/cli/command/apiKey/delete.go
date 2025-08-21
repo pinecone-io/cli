@@ -1,4 +1,4 @@
-package project
+package apiKey
 
 import (
 	"bufio"
@@ -6,80 +6,81 @@ import (
 	"os"
 	"strings"
 
-	"github.com/pinecone-io/cli/internal/pkg/dashboard"
+	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
+	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 	"github.com/spf13/cobra"
 )
 
 type DeleteApiKeyOptions struct {
-	name string
-	yes  bool
+	apiKeyId string
+	yes      bool
 }
 
 func NewDeleteKeyCmd() *cobra.Command {
 	options := DeleteApiKeyOptions{}
 
 	cmd := &cobra.Command{
-		Use:     "delete-key",
-		Short:   "delete an API key in a project",
-		GroupID: help.GROUP_PROJECTS_API_KEYS.ID,
-		Example: help.Examples([]string{
-			"pc target -o \"my-org\" -p \"my-project\"",
-			"pc delete-key -n \"my-key\"",
-		}),
+		Use:     "delete",
+		Short:   "delete an API key by ID",
+		GroupID: help.GROUP_API_KEYS.ID,
+		Example: heredoc.Doc(`
+		$ pc target -o "my-org" -p "my-project"
+		$ pc api-key delete -i "api-key-id" 
+		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			projId, err := getTargetProjectId()
+			ac := sdk.NewPineconeAdminClient()
+
+			projId, err := state.GetTargetProjectId()
 			if err != nil {
 				msg.FailMsg("No target project set. Use %s to set the target project.", style.Code("pc target -o <org> -p <project>"))
 				exit.ErrorMsg("No project context set")
 			}
 
-			if options.name == "" {
-				msg.FailMsg("Name of the key is required. Pass it with the %s flag", style.Code("--name"))
-				exit.ErrorMsg("Name of the key is required")
-			}
-
 			// Verify key exists before trying to delete it.
 			// This lets us give a more helpful error message than just
 			// attempting to delete non-existent key and getting 500 error.
-			existingKeys, err := dashboard.GetApiKeysById(projId)
+			existingKeys, err := ac.APIKey.List(cmd.Context(), projId)
 			if err != nil {
 				msg.FailMsg("Failed to list keys: %s", err)
 				exit.Error(err)
 			}
-			var keyToDelete dashboard.Key
+			var keyToDelete *pinecone.APIKey
 			var keyExists bool = false
-			for _, key := range existingKeys.Keys {
-				if key.UserLabel == options.name {
+			for _, key := range existingKeys {
+				if key.Id == options.apiKeyId {
 					keyToDelete = key
 					keyExists = true
 				}
 			}
 			if !keyExists {
-				msg.FailMsg("Key with name %s does not exist", style.Emphasis(options.name))
-				msg.HintMsg("See existing keys with %s", style.Code("pc project list-keys"))
-				exit.ErrorMsg(pcio.Sprintf("Key with name %s does not exist", style.Emphasis(options.name)))
+				msg.FailMsg("Key with ID %s does not exist", style.Emphasis(options.apiKeyId))
+				msg.HintMsg("See existing keys with %s", style.Code(pcio.Sprintf("pc api-key list")))
+				exit.ErrorMsg(pcio.Sprintf("Key with ID %s does not exist", style.Emphasis(options.apiKeyId)))
 			}
 
 			if !options.yes {
-				confirmDeleteApiKey(options.name)
+				confirmDeleteApiKey(keyToDelete.Name)
 			}
 
-			_, err = dashboard.DeleteApiKey(projId, keyToDelete)
+			err = ac.APIKey.Delete(cmd.Context(), keyToDelete.Id)
 			if err != nil {
-				msg.FailMsg("Failed to delete key: %s", err)
+				msg.FailMsg("Failed to delete API key %s: %s", style.Emphasis(keyToDelete.Name), err)
 				exit.Error(err)
 			}
-			msg.SuccessMsg("API key %s deleted", style.Emphasis(options.name))
+			msg.SuccessMsg("API key %s deleted", style.Emphasis(keyToDelete.Name))
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the key to create")
+	cmd.Flags().StringVarP(&options.apiKeyId, "id", "i", "", "the ID of the API key to delete")
+	_ = cmd.MarkFlagRequired("id")
+
 	cmd.Flags().BoolVar(&options.yes, "yes", false, "skip confirmation prompt")
 	return cmd
 }

@@ -1,4 +1,4 @@
-package logout
+package auth
 
 import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"

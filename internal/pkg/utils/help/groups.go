@@ -6,24 +6,28 @@ import (
 )
 
 var (
-	GROUP_START = &cobra.Group{
-		ID:    "getting-started",
-		Title: style.Heading("Auth Commands"),
+	GROUP_AUTH = &cobra.Group{
+		ID:    "auth",
+		Title: style.Heading("Authentication Commands"),
 	}
-	GROUP_MANAGEMENT = &cobra.Group{
-		ID:    "index",
-		Title: style.Heading("Management Commands"),
+	GROUP_ADMIN = &cobra.Group{
+		ID:    "admin",
+		Title: style.Heading("Admin Management Commands"),
+	}
+	GROUP_API_KEYS = &cobra.Group{
+		ID:    "api-keys",
+		Title: style.Heading("API Key Management Commands"),
+	}
+	GROUP_PROJECTS = &cobra.Group{
+		ID:    "projects",
+		Title: style.Heading("Project Management Commands"),
+	}
+	GROUP_ORGANIZATIONS = &cobra.Group{
+		ID:    "organizations",
+		Title: style.Heading("Organization Management Commands "),
 	}
 	GROUP_VECTORDB = &cobra.Group{
 		ID:    "vectordb",
 		Title: style.Heading("Vector Database Commands"),
-	}
-	GROUP_PROJECTS_API_KEYS = &cobra.Group{
-		ID:    "keys",
-		Title: style.Heading("API Key Management"),
-	}
-	GROUP_PROJECTS_CRUD = &cobra.Group{
-		ID:    "projects",
-		Title: style.Heading("Project Management"),
 	}
 )

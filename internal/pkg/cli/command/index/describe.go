@@ -1,7 +1,6 @@
 package index
 
 import (
-	"context"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -26,10 +25,9 @@ func NewDescribeCmd() *cobra.Command {
 		Use:   "describe",
 		Short: "Get configuration and status information for an index",
 		Run: func(cmd *cobra.Command, args []string) {
-			ctx := context.Background()
 			pc := sdk.NewPineconeClient()
 
-			idx, err := pc.DescribeIndex(ctx, options.name)
+			idx, err := pc.DescribeIndex(cmd.Context(), options.name)
 			if err != nil {
 				if strings.Contains(err.Error(), "not found") {
 					msg.FailMsg("The index %s does not exist\n", style.Emphasis(options.name))
