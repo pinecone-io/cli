@@ -12,7 +12,7 @@ import (
 func NewLoginCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "login",
-		Short:   "Login to Pinecone CLI",
+		Short:   "Log in to the Pinecone CLI",
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			out := cmd.OutOrStdout()

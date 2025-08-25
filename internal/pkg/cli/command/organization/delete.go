@@ -28,10 +28,10 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "delete",
-		Short: "delete an organization by ID",
+		Short: "Delete an organization by ID",
 		Example: heredoc.Doc(`
 		$ pc organization delete -i <organization-id>
-		$ pc organization delete -i <organization-id> --yes
+		$ pc organization delete -i <organization-id> --skip-confirmation
 		`),
 		GroupID: help.GROUP_ORGANIZATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -71,7 +71,7 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 
 	// optional flags
 	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "Skip the deletion confirmation prompt")
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 
 	return cmd
 }

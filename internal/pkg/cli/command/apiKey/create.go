@@ -27,7 +27,7 @@ func NewCreateApiKeyCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:     "create",
-		Short:   "create an API key in a project",
+		Short:   "Create an API key for a specific project by ID or the target project",
 		GroupID: help.GROUP_API_KEYS.ID,
 		Example: heredoc.Doc(`
 		$ pc target -o "my-org" -p "my-project"
@@ -54,6 +54,9 @@ func NewCreateApiKeyCmd() *cobra.Command {
 			}
 			if options.roles != nil {
 				createParams.Roles = &options.roles
+			} else {
+				// Default to 'ProjectEditor' role if no roles are provided
+				createParams.Roles = &[]string{"ProjectEditor"}
 			}
 
 			keyWithSecret, err := ac.APIKey.Create(cmd.Context(), projId, createParams)
@@ -73,13 +76,13 @@ func NewCreateApiKeyCmd() *cobra.Command {
 	}
 
 	// required flags
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the key to create")
+	cmd.Flags().StringVarP(&options.name, "name", "n", "", "Name of the key to create")
 	_ = cmd.MarkFlagRequired("name")
 
 	// optional flags
 	cmd.Flags().StringVarP(&options.projectId, "id", "i", "", "ID of the project to create the key for if not the target project")
-	cmd.Flags().StringSliceVar(&options.roles, "roles", []string{}, "roles to assign to the key. The default is 'ProjectEditor'")
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().StringSliceVar(&options.roles, "roles", []string{}, "Roles to assign to the key. The default is 'ProjectEditor'")
+	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 
 	return cmd
 }

@@ -26,7 +26,7 @@ func NewDeleteKeyCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:     "delete",
-		Short:   "delete an API key by ID",
+		Short:   "Delete an API key by ID",
 		GroupID: help.GROUP_API_KEYS.ID,
 		Example: heredoc.Doc(`
 		$ pc target -o "my-org" -p "my-project"
@@ -57,10 +57,10 @@ func NewDeleteKeyCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.apiKeyId, "id", "i", "", "the ID of the API key to delete")
+	cmd.Flags().StringVarP(&options.apiKeyId, "id", "i", "", "The ID of the API key to delete")
 	_ = cmd.MarkFlagRequired("id")
 
-	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "skip confirmation prompt")
+	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "Skip deletion confirmation prompt")
 	return cmd
 }
 

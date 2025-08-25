@@ -24,7 +24,7 @@ func NewDescribeProjectCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:     "describe",
-		Short:   "describe a project",
+		Short:   "Describe a project by ID",
 		GroupID: help.GROUP_PROJECTS.ID,
 		Example: heredoc.Doc(`
 		$ pc project describe -i <project-id>
@@ -52,7 +52,7 @@ func NewDescribeProjectCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("id")
 
 	// optional flags
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 
 	return cmd
 }

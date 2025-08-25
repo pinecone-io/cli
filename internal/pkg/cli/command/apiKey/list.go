@@ -28,7 +28,7 @@ func NewListKeysCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "list the API keys in a project",
+		Short: "List the API keys in a specific project",
 		Example: heredoc.Doc(`
 		$ pc target -o "my-org" -p "my-project"
 		$ pc api-key list
@@ -69,7 +69,7 @@ func NewListKeysCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&options.projectId, "id", "i", "", "ID of the project to list the keys for if not the target project")
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 	return cmd
 }
 

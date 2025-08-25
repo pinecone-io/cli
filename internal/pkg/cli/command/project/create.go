@@ -18,6 +18,7 @@ import (
 )
 
 type CreateProjectCmdOptions struct {
+	organizationID          string
 	name                    string
 	forceEncryptionWithCMEK bool
 	maxPods                 int
@@ -29,7 +30,7 @@ func NewCreateProjectCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:     "create",
-		Short:   "create a project in the target org",
+		Short:   "Create a project for a specific organization by ID or the target organization",
 		GroupID: help.GROUP_PROJECTS.ID,
 		Example: heredoc.Doc(`
 		$ pc target -o "my-organization-name"
@@ -71,6 +72,7 @@ func NewCreateProjectCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("name")
 
 	// optional flags
+	cmd.Flags().StringVarP(&options.organizationID, "id", "i", "", "The ID of the organization to create the project in if not the target organization")
 	cmd.Flags().IntVarP(&options.maxPods, "max-pods", "p", 5, "Maximum number of Pods that can be created in the project across all indexes")
 	cmd.Flags().BoolVar(&options.forceEncryptionWithCMEK, "force-encryption", false, "Whether to force encryption with a customer-managed encryption key (CMEK). Default is 'false'. Once enabled, CMEK encryption cannot be disabled.")
 	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")

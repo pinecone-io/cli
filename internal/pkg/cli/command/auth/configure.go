@@ -45,10 +45,10 @@ func NewConfigureCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&options.clientID, "client-id", "", "client id for the Pinecone CLI")
-	cmd.Flags().StringVar(&options.clientSecret, "client-secret", "", "client secret for the Pinecone CLI")
-	cmd.Flags().BoolVar(&options.readSecretFromStdin, "client-secret-stdin", false, "read client secret from stdin")
-	cmd.Flags().BoolVar(&options.promptIfMissing, "prompt-if-missing", false, "prompt for missing credentials if not provided")
+	cmd.Flags().StringVar(&options.clientID, "client-id", "", "Service account client id for the Pinecone CLI")
+	cmd.Flags().StringVar(&options.clientSecret, "client-secret", "", "Service accountclient secret for the Pinecone CLI")
+	cmd.Flags().BoolVar(&options.readSecretFromStdin, "client-secret-stdin", false, "Read the client secret from stdin")
+	cmd.Flags().BoolVar(&options.promptIfMissing, "prompt-if-missing", false, "Prompt for missing credentials if not provided")
 
 	return cmd
 }

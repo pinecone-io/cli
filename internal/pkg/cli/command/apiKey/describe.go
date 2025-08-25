@@ -23,7 +23,7 @@ func NewDescribeAPIKeyCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "describe",
-		Short: "describe an API key",
+		Short: "Describe an API key by ID",
 		Example: heredoc.Doc(`
 		$ pc api-key describe -i <api-key-id>
 		`),
@@ -47,11 +47,11 @@ func NewDescribeAPIKeyCmd() *cobra.Command {
 	}
 
 	// required flags
-	cmd.Flags().StringVarP(&options.apiKeyId, "id", "i", "", "id of the API key to describe")
+	cmd.Flags().StringVarP(&options.apiKeyId, "id", "i", "", "ID of the API key to describe")
 	_ = cmd.MarkFlagRequired("id")
 
 	// optional flags
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 
 	return cmd
 }

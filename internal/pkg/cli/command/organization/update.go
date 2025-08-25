@@ -25,7 +25,7 @@ func NewUpdateOrganizationCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "update",
-		Short: "Update an existing organization with the specified configuration",
+		Short: "Update an existing organization by ID with the specified configuration",
 		Example: heredoc.Doc(`
 		$ pc organization update -i <organization-id> --n <new-name>
 		`),
@@ -33,9 +33,13 @@ func NewUpdateOrganizationCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()
 
-			org, err := ac.Organization.Update(cmd.Context(), options.organizationID, &pinecone.UpdateOrganizationParams{
-				Name: &options.name,
-			})
+			updateParams := &pinecone.UpdateOrganizationParams{}
+
+			if options.name != "" {
+				updateParams.Name = &options.name
+			}
+
+			org, err := ac.Organization.Update(cmd.Context(), options.organizationID, updateParams)
 			if err != nil {
 				msg.FailMsg("Failed to update organization %s: %s\n", options.organizationID, err)
 				exit.Error(err)
@@ -53,12 +57,12 @@ func NewUpdateOrganizationCmd() *cobra.Command {
 	}
 
 	// required flags
-	cmd.Flags().StringVarP(&options.organizationID, "id", "i", "", "the ID of the organization to update")
+	cmd.Flags().StringVarP(&options.organizationID, "id", "i", "", "The ID of the organization to update")
 	_ = cmd.MarkFlagRequired("id")
 
 	// optional flags
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "the name of the organization to update")
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().StringVarP(&options.name, "name", "n", "", "The new name to use for the organization")
+	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 
 	return cmd
 }

@@ -27,7 +27,7 @@ func NewUpdateAPIKeyCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "update",
-		Short: "Update an existing API key with the specified configuration",
+		Short: "Update an existing API key by ID with the specified configuration",
 		Example: heredoc.Doc(`
 		$ pc api-key update --id <api-key-id> --name <new-name> --roles <new-roles>
 		`),
@@ -67,9 +67,9 @@ func NewUpdateAPIKeyCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("id")
 
 	// optional flags
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the API key")
-	cmd.Flags().StringSliceVarP(&options.roles, "roles", "r", []string{}, "roles of the API key")
-	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
+	cmd.Flags().StringVarP(&options.name, "name", "n", "", "The new name for the API key")
+	cmd.Flags().StringSliceVarP(&options.roles, "roles", "r", []string{}, "The new roles for the API key")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
 
 	return cmd
 }

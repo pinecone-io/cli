@@ -50,7 +50,7 @@ func NewDescribeOrganizationCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("id")
 
 	// optional flags
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 
 	return cmd
 }

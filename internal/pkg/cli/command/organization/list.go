@@ -50,7 +50,7 @@ func NewListOrganizationsCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 
 	return cmd
 }

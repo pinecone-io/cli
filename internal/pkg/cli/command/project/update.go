@@ -29,7 +29,7 @@ func NewUpdateProjectCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "update",
-		Short: "Update an existing project with the specified configuration",
+		Short: "Update an existing project by ID with the specified configuration",
 		Example: heredoc.Doc(`
 		$ pc project update --id <project-id> --name <new-name> --max-pods <new-max-pods>
 		`),
@@ -73,10 +73,10 @@ func NewUpdateProjectCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("id")
 
 	// optional flags
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "the new name for the project")
-	cmd.Flags().BoolVarP(&options.forceEncryptionWithCMEK, "force-encryption", "f", false, "force encryption with CMEK")
-	cmd.Flags().IntVarP(&options.maxPods, "max-pods", "p", 0, "max pods for the project")
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().StringVarP(&options.name, "name", "n", "", "The new name for the project")
+	cmd.Flags().BoolVarP(&options.forceEncryptionWithCMEK, "force-encryption", "f", false, "Force encryption with CMEK for the project. This cannot be disabled")
+	cmd.Flags().IntVarP(&options.maxPods, "max-pods", "p", 0, "The new maximum number of pods for the project")
+	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 
 	return cmd
 }
