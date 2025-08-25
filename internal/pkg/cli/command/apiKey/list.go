@@ -19,7 +19,8 @@ import (
 )
 
 type ListKeysCmdCmdOptions struct {
-	json bool
+	projectId string
+	json      bool
 }
 
 func NewListKeysCmd() *cobra.Command {
@@ -36,10 +37,14 @@ func NewListKeysCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()
 
-			projId, err := state.GetTargetProjectId()
-			if err != nil {
-				msg.FailMsg("No target project set. Use %s to set the target project.", style.Code("pc target -o <org> -p <project>"))
-				exit.ErrorMsg("No project context set")
+			var err error
+			projId := options.projectId
+			if projId == "" {
+				projId, err = state.GetTargetProjectId()
+				if err != nil {
+					msg.FailMsg("No target project set. Use %s to set the target project.", style.Code("pc target -o <org> -p <project>"))
+					exit.ErrorMsg("No project context set")
+				}
 			}
 
 			keysResponse, err := ac.APIKey.List(cmd.Context(), projId)
@@ -63,6 +68,7 @@ func NewListKeysCmd() *cobra.Command {
 		},
 	}
 
+	cmd.Flags().StringVarP(&options.projectId, "id", "i", "", "ID of the project to list the keys for if not the target project")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 	return cmd
 }

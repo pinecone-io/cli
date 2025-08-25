@@ -16,9 +16,10 @@ import (
 )
 
 type CreateApiKeyOptions struct {
-	name  string
-	roles []string
-	json  bool
+	projectId string
+	name      string
+	roles     []string
+	json      bool
 }
 
 func NewCreateApiKeyCmd() *cobra.Command {
@@ -35,16 +36,27 @@ func NewCreateApiKeyCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()
 
-			projId, err := state.GetTargetProjectId()
-			if err != nil {
-				msg.FailMsg("No target project set. Use %s to set the target project.", style.Code("pc target -o <org> -p <project>"))
-				exit.ErrorMsg("No project context set")
+			projId := options.projectId
+			var err error
+			if projId == "" {
+				projId, err = state.GetTargetProjectId()
+				if err != nil {
+					msg.FailMsg("No target project set, and no project ID provided. Use %s to set the target project. Use %s to create the key in a specific project.", style.Code("pc target -o <org> -p <project>"), style.Code("pc api-key create -i <project-id> -n <name>"))
+					exit.ErrorMsg("No project ID provided, and no target project set")
+				}
 			}
 
-			keyWithSecret, err := ac.APIKey.Create(cmd.Context(), projId, &pinecone.CreateAPIKeyParams{
-				Name:  options.name,
-				Roles: &options.roles,
-			})
+			createParams := &pinecone.CreateAPIKeyParams{}
+
+			// Only set non-empty values
+			if options.name != "" {
+				createParams.Name = options.name
+			}
+			if options.roles != nil {
+				createParams.Roles = &options.roles
+			}
+
+			keyWithSecret, err := ac.APIKey.Create(cmd.Context(), projId, createParams)
 			if err != nil {
 				msg.FailMsg("Failed to create API key %s in project %s: %s", options.name, projId, err)
 				exit.Error(err)
@@ -65,6 +77,7 @@ func NewCreateApiKeyCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("name")
 
 	// optional flags
+	cmd.Flags().StringVarP(&options.projectId, "id", "i", "", "ID of the project to create the key for if not the target project")
 	cmd.Flags().StringSliceVar(&options.roles, "roles", []string{}, "roles to assign to the key. The default is 'ProjectEditor'")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 

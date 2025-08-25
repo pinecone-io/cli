@@ -36,20 +36,24 @@ func NewUpdateProjectCmd() *cobra.Command {
 		GroupID: help.GROUP_PROJECTS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()
-			if len(args) == 0 {
-				msg.FailMsg("No project ID provided, please provide a project ID")
-				exit.ErrorMsg("No project ID provided")
+
+			updateParams := &pinecone.UpdateProjectParams{}
+
+			// Only set non-empty values
+			// You cannot disable encryption with CMEK
+			if options.name != "" {
+				updateParams.Name = &options.name
+			}
+			if options.forceEncryptionWithCMEK {
+				updateParams.ForceEncryptionWithCmek = &options.forceEncryptionWithCMEK
+			}
+			if options.maxPods > 0 {
+				updateParams.MaxPods = &options.maxPods
 			}
 
-			projectId := args[0]
-
-			project, err := ac.Project.Update(context.Background(), projectId, &pinecone.UpdateProjectParams{
-				Name:                    &options.name,
-				ForceEncryptionWithCmek: &options.forceEncryptionWithCMEK,
-				MaxPods:                 &options.maxPods,
-			})
+			project, err := ac.Project.Update(context.Background(), options.projectId, updateParams)
 			if err != nil {
-				msg.FailMsg("Failed to update project %s: %s\n", projectId, err)
+				msg.FailMsg("Failed to update project %s: %s\n", options.projectId, err)
 				exit.Error(err)
 			}
 
@@ -69,8 +73,8 @@ func NewUpdateProjectCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("id")
 
 	// optional flags
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of project to update")
-	cmd.Flags().BoolVarP(&options.forceEncryptionWithCMEK, "force-encryption-with-cmek", "f", false, "force encryption with CMEK")
+	cmd.Flags().StringVarP(&options.name, "name", "n", "", "the new name for the project")
+	cmd.Flags().BoolVarP(&options.forceEncryptionWithCMEK, "force-encryption", "f", false, "force encryption with CMEK")
 	cmd.Flags().IntVarP(&options.maxPods, "max-pods", "p", 0, "max pods for the project")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 

@@ -3,14 +3,14 @@ package state
 import "github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 
 type TargetContext struct {
-	Project string
-	Org     string
+	Project TargetProject
+	Org     TargetOrganization
 }
 
 func GetTargetContext() *TargetContext {
 	return &TargetContext{
-		Org:     TargetOrg.Get().Name,
-		Project: TargetProj.Get().Name,
+		Org:     TargetOrg.Get(),
+		Project: TargetProj.Get(),
 	}
 }
 

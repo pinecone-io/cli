@@ -35,10 +35,17 @@ func NewUpdateAPIKeyCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()
 
-			apiKey, err := ac.APIKey.Update(cmd.Context(), options.apiKeyId, &pinecone.UpdateAPIKeyParams{
-				Name:  &options.name,
-				Roles: &options.roles,
-			})
+			updateParams := &pinecone.UpdateAPIKeyParams{}
+
+			// Only set non-empty values
+			if options.name != "" {
+				updateParams.Name = &options.name
+			}
+			if options.roles != nil {
+				updateParams.Roles = &options.roles
+			}
+
+			apiKey, err := ac.APIKey.Update(cmd.Context(), options.apiKeyId, updateParams)
 			if err != nil {
 				msg.FailMsg("Failed to update API key %s: %s\n", options.apiKeyId, err)
 				exit.Error(err)

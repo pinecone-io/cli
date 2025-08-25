@@ -11,16 +11,14 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
-	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 	"github.com/spf13/cobra"
 )
 
 type DeleteApiKeyOptions struct {
-	apiKeyId string
-	yes      bool
+	apiKeyId         string
+	skipConfirmation bool
 }
 
 func NewDeleteKeyCmd() *cobra.Command {
@@ -37,35 +35,16 @@ func NewDeleteKeyCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()
 
-			projId, err := state.GetTargetProjectId()
-			if err != nil {
-				msg.FailMsg("No target project set. Use %s to set the target project.", style.Code("pc target -o <org> -p <project>"))
-				exit.ErrorMsg("No project context set")
-			}
-
 			// Verify key exists before trying to delete it.
 			// This lets us give a more helpful error message than just
 			// attempting to delete non-existent key and getting 500 error.
-			existingKeys, err := ac.APIKey.List(cmd.Context(), projId)
+			keyToDelete, err := ac.APIKey.Describe(cmd.Context(), options.apiKeyId)
 			if err != nil {
-				msg.FailMsg("Failed to list keys: %s", err)
+				msg.FailMsg("Failed to describe existing API key: %s", err)
 				exit.Error(err)
 			}
-			var keyToDelete *pinecone.APIKey
-			var keyExists bool = false
-			for _, key := range existingKeys {
-				if key.Id == options.apiKeyId {
-					keyToDelete = key
-					keyExists = true
-				}
-			}
-			if !keyExists {
-				msg.FailMsg("Key with ID %s does not exist", style.Emphasis(options.apiKeyId))
-				msg.HintMsg("See existing keys with %s", style.Code(pcio.Sprintf("pc api-key list")))
-				exit.ErrorMsg(pcio.Sprintf("Key with ID %s does not exist", style.Emphasis(options.apiKeyId)))
-			}
 
-			if !options.yes {
+			if !options.skipConfirmation {
 				confirmDeleteApiKey(keyToDelete.Name)
 			}
 
@@ -81,7 +60,7 @@ func NewDeleteKeyCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&options.apiKeyId, "id", "i", "", "the ID of the API key to delete")
 	_ = cmd.MarkFlagRequired("id")
 
-	cmd.Flags().BoolVar(&options.yes, "yes", false, "skip confirmation prompt")
+	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "skip confirmation prompt")
 	return cmd
 }
 

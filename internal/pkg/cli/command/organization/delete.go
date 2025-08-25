@@ -50,7 +50,7 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 
 			err = ac.Organization.Delete(cmd.Context(), options.organizationID)
 			if err != nil {
-				msg.FailMsg("Failed to describe organization %s: %s\n", options.organizationID, err)
+				msg.FailMsg("Failed to delete organization %s: %s\n", options.organizationID, err)
 				exit.Error(err)
 			}
 
