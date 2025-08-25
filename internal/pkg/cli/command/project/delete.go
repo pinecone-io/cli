@@ -29,7 +29,7 @@ func NewDeleteProjectCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "delete",
-		Short: "Delete a project by ID",
+		Short: "Delete a specific project by ID or the target project",
 		Example: heredoc.Doc(`
 		$ pc project delete -i <project-id>
 		`),
@@ -38,7 +38,17 @@ func NewDeleteProjectCmd() *cobra.Command {
 			ac := sdk.NewPineconeAdminClient()
 			ctx := context.Background()
 
-			projToDelete, err := ac.Project.Describe(ctx, options.projectId)
+			projId := options.projectId
+			var err error
+			if projId == "" {
+				projId, err = state.GetTargetProjectId()
+				if err != nil {
+					msg.FailMsg("No target project set and no project ID provided. Use %s to set the target project. Use %s to delete a specific project.", style.Code("pc target -p <project>"), style.Code("pc project delete -i <project-id>"))
+					exit.ErrorMsg("No project ID provided, and no target project set")
+				}
+			}
+
+			projToDelete, err := ac.Project.Describe(ctx, projId)
 			if err != nil {
 				msg.FailMsg("Failed to retrieve project information: %s\n", err)
 				msg.HintMsg("To see a list of projects in the organization, run %s", style.Code("pc project list"))
@@ -69,11 +79,8 @@ func NewDeleteProjectCmd() *cobra.Command {
 		},
 	}
 
-	// required flags
-	cmd.Flags().StringVarP(&options.projectId, "id", "i", "", "ID of the project to delete")
-	_ = cmd.MarkFlagRequired("id")
-
 	// optional flags
+	cmd.Flags().StringVarP(&options.projectId, "id", "i", "", "ID of the project to delete")
 	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "Skip the deletion confirmation prompt")
 	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 

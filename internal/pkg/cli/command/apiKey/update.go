@@ -35,9 +35,8 @@ func NewUpdateAPIKeyCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()
 
-			updateParams := &pinecone.UpdateAPIKeyParams{}
-
 			// Only set non-empty values
+			updateParams := &pinecone.UpdateAPIKeyParams{}
 			if options.name != "" {
 				updateParams.Name = &options.name
 			}

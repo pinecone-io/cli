@@ -2,12 +2,14 @@ package organization
 
 import (
 	"github.com/MakeNowJust/heredoc"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
+	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 	"github.com/spf13/cobra"
@@ -25,7 +27,7 @@ func NewUpdateOrganizationCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "update",
-		Short: "Update an existing organization by ID with the specified configuration",
+		Short: "Update an existing organization by ID or the target organization with the specified configuration",
 		Example: heredoc.Doc(`
 		$ pc organization update -i <organization-id> --n <new-name>
 		`),
@@ -33,15 +35,25 @@ func NewUpdateOrganizationCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()
 
-			updateParams := &pinecone.UpdateOrganizationParams{}
+			orgId := options.organizationID
+			var err error
+			if orgId == "" {
+				orgId, err = state.GetTargetOrgId()
+				if err != nil {
+					msg.FailMsg("No target organization set and no organization ID provided. Use %s to set the target organization. Use %s to describe an organization by ID.", style.Code("pc target -o <org>"), style.Code("pc organization describe -i <organization-id>"))
+					exit.ErrorMsg("No organization ID provided, and no target organization set")
+				}
+			}
 
+			// Only set non-empty values
+			updateParams := &pinecone.UpdateOrganizationParams{}
 			if options.name != "" {
 				updateParams.Name = &options.name
 			}
 
-			org, err := ac.Organization.Update(cmd.Context(), options.organizationID, updateParams)
+			org, err := ac.Organization.Update(cmd.Context(), orgId, updateParams)
 			if err != nil {
-				msg.FailMsg("Failed to update organization %s: %s\n", options.organizationID, err)
+				msg.FailMsg("Failed to update organization %s: %s\n", orgId, err)
 				exit.Error(err)
 			}
 
@@ -56,11 +68,8 @@ func NewUpdateOrganizationCmd() *cobra.Command {
 		},
 	}
 
-	// required flags
-	cmd.Flags().StringVarP(&options.organizationID, "id", "i", "", "The ID of the organization to update")
-	_ = cmd.MarkFlagRequired("id")
-
 	// optional flags
+	cmd.Flags().StringVarP(&options.organizationID, "id", "i", "", "The ID of the organization to update if not the target organization")
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "The new name to use for the organization")
 	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 

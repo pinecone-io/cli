@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/MakeNowJust/heredoc"
-	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -18,7 +17,6 @@ import (
 )
 
 type CreateProjectCmdOptions struct {
-	organizationID          string
 	name                    string
 	forceEncryptionWithCMEK bool
 	maxPods                 int
@@ -30,7 +28,7 @@ func NewCreateProjectCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:     "create",
-		Short:   "Create a project for a specific organization by ID or the target organization",
+		Short:   "Create a project for the target organization determined by user credentials",
 		GroupID: help.GROUP_PROJECTS.ID,
 		Example: heredoc.Doc(`
 		$ pc target -o "my-organization-name"
@@ -39,18 +37,18 @@ func NewCreateProjectCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()
 
-			_, err := state.GetTargetOrgId()
-			if err != nil {
-				msg.FailMsg("No target organization set. Use %s to set the organization context.", style.Code("pc target -o <org>"))
-				cmd.Help()
-				exit.ErrorMsg("No organization context set")
+			createParams := &pinecone.CreateProjectParams{}
+			if options.name != "" {
+				createParams.Name = options.name
+			}
+			if options.maxPods > 0 {
+				createParams.MaxPods = &options.maxPods
+			}
+			if options.forceEncryptionWithCMEK {
+				createParams.ForceEncryptionWithCmek = &options.forceEncryptionWithCMEK
 			}
 
-			proj, err := ac.Project.Create(context.Background(), &pinecone.CreateProjectParams{
-				Name:                    options.name,
-				MaxPods:                 &options.maxPods,
-				ForceEncryptionWithCmek: &options.forceEncryptionWithCMEK,
-			})
+			proj, err := ac.Project.Create(context.Background(), createParams)
 			if err != nil {
 				msg.FailMsg("Failed to create project %s: %s\n", style.Emphasis(options.name), err)
 				exit.Error(err)
@@ -72,7 +70,6 @@ func NewCreateProjectCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("name")
 
 	// optional flags
-	cmd.Flags().StringVarP(&options.organizationID, "id", "i", "", "The ID of the organization to create the project in if not the target organization")
 	cmd.Flags().IntVarP(&options.maxPods, "max-pods", "p", 5, "Maximum number of Pods that can be created in the project across all indexes")
 	cmd.Flags().BoolVar(&options.forceEncryptionWithCMEK, "force-encryption", false, "Whether to force encryption with a customer-managed encryption key (CMEK). Default is 'false'. Once enabled, CMEK encryption cannot be disabled.")
 	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")

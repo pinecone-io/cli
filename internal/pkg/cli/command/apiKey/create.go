@@ -46,9 +46,8 @@ func NewCreateApiKeyCmd() *cobra.Command {
 				}
 			}
 
-			createParams := &pinecone.CreateAPIKeyParams{}
-
 			// Only set non-empty values
+			createParams := &pinecone.CreateAPIKeyParams{}
 			if options.name != "" {
 				createParams.Name = options.name
 			}

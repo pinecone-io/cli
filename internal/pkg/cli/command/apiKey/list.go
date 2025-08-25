@@ -28,7 +28,7 @@ func NewListKeysCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List the API keys in a specific project",
+		Short: "List the API keys in a specific project by ID or the target project",
 		Example: heredoc.Doc(`
 		$ pc target -o "my-org" -p "my-project"
 		$ pc api-key list
@@ -42,8 +42,8 @@ func NewListKeysCmd() *cobra.Command {
 			if projId == "" {
 				projId, err = state.GetTargetProjectId()
 				if err != nil {
-					msg.FailMsg("No target project set. Use %s to set the target project.", style.Code("pc target -o <org> -p <project>"))
-					exit.ErrorMsg("No project context set")
+					msg.FailMsg("No target project set, and no project ID provided. Use %s to set the target project. Use %s to create the key in a specific project.", style.Code("pc target -o <org> -p <project>"), style.Code("pc api-key create -i <project-id> -n <name>"))
+					exit.ErrorMsg("No project ID provided, and no target project set")
 				}
 			}
 

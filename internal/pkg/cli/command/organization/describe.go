@@ -2,12 +2,14 @@ package organization
 
 import (
 	"github.com/MakeNowJust/heredoc"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
+	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 )
@@ -22,7 +24,7 @@ func NewDescribeOrganizationCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "describe",
-		Short: "Describe an organization by ID",
+		Short: "Describe an organization by ID or the target organization",
 		Example: heredoc.Doc(`
 		$ pc organization describe -i <organization-id>
 		`),
@@ -30,9 +32,19 @@ func NewDescribeOrganizationCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()
 
-			org, err := ac.Organization.Describe(cmd.Context(), options.organizationID)
+			orgId := options.organizationID
+			var err error
+			if orgId == "" {
+				orgId, err = state.GetTargetOrgId()
+				if err != nil {
+					msg.FailMsg("No target organization set and no organization ID provided. Use %s to set the target organization. Use %s to describe an organization by ID.", style.Code("pc target -o <org>"), style.Code("pc organization describe -i <organization-id>"))
+					exit.ErrorMsg("No organization ID provided, and no target organization set")
+				}
+			}
+
+			org, err := ac.Organization.Describe(cmd.Context(), orgId)
 			if err != nil {
-				msg.FailMsg("Failed to describe organization %s: %s\n", options.organizationID, err)
+				msg.FailMsg("Failed to describe organization %s: %s\n", orgId, err)
 				exit.Error(err)
 			}
 
