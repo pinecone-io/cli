@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/pinecone-io/cli/internal/pkg/dashboard"
+	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -19,9 +19,9 @@ import (
 )
 
 type DeleteProjectCmdOptions struct {
-	name string
-	json bool
-	yes  bool
+	projectId        string
+	skipConfirmation bool
+	json             bool
 }
 
 func NewDeleteProjectCmd() *cobra.Command {
@@ -29,78 +29,62 @@ func NewDeleteProjectCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "delete",
-		Short: "delete a project in the target org",
-		Example: help.Examples([]string{
-			"pc target -o \"my-org\"",
-			"pc project delete --name=\"demo\"",
-			"pc project delete --name=\"demo\" --yes",
-		}),
-		GroupID: help.GROUP_PROJECTS_CRUD.ID,
+		Short: "Delete a specific project by ID or the target project",
+		Example: heredoc.Doc(`
+		$ pc project delete -i <project-id>
+		`),
+		GroupID: help.GROUP_PROJECTS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			orgId, err := getTargetOrgId()
-			orgName := state.TargetOrg.Get().Name
-			if err != nil {
-				msg.FailMsg("No target organization set. Use %s to set the organization context.", style.Code("pc target -o <org>"))
-				cmd.Help()
-				exit.ErrorMsg("No organization context set")
+			ac := sdk.NewPineconeAdminClient()
+			ctx := context.Background()
+
+			projId := options.projectId
+			var err error
+			if projId == "" {
+				projId, err = state.GetTargetProjectId()
+				if err != nil {
+					msg.FailMsg("No target project set and no project ID provided. Use %s to set the target project. Use %s to delete a specific project.", style.Code("pc target -p <project>"), style.Code("pc project delete -i <project-id>"))
+					exit.ErrorMsg("No project ID provided, and no target project set")
+				}
 			}
 
-			projToDelete, err := dashboard.GetProjectByName(orgName, options.name)
+			projToDelete, err := ac.Project.Describe(ctx, projId)
 			if err != nil {
 				msg.FailMsg("Failed to retrieve project information: %s\n", err)
 				msg.HintMsg("To see a list of projects in the organization, run %s", style.Code("pc project list"))
 				exit.Error(err)
 			}
 
-			verifyNoIndexes(orgName, projToDelete.Id, projToDelete.Name)
-			verifyNoCollections(orgName, projToDelete.Id, projToDelete.Name)
+			verifyNoIndexes(projToDelete.Id, projToDelete.Name)
+			verifyNoCollections(projToDelete.Id, projToDelete.Name)
 
-			if !options.yes {
-				confirmDelete(options.name)
+			if !options.skipConfirmation {
+				confirmDelete(projToDelete.Name)
 			}
 
-			resp, err := dashboard.DeleteProject(orgId, projToDelete.Id)
+			err = ac.Project.Delete(ctx, projToDelete.Id)
 			if err != nil {
-				msg.FailMsg("Failed to delete project %s: %s\n", style.Emphasis(options.name), err)
+				msg.FailMsg("Failed to delete project %s: %s\n", style.Emphasis(projToDelete.Name), err)
 				exit.Error(err)
-			}
-			if !resp.Success {
-				msg.FailMsg("Failed to delete project %s\n", style.Emphasis(options.name))
-				exit.Error(pcio.Errorf("Delete project %s call returned 200 but with success=false in the body", options.name))
 			}
 
 			// Clear target project if the deleted project is the target project
-			if state.TargetProj.Get().Name == options.name {
+			if state.TargetProj.Get().Name == projToDelete.Name {
 				state.TargetProj.Set(&state.TargetProject{
 					Id:   "",
 					Name: "",
 				})
 			}
-			msg.SuccessMsg("Project %s deleted.\n", style.Emphasis(options.name))
+			msg.SuccessMsg("Project %s deleted.\n", style.Emphasis(projToDelete.Name))
 		},
 	}
 
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
-	cmd.Flags().BoolVar(&options.yes, "yes", false, "skip confirmation prompt")
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the project")
-	_ = cmd.MarkFlagRequired("name")
+	// optional flags
+	cmd.Flags().StringVarP(&options.projectId, "id", "i", "", "ID of the project to delete")
+	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "Skip the deletion confirmation prompt")
+	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
+
 	return cmd
-}
-
-func getTargetOrgId() (string, error) {
-	orgId := state.TargetOrg.Get().Id
-	if orgId == "" {
-		return "", pcio.Errorf("no target organization set")
-	}
-	return orgId, nil
-}
-
-func getTargetProjectId() (string, error) {
-	projId := state.TargetProj.Get().Id
-	if projId == "" {
-		return "", pcio.Errorf("no target project set")
-	}
-	return projId, nil
 }
 
 func confirmDelete(projectName string) {
@@ -114,7 +98,7 @@ func confirmDelete(projectName string) {
 	reader := bufio.NewReader(os.Stdin)
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		fmt.Println("Error reading input:", err)
+		pcio.Println(fmt.Errorf("Error reading input: %w", err))
 		return
 	}
 
@@ -130,9 +114,9 @@ func confirmDelete(projectName string) {
 	}
 }
 
-func verifyNoIndexes(orgId string, projectId string, projectName string) {
+func verifyNoIndexes(projectId string, projectName string) {
 	// Check if project contains indexes
-	pc := sdk.NewPineconeClientForProjectById(orgId, projectId)
+	pc := sdk.NewPineconeClientForUser(projectId)
 	ctx := context.Background()
 
 	idxs, err := pc.ListIndexes(ctx)
@@ -147,9 +131,9 @@ func verifyNoIndexes(orgId string, projectId string, projectName string) {
 	}
 }
 
-func verifyNoCollections(orgId string, projectId string, projectName string) {
+func verifyNoCollections(projectId string, projectName string) {
 	// Check if project contains collections
-	pc := sdk.NewPineconeClientForProjectById(orgId, projectId)
+	pc := sdk.NewPineconeClientForUser(projectId)
 	ctx := context.Background()
 
 	collections, err := pc.ListCollections(ctx)

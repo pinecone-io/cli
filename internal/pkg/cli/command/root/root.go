@@ -3,11 +3,15 @@ package pinecone
 import (
 	"os"
 
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/apiKey"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/auth"
 	collection "github.com/pinecone-io/cli/internal/pkg/cli/command/collection"
 	configCmd "github.com/pinecone-io/cli/internal/pkg/cli/command/config"
 	index "github.com/pinecone-io/cli/internal/pkg/cli/command/index"
 	login "github.com/pinecone-io/cli/internal/pkg/cli/command/login"
 	logout "github.com/pinecone-io/cli/internal/pkg/cli/command/logout"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/organization"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/project"
 	target "github.com/pinecone-io/cli/internal/pkg/cli/command/target"
 	version "github.com/pinecone-io/cli/internal/pkg/cli/command/version"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -52,17 +56,19 @@ Get started by logging in with
 
 	rootCmd.SetUsageTemplate(help.HelpTemplate)
 
-	// Getting started group
-	rootCmd.AddGroup(help.GROUP_START)
+	// Auth group
+	rootCmd.AddGroup(help.GROUP_AUTH)
+	rootCmd.AddCommand(auth.NewAuthCmd())
 	rootCmd.AddCommand(login.NewLoginCmd())
 	rootCmd.AddCommand(logout.NewLogoutCmd())
 	rootCmd.AddCommand(target.NewTargetCmd())
 	rootCmd.AddCommand(login.NewWhoAmICmd())
 
-	// Management group
-	// rootCmd.AddGroup(help.GROUP_MANAGEMENT)
-	// rootCmd.AddCommand(org.NewOrgCmd())
-	// rootCmd.AddCommand(project.NewProjectCmd())
+	// Admin management group
+	rootCmd.AddGroup(help.GROUP_ADMIN)
+	rootCmd.AddCommand(organization.NewOrganizationCmd())
+	rootCmd.AddCommand(project.NewProjectCmd())
+	rootCmd.AddCommand(apiKey.NewAPIKeyCmd())
 
 	// Vector database group
 	rootCmd.AddGroup(help.GROUP_VECTORDB)

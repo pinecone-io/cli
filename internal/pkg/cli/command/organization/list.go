@@ -1,54 +1,52 @@
-package project
+package organization
 
 import (
-	"context"
 	"os"
-	"strconv"
 	"strings"
 	"text/tabwriter"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/spf13/cobra"
+
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/go-pinecone/v4/pinecone"
-	"github.com/spf13/cobra"
-
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
-type ListProjectCmdOptions struct {
+type ListOrganizationCmdOptions struct {
 	json bool
 }
 
-func NewListProjectsCmd() *cobra.Command {
-	options := ListProjectCmdOptions{}
+func NewListOrganizationsCmd() *cobra.Command {
+	options := ListOrganizationCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:     "list",
-		Short:   "list all projects in the organization available to the authenticated user",
-		GroupID: help.GROUP_PROJECTS.ID,
+		Use:   "list",
+		Short: "List all organizations available to the currently authenticated user",
 		Example: heredoc.Doc(`
-		$ pc project list
+		$ pc organization list
 		`),
+		GroupID: help.GROUP_ORGANIZATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()
-			ctx := context.Background()
 
-			projects, err := ac.Project.List(ctx)
+			orgs, err := ac.Organization.List(cmd.Context())
 			if err != nil {
-				msg.FailMsg("Failed to list projects: %s\n", err)
+				msg.FailMsg("Failed to list organizations: %s\n", err)
 				exit.Error(err)
 			}
 
 			if options.json {
-				json := text.IndentJSON(projects)
+				json := text.IndentJSON(orgs)
 				pcio.Println(json)
-			} else {
-				printTable(projects)
+				return
 			}
+
+			printTable(orgs)
 		},
 	}
 
@@ -57,21 +55,22 @@ func NewListProjectsCmd() *cobra.Command {
 	return cmd
 }
 
-func printTable(projects []*pinecone.Project) {
+func printTable(orgs []*pinecone.Organization) {
 	writer := tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
 
-	columns := []string{"NAME", "ID", "ORGANIZATION ID", "CREATED AT", "FORCE ENCRYPTION", "MAX PODS"}
+	columns := []string{"NAME", "ID", "CREATED AT", "PAYMENT STATUS", "PLAN", "SUPPORT TIER"}
 	header := strings.Join(columns, "\t") + "\n"
 	pcio.Fprint(writer, header)
 
-	for _, proj := range projects {
+	for _, org := range orgs {
 		values := []string{
-			proj.Name,
-			proj.Id,
-			proj.OrganizationId,
-			proj.CreatedAt.String(),
-			strconv.FormatBool(proj.ForceEncryptionWithCmek),
-			strconv.Itoa(proj.MaxPods)}
+			org.Name,
+			org.Id,
+			org.CreatedAt.String(),
+			org.PaymentStatus,
+			org.Plan,
+			org.SupportTier,
+		}
 		pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
 	}
 	writer.Flush()

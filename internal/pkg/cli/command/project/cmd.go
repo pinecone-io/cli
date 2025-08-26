@@ -9,18 +9,16 @@ func NewProjectCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "project <command>",
 		Short:   "Manage Pinecone projects",
-		GroupID: help.GROUP_MANAGEMENT.ID,
+		GroupID: help.GROUP_ADMIN.ID,
 	}
 
-	cmd.AddGroup(help.GROUP_PROJECTS_CRUD)
-	cmd.AddGroup(help.GROUP_PROJECTS_API_KEYS)
+	cmd.AddGroup(help.GROUP_PROJECTS)
 
-	cmd.AddCommand(NewListProjectsCmd())
 	cmd.AddCommand(NewCreateProjectCmd())
+	cmd.AddCommand(NewListProjectsCmd())
+	cmd.AddCommand(NewDescribeProjectCmd())
+	cmd.AddCommand(NewUpdateProjectCmd())
 	cmd.AddCommand(NewDeleteProjectCmd())
-	cmd.AddCommand(NewListKeysCmd())
-	cmd.AddCommand(NewCreateApiKeyCmd())
-	cmd.AddCommand(NewDeleteKeyCmd())
 
 	return cmd
 }

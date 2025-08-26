@@ -3,7 +3,6 @@ package sdk
 import (
 	"context"
 
-	"github.com/pinecone-io/cli/internal/pkg/dashboard"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
@@ -18,7 +17,11 @@ import (
 	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 )
 
-func newClientParams(key string) pinecone.NewClientParams {
+const (
+	cliApiKeyName = "pinecone-cli-api-key"
+)
+
+func newClientParams(apiKey string) pinecone.NewClientParams {
 	env := config.Environment.Get()
 
 	var clientControllerHostUrl string
@@ -33,9 +36,30 @@ func newClientParams(key string) pinecone.NewClientParams {
 	}
 
 	return pinecone.NewClientParams{
-		ApiKey:    key,
+		ApiKey:    apiKey,
 		SourceTag: "pinecone-cli",
 		Host:      clientControllerHostUrl,
+	}
+}
+
+func newAdminClientParams(clientId string, clientSecret string, accessToken string) pinecone.NewAdminClientParams {
+	env := config.Environment.Get()
+
+	var clientControllerHostUrl string
+	switch env {
+	case "production":
+		clientControllerHostUrl = environment.Prod.IndexControlPlaneUrl
+	case "staging":
+		clientControllerHostUrl = environment.Staging.IndexControlPlaneUrl
+	default:
+		exit.Error(pcio.Errorf("invalid environment: %s", env))
+		return pinecone.NewAdminClientParams{}
+	}
+	return pinecone.NewAdminClientParams{
+		ClientId:     clientId,
+		ClientSecret: clientSecret,
+		AccessToken:  accessToken,
+		Host:         clientControllerHostUrl,
 	}
 }
 
@@ -58,7 +82,7 @@ func newClientForUserFromTarget() *pinecone.Client {
 		return NewClientForMachine(secrets.ApiKey.Get())
 	}
 
-	log.Debug().Msg("No API key is stored in configuration, so attempting to create a client using user access token")
+	log.Debug().Msg("No API key is stored in configuration, attempting to create a client using user access token")
 
 	if oauth2Token.AccessToken == "" {
 		msg.FailMsg("Please set an API key with %s or login with %s before attempting this operation.", style.Code("pc config set-api-key"), style.Code("pc login"))
@@ -122,38 +146,109 @@ func NewPineconeClient() *pinecone.Client {
 	return newClientForUserFromTarget()
 }
 
-func NewPineconeClientForProjectById(orgId string, projectId string) *pinecone.Client {
-	project, err := dashboard.GetProjectById(orgId, projectId)
+func NewPineconeAdminClient() *pinecone.AdminClient {
+	oauth2Token := secrets.OAuth2Token.Get()
+	clientId := secrets.ClientId.Get()
+	clientSecret := secrets.ClientSecret.Get()
+
+	if oauth2Token.AccessToken == "" && (clientId == "" || clientSecret == "") {
+		msg.FailMsg("Please login with %s or configure credentials with %s before attempting this operation.", style.Code("pc auth login"), style.Code("pc auth configure"))
+		exit.ErrorMsg("User is not logged in")
+	}
+
+	ac, err := pinecone.NewAdminClient(newAdminClientParams(clientId, clientSecret, oauth2Token.AccessToken))
+	if err != nil {
+		msg.FailMsg("Failed to create Pinecone admin client: %s", err)
+		exit.Error(err)
+	}
+
+	return ac
+}
+
+func NewPineconeClientForProjectById(projectId string) *pinecone.Client {
+	ac := NewPineconeAdminClient()
+	ctx := context.Background()
+
+	project, err := ac.Project.Describe(ctx, projectId)
 	if err != nil {
 		msg.FailMsg("Failed to get project %s: %s", style.Emphasis(projectId), err)
 		exit.Error(err)
 	}
 
-	keyResponse, err2 := dashboard.GetApiKeys(*project)
-	if err2 != nil {
-		msg.FailMsg("Failed to get API keys for project %s: %s", style.Emphasis(project.Name), err2)
-		exit.Error(err2)
-	}
-
-	var key string
-	if len(keyResponse.Keys) > 0 {
-		key = keyResponse.Keys[0].Value
-	} else {
-		log.Error().Str("projectId", projectId).Msg("No API keys found for project")
-		msg.FailMsg("No API keys found for project id %s", style.Code(projectId))
-		exit.ErrorMsg(pcio.Sprintf("No API keys found for project %s", style.Emphasis(projectId)))
-	}
-
-	if key == "" {
-		msg.FailMsg("API key not set. Please run %s or %s", style.Code("pc login"), style.Code("pc config set-api-key"))
-		exit.Error(pcio.Errorf("API key not set."))
+	key, err := getCLIAPIKeyForProject(ctx, ac, project)
+	if err != nil {
+		msg.FailMsg("Failed to retrieve or create an API key for the project %s (ID: %s)", project.Name, project.Id)
+		exit.Error(pcio.Errorf("failed to retrieve or create API key for project: %w", err))
 	}
 
 	pc, err := pinecone.NewClient(newClientParams(key))
 	if err != nil {
 		msg.FailMsg("Failed to create Pinecone client: %s", err)
-		exit.Error(err)
+		exit.Error(pcio.Errorf("failed to create Pinecone Client: %w", err))
 	}
 
 	return pc
+}
+
+func getCLIAPIKeyForProject(ctx context.Context, ac *pinecone.AdminClient, project *pinecone.Project) (string, error) {
+	apiKeys, err := ac.APIKey.List(ctx, project.Id)
+	if err != nil {
+		msg.FailMsg("Failed to get API keys for project %s: %s", style.Emphasis(project.Name), err)
+		exit.Error(err)
+	}
+
+	projectAPIKeysMap := secrets.ProjectAPIKeys.Get()
+
+	var keyValue string
+	var existingProjectAPIKey *pinecone.APIKey
+	projectHasCLIAPIKey := false
+	if len(apiKeys) > 0 {
+		for _, key := range apiKeys {
+			if key.Name == cliApiKeyName {
+				projectHasCLIAPIKey = true
+				existingProjectAPIKey = key
+				break
+			}
+		}
+
+		// if the project has a CLI API key currently via listing API keys
+		if projectHasCLIAPIKey {
+			// if the project has a CLI API key stored in secrets state, use it
+			if projectAPIKeysMap[project.Id] != "" {
+				keyValue = projectAPIKeysMap[project.Id]
+
+				return keyValue, nil
+			}
+
+			// if the project does not have an associated CLI API key stored in state, delete the existing key
+			// and create a new one below
+			if projectAPIKeysMap[project.Id] == "" {
+				err := ac.APIKey.Delete(ctx, existingProjectAPIKey.Id)
+				if err != nil {
+					msg.FailMsg("Failed to delete API key for project %s: %s", style.Emphasis(project.Name), err)
+					exit.Error(err)
+				}
+			}
+		}
+		// if keyValue is still empty, we know we need to create a new key and persist in secrets state below
+	}
+
+	if keyValue == "" {
+		// create a new CLI API key
+		newKey, err := ac.APIKey.Create(ctx, project.Id, &pinecone.CreateAPIKeyParams{
+			Name: cliApiKeyName,
+		})
+		if err != nil {
+			msg.FailMsg("Failed to create CLI API key for project %s: %s", style.Emphasis(project.Name), err)
+			return "", pcio.Errorf("failed to create a CLI API key for project: %w", err)
+		}
+
+		keyValue = newKey.Value
+
+		// persist the new key in secrets state
+		projectAPIKeysMap[project.Id] = keyValue
+		secrets.ProjectAPIKeys.Set(&projectAPIKeysMap)
+	}
+
+	return keyValue, nil
 }

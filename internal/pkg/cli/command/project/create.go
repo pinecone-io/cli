@@ -1,19 +1,26 @@
 package project
 
 import (
-	"github.com/pinecone-io/cli/internal/pkg/dashboard"
+	"context"
+
+	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
+	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
+	"github.com/pinecone-io/cli/internal/pkg/utils/text"
+	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 	"github.com/spf13/cobra"
 )
 
 type CreateProjectCmdOptions struct {
-	name      string
-	pod_quota int32
-	json      bool
+	name                    string
+	forceEncryptionWithCMEK bool
+	maxPods                 int
+	json                    bool
 }
 
 func NewCreateProjectCmd() *cobra.Command {
@@ -21,36 +28,50 @@ func NewCreateProjectCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:     "create",
-		Short:   "create a project in the target org",
-		GroupID: help.GROUP_PROJECTS_CRUD.ID,
-		Example: help.Examples([]string{
-			"pc target -o \"my-org\"",
-			"pc project create --name=\"demo\"",
-		}),
+		Short:   "Create a project for the target organization determined by user credentials",
+		GroupID: help.GROUP_PROJECTS.ID,
+		Example: heredoc.Doc(`
+		$ pc target -o "my-organization-name"
+		$ pc project create --name "demo-project" --max-pods 10 --force-encryption
+		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			orgId, err := getTargetOrgId()
-			if err != nil {
-				msg.FailMsg("No target organization set. Use %s to set the organization context.", style.Code("pc target -o <org>"))
-				cmd.Help()
-				exit.ErrorMsg("No organization context set")
+			ac := sdk.NewPineconeAdminClient()
+
+			createParams := &pinecone.CreateProjectParams{}
+			if options.name != "" {
+				createParams.Name = options.name
+			}
+			if options.maxPods > 0 {
+				createParams.MaxPods = &options.maxPods
+			}
+			if options.forceEncryptionWithCMEK {
+				createParams.ForceEncryptionWithCmek = &options.forceEncryptionWithCMEK
 			}
 
-			proj, err := dashboard.CreateProject(orgId, options.name, options.pod_quota)
+			proj, err := ac.Project.Create(context.Background(), createParams)
 			if err != nil {
 				msg.FailMsg("Failed to create project %s: %s\n", style.Emphasis(options.name), err)
 				exit.Error(err)
 			}
-			if !proj.Success {
-				msg.FailMsg("Failed to create project %s\n", style.Emphasis(options.name))
-				exit.Error(pcio.Errorf("Create project call returned 200 but with success=false in the body%s", options.name))
+
+			if options.json {
+				json := text.IndentJSON(proj)
+				pcio.Println(json)
+				return
 			}
-			msg.SuccessMsg("Project %s created successfully.\n", style.Emphasis(proj.Project.Name))
+
+			msg.SuccessMsg("Project %s created successfully.\n", style.Emphasis(proj.Name))
+			presenters.PrintDescribeProjectTable(proj)
 		},
 	}
 
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the project")
+	// required flags
+	cmd.Flags().StringVarP(&options.name, "name", "n", "", "Name of the project")
 	_ = cmd.MarkFlagRequired("name")
-	cmd.Flags().Int32VarP(&options.pod_quota, "pod_quota", "p", 5, "maximum number of pods allowed in the project across all indexes")
+
+	// optional flags
+	cmd.Flags().IntVarP(&options.maxPods, "max-pods", "p", 5, "Maximum number of Pods that can be created in the project across all indexes")
+	cmd.Flags().BoolVar(&options.forceEncryptionWithCMEK, "force-encryption", false, "Whether to force encryption with a customer-managed encryption key (CMEK). Default is 'false'. Once enabled, CMEK encryption cannot be disabled.")
+	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 	return cmd
 }

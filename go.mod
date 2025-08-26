@@ -10,11 +10,12 @@ require (
 	github.com/charmbracelet/lipgloss v0.10.0
 	github.com/fatih/color v1.16.0
 	github.com/golang-jwt/jwt/v5 v5.2.2
-	github.com/pinecone-io/go-pinecone/v4 v4.1.2
+	github.com/pinecone-io/go-pinecone/v4 v4.1.4
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
 	golang.org/x/oauth2 v0.30.0
+	golang.org/x/term v0.33.0
 )
 
 require (
@@ -57,7 +58,6 @@ require (
 	golang.org/x/net v0.42.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
 	golang.org/x/sys v0.34.0 // indirect
-	golang.org/x/term v0.33.0 // indirect
 	golang.org/x/text v0.27.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250715232539-7130f93afb79 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250715232539-7130f93afb79 // indirect

@@ -9,13 +9,13 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/pinecone-io/cli/internal/pkg/cli/command/login"
 	"github.com/pinecone-io/cli/internal/pkg/dashboard"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
+	"github.com/pinecone-io/cli/internal/pkg/utils/login"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	pc_oauth2 "github.com/pinecone-io/cli/internal/pkg/utils/oauth2"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
@@ -26,7 +26,7 @@ import (
 )
 
 var targetHelpPart1 string = text.WordWrap(`Many API calls take place in the context of a specific project. 
-When using the CLI interactively (i.e. via the device authorization flow) you
+When using the CLI interactively (i.e. via the oauth2 authentication flow) you
 should use this command to set the current project context for the CLI.`, 80)
 
 var targetHelpPart3 = text.WordWrap(`For automation use cases relying on API-Keys for authentication, there's no need
@@ -53,8 +53,8 @@ func NewTargetCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "target <flags>",
 		Short:   "Set context for the CLI",
-		GroupID: help.GROUP_START.ID,
 		Long:    targetHelp,
+		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debug().
 				Str("org", options.Org).
