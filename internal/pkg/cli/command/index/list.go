@@ -7,8 +7,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
-	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -33,7 +33,7 @@ func NewListCmd() *cobra.Command {
 
 			idxs, err := pc.ListIndexes(ctx)
 			if err != nil {
-				msg.FailMsg("Failed to list indexes: %s\n", err)
+				errorutil.HandleIndexAPIError(err, cmd, []string{})
 				exit.Error(err)
 			}
 

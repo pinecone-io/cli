@@ -5,6 +5,7 @@ import (
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/docslinks"
+	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/index"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
@@ -89,10 +90,11 @@ func NewCreateIndexCmd() *cobra.Command {
 		# create an integrated index
 		$ pc index create my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1 --model multilingual-e5-large --field_map text=chunk_text
 		`),
-		Args: index.ValidateIndexNameArgs,
+		Args:         index.ValidateIndexNameArgs,
+		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			options.name = args[0]
-			runCreateIndexCmd(options)
+			runCreateIndexCmd(options, cmd, args)
 		},
 	}
 
@@ -130,18 +132,20 @@ func NewCreateIndexCmd() *cobra.Command {
 	return cmd
 }
 
-func runCreateIndexCmd(options createIndexOptions) {
+func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []string) {
 	ctx := context.Background()
 	pc := sdk.NewPineconeClient()
 
 	// validate and derive index type from arguments
 	err := options.validate()
 	if err != nil {
+		msg.FailMsg("%s\n", err.Error())
 		exit.Error(err)
 		return
 	}
 	idxType, err := options.deriveIndexType()
 	if err != nil {
+		msg.FailMsg("%s\n", err.Error())
 		exit.Error(err)
 		return
 	}
@@ -159,7 +163,7 @@ func runCreateIndexCmd(options createIndexOptions) {
 	switch idxType {
 	case indexTypeServerless:
 		// create serverless index
-		args := pinecone.CreateServerlessIndexRequest{
+		req := pinecone.CreateServerlessIndexRequest{
 			Name:               options.name,
 			Cloud:              pinecone.Cloud(options.cloud),
 			Region:             options.region,
@@ -171,9 +175,9 @@ func runCreateIndexCmd(options createIndexOptions) {
 			SourceCollection:   pointerOrNil(options.sourceCollection),
 		}
 
-		idx, err = pc.CreateServerlessIndex(ctx, &args)
+		idx, err = pc.CreateServerlessIndex(ctx, &req)
 		if err != nil {
-			msg.FailMsg("Failed to create serverless index %s: %s\n", style.Emphasis(options.name), err)
+			errorutil.HandleIndexAPIError(err, cmd, args)
 			exit.Error(err)
 		}
 	case indexTypePod:
@@ -184,7 +188,7 @@ func runCreateIndexCmd(options createIndexOptions) {
 				Indexed: &options.metadataConfig,
 			}
 		}
-		args := pinecone.CreatePodIndexRequest{
+		req := pinecone.CreatePodIndexRequest{
 			Name:               options.name,
 			Dimension:          options.dimension,
 			Environment:        options.environment,
@@ -198,9 +202,9 @@ func runCreateIndexCmd(options createIndexOptions) {
 			MetadataConfig:     metadataConfig,
 		}
 
-		idx, err = pc.CreatePodIndex(ctx, &args)
+		idx, err = pc.CreatePodIndex(ctx, &req)
 		if err != nil {
-			msg.FailMsg("Failed to create pod index %s: %s\n", style.Emphasis(options.name), err)
+			errorutil.HandleIndexAPIError(err, cmd, args)
 			exit.Error(err)
 		}
 	case indexTypeIntegrated:
@@ -208,7 +212,7 @@ func runCreateIndexCmd(options createIndexOptions) {
 		readParams := toInterfaceMap(options.readParameters)
 		writeParams := toInterfaceMap(options.writeParameters)
 
-		args := pinecone.CreateIndexForModelRequest{
+		req := pinecone.CreateIndexForModelRequest{
 			Name:               options.name,
 			Cloud:              pinecone.Cloud(options.cloud),
 			Region:             options.region,
@@ -221,9 +225,9 @@ func runCreateIndexCmd(options createIndexOptions) {
 			},
 		}
 
-		idx, err = pc.CreateIndexForModel(ctx, &args)
+		idx, err = pc.CreateIndexForModel(ctx, &req)
 		if err != nil {
-			msg.FailMsg("Failed to create integrated index %s: %s\n", style.Emphasis(options.name), err)
+			errorutil.HandleIndexAPIError(err, cmd, args)
 			exit.Error(err)
 		}
 	default:

@@ -2,8 +2,8 @@ package index
 
 import (
 	"context"
-	"strings"
 
+	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/index"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -20,9 +20,10 @@ func NewDeleteCmd() *cobra.Command {
 	options := DeleteCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "delete <name>",
-		Short: "Delete an index",
-		Args:  index.ValidateIndexNameArgs,
+		Use:          "delete <name>",
+		Short:        "Delete an index",
+		Args:         index.ValidateIndexNameArgs,
+		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			options.name = args[0]
 			ctx := context.Background()
@@ -30,11 +31,7 @@ func NewDeleteCmd() *cobra.Command {
 
 			err := pc.DeleteIndex(ctx, options.name)
 			if err != nil {
-				if strings.Contains(err.Error(), "not found") {
-					msg.FailMsg("The index %s does not exist\n", style.Emphasis(options.name))
-				} else {
-					msg.FailMsg("Failed to delete index %s: %s\n", style.Emphasis(options.name), err)
-				}
+				errorutil.HandleIndexAPIError(err, cmd, args)
 				exit.Error(err)
 			}
 

@@ -3,6 +3,7 @@ package index
 import (
 	"context"
 
+	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/index"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -27,13 +28,14 @@ func NewConfigureIndexCmd() *cobra.Command {
 	options := configureIndexOptions{}
 
 	cmd := &cobra.Command{
-		Use:     "configure <name>",
-		Short:   "Configure an existing index with the specified configuration",
-		Example: "",
-		Args:    index.ValidateIndexNameArgs,
+		Use:          "configure <name>",
+		Short:        "Configure an existing index with the specified configuration",
+		Example:      "",
+		Args:         index.ValidateIndexNameArgs,
+		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			options.name = args[0]
-			runConfigureIndexCmd(options)
+			runConfigureIndexCmd(options, cmd, args)
 		},
 	}
 
@@ -46,7 +48,7 @@ func NewConfigureIndexCmd() *cobra.Command {
 	return cmd
 }
 
-func runConfigureIndexCmd(options configureIndexOptions) {
+func runConfigureIndexCmd(options configureIndexOptions, cmd *cobra.Command, args []string) {
 	ctx := context.Background()
 	pc := sdk.NewPineconeClient()
 
@@ -56,7 +58,7 @@ func runConfigureIndexCmd(options configureIndexOptions) {
 		DeletionProtection: pinecone.DeletionProtection(options.deletionProtection),
 	})
 	if err != nil {
-		msg.FailMsg("Failed to configure index %s: %+v\n", style.Emphasis(options.name), err)
+		errorutil.HandleIndexAPIError(err, cmd, args)
 		exit.Error(err)
 	}
 

@@ -1,15 +1,12 @@
 package index
 
 import (
-	"strings"
-
+	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/index"
-	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
-	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 )
@@ -23,20 +20,17 @@ func NewDescribeCmd() *cobra.Command {
 	options := DescribeCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "describe <name>",
-		Short: "Get configuration and status information for an index",
-		Args:  index.ValidateIndexNameArgs,
+		Use:          "describe <name>",
+		Short:        "Get configuration and status information for an index",
+		Args:         index.ValidateIndexNameArgs,
+		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			options.name = args[0]
 			pc := sdk.NewPineconeClient()
 
 			idx, err := pc.DescribeIndex(cmd.Context(), options.name)
 			if err != nil {
-				if strings.Contains(err.Error(), "not found") {
-					msg.FailMsg("The index %s does not exist\n", style.Emphasis(options.name))
-				} else {
-					msg.FailMsg("Failed to describe index %s: %s\n", style.Emphasis(options.name), err)
-				}
+				errorutil.HandleIndexAPIError(err, cmd, args)
 				exit.Error(err)
 			}
 
