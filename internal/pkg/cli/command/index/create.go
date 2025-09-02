@@ -2,6 +2,8 @@ package index
 
 import (
 	"context"
+	"errors"
+	"strings"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/docslinks"
@@ -65,7 +67,7 @@ func NewCreateIndexCmd() *cobra.Command {
 	options := createIndexOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "create",
+		Use:   "create <name>",
 		Short: "Create a new index with the specified configuration",
 		Long: heredoc.Docf(`
 		The %s command creates a new index with the specified configuration. There are several different types of indexes
@@ -80,22 +82,31 @@ func NewCreateIndexCmd() *cobra.Command {
 		`, style.Code("pc index create"), style.URL(docslinks.DocsIndexCreate)),
 		Example: heredoc.Doc(`
 		# create a serverless index
-		$ pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1
+		$ pc index create my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1
 
 		# create a pod index
-		$ pc index create --name my-index --dimension 1536 --metric cosine --environment us-east-1-aws --pod-type p1.x1 --shards 2 --replicas 2
+		$ pc index create my-index --dimension 1536 --metric cosine --environment us-east-1-aws --pod-type p1.x1 --shards 2 --replicas 2
 
 		# create an integrated index
-		$ pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1 --model multilingual-e5-large --field_map text=chunk_text
+		$ pc index create my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1 --model multilingual-e5-large --field_map text=chunk_text
 		`),
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				return errors.New("please provide an index name")
+			}
+			if len(args) > 1 {
+				return errors.New("please provide only one index name")
+			}
+			if strings.TrimSpace(args[0]) == "" {
+				return errors.New("index name cannot be empty")
+			}
+			return nil
+		},
 		Run: func(cmd *cobra.Command, args []string) {
+			options.name = args[0]
 			runCreateIndexCmd(options)
 		},
 	}
-
-	// Required flags
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "Name of index to create")
-	_ = cmd.MarkFlagRequired("name")
 
 	// Serverless & Pods
 	cmd.Flags().StringVar(&options.sourceCollection, "source_collection", "", "When creating an index from a collection")
@@ -243,7 +254,7 @@ func renderSuccessOutput(idx *pinecone.Index, options createIndexOptions) {
 		return
 	}
 
-	describeCommand := pcio.Sprintf("pc index describe --name %s", idx.Name)
+	describeCommand := pcio.Sprintf("pc index describe %s", idx.Name)
 	msg.SuccessMsg("Index %s created successfully. Run %s to check status. \n\n", style.Emphasis(idx.Name), style.Code(describeCommand))
 	presenters.PrintDescribeIndexTable(idx)
 }
