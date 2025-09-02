@@ -2,12 +2,11 @@ package index
 
 import (
 	"context"
-	"errors"
-	"strings"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/docslinks"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/index"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
@@ -90,18 +89,7 @@ func NewCreateIndexCmd() *cobra.Command {
 		# create an integrated index
 		$ pc index create my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1 --model multilingual-e5-large --field_map text=chunk_text
 		`),
-		Args: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 {
-				return errors.New("please provide an index name")
-			}
-			if len(args) > 1 {
-				return errors.New("please provide only one index name")
-			}
-			if strings.TrimSpace(args[0]) == "" {
-				return errors.New("index name cannot be empty")
-			}
-			return nil
-		},
+		Args: index.ValidateIndexNameArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			options.name = args[0]
 			runCreateIndexCmd(options)
