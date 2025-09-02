@@ -3,8 +3,37 @@ package style
 import (
 	"fmt"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/fatih/color"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+)
+
+// Lipgloss styles for cli-alerts style messages
+var (
+	// Alert type boxes (solid colored backgrounds) - using standard CLI colors
+	successBoxStyle = lipgloss.NewStyle().
+			Background(lipgloss.Color("#28a745")). // Standard green
+			Foreground(lipgloss.Color("#FFFFFF")).
+			Bold(true).
+			Padding(0, 1)
+
+	errorBoxStyle = lipgloss.NewStyle().
+			Background(lipgloss.Color("#dc3545")). // Standard red (softer)
+			Foreground(lipgloss.Color("#FFFFFF")).
+			Bold(true).
+			Padding(0, 1)
+
+	warningBoxStyle = lipgloss.NewStyle().
+			Background(lipgloss.Color("#ffc107")). // Standard amber/yellow
+			Foreground(lipgloss.Color("#000000")).
+			Bold(true).
+			Padding(0, 1)
+
+	infoBoxStyle = lipgloss.NewStyle().
+			Background(lipgloss.Color("#17a2b8")). // Standard info blue
+			Foreground(lipgloss.Color("#FFFFFF")).
+			Bold(true).
+			Padding(0, 1)
 )
 
 func Emphasis(s string) string {
@@ -32,19 +61,40 @@ func CodeHint(templateString string, codeString string) string {
 }
 
 func SuccessMsg(s string) string {
-	return applyStyle("[SUCCESS] ", color.FgGreen) + s
+	if color.NoColor {
+		return fmt.Sprintf("✔ [SUCCESS] %s", s)
+	}
+	icon := "✔"
+	box := successBoxStyle.Render(icon + " SUCCESS")
+	return fmt.Sprintf("%s %s", box, s)
 }
 
 func WarnMsg(s string) string {
-	return applyStyle("[WARN] ", color.FgYellow) + s
+	if color.NoColor {
+		return fmt.Sprintf("⚠ [WARNING] %s", s)
+	}
+	icon := "⚠"
+	box := warningBoxStyle.Render(icon + " WARNING")
+	return fmt.Sprintf("%s %s", box, s)
 }
 
 func InfoMsg(s string) string {
-	return applyStyle("[INFO] ", color.FgHiWhite) + s
+	if color.NoColor {
+		return fmt.Sprintf("ℹ [INFO] %s", s)
+	}
+	icon := "ℹ"
+	box := infoBoxStyle.Render(icon + " INFO")
+	return fmt.Sprintf("%s %s", box, s)
 }
 
 func FailMsg(s string, a ...any) string {
-	return applyStyle("[ERROR] ", color.FgRed) + fmt.Sprintf(s, a...)
+	message := fmt.Sprintf(s, a...)
+	if color.NoColor {
+		return fmt.Sprintf("✘ [ERROR] %s", message)
+	}
+	icon := "✘"
+	box := errorBoxStyle.Render(icon + " ERROR")
+	return fmt.Sprintf("%s %s", box, message)
 }
 
 func Code(s string) string {
