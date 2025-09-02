@@ -2,6 +2,8 @@ package index
 
 import (
 	"context"
+	"errors"
+	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -19,29 +21,40 @@ type configureIndexOptions struct {
 	podType            string
 	replicas           int32
 	deletionProtection string
-
-	json bool
+	json               bool
 }
 
 func NewConfigureIndexCmd() *cobra.Command {
 	options := configureIndexOptions{}
 
 	cmd := &cobra.Command{
-		Use:     "configure",
+		Use:     "configure <name>",
 		Short:   "Configure an existing index with the specified configuration",
 		Example: "",
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				// TODO: start interactive mode. For now just return an error.
+				return errors.New("please provide an index name")
+			}
+			if len(args) > 1 {
+				return errors.New("please provide only one index name")
+			}
+			if strings.TrimSpace(args[0]) == "" {
+				return errors.New("index name cannot be empty")
+			}
+			return nil
+		},
 		Run: func(cmd *cobra.Command, args []string) {
+			options.name = args[0]
 			runConfigureIndexCmd(options)
 		},
 	}
-
-	// Required flags
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of index to configure")
 
 	// Optional flags
 	cmd.Flags().StringVarP(&options.podType, "pod_type", "t", "", "type of pod to use, can only upgrade when configuring")
 	cmd.Flags().Int32VarP(&options.replicas, "replicas", "r", 0, "replicas of the index to configure")
 	cmd.Flags().StringVarP(&options.deletionProtection, "deletion_protection", "p", "", "enable or disable deletion protection for the index")
+	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	return cmd
 }
@@ -59,13 +72,14 @@ func runConfigureIndexCmd(options configureIndexOptions) {
 		msg.FailMsg("Failed to configure index %s: %+v\n", style.Emphasis(options.name), err)
 		exit.Error(err)
 	}
+
 	if options.json {
 		json := text.IndentJSON(idx)
 		pcio.Println(json)
 		return
 	}
 
-	describeCommand := pcio.Sprintf("pc index describe --name %s", idx.Name)
+	describeCommand := pcio.Sprintf("pc index describe %s", idx.Name)
 	msg.SuccessMsg("Index %s configured successfully. Run %s to check status. \n\n", style.Emphasis(idx.Name), style.Code(describeCommand))
 	presenters.PrintDescribeIndexTable(idx)
 }
