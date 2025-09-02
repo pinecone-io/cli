@@ -1,6 +1,7 @@
 package index
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -22,9 +23,23 @@ func NewDescribeCmd() *cobra.Command {
 	options := DescribeCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "describe",
+		Use:   "describe <name>",
 		Short: "Get configuration and status information for an index",
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				// TODO: start interactive mode. For now just return an error.
+				return errors.New("please provide an index name")
+			}
+			if len(args) > 1 {
+				return errors.New("please provide only one index name")
+			}
+			if strings.TrimSpace(args[0]) == "" {
+				return errors.New("index name cannot be empty")
+			}
+			return nil
+		},
 		Run: func(cmd *cobra.Command, args []string) {
+			options.name = args[0]
 			pc := sdk.NewPineconeClient()
 
 			idx, err := pc.DescribeIndex(cmd.Context(), options.name)
@@ -45,10 +60,6 @@ func NewDescribeCmd() *cobra.Command {
 			}
 		},
 	}
-
-	// required flags
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of index to describe")
-	_ = cmd.MarkFlagRequired("name")
 
 	// optional flags
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
