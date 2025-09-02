@@ -2,6 +2,7 @@ package index
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -19,9 +20,23 @@ func NewDeleteCmd() *cobra.Command {
 	options := DeleteCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "delete",
+		Use:   "delete <name>",
 		Short: "Delete an index",
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				// TODO: start interactive mode. For now just return an error.
+				return errors.New("please provide an index name")
+			}
+			if len(args) > 1 {
+				return errors.New("please provide only one index name")
+			}
+			if strings.TrimSpace(args[0]) == "" {
+				return errors.New("index name cannot be empty")
+			}
+			return nil
+		},
 		Run: func(cmd *cobra.Command, args []string) {
+			options.name = args[0]
 			ctx := context.Background()
 			pc := sdk.NewPineconeClient()
 
@@ -38,10 +53,6 @@ func NewDeleteCmd() *cobra.Command {
 			msg.SuccessMsg("Index %s deleted.\n", style.Emphasis(options.name))
 		},
 	}
-
-	// required flags
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of index to delete")
-	_ = cmd.MarkFlagRequired("name")
 
 	return cmd
 }
