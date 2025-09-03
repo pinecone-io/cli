@@ -13,11 +13,11 @@ import (
 func ColorizeState(state pinecone.IndexStatusState) string {
 	switch state {
 	case pinecone.Ready:
-		return style.StatusGreen(string(state))
+		return style.SuccessStyle().Render(string(state))
 	case pinecone.Initializing, pinecone.Terminating, pinecone.ScalingDown, pinecone.ScalingDownPodSize, pinecone.ScalingUp, pinecone.ScalingUpPodSize:
-		return style.StatusYellow(string(state))
+		return style.WarningStyle().Render(string(state))
 	case pinecone.InitializationFailed:
-		return style.StatusRed(string(state))
+		return style.ErrorStyle().Render(string(state))
 	default:
 		return string(state)
 	}
@@ -25,9 +25,9 @@ func ColorizeState(state pinecone.IndexStatusState) string {
 
 func ColorizeDeletionProtection(deletionProtection pinecone.DeletionProtection) string {
 	if deletionProtection == pinecone.DeletionProtectionEnabled {
-		return style.StatusGreen("enabled")
+		return style.SuccessStyle().Render("enabled")
 	}
-	return style.StatusRed("disabled")
+	return style.ErrorStyle().Render("disabled")
 }
 
 func PrintDescribeIndexTable(idx *pinecone.Index) {

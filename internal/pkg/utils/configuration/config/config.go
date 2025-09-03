@@ -22,10 +22,16 @@ var (
 		ViperStore:   ConfigViper,
 		DefaultValue: "production",
 	}
+	ColorScheme = configuration.ConfigProperty[string]{
+		KeyName:      "color_scheme",
+		ViperStore:   ConfigViper,
+		DefaultValue: "pc-default-dark",
+	}
 )
 var properties = []configuration.Property{
 	Color,
 	Environment,
+	ColorScheme,
 }
 
 var configFile = configuration.ConfigFile{

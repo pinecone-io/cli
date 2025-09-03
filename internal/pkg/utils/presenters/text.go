@@ -8,9 +8,9 @@ import (
 
 func ColorizeBool(b bool) string {
 	if b {
-		return style.StatusGreen("true")
+		return style.SuccessStyle().Render("true")
 	}
-	return style.StatusRed("false")
+	return style.ErrorStyle().Render("false")
 }
 
 func DisplayOrNone(val any) any {

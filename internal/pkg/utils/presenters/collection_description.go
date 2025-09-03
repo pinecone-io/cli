@@ -30,9 +30,9 @@ func PrintDescribeCollectionTable(coll *pinecone.Collection) {
 func ColorizeCollectionStatus(state pinecone.CollectionStatus) string {
 	switch state {
 	case pinecone.CollectionStatusReady:
-		return style.StatusGreen(string(state))
+		return style.SuccessStyle().Render(string(state))
 	case pinecone.CollectionStatusInitializing, pinecone.CollectionStatusTerminating:
-		return style.StatusYellow(string(state))
+		return style.WarningStyle().Render(string(state))
 	}
 
 	return string(state)
