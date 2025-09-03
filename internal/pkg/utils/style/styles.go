@@ -203,7 +203,7 @@ func GetBrandedConfirmationStyles() (lipgloss.Style, lipgloss.Style, lipgloss.St
 			MarginBottom(1)
 
 		keyStyle = lipgloss.NewStyle().
-			Foreground(colors.SuccessGreen).
+			Foreground(colors.InfoBlue).
 			Bold(true)
 	} else {
 		questionStyle = lipgloss.NewStyle().

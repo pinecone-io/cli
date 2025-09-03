@@ -1,17 +1,14 @@
 package organization
 
 import (
-	"bufio"
 	"fmt"
-	"os"
-	"strings"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
+	"github.com/pinecone-io/cli/internal/pkg/utils/interactive"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
@@ -80,23 +77,10 @@ func confirmDelete(organizationName string, organizationID string) {
 	msg.WarnMsg("This will delete the organization %s (ID: %s).", style.Emphasis(organizationName), style.Emphasis(organizationID))
 	msg.WarnMsg("This action cannot be undone.")
 
-	// Prompt the user
-	fmt.Print("Do you want to continue? (y/N): ")
-
-	// Read the user's input
-	reader := bufio.NewReader(os.Stdin)
-	input, err := reader.ReadString('\n')
-	if err != nil {
-		pcio.Println(fmt.Errorf("Error reading input: %w", err))
-		return
-	}
-
-	input = strings.TrimSpace(strings.ToLower(input))
-
-	if input == "y" || input == "yes" {
-		msg.InfoMsg("You chose to continue delete.")
-	} else {
+	question := fmt.Sprintf("Do you want to continue deleting organization '%s'?", organizationName)
+	if !interactive.GetConfirmation(question) {
 		msg.InfoMsg("Operation canceled.")
 		exit.Success()
 	}
+	msg.InfoMsg("You chose to continue delete.")
 }
