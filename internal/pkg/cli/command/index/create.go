@@ -2,13 +2,13 @@ package index
 
 import (
 	"context"
-	"strings"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/docslinks"
 	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/index"
+	"github.com/pinecone-io/cli/internal/pkg/utils/interactive"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
@@ -152,7 +152,14 @@ func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []st
 	}
 
 	// Print preview of what will be created
-	printCreatePreview(name, options, idxType)
+	printCreatePreview(options, idxType)
+
+	// Ask for user confirmation
+	question := "Is this configuration correct? Do you want to proceed with creating the index?"
+	if !interactive.GetConfirmation(question) {
+		pcio.Println(style.InfoMsg("Index creation cancelled."))
+		return
+	}
 
 	// index tags
 	var indexTags *pinecone.IndexTags
@@ -244,76 +251,49 @@ func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []st
 }
 
 // printCreatePreview prints a preview of the index configuration that will be created
-func printCreatePreview(name string, options createIndexOptions, idxType indexType) {
+func printCreatePreview(options createIndexOptions, idxType indexType) {
+	log.Debug().Str("name", options.name).Msg("Printing index creation preview")
+
+	// Create a mock pinecone.Index for preview display
+	mockIndex := &pinecone.Index{
+		Name:               options.name,
+		Metric:             pinecone.IndexMetric(options.metric),
+		Dimension:          &options.dimension,
+		DeletionProtection: pinecone.DeletionProtection(options.deletionProtection),
+		Status: &pinecone.IndexStatus{
+			State: "Creating",
+		},
+	}
+
+	// Set spec based on index type
+	if idxType == "serverless" {
+		mockIndex.Spec = &pinecone.IndexSpec{
+			Serverless: &pinecone.ServerlessSpec{
+				Cloud:  pinecone.Cloud(options.cloud),
+				Region: options.region,
+			},
+		}
+		mockIndex.VectorType = options.vectorType
+	} else {
+		mockIndex.Spec = &pinecone.IndexSpec{
+			Pod: &pinecone.PodSpec{
+				Environment: options.environment,
+				PodType:     options.podType,
+				Replicas:    options.replicas,
+				ShardCount:  options.shards,
+				PodCount:    0, //?!?!?!?!
+			},
+		}
+	}
+
+	// Print title
 	pcio.Println()
-	pcio.Printf("Creating %s index '%s' with the following configuration:\n\n", style.Emphasis(string(idxType)), style.Emphasis(name))
+	pcio.Printf("%s\n\n", style.Heading(pcio.Sprintf("Creating %s index %s with the following configuration:",
+		style.Emphasis(string(idxType)),
+		style.Code(options.name))))
 
-	writer := presenters.NewTabWriter()
-	log.Debug().Str("name", name).Msg("Printing index creation preview")
-
-	columns := []string{"ATTRIBUTE", "VALUE"}
-	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
-
-	pcio.Fprintf(writer, "Name\t%s\n", name)
-	pcio.Fprintf(writer, "Type\t%s\n", string(idxType))
-
-	if options.dimension > 0 {
-		pcio.Fprintf(writer, "Dimension\t%d\n", options.dimension)
-	}
-
-	pcio.Fprintf(writer, "Metric\t%s\n", options.metric)
-
-	if options.deletionProtection != "" {
-		pcio.Fprintf(writer, "Deletion Protection\t%s\n", options.deletionProtection)
-	}
-
-	if options.vectorType != "" {
-		pcio.Fprintf(writer, "Vector Type\t%s\n", options.vectorType)
-	}
-
-	pcio.Fprintf(writer, "\t\n")
-
-	switch idxType {
-	case indexTypeServerless:
-		pcio.Fprintf(writer, "Cloud\t%s\n", options.cloud)
-		pcio.Fprintf(writer, "Region\t%s\n", options.region)
-		if options.sourceCollection != "" {
-			pcio.Fprintf(writer, "Source Collection\t%s\n", options.sourceCollection)
-		}
-	case indexTypePod:
-		pcio.Fprintf(writer, "Environment\t%s\n", options.environment)
-		pcio.Fprintf(writer, "Pod Type\t%s\n", options.podType)
-		pcio.Fprintf(writer, "Replicas\t%d\n", options.replicas)
-		pcio.Fprintf(writer, "Shards\t%d\n", options.shards)
-		if len(options.metadataConfig) > 0 {
-			pcio.Fprintf(writer, "Metadata Config\t%s\n", text.InlineJSON(options.metadataConfig))
-		}
-		if options.sourceCollection != "" {
-			pcio.Fprintf(writer, "Source Collection\t%s\n", options.sourceCollection)
-		}
-	case indexTypeIntegrated:
-		pcio.Fprintf(writer, "Cloud\t%s\n", options.cloud)
-		pcio.Fprintf(writer, "Region\t%s\n", options.region)
-		pcio.Fprintf(writer, "Model\t%s\n", options.model)
-		if len(options.fieldMap) > 0 {
-			pcio.Fprintf(writer, "Field Map\t%s\n", text.InlineJSON(options.fieldMap))
-		}
-		if len(options.readParameters) > 0 {
-			pcio.Fprintf(writer, "Read Parameters\t%s\n", text.InlineJSON(options.readParameters))
-		}
-		if len(options.writeParameters) > 0 {
-			pcio.Fprintf(writer, "Write Parameters\t%s\n", text.InlineJSON(options.writeParameters))
-		}
-	}
-
-	if len(options.tags) > 0 {
-		pcio.Fprintf(writer, "\t\n")
-		pcio.Fprintf(writer, "Tags\t%s\n", text.InlineJSON(options.tags))
-	}
-
-	writer.Flush()
-	pcio.Println()
+	// Use the specialized index table without status info (second column set)
+	presenters.PrintDescribeIndexTable(mockIndex)
 }
 
 func renderSuccessOutput(idx *pinecone.Index, options createIndexOptions) {

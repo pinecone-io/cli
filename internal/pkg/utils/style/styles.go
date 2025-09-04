@@ -187,6 +187,38 @@ func GetBrandedTableStyles() (table.Styles, bool) {
 	return s, colorsEnabled
 }
 
+// GetBrandedTableNoSelectionStyles returns table styles for read-only tables without row selection
+func GetBrandedTableNoSelectionStyles() (table.Styles, bool) {
+	colors := GetLipglossColorScheme()
+	colorsEnabled := config.Color.Get()
+
+	s := table.DefaultStyles()
+
+	if colorsEnabled {
+		s.Header = s.Header.
+			BorderStyle(lipgloss.NormalBorder()).
+			BorderForeground(colors.PrimaryBlue).
+			Foreground(colors.PrimaryBlue).
+			BorderBottom(true).
+			Bold(true)
+		s.Cell = s.Cell.Padding(0, 1)
+		// Empty selected style since cell style is already applied to each cell
+		// and we don't want any additional styling for selected rows
+		s.Selected = lipgloss.NewStyle()
+	} else {
+		s.Header = s.Header.
+			BorderStyle(lipgloss.NormalBorder()).
+			BorderBottom(true).
+			Bold(true)
+		s.Cell = s.Cell.Padding(0, 1)
+		// Empty selected style since cell style is already applied to each cell
+		// and we don't want any additional styling for selected rows
+		s.Selected = lipgloss.NewStyle()
+	}
+
+	return s, colorsEnabled
+}
+
 // GetBrandedConfirmationStyles returns confirmation dialog styles using the centralized color scheme
 func GetBrandedConfirmationStyles() (lipgloss.Style, lipgloss.Style, lipgloss.Style, bool) {
 	colors := GetLipglossColorScheme()
@@ -195,15 +227,8 @@ func GetBrandedConfirmationStyles() (lipgloss.Style, lipgloss.Style, lipgloss.St
 	var questionStyle, promptStyle, keyStyle lipgloss.Style
 
 	if colorsEnabled {
-		questionStyle = lipgloss.NewStyle().
-			Foreground(colors.PrimaryBlue).
-			Bold(true).
-			MarginBottom(1)
-
-		promptStyle = lipgloss.NewStyle().
-			Foreground(colors.SecondaryText).
-			MarginBottom(1)
-
+		questionStyle = HeadingStyle()
+		promptStyle = SecondaryTextStyle().MarginBottom(1)
 		keyStyle = lipgloss.NewStyle().
 			Foreground(colors.InfoBlue).
 			Bold(true)
