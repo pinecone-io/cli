@@ -6,6 +6,8 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 )
 
+const MessageBoxFixedWidth = 14
+
 // Predefined styles for common use cases
 var (
 	// Status styles
@@ -116,7 +118,7 @@ var (
 			Foreground(lipgloss.Color("#FFFFFF")). // Always white text for good contrast
 			Bold(true).
 			Padding(0, 1).
-			Width(14) // Fixed width for consistent alignment
+			Width(MessageBoxFixedWidth) // Fixed width for consistent alignment
 	}
 
 	WarningBoxStyle = func() lipgloss.Style {
@@ -126,7 +128,7 @@ var (
 			Foreground(lipgloss.Color("#000000")). // Always black text for good contrast on yellow
 			Bold(true).
 			Padding(0, 1).
-			Width(14) // Fixed width for consistent alignment
+			Width(MessageBoxFixedWidth) // Fixed width for consistent alignment
 	}
 
 	ErrorBoxStyle = func() lipgloss.Style {
@@ -136,7 +138,7 @@ var (
 			Foreground(lipgloss.Color("#FFFFFF")). // Always white text for good contrast
 			Bold(true).
 			Padding(0, 1).
-			Width(14) // Fixed width for consistent alignment
+			Width(MessageBoxFixedWidth) // Fixed width for consistent alignment
 	}
 
 	InfoBoxStyle = func() lipgloss.Style {
@@ -146,7 +148,7 @@ var (
 			Foreground(lipgloss.Color("#FFFFFF")). // Always white text for good contrast
 			Bold(true).
 			Padding(0, 1).
-			Width(14) // Fixed width for consistent alignment
+			Width(MessageBoxFixedWidth) // Fixed width for consistent alignment
 	}
 )
 

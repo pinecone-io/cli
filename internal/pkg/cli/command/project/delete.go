@@ -2,7 +2,6 @@ package project
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
@@ -86,10 +85,12 @@ func NewDeleteProjectCmd() *cobra.Command {
 }
 
 func confirmDelete(projectName string) {
-	msg.WarnMsg("This will delete the project %s in organization %s.", style.Emphasis(projectName), style.Emphasis(state.TargetOrg.Get().Name))
-	msg.WarnMsg("This action cannot be undone.")
+	msg.WarnMsgMultiLine(
+		pcio.Sprintf("This will delete the project %s in organization %s.", style.Emphasis(projectName), style.Emphasis(state.TargetOrg.Get().Name)),
+		"This action cannot be undone.",
+	)
 
-	question := fmt.Sprintf("Do you want to continue deleting project '%s'?", projectName)
+	question := "Are you sure you want to proceed with deleting this project?"
 	if !interactive.GetConfirmation(question) {
 		msg.InfoMsg("Operation canceled.")
 		exit.Success()

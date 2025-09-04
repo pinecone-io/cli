@@ -1,14 +1,13 @@
 package organization
 
 import (
-	"fmt"
-
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/interactive"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
@@ -74,10 +73,12 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 }
 
 func confirmDelete(organizationName string, organizationID string) {
-	msg.WarnMsg("This will delete the organization %s (ID: %s).", style.Emphasis(organizationName), style.Emphasis(organizationID))
-	msg.WarnMsg("This action cannot be undone.")
+	msg.WarnMsgMultiLine(
+		pcio.Sprintf("This will delete the organization %s (ID: %s).", style.Emphasis(organizationName), style.Emphasis(organizationID)),
+		"This action cannot be undone.",
+	)
 
-	question := fmt.Sprintf("Do you want to continue deleting organization '%s'?", organizationName)
+	question := "Are you sure you want to proceed with deleting this organization?"
 	if !interactive.GetConfirmation(question) {
 		msg.InfoMsg("Operation canceled.")
 		exit.Success()

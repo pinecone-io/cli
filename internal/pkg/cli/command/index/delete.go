@@ -2,7 +2,6 @@ package index
 
 import (
 	"context"
-	"fmt"
 
 	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -31,7 +30,11 @@ func NewDeleteCmd() *cobra.Command {
 			options.name = args[0]
 
 			// Ask for user confirmation
-			question := fmt.Sprintf("Do you want to delete the index '%s'?", options.name)
+			msg.WarnMsgMultiLine(
+				pcio.Sprintf("This will delete the index %s and all its data.", style.Emphasis(options.name)),
+				"This action cannot be undone.",
+			)
+			question := "Are you sure you want to proceed with the deletion?"
 			if !interactive.GetConfirmation(question) {
 				pcio.Println(style.InfoMsg("Index deletion cancelled."))
 				return
