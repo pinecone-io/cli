@@ -1,3 +1,9 @@
+// Package presenters provides table rendering functions for data display.
+//
+// NOTE: This package uses fmt functions directly (not pcio) because:
+// - Data output should NOT be suppressed by the -q flag
+// - Informational commands (list, describe) need to display data even in quiet mode
+// - Only user-facing messages (progress, confirmations) should respect quiet mode
 package presenters
 
 import (
@@ -5,7 +11,6 @@ import (
 
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 )
@@ -58,15 +63,15 @@ func PrintTable(options TableOptions) {
 	t.SetCursor(-1)
 
 	// Render the table directly
-	pcio.Println(t.View())
+	fmt.Println(t.View())
 }
 
 // PrintTableWithTitle creates and renders a bubbles table with a title
 func PrintTableWithTitle(title string, options TableOptions) {
-	pcio.Println()
-	pcio.Printf("%s\n\n", style.Heading(title))
+	fmt.Println()
+	fmt.Printf("%s\n\n", style.Heading(title))
 	PrintTable(options)
-	pcio.Println()
+	fmt.Println()
 }
 
 // PrintIndexTableWithIndexAttributesGroups creates and renders a table for index information with custom index attribute groups
@@ -93,7 +98,7 @@ func PrintIndexTableWithIndexAttributesGroups(indexes []*pinecone.Index, groups 
 		Rows:    rows,
 	})
 
-	pcio.Println()
+	fmt.Println()
 
 	// Add a note about full URLs if state info is shown
 	hasStateGroup := false
@@ -105,7 +110,7 @@ func PrintIndexTableWithIndexAttributesGroups(indexes []*pinecone.Index, groups 
 	}
 	if hasStateGroup && len(indexes) > 0 {
 		hint := fmt.Sprintf("Use %s to see index details", style.Code("pc index describe <name>"))
-		pcio.Println(style.Hint(hint))
+		fmt.Println(style.Hint(hint))
 	}
 }
 
@@ -114,8 +119,8 @@ func PrintDescribeIndexTable(idx *pinecone.Index) {
 	log.Debug().Str("name", idx.Name).Msg("Printing index description")
 
 	// Print title
-	pcio.Println(style.Heading("Index Configuration"))
-	pcio.Println()
+	fmt.Println(style.Heading("Index Configuration"))
+	fmt.Println()
 
 	// Print all groups with their information
 	PrintDescribeIndexTableWithIndexAttributesGroups(idx, AllIndexAttributesGroups())
@@ -160,10 +165,10 @@ func PrintDescribeIndexTableWithIndexAttributesGroups(idx *pinecone.Index, group
 
 			// Print the row
 			rowText := fmt.Sprintf("%s  %s", styledFirstCol, row[1])
-			pcio.Println(rowText)
+			fmt.Println(rowText)
 		} else if len(row) == 1 && row[0] == "" {
 			// Empty row for spacing
-			pcio.Println()
+			fmt.Println()
 		}
 	}
 }

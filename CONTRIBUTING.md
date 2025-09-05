@@ -68,6 +68,163 @@ Some facts that could be useful:
 - You can enable debug output with the `PINECONE_LOG_LEVEL=DEBUG` env var
 - Are you pointed at the correct environment? The current value of the environment setting (i.e. prod or staging) is controlled through `pc config set-environment staging` is not clearly surfaced through the printed output. If things aren't working as you expect, you might be pointed in the wrong place. See `cat ~/.config/pinecone/config.yaml` to confirm.
 
+## Development Practices & Tools
+
+This project follows several established patterns and provides utilities to ensure consistency across the codebase.
+
+### Output Functions & Quiet Mode
+
+The CLI supports a `-q` (quiet) flag that suppresses non-essential output while preserving essential data. Follow these guidelines:
+
+**Use `pcio` functions for:**
+
+- User-facing messages (success, error, warning, info)
+- Progress indicators and status updates
+- Interactive prompts and confirmations
+- Help text and documentation
+- Any output that should be suppressed with `-q` flag
+
+**Use `fmt` functions for:**
+
+- Data output from informational commands (list, describe)
+- JSON output that should always be displayed
+- Table rendering and structured data display
+- Any output that should NOT be suppressed with `-q` flag
+
+```go
+// ✅ Correct usage
+pcio.Println("Creating index...")  // User message - suppressed with -q
+msg.SuccessMsg("Index created!")   // User message - suppressed with -q
+fmt.Println(jsonData)              // Data output - always displayed
+
+// ❌ Incorrect usage
+pcio.Println(jsonData)             // Wrong! Data would be suppressed
+fmt.Println("Creating index...")   // Wrong! Ignores quiet mode
+```
+
+### Error Handling
+
+Use the centralized error handling utilities:
+
+```go
+// For API errors with structured responses
+errorutil.HandleIndexAPIError(err, cmd, args)
+
+// For program termination
+exit.Error(err)        // Logs error and exits with code 1
+exit.ErrorMsg("msg")   // Logs message and exits with code 1
+exit.Success()         // Logs success and exits with code 0
+```
+
+### User Messages & Styling
+
+Use the `msg` package for consistent user messaging:
+
+```go
+msg.SuccessMsg("Operation completed successfully!")
+msg.FailMsg("Operation failed: %s", err)
+msg.WarnMsg("This will delete the resource")
+msg.InfoMsg("Processing...")
+msg.HintMsg("Use --help for more options")
+
+// Multi-line messages
+msg.WarnMsgMultiLine("Warning 1", "Warning 2", "Warning 3")
+```
+
+Use the `style` package for consistent text formatting:
+
+```go
+style.Heading("Section Title")
+style.Emphasis("important text")
+style.Code("command-name")
+style.URL("https://example.com")
+```
+
+### Interactive Components
+
+For user confirmations, use the interactive package:
+
+```go
+result := interactive.AskForConfirmation("Delete this resource?")
+switch result {
+case interactive.ConfirmationYes:
+    // Proceed with deletion
+case interactive.ConfirmationNo:
+    // Cancel operation
+case interactive.ConfirmationQuit:
+    // Exit program
+}
+```
+
+### Table Rendering
+
+Use the `presenters` package for consistent table output:
+
+```go
+// For data tables (always displayed, not suppressed by -q)
+presenters.PrintTable(presenters.TableOptions{
+    Columns: []presenters.Column{{Title: "Name", Width: 20}},
+    Rows:    []presenters.Row{{"example"}},
+})
+
+// For index-specific tables
+presenters.PrintIndexTableWithIndexAttributesGroups(indexes, groups)
+```
+
+### Testing Utilities
+
+Use the `testutils` package for consistent command testing:
+
+```go
+// Test command arguments and flags
+tests := []testutils.CommandTestConfig{
+    {
+        Name:         "valid arguments",
+        Args:         []string{"my-arg"},
+        Flags:        map[string]string{"json": "true"},
+        ExpectError:  false,
+        ExpectedArgs: []string{"my-arg"},
+    },
+}
+testutils.TestCommandArgsAndFlags(t, cmd, tests)
+
+// Test JSON flag configuration
+testutils.AssertJSONFlag(t, cmd)
+```
+
+### Validation Utilities
+
+Use centralized validation functions:
+
+```go
+// For index name validation
+index.ValidateIndexNameArgs(cmd, args)
+
+// For other validations, check the respective utility packages
+```
+
+### Logging
+
+Use structured logging with the `log` package:
+
+```go
+log.Debug().Str("index", name).Msg("Creating index")
+log.Error().Err(err).Msg("Failed to create index")
+log.Info().Msg("Operation completed")
+```
+
+### Configuration Management
+
+Use the configuration utilities for consistent config handling:
+
+```go
+// Get current state
+org := state.TargetOrg.Get()
+proj := state.TargetProj.Get()
+
+// Configuration files are managed through the config package
+```
+
 ## Making a Pull Request
 
 Please fork this repo and make a PR with your changes. Run `gofmt` and `goimports` on all proposed

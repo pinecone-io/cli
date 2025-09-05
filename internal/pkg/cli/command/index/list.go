@@ -2,11 +2,11 @@ package index
 
 import (
 	"context"
+	"fmt"
 	"sort"
 
 	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -39,10 +39,12 @@ func NewListCmd() *cobra.Command {
 			})
 
 			if options.json {
+				// Use fmt for data output - should not be suppressed by -q flag
 				json := text.IndentJSON(idxs)
-				pcio.Println(json)
+				fmt.Println(json)
 			} else {
 				// Show essential and state information
+				// Note: presenters functions now use fmt internally for data output
 				presenters.PrintIndexTableWithIndexAttributesGroups(idxs, []presenters.IndexAttributesGroup{
 					presenters.IndexAttributesGroupEssential,
 					presenters.IndexAttributesGroupState,

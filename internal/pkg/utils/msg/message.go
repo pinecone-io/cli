@@ -5,6 +5,8 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 )
 
+// FailMsg displays an error message to the user.
+// Uses pcio functions so the message is suppressed with -q flag.
 func FailMsg(format string, a ...any) {
 	formatted := pcio.Sprintf(format, a...)
 	pcio.Println("\n" + style.FailMsg(formatted) + "\n")

@@ -1,10 +1,11 @@
 package index
 
 import (
+	"fmt"
+
 	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/index"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -36,7 +37,7 @@ func NewDescribeCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(idx)
-				pcio.Println(json)
+				fmt.Println(json)
 			} else {
 				presenters.PrintDescribeIndexTable(idx)
 			}
