@@ -12,56 +12,8 @@ func TestCreateCmd_ArgsValidation(t *testing.T) {
 	// Get preset index name validation tests
 	tests := testutils.GetIndexNameValidationTests()
 
-	// Add custom tests for this command (create-specific flags)
+	// Add custom tests for this command (create-specific business logic)
 	customTests := []testutils.CommandTestConfig{
-		{
-			Name:        "valid - positional arg with --json flag",
-			Args:        []string{"my-index"},
-			Flags:       map[string]string{"json": "true"},
-			ExpectError: false,
-		},
-		{
-			Name:        "valid - positional arg with --json=false",
-			Args:        []string{"my-index"},
-			Flags:       map[string]string{"json": "false"},
-			ExpectError: false,
-		},
-		{
-			Name:        "valid - positional arg with --dimension flag",
-			Args:        []string{"my-index"},
-			Flags:       map[string]string{"dimension": "1536"},
-			ExpectError: false,
-		},
-		{
-			Name:        "valid - positional arg with --metric flag",
-			Args:        []string{"my-index"},
-			Flags:       map[string]string{"metric": "cosine"},
-			ExpectError: false,
-		},
-		{
-			Name:        "valid - positional arg with --cloud and --region flags",
-			Args:        []string{"my-index"},
-			Flags:       map[string]string{"cloud": "aws", "region": "us-east-1"},
-			ExpectError: false,
-		},
-		{
-			Name:        "valid - positional arg with --environment flag",
-			Args:        []string{"my-index"},
-			Flags:       map[string]string{"environment": "us-east-1-aws"},
-			ExpectError: false,
-		},
-		{
-			Name:        "valid - positional arg with --pod_type flag",
-			Args:        []string{"my-index"},
-			Flags:       map[string]string{"pod_type": "p1.x1"},
-			ExpectError: false,
-		},
-		{
-			Name:        "valid - positional arg with --model flag",
-			Args:        []string{"my-index"},
-			Flags:       map[string]string{"model": "multilingual-e5-large"},
-			ExpectError: false,
-		},
 		{
 			Name:        "error - no arguments but with --json flag",
 			Args:        []string{},

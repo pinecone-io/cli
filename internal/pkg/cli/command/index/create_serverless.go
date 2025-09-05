@@ -5,9 +5,9 @@ import (
 	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	indexpresenters "github.com/pinecone-io/cli/internal/pkg/utils/index/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
-	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -100,5 +100,5 @@ func runCreateServerlessCmd(options createServerlessOptions) {
 
 	describeCommand := pcio.Sprintf("pc index describe --name %s", idx.Name)
 	msg.SuccessMsg("Index %s created successfully. Run %s to check status. \n\n", style.Emphasis(idx.Name), style.Code(describeCommand))
-	presenters.PrintDescribeIndexTable(idx)
+	indexpresenters.PrintDescribeIndexTable(idx)
 }

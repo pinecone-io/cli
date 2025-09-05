@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 )
 
@@ -108,33 +109,33 @@ var IndexColumnGroups = struct {
 }
 
 // GetColumnsForIndexAttributesGroups returns columns for the specified index attribute groups (using short names for horizontal tables)
-func GetColumnsForIndexAttributesGroups(groups []IndexAttributesGroup) []Column {
-	var columns []Column
+func GetColumnsForIndexAttributesGroups(groups []IndexAttributesGroup) []presenters.Column {
+	var columns []presenters.Column
 	for _, group := range groups {
 		switch group {
 		case IndexAttributesGroupEssential:
 			for _, col := range IndexColumnGroups.Essential.Columns {
-				columns = append(columns, Column{Title: col.ShortTitle, Width: col.Width})
+				columns = append(columns, presenters.Column{Title: col.ShortTitle, Width: col.Width})
 			}
 		case IndexAttributesGroupState:
 			for _, col := range IndexColumnGroups.State.Columns {
-				columns = append(columns, Column{Title: col.ShortTitle, Width: col.Width})
+				columns = append(columns, presenters.Column{Title: col.ShortTitle, Width: col.Width})
 			}
 		case IndexAttributesGroupPodSpec:
 			for _, col := range IndexColumnGroups.PodSpec.Columns {
-				columns = append(columns, Column{Title: col.ShortTitle, Width: col.Width})
+				columns = append(columns, presenters.Column{Title: col.ShortTitle, Width: col.Width})
 			}
 		case IndexAttributesGroupServerlessSpec:
 			for _, col := range IndexColumnGroups.ServerlessSpec.Columns {
-				columns = append(columns, Column{Title: col.ShortTitle, Width: col.Width})
+				columns = append(columns, presenters.Column{Title: col.ShortTitle, Width: col.Width})
 			}
 		case IndexAttributesGroupInference:
 			for _, col := range IndexColumnGroups.Inference.Columns {
-				columns = append(columns, Column{Title: col.ShortTitle, Width: col.Width})
+				columns = append(columns, presenters.Column{Title: col.ShortTitle, Width: col.Width})
 			}
 		case IndexAttributesGroupOther:
 			for _, col := range IndexColumnGroups.Other.Columns {
-				columns = append(columns, Column{Title: col.ShortTitle, Width: col.Width})
+				columns = append(columns, presenters.Column{Title: col.ShortTitle, Width: col.Width})
 			}
 		}
 	}

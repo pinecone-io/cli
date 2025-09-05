@@ -7,7 +7,7 @@ import (
 
 	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
-	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
+	indexpresenters "github.com/pinecone-io/cli/internal/pkg/utils/index/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -45,9 +45,9 @@ func NewListCmd() *cobra.Command {
 			} else {
 				// Show essential and state information
 				// Note: presenters functions now use fmt internally for data output
-				presenters.PrintIndexTableWithIndexAttributesGroups(idxs, []presenters.IndexAttributesGroup{
-					presenters.IndexAttributesGroupEssential,
-					presenters.IndexAttributesGroupState,
+				indexpresenters.PrintIndexTableWithIndexAttributesGroups(idxs, []indexpresenters.IndexAttributesGroup{
+					indexpresenters.IndexAttributesGroupEssential,
+					indexpresenters.IndexAttributesGroupState,
 				})
 			}
 		},

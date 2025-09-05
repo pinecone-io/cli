@@ -33,13 +33,18 @@ func HintMsg(format string, a ...any) {
 }
 
 // WarnMsgMultiLine displays multiple warning messages in a single message box
-func WarnMsgMultiLine(messages ...string) {
+func FailMsgMultiLine(messages ...string) {
 	if len(messages) == 0 {
 		return
 	}
 
-	// Create a proper multi-line warning box
-	formatted := style.WarnMsgMultiLine(messages...)
+	if len(messages) == 1 {
+		FailMsg(messages[0])
+		return
+	}
+
+	// Multi-line - use existing multi-line styling
+	formatted := style.FailMsgMultiLine(messages...)
 	pcio.Println("\n" + formatted + "\n")
 }
 
@@ -49,29 +54,44 @@ func SuccessMsgMultiLine(messages ...string) {
 		return
 	}
 
-	// Create a proper multi-line success box
+	if len(messages) == 1 {
+		SuccessMsg(messages[0])
+		return
+	}
+
+	// Multi-line - use existing multi-line styling
 	formatted := style.SuccessMsgMultiLine(messages...)
 	pcio.Println("\n" + formatted + "\n")
 }
 
 // InfoMsgMultiLine displays multiple info messages in a single message box
+func WarnMsgMultiLine(messages ...string) {
+	if len(messages) == 0 {
+		return
+	}
+
+	if len(messages) == 1 {
+		WarnMsg(messages[0])
+		return
+	}
+
+	// Multi-line - use existing multi-line styling
+	formatted := style.WarnMsgMultiLine(messages...)
+	pcio.Println("\n" + formatted + "\n")
+}
+
+// FailMsgMultiLine displays multiple error messages in a single message box
 func InfoMsgMultiLine(messages ...string) {
 	if len(messages) == 0 {
 		return
 	}
 
-	// Create a proper multi-line info box
-	formatted := style.InfoMsgMultiLine(messages...)
-	pcio.Println("\n" + formatted + "\n")
-}
-
-// FailMsgMultiLine displays multiple error messages in a single message box
-func FailMsgMultiLine(messages ...string) {
-	if len(messages) == 0 {
+	if len(messages) == 1 {
+		InfoMsg(messages[0])
 		return
 	}
 
-	// Create a proper multi-line error box
-	formatted := style.FailMsgMultiLine(messages...)
+	// Multi-line - use existing multi-line styling
+	formatted := style.InfoMsgMultiLine(messages...)
 	pcio.Println("\n" + formatted + "\n")
 }

@@ -2,13 +2,14 @@ package index
 
 import (
 	"context"
+	"fmt"
 
 	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/index"
+	indexpresenters "github.com/pinecone-io/cli/internal/pkg/utils/index/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
-	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -68,7 +69,11 @@ func runConfigureIndexCmd(options configureIndexOptions, cmd *cobra.Command, arg
 		return
 	}
 
+	msg.SuccessMsg("Index %s configured successfully.", style.ResourceName(idx.Name))
+
+	indexpresenters.PrintDescribeIndexTable(idx)
+
 	describeCommand := pcio.Sprintf("pc index describe %s", idx.Name)
-	msg.SuccessMsg("Index %s configured successfully. Run %s to check status. \n\n", style.ResourceName(idx.Name), style.Code(describeCommand))
-	presenters.PrintDescribeIndexTable(idx)
+	hint := fmt.Sprintf("Run %s at any time to check the status. \n\n", style.Code(describeCommand))
+	pcio.Println(style.Hint(hint))
 }

@@ -6,7 +6,7 @@ import (
 	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/index"
-	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
+	indexpresenters "github.com/pinecone-io/cli/internal/pkg/utils/index/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -39,7 +39,7 @@ func NewDescribeCmd() *cobra.Command {
 				json := text.IndentJSON(idx)
 				fmt.Println(json)
 			} else {
-				presenters.PrintDescribeIndexTable(idx)
+				indexpresenters.PrintDescribeIndexTable(idx)
 			}
 		},
 	}
