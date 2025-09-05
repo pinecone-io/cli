@@ -1,7 +1,9 @@
 package presenters
 
 import (
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+	"fmt"
+	"strings"
+
 	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 )
 
@@ -29,52 +31,17 @@ func AllIndexAttributesGroups() []IndexAttributesGroup {
 	}
 }
 
-// IndexAttributesGroupsToStrings converts a slice of IndexAttributesGroup to strings
-func IndexAttributesGroupsToStrings(groups []IndexAttributesGroup) []string {
-	strings := make([]string, len(groups))
-	for i, group := range groups {
-		strings[i] = string(group)
-	}
-	return strings
-}
-
-// StringsToIndexAttributesGroups converts a slice of strings to IndexAttributesGroup (validates input)
-func StringsToIndexAttributesGroups(groups []string) []IndexAttributesGroup {
-	indexGroups := make([]IndexAttributesGroup, 0, len(groups))
-	validGroups := map[string]IndexAttributesGroup{
-		"essential":       IndexAttributesGroupEssential,
-		"state":           IndexAttributesGroupState,
-		"pod_spec":        IndexAttributesGroupPodSpec,
-		"serverless_spec": IndexAttributesGroupServerlessSpec,
-		"inference":       IndexAttributesGroupInference,
-		"other":           IndexAttributesGroupOther,
-	}
-
-	for _, group := range groups {
-		if indexGroup, exists := validGroups[group]; exists {
-			indexGroups = append(indexGroups, indexGroup)
-		}
-	}
-	return indexGroups
-}
-
-// ColumnGroup represents a group of related columns for index display
-type ColumnGroup struct {
-	Name    string
-	Columns []Column
-}
-
-// ColumnWithNames represents a table column with both short and full names
-type ColumnWithNames struct {
+// IndexColumn represents a table column with both short and full names
+type IndexColumn struct {
 	ShortTitle string
 	FullTitle  string
 	Width      int
 }
 
-// ColumnGroupWithNames represents a group of columns with both short and full names
-type ColumnGroupWithNames struct {
+// ColumnGroup represents a group of columns with both short and full names
+type ColumnGroup struct {
 	Name    string
-	Columns []ColumnWithNames
+	Columns []IndexColumn
 }
 
 // IndexColumnGroups defines the available column groups for index tables
@@ -89,66 +56,7 @@ var IndexColumnGroups = struct {
 }{
 	Essential: ColumnGroup{
 		Name: "essential",
-		Columns: []Column{
-			{Title: "NAME", Width: 20},
-			{Title: "SPEC", Width: 12},
-			{Title: "TYPE", Width: 8},
-			{Title: "METRIC", Width: 8},
-			{Title: "DIM", Width: 8},
-		},
-	},
-	State: ColumnGroup{
-		Name: "state",
-		Columns: []Column{
-			{Title: "STATUS", Width: 10},
-			{Title: "HOST", Width: 60},
-			{Title: "PROT", Width: 8},
-		},
-	},
-	PodSpec: ColumnGroup{
-		Name: "pod_spec",
-		Columns: []Column{
-			{Title: "ENV", Width: 12},
-			{Title: "POD_TYPE", Width: 12},
-			{Title: "REPLICAS", Width: 8},
-			{Title: "SHARDS", Width: 8},
-			{Title: "PODS", Width: 8},
-		},
-	},
-	ServerlessSpec: ColumnGroup{
-		Name: "serverless_spec",
-		Columns: []Column{
-			{Title: "CLOUD", Width: 12},
-			{Title: "REGION", Width: 15},
-		},
-	},
-	Inference: ColumnGroup{
-		Name: "inference",
-		Columns: []Column{
-			{Title: "MODEL", Width: 25},
-			{Title: "EMBED_DIM", Width: 10},
-		},
-	},
-	Other: ColumnGroup{
-		Name: "other",
-		Columns: []Column{
-			{Title: "TAGS", Width: 30},
-		},
-	},
-}
-
-// IndexColumnGroupsWithNames defines the available column groups with both short and full names
-var IndexColumnGroupsWithNames = struct {
-	Essential      ColumnGroupWithNames // Basic index information (name, spec, type, metric, dimension)
-	State          ColumnGroupWithNames // Runtime state information (status, host, protection)
-	PodSpec        ColumnGroupWithNames // Pod-specific configuration (environment, pod type, replicas, etc.)
-	ServerlessSpec ColumnGroupWithNames // Serverless-specific configuration (cloud, region)
-	Inference      ColumnGroupWithNames // Inference/embedding model information
-	Other          ColumnGroupWithNames // Other information (tags, custom fields, etc.)
-}{
-	Essential: ColumnGroupWithNames{
-		Name: "essential",
-		Columns: []ColumnWithNames{
+		Columns: []IndexColumn{
 			{ShortTitle: "NAME", FullTitle: "Name", Width: 20},
 			{ShortTitle: "SPEC", FullTitle: "Specification", Width: 12},
 			{ShortTitle: "TYPE", FullTitle: "Vector Type", Width: 8},
@@ -156,17 +64,17 @@ var IndexColumnGroupsWithNames = struct {
 			{ShortTitle: "DIM", FullTitle: "Dimension", Width: 8},
 		},
 	},
-	State: ColumnGroupWithNames{
+	State: ColumnGroup{
 		Name: "state",
-		Columns: []ColumnWithNames{
+		Columns: []IndexColumn{
 			{ShortTitle: "STATUS", FullTitle: "Status", Width: 10},
 			{ShortTitle: "HOST", FullTitle: "Host URL", Width: 60},
 			{ShortTitle: "PROT", FullTitle: "Deletion Protection", Width: 8},
 		},
 	},
-	PodSpec: ColumnGroupWithNames{
+	PodSpec: ColumnGroup{
 		Name: "pod_spec",
-		Columns: []ColumnWithNames{
+		Columns: []IndexColumn{
 			{ShortTitle: "ENV", FullTitle: "Environment", Width: 12},
 			{ShortTitle: "POD_TYPE", FullTitle: "Pod Type", Width: 12},
 			{ShortTitle: "REPLICAS", FullTitle: "Replicas", Width: 8},
@@ -174,23 +82,26 @@ var IndexColumnGroupsWithNames = struct {
 			{ShortTitle: "PODS", FullTitle: "Pod Count", Width: 8},
 		},
 	},
-	ServerlessSpec: ColumnGroupWithNames{
+	ServerlessSpec: ColumnGroup{
 		Name: "serverless_spec",
-		Columns: []ColumnWithNames{
+		Columns: []IndexColumn{
 			{ShortTitle: "CLOUD", FullTitle: "Cloud Provider", Width: 12},
 			{ShortTitle: "REGION", FullTitle: "Region", Width: 15},
 		},
 	},
-	Inference: ColumnGroupWithNames{
+	Inference: ColumnGroup{
 		Name: "inference",
-		Columns: []ColumnWithNames{
+		Columns: []IndexColumn{
 			{ShortTitle: "MODEL", FullTitle: "Model", Width: 25},
-			{ShortTitle: "EMBED_DIM", FullTitle: "Embedding Dimension", Width: 10},
+			{ShortTitle: "EMBED DIM", FullTitle: "Embedding Dimension", Width: 10},
+			{ShortTitle: "FIELD MAP", FullTitle: "Field Map", Width: 20},
+			{ShortTitle: "READ PARAMS", FullTitle: "Read Parameters", Width: 20},
+			{ShortTitle: "WRITE PARAMS", FullTitle: "Write Parameters", Width: 20},
 		},
 	},
-	Other: ColumnGroupWithNames{
+	Other: ColumnGroup{
 		Name: "other",
-		Columns: []ColumnWithNames{
+		Columns: []IndexColumn{
 			{ShortTitle: "TAGS", FullTitle: "Tags", Width: 30},
 		},
 	},
@@ -202,39 +113,29 @@ func GetColumnsForIndexAttributesGroups(groups []IndexAttributesGroup) []Column 
 	for _, group := range groups {
 		switch group {
 		case IndexAttributesGroupEssential:
-			columns = append(columns, IndexColumnGroups.Essential.Columns...)
+			for _, col := range IndexColumnGroups.Essential.Columns {
+				columns = append(columns, Column{Title: col.ShortTitle, Width: col.Width})
+			}
 		case IndexAttributesGroupState:
-			columns = append(columns, IndexColumnGroups.State.Columns...)
+			for _, col := range IndexColumnGroups.State.Columns {
+				columns = append(columns, Column{Title: col.ShortTitle, Width: col.Width})
+			}
 		case IndexAttributesGroupPodSpec:
-			columns = append(columns, IndexColumnGroups.PodSpec.Columns...)
+			for _, col := range IndexColumnGroups.PodSpec.Columns {
+				columns = append(columns, Column{Title: col.ShortTitle, Width: col.Width})
+			}
 		case IndexAttributesGroupServerlessSpec:
-			columns = append(columns, IndexColumnGroups.ServerlessSpec.Columns...)
+			for _, col := range IndexColumnGroups.ServerlessSpec.Columns {
+				columns = append(columns, Column{Title: col.ShortTitle, Width: col.Width})
+			}
 		case IndexAttributesGroupInference:
-			columns = append(columns, IndexColumnGroups.Inference.Columns...)
+			for _, col := range IndexColumnGroups.Inference.Columns {
+				columns = append(columns, Column{Title: col.ShortTitle, Width: col.Width})
+			}
 		case IndexAttributesGroupOther:
-			columns = append(columns, IndexColumnGroups.Other.Columns...)
-		}
-	}
-	return columns
-}
-
-// GetColumnsForIndexAttributesGroupsWithNames returns columns for the specified index attribute groups with both short and full names
-func GetColumnsForIndexAttributesGroupsWithNames(groups []IndexAttributesGroup) []ColumnWithNames {
-	var columns []ColumnWithNames
-	for _, group := range groups {
-		switch group {
-		case IndexAttributesGroupEssential:
-			columns = append(columns, IndexColumnGroupsWithNames.Essential.Columns...)
-		case IndexAttributesGroupState:
-			columns = append(columns, IndexColumnGroupsWithNames.State.Columns...)
-		case IndexAttributesGroupPodSpec:
-			columns = append(columns, IndexColumnGroupsWithNames.PodSpec.Columns...)
-		case IndexAttributesGroupServerlessSpec:
-			columns = append(columns, IndexColumnGroupsWithNames.ServerlessSpec.Columns...)
-		case IndexAttributesGroupInference:
-			columns = append(columns, IndexColumnGroupsWithNames.Inference.Columns...)
-		case IndexAttributesGroupOther:
-			columns = append(columns, IndexColumnGroupsWithNames.Other.Columns...)
+			for _, col := range IndexColumnGroups.Other.Columns {
+				columns = append(columns, Column{Title: col.ShortTitle, Width: col.Width})
+			}
 		}
 	}
 	return columns
@@ -259,9 +160,9 @@ func ExtractEssentialValues(idx *pinecone.Index) []string {
 	}
 
 	// Get dimension
-	dimension := "nil"
+	dimension := ""
 	if idx.Dimension != nil && *idx.Dimension > 0 {
-		dimension = pcio.Sprintf("%d", *idx.Dimension)
+		dimension = fmt.Sprintf("%d", *idx.Dimension)
 	}
 
 	return []string{
@@ -281,8 +182,13 @@ func ExtractStateValues(idx *pinecone.Index) []string {
 		protected = "yes"
 	}
 
+	status := ""
+	if idx.Status != nil {
+		status = string(idx.Status.State)
+	}
+
 	return []string{
-		string(idx.Status.State),
+		status,
 		idx.Host,
 		protected,
 	}
@@ -297,9 +203,9 @@ func ExtractPodSpecValues(idx *pinecone.Index) []string {
 	return []string{
 		idx.Spec.Pod.Environment,
 		idx.Spec.Pod.PodType,
-		pcio.Sprintf("%d", idx.Spec.Pod.Replicas),
-		pcio.Sprintf("%d", idx.Spec.Pod.ShardCount),
-		pcio.Sprintf("%d", idx.Spec.Pod.PodCount),
+		fmt.Sprintf("%d", idx.Spec.Pod.Replicas),
+		fmt.Sprintf("%d", idx.Spec.Pod.ShardCount),
+		fmt.Sprintf("%d", idx.Spec.Pod.PodCount),
 	}
 }
 
@@ -318,17 +224,50 @@ func ExtractServerlessSpecValues(idx *pinecone.Index) []string {
 // ExtractInferenceValues extracts inference-related values from an index
 func ExtractInferenceValues(idx *pinecone.Index) []string {
 	if idx.Embed == nil {
-		return []string{"", ""}
+		return []string{"", "", "", "", ""}
 	}
 
-	embedDim := "nil"
+	embedDim := ""
 	if idx.Embed.Dimension != nil && *idx.Embed.Dimension > 0 {
-		embedDim = pcio.Sprintf("%d", *idx.Embed.Dimension)
+		embedDim = fmt.Sprintf("%d", *idx.Embed.Dimension)
+	}
+
+	// Format field map
+	fieldMapStr := ""
+	if idx.Embed.FieldMap != nil && len(*idx.Embed.FieldMap) > 0 {
+		var fieldMapPairs []string
+		for k, v := range *idx.Embed.FieldMap {
+			fieldMapPairs = append(fieldMapPairs, fmt.Sprintf("%s=%v", k, v))
+		}
+		fieldMapStr = strings.Join(fieldMapPairs, ", ")
+	}
+
+	// Format read parameters
+	readParamsStr := ""
+	if idx.Embed.ReadParameters != nil && len(*idx.Embed.ReadParameters) > 0 {
+		var readParamsPairs []string
+		for k, v := range *idx.Embed.ReadParameters {
+			readParamsPairs = append(readParamsPairs, fmt.Sprintf("%s=%v", k, v))
+		}
+		readParamsStr = strings.Join(readParamsPairs, ", ")
+	}
+
+	// Format write parameters
+	writeParamsStr := ""
+	if idx.Embed.WriteParameters != nil && len(*idx.Embed.WriteParameters) > 0 {
+		var writeParamsPairs []string
+		for k, v := range *idx.Embed.WriteParameters {
+			writeParamsPairs = append(writeParamsPairs, fmt.Sprintf("%s=%v", k, v))
+		}
+		writeParamsStr = strings.Join(writeParamsPairs, ", ")
 	}
 
 	return []string{
 		idx.Embed.Model,
 		embedDim,
+		fieldMapStr,
+		readParamsStr,
+		writeParamsStr,
 	}
 }
 
@@ -338,9 +277,12 @@ func ExtractOtherValues(idx *pinecone.Index) []string {
 		return []string{""}
 	}
 
-	// Convert tags to a simple string representation
-	// For now, just show the count, could be enhanced to show key-value pairs
-	return []string{pcio.Sprintf("%d tags", len(*idx.Tags))}
+	// Convert tags to a string representation showing key-value pairs
+	var tagStrings []string
+	for key, value := range *idx.Tags {
+		tagStrings = append(tagStrings, fmt.Sprintf("%s=%s", key, value))
+	}
+	return []string{fmt.Sprint(strings.Join(tagStrings, ", "))}
 }
 
 // ExtractValuesForIndexAttributesGroups extracts values for the specified index attribute groups from an index
@@ -365,43 +307,23 @@ func ExtractValuesForIndexAttributesGroups(idx *pinecone.Index, groups []IndexAt
 	return values
 }
 
-// GetGroupDescription returns a description of what each group contains
-func GetGroupDescription(group IndexAttributesGroup) string {
-	switch group {
-	case IndexAttributesGroupEssential:
-		return "Basic index information (name, spec type, vector type, metric, dimension)"
-	case IndexAttributesGroupState:
-		return "Runtime state information (status, host URL, deletion protection)"
-	case IndexAttributesGroupPodSpec:
-		return "Pod-specific configuration (environment, pod type, replicas, shards, pod count)"
-	case IndexAttributesGroupServerlessSpec:
-		return "Serverless-specific configuration (cloud provider, region)"
-	case IndexAttributesGroupInference:
-		return "Inference/embedding model information (model name, embedding dimension)"
-	case IndexAttributesGroupOther:
-		return "Other information (tags, custom fields, etc.)"
-	default:
-		return ""
-	}
-}
-
 // getColumnsWithNamesForIndexAttributesGroup returns columns with both short and full names for a specific index attribute group
-func getColumnsWithNamesForIndexAttributesGroup(group IndexAttributesGroup) []ColumnWithNames {
+func getColumnsWithNamesForIndexAttributesGroup(group IndexAttributesGroup) []IndexColumn {
 	switch group {
 	case IndexAttributesGroupEssential:
-		return IndexColumnGroupsWithNames.Essential.Columns
+		return IndexColumnGroups.Essential.Columns
 	case IndexAttributesGroupState:
-		return IndexColumnGroupsWithNames.State.Columns
+		return IndexColumnGroups.State.Columns
 	case IndexAttributesGroupPodSpec:
-		return IndexColumnGroupsWithNames.PodSpec.Columns
+		return IndexColumnGroups.PodSpec.Columns
 	case IndexAttributesGroupServerlessSpec:
-		return IndexColumnGroupsWithNames.ServerlessSpec.Columns
+		return IndexColumnGroups.ServerlessSpec.Columns
 	case IndexAttributesGroupInference:
-		return IndexColumnGroupsWithNames.Inference.Columns
+		return IndexColumnGroups.Inference.Columns
 	case IndexAttributesGroupOther:
-		return IndexColumnGroupsWithNames.Other.Columns
+		return IndexColumnGroups.Other.Columns
 	default:
-		return []ColumnWithNames{}
+		return []IndexColumn{}
 	}
 }
 
