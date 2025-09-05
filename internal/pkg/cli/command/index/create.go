@@ -288,9 +288,12 @@ func printCreatePreview(options createIndexOptions, idxType indexType) {
 
 	// Print title
 	pcio.Println()
-	pcio.Printf("%s\n\n", style.Heading(pcio.Sprintf("Creating %s index %s with the following configuration:",
-		style.Emphasis(string(idxType)),
-		style.Code(options.name))))
+	pcio.Printf("%s\n\n",
+		pcio.Sprintf("Creating %s index %s with the following configuration:",
+			style.Emphasis(string(idxType)),
+			style.ResourceName(options.name),
+		),
+	)
 
 	// Use the specialized index table without status info (second column set)
 	presenters.PrintDescribeIndexTable(mockIndex)
@@ -304,7 +307,7 @@ func renderSuccessOutput(idx *pinecone.Index, options createIndexOptions) {
 	}
 
 	describeCommand := pcio.Sprintf("pc index describe %s", idx.Name)
-	msg.SuccessMsg("Index %s created successfully. Run %s to check status. \n\n", style.Emphasis(idx.Name), style.Code(describeCommand))
+	msg.SuccessMsg("Index %s created successfully. Run %s to check status. \n\n", style.ResourceName(idx.Name), style.Code(describeCommand))
 	presenters.PrintDescribeIndexTable(idx)
 }
 

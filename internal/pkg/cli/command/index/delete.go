@@ -31,7 +31,7 @@ func NewDeleteCmd() *cobra.Command {
 
 			// Ask for user confirmation
 			msg.WarnMsgMultiLine(
-				pcio.Sprintf("This will delete the index %s and all its data.", style.Emphasis(options.name)),
+				pcio.Sprintf("This will delete the index %s and all its data.", style.ResourceName(options.name)),
 				"This action cannot be undone.",
 			)
 			question := "Are you sure you want to proceed with the deletion?"
@@ -49,7 +49,7 @@ func NewDeleteCmd() *cobra.Command {
 				exit.Error(err)
 			}
 
-			msg.SuccessMsg("Index %s deleted.\n", style.Emphasis(options.name))
+			msg.SuccessMsg("Index %s deleted.\n", style.ResourceName(options.name))
 		},
 	}
 

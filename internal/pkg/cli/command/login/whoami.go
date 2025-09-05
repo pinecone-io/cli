@@ -32,7 +32,7 @@ func NewWhoAmICmd() *cobra.Command {
 				exit.Error(pcio.Errorf("error parsing claims from access token: %s", err))
 				return
 			}
-			msg.InfoMsg("Logged in as " + style.Emphasis(claims.Email))
+			msg.InfoMsg("Logged in as " + style.ResourceName(claims.Email))
 		},
 	}
 

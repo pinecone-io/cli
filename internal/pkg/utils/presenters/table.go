@@ -171,6 +171,8 @@ func PrintDescribeIndexTableWithIndexAttributesGroups(idx *pinecone.Index, group
 			fmt.Println()
 		}
 	}
+	// Add spacing after the last row
+	fmt.Println()
 }
 
 // ColorizeState applies appropriate styling to index state

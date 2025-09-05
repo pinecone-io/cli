@@ -69,6 +69,6 @@ func runConfigureIndexCmd(options configureIndexOptions, cmd *cobra.Command, arg
 	}
 
 	describeCommand := pcio.Sprintf("pc index describe %s", idx.Name)
-	msg.SuccessMsg("Index %s configured successfully. Run %s to check status. \n\n", style.Emphasis(idx.Name), style.Code(describeCommand))
+	msg.SuccessMsg("Index %s configured successfully. Run %s to check status. \n\n", style.ResourceName(idx.Name), style.Code(describeCommand))
 	presenters.PrintDescribeIndexTable(idx)
 }

@@ -42,6 +42,14 @@ func Code(s string) string {
 	return CodeStyle().Render(s)
 }
 
+func ResourceName(s string) string {
+	if color.NoColor {
+		// Add backticks for code formatting if color is disabled
+		return "`" + s + "`"
+	}
+	return HeavyEmphasisStyle().Render(s)
+}
+
 func URL(s string) string {
 	return URLStyle().Render(s)
 }
