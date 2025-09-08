@@ -34,14 +34,14 @@ type CreateOptions struct {
 
 // GetSpec determines the index specification type based on the flags
 func (c *CreateOptions) GetSpec() IndexSpec {
-	if c.Serverless && c.Pod {
-		return "" // This should be caught by validation
-	}
-	if c.Pod {
+	if c.Pod && !c.Serverless {
 		return IndexSpecPod
 	}
-	// default to serverless
-	return IndexSpecServerless
+
+	if c.Serverless && !c.Pod {
+		return IndexSpecServerless
+	}
+	return ""
 }
 
 // GetSpecString returns the spec as a string for the presenter interface

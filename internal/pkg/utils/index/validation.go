@@ -2,6 +2,7 @@ package index
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -60,7 +61,7 @@ func ValidateCreateOptions(config CreateOptions) []string {
 // validateConfigIndexTypeFlags checks that serverless and pod flags are not both set
 func validateConfigIndexTypeFlags(config *CreateOptions) string {
 	if config.Serverless && config.Pod {
-		return "serverless and pod cannot be provided together"
+		return fmt.Sprintf("%s and %s cannot be provided together", style.Code("serverless"), style.Code("pod"))
 	}
 	return ""
 }
@@ -120,7 +121,7 @@ func validateConfigNameCharacters(config *CreateOptions) string {
 // validateConfigServerlessCloud checks that cloud is provided for serverless indexes
 func validateConfigServerlessCloud(config *CreateOptions) string {
 	if config.GetSpec() == IndexSpecServerless && config.Cloud == "" {
-		return "cloud is required for serverless indexes"
+		return fmt.Sprintf("%s is required  for %s indexes", style.Code("cloud"), style.Code("serverless"))
 	}
 	return ""
 }
@@ -128,7 +129,7 @@ func validateConfigServerlessCloud(config *CreateOptions) string {
 // validateConfigServerlessRegion checks that region is provided for serverless indexes
 func validateConfigServerlessRegion(config *CreateOptions) string {
 	if config.GetSpec() == IndexSpecServerless && config.Region == "" {
-		return "region is required for serverless indexes"
+		return fmt.Sprintf("%s is required  for %s indexes", style.Code("region"), style.Code("serverless"))
 	}
 	return ""
 }
@@ -136,7 +137,7 @@ func validateConfigServerlessRegion(config *CreateOptions) string {
 // validateConfigPodEnvironment checks that environment is provided for pod indexes
 func validateConfigPodEnvironment(config *CreateOptions) string {
 	if config.GetSpec() == IndexSpecPod && config.Environment == "" {
-		return "environment is required for pod indexes"
+		return fmt.Sprintf("%s is required  for %s indexes", style.Code("environment"), style.Code("pod"))
 	}
 	return ""
 }
@@ -144,7 +145,7 @@ func validateConfigPodEnvironment(config *CreateOptions) string {
 // validateConfigPodType checks that pod_type is provided for pod indexes
 func validateConfigPodType(config *CreateOptions) string {
 	if config.GetSpec() == IndexSpecPod && config.PodType == "" {
-		return "pod_type is required for pod indexes"
+		return fmt.Sprintf("%s is required  for %s indexes", style.Code("pod_type"), style.Code("pod"))
 	}
 	return ""
 }
@@ -152,7 +153,7 @@ func validateConfigPodType(config *CreateOptions) string {
 // validateConfigPodSparseVector checks that pod indexes cannot use sparse vector type
 func validateConfigPodSparseVector(config *CreateOptions) string {
 	if config.GetSpec() == IndexSpecPod && config.VectorType == "sparse" {
-		return "sparse vector type is not supported for pod indexes"
+		return fmt.Sprintf("%s vector type is not supported for %s indexes", style.Code("sparse"), style.Code("pod"))
 	}
 	return ""
 }
@@ -160,7 +161,7 @@ func validateConfigPodSparseVector(config *CreateOptions) string {
 // validateConfigSparseVectorDimension checks that dimension should not be specified for sparse vector type
 func validateConfigSparseVectorDimension(config *CreateOptions) string {
 	if config.VectorType == "sparse" && config.Dimension > 0 {
-		return "dimension should not be specified when vector type is 'sparse'"
+		return fmt.Sprintf("%s should not be specified when vector type is %s", style.Code("dimension"), style.Code("sparse"))
 	}
 	return ""
 }
@@ -176,8 +177,8 @@ func validateConfigSparseVectorMetric(config *CreateOptions) string {
 // validateConfigDenseVectorDimension checks that dimension is provided for dense vector indexes
 func validateConfigDenseVectorDimension(config *CreateOptions) string {
 	// Check if it's a dense vector type (empty string means dense, or explicitly "dense")
-	if (config.VectorType == "" || config.VectorType == "dense") && config.Dimension <= 0 {
-		return "dimension is required for dense vector index"
+	if config.VectorType == "dense" && config.Dimension <= 0 {
+		return fmt.Sprintf("%s is required when vector type is %s", style.Code("dimension"), style.Code("dense"))
 	}
 	return ""
 }

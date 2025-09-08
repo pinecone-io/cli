@@ -120,19 +120,9 @@ func PrintIndexCreateConfigTable(config *index.CreateOptions) {
 	// Essential information
 	rows = append(rows, presenters.Row{"Name", config.Name})
 	rows = append(rows, presenters.Row{"Specification", config.GetSpecString()})
-
-	// Vector type (for serverless)
-	if config.VectorType != "" {
-		rows = append(rows, presenters.Row{"Vector Type", config.VectorType})
-	} else {
-		rows = append(rows, presenters.Row{"Vector Type", "dense"}) // Default
-	}
-
+	rows = append(rows, presenters.Row{"Vector Type", config.VectorType})
 	rows = append(rows, presenters.Row{"Metric", config.Metric})
-
-	if config.Dimension > 0 {
-		rows = append(rows, presenters.Row{"Dimension", fmt.Sprintf("%d", config.Dimension)})
-	}
+	rows = append(rows, presenters.Row{"Dimension", fmt.Sprintf("%d", config.Dimension)})
 
 	// Add spacing
 	rows = append(rows, presenters.Row{"", ""})

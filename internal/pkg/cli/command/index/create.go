@@ -91,7 +91,7 @@ func NewCreateIndexCmd() *cobra.Command {
 
 	// Optional flags
 	cmd.Flags().Int32VarP(&options.CreateOptions.Dimension, "dimension", "d", 0, "Dimension of the index to create")
-	cmd.Flags().StringVarP(&options.CreateOptions.Metric, "metric", "m", "cosine", "Metric to use. One of: cosine, euclidean, dotproduct")
+	cmd.Flags().StringVarP(&options.CreateOptions.Metric, "metric", "m", "", "Metric to use. One of: cosine, euclidean, dotproduct")
 	cmd.Flags().StringVar(&options.CreateOptions.DeletionProtection, "deletion_protection", "", "Whether to enable deletion protection for the index. One of: enabled, disabled")
 	cmd.Flags().StringToStringVar(&options.CreateOptions.Tags, "tags", map[string]string{}, "Custom user tags to add to an index")
 
@@ -102,6 +102,12 @@ func NewCreateIndexCmd() *cobra.Command {
 
 func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []string) {
 
+	validationErrors := index.ValidateCreateOptions(options.CreateOptions)
+	if len(validationErrors) > 0 {
+		msg.FailMsgMultiLine(validationErrors...)
+		exit.Error(errors.New(validationErrors[0])) // Use first error for exit code
+	}
+
 	// Print preview of what will be created
 	pcio.Println()
 	pcio.Printf("%s\n\n",
@@ -110,13 +116,8 @@ func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []st
 			style.ResourceName(options.CreateOptions.Name),
 		),
 	)
-	indexpresenters.PrintIndexCreateConfigTable(&options.CreateOptions)
 
-	validationErrors := index.ValidateCreateOptions(options.CreateOptions)
-	if len(validationErrors) > 0 {
-		msg.FailMsgMultiLine(validationErrors...)
-		exit.Error(errors.New(validationErrors[0])) // Use first error for exit code
-	}
+	indexpresenters.PrintIndexCreateConfigTable(&options.CreateOptions)
 
 	// Ask for user confirmation
 	question := "Is this configuration correct? Do you want to proceed with creating the index?"
