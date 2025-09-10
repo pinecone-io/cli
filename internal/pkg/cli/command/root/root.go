@@ -24,8 +24,9 @@ import (
 var rootCmd *cobra.Command
 
 type GlobalOptions struct {
-	quiet   bool
-	verbose bool
+	quiet     bool
+	verbose   bool
+	assumeYes bool
 }
 
 func Execute() {
@@ -93,4 +94,5 @@ Get started by logging in with
 	// Global flags
 	rootCmd.PersistentFlags().BoolVarP(&globalOptions.quiet, "quiet", "q", false, "suppress output")
 	rootCmd.PersistentFlags().BoolVarP(&globalOptions.verbose, "verbose", "V", false, "show detailed error information")
+	rootCmd.PersistentFlags().BoolVarP(&globalOptions.assumeYes, "assume-yes", "y", false, "assume yes to all confirmation requests")
 }

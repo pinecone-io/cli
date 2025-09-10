@@ -141,11 +141,14 @@ func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []st
 
 	indexpresenters.PrintIndexCreateConfigTable(&inferredOptions)
 
-	// Ask for user confirmation
-	question := "Is this configuration correct? Do you want to proceed with creating the index?"
-	if !interactive.GetConfirmation(question) {
-		pcio.Println(style.InfoMsg("Index creation cancelled."))
-		return
+	// Ask for user confirmation unless -y flag is set
+	assumeYes, _ := cmd.Flags().GetBool("assume-yes")
+	if !assumeYes {
+		question := "Is this configuration correct? Do you want to proceed with creating the index?"
+		if !interactive.GetConfirmation(question) {
+			pcio.Println(style.InfoMsg("Index creation cancelled."))
+			return
+		}
 	}
 
 	// index tags

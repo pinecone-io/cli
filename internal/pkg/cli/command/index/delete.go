@@ -29,15 +29,19 @@ func NewDeleteCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			options.name = args[0]
 
-			// Ask for user confirmation
-			msg.WarnMsgMultiLine(
-				pcio.Sprintf("This will delete the index %s and all its data.", style.ResourceName(options.name)),
-				"This action cannot be undone.",
-			)
-			question := "Are you sure you want to proceed with the deletion?"
-			if !interactive.GetConfirmation(question) {
-				pcio.Println(style.InfoMsg("Index deletion cancelled."))
-				return
+			// Ask for user confirmation unless -y flag is set
+			assumeYes, _ := cmd.Flags().GetBool("assume-yes")
+			if !assumeYes {
+				// Ask for user confirmation
+				msg.WarnMsgMultiLine(
+					pcio.Sprintf("This will delete the index %s and all its data.", style.ResourceName(options.name)),
+					"This action cannot be undone.",
+				)
+				question := "Are you sure you want to proceed with the deletion?"
+				if !interactive.GetConfirmation(question) {
+					pcio.Println(style.InfoMsg("Index deletion cancelled."))
+					return
+				}
 			}
 
 			ctx := context.Background()

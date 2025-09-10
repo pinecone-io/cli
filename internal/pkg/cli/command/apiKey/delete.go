@@ -14,8 +14,7 @@ import (
 )
 
 type DeleteApiKeyOptions struct {
-	apiKeyId         string
-	skipConfirmation bool
+	apiKeyId string
 }
 
 func NewDeleteKeyCmd() *cobra.Command {
@@ -27,7 +26,8 @@ func NewDeleteKeyCmd() *cobra.Command {
 		GroupID: help.GROUP_API_KEYS.ID,
 		Example: heredoc.Doc(`
 		$ pc target -o "my-org" -p "my-project"
-		$ pc api-key delete -i "api-key-id" 
+		$ pc api-key delete -i "api-key-id"
+		$ pc api-key delete -i "api-key-id" -y
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()
@@ -41,7 +41,9 @@ func NewDeleteKeyCmd() *cobra.Command {
 				exit.Error(err)
 			}
 
-			if !options.skipConfirmation {
+			// Check if -y flag is set
+			assumeYes, _ := cmd.Flags().GetBool("assume-yes")
+			if !assumeYes {
 				confirmDeleteApiKey(keyToDelete.Name)
 			}
 
@@ -57,7 +59,6 @@ func NewDeleteKeyCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&options.apiKeyId, "id", "i", "", "The ID of the API key to delete")
 	_ = cmd.MarkFlagRequired("id")
 
-	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "Skip deletion confirmation prompt")
 	return cmd
 }
 

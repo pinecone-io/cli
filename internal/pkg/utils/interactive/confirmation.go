@@ -76,6 +76,7 @@ func (m ConfirmationModel) View() string {
 // GetConfirmation prompts the user to confirm an action
 // Returns true if the user confirmed with 'y', false if they declined with 'n'
 func GetConfirmation(question string) bool {
+
 	m := NewConfirmationModel(question)
 
 	p := tea.NewProgram(m)
@@ -99,6 +100,7 @@ func GetConfirmation(question string) bool {
 // This allows callers to distinguish between "no" and "quit" responses (though both 'n' and 'q' now map to ConfirmationNo)
 // Note: Ctrl+C will kill the entire CLI process and is not handled gracefully
 func GetConfirmationResult(question string) ConfirmationResult {
+
 	m := NewConfirmationModel(question)
 
 	p := tea.NewProgram(m)

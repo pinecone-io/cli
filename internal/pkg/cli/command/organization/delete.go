@@ -14,9 +14,8 @@ import (
 )
 
 type DeleteOrganizationCmdOptions struct {
-	organizationID   string
-	skipConfirmation bool
-	json             bool
+	organizationID string
+	json           bool
 }
 
 func NewDeleteOrganizationCmd() *cobra.Command {
@@ -27,7 +26,7 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 		Short: "Delete an organization by ID",
 		Example: heredoc.Doc(`
 		$ pc organization delete -i <organization-id>
-		$ pc organization delete -i <organization-id> --skip-confirmation
+		$ pc organization delete -i <organization-id> -y
 		`),
 		GroupID: help.GROUP_ORGANIZATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -40,7 +39,9 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 				exit.Error(err)
 			}
 
-			if !options.skipConfirmation {
+			// Check if -y flag is set
+			assumeYes, _ := cmd.Flags().GetBool("assume-yes")
+			if !assumeYes {
 				confirmDelete(org.Name, org.Id)
 			}
 
@@ -66,7 +67,6 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("id")
 
 	// optional flags
-	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "Skip the deletion confirmation prompt")
 	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 
 	return cmd

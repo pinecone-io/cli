@@ -16,9 +16,8 @@ import (
 )
 
 type DeleteProjectCmdOptions struct {
-	projectId        string
-	skipConfirmation bool
-	json             bool
+	projectId string
+	json      bool
 }
 
 func NewDeleteProjectCmd() *cobra.Command {
@@ -55,7 +54,9 @@ func NewDeleteProjectCmd() *cobra.Command {
 			verifyNoIndexes(projToDelete.Id, projToDelete.Name)
 			verifyNoCollections(projToDelete.Id, projToDelete.Name)
 
-			if !options.skipConfirmation {
+			// Check if -y flag is set
+			assumeYes, _ := cmd.Flags().GetBool("assume-yes")
+			if !assumeYes {
 				confirmDelete(projToDelete.Name)
 			}
 
@@ -78,7 +79,6 @@ func NewDeleteProjectCmd() *cobra.Command {
 
 	// optional flags
 	cmd.Flags().StringVarP(&options.projectId, "id", "i", "", "ID of the project to delete")
-	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "Skip the deletion confirmation prompt")
 	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 
 	return cmd
