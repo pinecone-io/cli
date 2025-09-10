@@ -127,7 +127,6 @@ func NewCreateIndexCmd() *cobra.Command {
 }
 
 func collectInteractiveConfiguration(ctx context.Context, options index.CreateOptions) (index.CreateOptions, bool) {
-	pcio.Println(style.InfoMsg("Interactive mode: Let's configure your index step by step.\n"))
 	pcio.Println(style.Hint("Press Esc or Ctrl+C at any time to exit interactive mode.\n"))
 
 	// Variables for model data (will be populated when needed)
@@ -363,7 +362,6 @@ func collectInteractiveConfiguration(ctx context.Context, options index.CreateOp
 		}
 	}
 
-	pcio.Println(style.SuccessMsg("\nConfiguration complete!"))
 	return options, false
 }
 
