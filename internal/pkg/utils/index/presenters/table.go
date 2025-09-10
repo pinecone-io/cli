@@ -245,10 +245,10 @@ func PrintIndexDisplayTable(data *IndexDisplayData) {
 	}
 
 	// Spec-specific information
-	if data.Specification == "serverless" {
+	if strings.HasPrefix(data.Specification, "serverless") {
 		rows = append(rows, presenters.Row{"Cloud Provider", data.CloudProvider})
 		rows = append(rows, presenters.Row{"Region", data.Region})
-	} else if data.Specification == "pod" {
+	} else if strings.HasPrefix(data.Specification, "pod") {
 		rows = append(rows, presenters.Row{"Environment", data.Environment})
 		rows = append(rows, presenters.Row{"Pod Type", data.PodType})
 		rows = append(rows, presenters.Row{"Replicas", data.Replicas})
