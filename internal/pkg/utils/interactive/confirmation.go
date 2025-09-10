@@ -59,8 +59,8 @@ func (m ConfirmationModel) View() string {
 		return ""
 	}
 
-	// Use centralized color scheme
-	questionStyle, promptStyle, keyStyle, _ := style.GetBrandedConfirmationStyles()
+	// Use interactive styles
+	questionStyle, promptStyle, keyStyle, _ := style.GetInteractiveStyles()
 
 	// Create the confirmation prompt with styled keys
 	keys := fmt.Sprintf("%s to confirm, %s to cancel",

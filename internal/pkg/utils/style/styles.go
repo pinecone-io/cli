@@ -219,8 +219,8 @@ func GetBrandedTableNoSelectionStyles() (table.Styles, bool) {
 	return s, colorsEnabled
 }
 
-// GetBrandedConfirmationStyles returns confirmation dialog styles using the centralized color scheme
-func GetBrandedConfirmationStyles() (lipgloss.Style, lipgloss.Style, lipgloss.Style, bool) {
+// GetInteractiveStyles returns styles for interactive components using the centralized color scheme
+func GetInteractiveStyles() (lipgloss.Style, lipgloss.Style, lipgloss.Style, bool) {
 	colors := GetLipglossColorScheme()
 	colorsEnabled := config.Color.Get()
 
