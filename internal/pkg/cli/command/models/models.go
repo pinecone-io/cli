@@ -8,15 +8,15 @@ import (
 
 	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/models"
 	"github.com/pinecone-io/cli/internal/pkg/utils/models/presenters"
-	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
-	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 	"github.com/spf13/cobra"
 )
 
 type ListModelsCmdOptions struct {
-	json bool
+	json    bool
+	noCache bool
 }
 
 func NewModelsCmd() *cobra.Command {
@@ -26,22 +26,20 @@ func NewModelsCmd() *cobra.Command {
 		Use:   "models",
 		Short: "List the models hosted on Pinecone",
 		Run: func(cmd *cobra.Command, args []string) {
-			pc := sdk.NewPineconeClient()
 			ctx := context.Background()
 
-			embed := "embed"
-			embedModels, err := pc.Inference.ListModels(ctx, &pinecone.ListModelsParams{Type: &embed})
+			// Use cache unless --no-cache flag is set
+			useCache := !options.noCache
+			models, err := models.GetModels(ctx, useCache)
 			if err != nil {
 				errorutil.HandleIndexAPIError(err, cmd, []string{})
 				exit.Error(err)
 			}
 
-			if embedModels == nil || embedModels.Models == nil || len(*embedModels.Models) == 0 {
+			if len(models) == 0 {
 				fmt.Println("No models found.")
 				return
 			}
-
-			models := *embedModels.Models
 
 			// Sort results alphabetically by model name
 			sort.SliceStable(models, func(i, j int) bool {
@@ -60,6 +58,7 @@ func NewModelsCmd() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVar(&options.noCache, "no-cache", false, "skip cache and fetch fresh data from API")
 
 	return cmd
 }
