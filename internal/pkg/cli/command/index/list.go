@@ -47,6 +47,7 @@ func NewListCmd() *cobra.Command {
 				// Note: presenters functions now use fmt internally for data output
 				indexpresenters.PrintIndexTableWithIndexAttributesGroups(idxs, []indexpresenters.IndexAttributesGroup{
 					indexpresenters.IndexAttributesGroupEssential,
+					// indexpresenters.IndexAttributesGroupInference,
 					indexpresenters.IndexAttributesGroupState,
 				})
 			}

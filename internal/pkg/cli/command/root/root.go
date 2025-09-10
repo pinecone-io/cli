@@ -10,6 +10,7 @@ import (
 	index "github.com/pinecone-io/cli/internal/pkg/cli/command/index"
 	login "github.com/pinecone-io/cli/internal/pkg/cli/command/login"
 	logout "github.com/pinecone-io/cli/internal/pkg/cli/command/logout"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/models"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/organization"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/project"
 	target "github.com/pinecone-io/cli/internal/pkg/cli/command/target"
@@ -77,6 +78,7 @@ Get started by logging in with
 	rootCmd.AddGroup(help.GROUP_VECTORDB)
 	rootCmd.AddCommand(index.NewIndexCmd())
 	rootCmd.AddCommand(collection.NewCollectionCmd())
+	rootCmd.AddCommand(models.NewModelsCmd())
 
 	// Misc group
 	rootCmd.AddCommand(version.NewVersionCmd())
