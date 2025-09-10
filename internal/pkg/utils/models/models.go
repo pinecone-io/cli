@@ -9,8 +9,8 @@ import (
 	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 )
 
-// CachedModel is a simplified version of pinecone.ModelInfo for caching
-type CachedModel struct {
+// ModelInfo is our CLI's model representation
+type ModelInfo struct {
 	Model               string                  `json:"model"`
 	Type                string                  `json:"type"`
 	VectorType          *string                 `json:"vector_type"`
@@ -25,7 +25,7 @@ type CachedModel struct {
 }
 
 // GetModels fetches models from API or cache
-func GetModels(ctx context.Context, useCache bool) ([]pinecone.ModelInfo, error) {
+func GetModels(ctx context.Context, useCache bool) ([]ModelInfo, error) {
 	if useCache {
 		return getModelsWithCache(ctx)
 	}
@@ -37,19 +37,16 @@ func GetModels(ctx context.Context, useCache bool) ([]pinecone.ModelInfo, error)
 	}
 
 	// Update cache with fresh data
-	cachedModels := convertModelInfoToCached(models)
-	cache.Cache.Set("models", cachedModels, 24*time.Hour)
+	cache.Cache.Set("models", models, 24*time.Hour)
 	return models, nil
 }
 
 // getModelsWithCache tries cache first, then API if not found
-func getModelsWithCache(ctx context.Context) ([]pinecone.ModelInfo, error) {
+func getModelsWithCache(ctx context.Context) ([]ModelInfo, error) {
 	// Try to get from cache first
-	cached, found, err := cache.GetCached[[]CachedModel]("models")
+	cached, found, err := cache.GetCached[[]ModelInfo]("models")
 	if found && err == nil {
-		// Convert cached models to pinecone.ModelInfo
-		models := convertCachedToModelInfo(*cached)
-		return models, nil
+		return *cached, nil
 	}
 
 	// Fetch from API if not in cache
@@ -58,14 +55,13 @@ func getModelsWithCache(ctx context.Context) ([]pinecone.ModelInfo, error) {
 		return nil, err
 	}
 
-	// Convert to cached models and cache
-	cachedModels := convertModelInfoToCached(models)
-	cache.CacheWithTTL("models", cachedModels, 24*time.Hour)
+	// Cache the models
+	cache.CacheWithTTL("models", models, 24*time.Hour)
 	return models, nil
 }
 
 // getModelsFromAPI fetches models directly from the API
-func getModelsFromAPI(ctx context.Context) ([]pinecone.ModelInfo, error) {
+func getModelsFromAPI(ctx context.Context) ([]ModelInfo, error) {
 	pc := sdk.NewPineconeClient()
 	embed := "embed"
 	embedModels, err := pc.Inference.ListModels(ctx, &pinecone.ListModelsParams{Type: &embed})
@@ -74,38 +70,13 @@ func getModelsFromAPI(ctx context.Context) ([]pinecone.ModelInfo, error) {
 	}
 
 	if embedModels == nil || embedModels.Models == nil {
-		return []pinecone.ModelInfo{}, nil
+		return []ModelInfo{}, nil
 	}
 
-	return *embedModels.Models, nil
-}
-
-// convertCachedToModelInfo converts CachedModel to pinecone.ModelInfo
-func convertCachedToModelInfo(cached []CachedModel) []pinecone.ModelInfo {
-	models := make([]pinecone.ModelInfo, len(cached))
-	for i, cachedModel := range cached {
-		models[i] = pinecone.ModelInfo{
-			Model:               cachedModel.Model,
-			Type:                cachedModel.Type,
-			VectorType:          cachedModel.VectorType,
-			DefaultDimension:    cachedModel.DefaultDimension,
-			ProviderName:        cachedModel.ProviderName,
-			ShortDescription:    cachedModel.ShortDescription,
-			MaxBatchSize:        cachedModel.MaxBatchSize,
-			MaxSequenceLength:   cachedModel.MaxSequenceLength,
-			Modality:            cachedModel.Modality,
-			SupportedDimensions: cachedModel.SupportedDimensions,
-			SupportedMetrics:    cachedModel.SupportedMetrics,
-		}
-	}
-	return models
-}
-
-// convertModelInfoToCached converts pinecone.ModelInfo to CachedModel
-func convertModelInfoToCached(models []pinecone.ModelInfo) []CachedModel {
-	cached := make([]CachedModel, len(models))
-	for i, model := range models {
-		cached[i] = CachedModel{
+	// Convert pinecone.ModelInfo to our ModelInfo
+	models := make([]ModelInfo, len(*embedModels.Models))
+	for i, model := range *embedModels.Models {
+		models[i] = ModelInfo{
 			Model:               model.Model,
 			Type:                model.Type,
 			VectorType:          model.VectorType,
@@ -119,5 +90,6 @@ func convertModelInfoToCached(models []pinecone.ModelInfo) []CachedModel {
 			SupportedMetrics:    model.SupportedMetrics,
 		}
 	}
-	return cached
+
+	return models, nil
 }

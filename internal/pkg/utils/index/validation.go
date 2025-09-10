@@ -1,10 +1,12 @@
 package index
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/models"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/validation"
 	"github.com/spf13/cobra"
@@ -54,6 +56,7 @@ func ValidateCreateOptions(config CreateOptions) []string {
 	validator.AddRule(CreateOptionsRule(validateConfigSparseVectorDimension))
 	validator.AddRule(CreateOptionsRule(validateConfigSparseVectorMetric))
 	validator.AddRule(CreateOptionsRule(validateConfigDenseVectorDimension))
+	validator.AddRule(CreateOptionsRule(validateConfigModel))
 
 	return validator.Validate(&config)
 }
@@ -181,4 +184,32 @@ func validateConfigDenseVectorDimension(config *CreateOptions) string {
 		return fmt.Sprintf("%s is required when vector type is %s", style.Code("dimension"), style.Code("dense"))
 	}
 	return ""
+}
+
+// validateConfigModel checks that the model name is one of the supported models
+func validateConfigModel(config *CreateOptions) string {
+	// Skip validation if no model is specified
+	if config.Model.Value == "" {
+		return ""
+	}
+
+	// Get available models from API
+	ctx := context.Background()
+	availableModels, err := models.GetModels(ctx, true) // Use cache for performance
+	if err != nil {
+		// If we can't get models, skip validation (let the API call fail later)
+		return ""
+	}
+
+	// Check if the model exists in available models
+	for _, model := range availableModels {
+		if model.Model == config.Model.Value {
+			return ""
+		}
+	}
+
+	// Model not found
+	return fmt.Sprintf("model %s is not supported. Use %s to see available models",
+		style.Code(config.Model.Value),
+		style.Code("pc models"))
 }

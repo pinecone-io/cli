@@ -1,5 +1,14 @@
 package index
 
+import (
+	"context"
+
+	"github.com/pinecone-io/cli/internal/pkg/utils/models"
+)
+
+// ModelInfo is an alias for models.ModelInfo for convenience
+type ModelInfo = models.ModelInfo
+
 // IndexSpec represents the type of index (serverless, pod) as per what the server recognizes
 type IndexSpec string
 
@@ -17,12 +26,9 @@ const (
 	Integrated
 )
 
-type EmbeddingModel string
-
 const (
-	LlamaTextEmbedV2        EmbeddingModel = "llama-text-embed-v2"
-	MultilingualE5Large     EmbeddingModel = "multilingual-e5-large"
-	PineconeSparseEnglishV0 EmbeddingModel = "pinecone-sparse-english-v0"
+	DefaultDense  string = "llama-text-embed-v2"
+	DefaultSparse string = "pinecone-sparse-english-v0"
 )
 
 // Option represents a configuration option with its value and whether it was inferred
@@ -86,88 +92,54 @@ func (c *CreateOptions) GetCreateFlow() IndexCreateFlow {
 }
 
 // InferredCreateOptions returns CreateOptions with inferred values applied based on the spec
-func InferredCreateOptions(opts CreateOptions) CreateOptions {
+func InferredCreateOptions(ctx context.Context, opts CreateOptions) CreateOptions {
+	// Get available models from API
+	availableModels, err := models.GetModels(ctx, true) // Use cache for performance
 
-	if EmbeddingModel(opts.Model.Value) == "default" || EmbeddingModel(opts.Model.Value) == "default-dense" {
-		opts.Model = Option[string]{
-			Value:    string(LlamaTextEmbedV2),
-			Inferred: true,
+	if err == nil {
+		// Create a map of model names for quick lookup
+		modelMap := make(map[string]bool)
+		for _, model := range availableModels {
+			modelMap[model.Model] = true
 		}
-	}
 
-	if EmbeddingModel(opts.Model.Value) == "default-sparse" {
-		opts.Model = Option[string]{
-			Value:    string(PineconeSparseEnglishV0),
-			Inferred: true,
+		// Check if model exists in available models
+		modelExists := func(modelName string) bool {
+			return modelMap[modelName]
 		}
-	}
 
-	if EmbeddingModel(opts.Model.Value) == LlamaTextEmbedV2 {
-		opts.Serverless = Option[bool]{
-			Value:    true,
-			Inferred: true,
+		// Handle default model mappings
+		if opts.Model.Value == "default" || opts.Model.Value == "dense" || opts.Model.Value == "default-dense" {
+			if modelExists(string(DefaultDense)) {
+				opts.Model = Option[string]{
+					Value:    string(DefaultDense),
+					Inferred: true,
+				}
+			}
 		}
-		opts.FieldMap = Option[map[string]string]{
-			Value:    map[string]string{"text": "text"},
-			Inferred: true,
-		}
-		opts.ReadParameters = Option[map[string]string]{
-			Value:    map[string]string{"input_type": "query", "truncate": "END"},
-			Inferred: true,
-		}
-		opts.WriteParameters = Option[map[string]string]{
-			Value:    map[string]string{"input_type": "passage", "truncate": "END"},
-			Inferred: true,
-		}
-	}
 
-	if EmbeddingModel(opts.Model.Value) == MultilingualE5Large {
-		opts.Serverless = Option[bool]{
-			Value:    true,
-			Inferred: true,
+		if opts.Model.Value == "sparse" || opts.Model.Value == "default-sparse" {
+			if modelExists(string(DefaultSparse)) {
+				opts.Model = Option[string]{
+					Value:    string(DefaultSparse),
+					Inferred: true,
+				}
+			}
 		}
-		opts.FieldMap = Option[map[string]string]{
-			Value:    map[string]string{"text": "text"},
-			Inferred: true,
-		}
-		opts.ReadParameters = Option[map[string]string]{
-			Value:    map[string]string{"input_type": "query", "truncate": "END"},
-			Inferred: true,
-		}
-		opts.WriteParameters = Option[map[string]string]{
-			Value:    map[string]string{"input_type": "passage", "truncate": "END"},
-			Inferred: true,
-		}
-	}
 
-	if EmbeddingModel(opts.Model.Value) == PineconeSparseEnglishV0 {
-		opts.Serverless = Option[bool]{
-			Value:    true,
-			Inferred: true,
-		}
-		opts.FieldMap = Option[map[string]string]{
-			Value:    map[string]string{"text": "text"},
-			Inferred: true,
-		}
-		opts.ReadParameters = Option[map[string]string]{
-			Value:    map[string]string{"input_type": "query", "truncate": "END"},
-			Inferred: true,
-		}
-		opts.WriteParameters = Option[map[string]string]{
-			Value:    map[string]string{"input_type": "passage", "truncate": "END"},
-			Inferred: true,
-		}
-		opts.Dimension = Option[int32]{
-			Value:    0,
-			Inferred: true,
-		}
-		opts.VectorType = Option[string]{
-			Value:    "sparse",
-			Inferred: true,
-		}
-		opts.Metric = Option[string]{
-			Value:    "dotproduct",
-			Inferred: true,
+		// Apply inference rules based on available models
+		if modelExists(opts.Model.Value) {
+			// Find the specific model data
+			var modelData *ModelInfo
+			for _, model := range availableModels {
+				if model.Model == opts.Model.Value {
+					modelData = &model
+					break
+				}
+			}
+			if modelData != nil {
+				applyModelInference(&opts, modelData)
+			}
 		}
 	}
 
@@ -274,3 +246,161 @@ func InferredCreateOptions(opts CreateOptions) CreateOptions {
 
 	return opts
 }
+
+// applyModelInference applies model-specific inference rules based on model data
+func applyModelInference(opts *CreateOptions, model *ModelInfo) {
+	// Set serverless to true for embedding models
+	if model.Type == "embed" {
+		opts.Serverless = Option[bool]{
+			Value:    true,
+			Inferred: true,
+		}
+	}
+
+	// Set vector type from model data
+	if model.VectorType != nil {
+		opts.VectorType = Option[string]{
+			Value:    *model.VectorType,
+			Inferred: true,
+		}
+	}
+
+	// Set dimension from model data if available
+	if model.DefaultDimension != nil && *model.DefaultDimension > 0 {
+		opts.Dimension = Option[int32]{
+			Value:    *model.DefaultDimension,
+			Inferred: true,
+		}
+	}
+
+	// Set metric based on vector type
+	if model.VectorType != nil {
+		if *model.VectorType == "sparse" {
+			opts.Metric = Option[string]{
+				Value:    "dotproduct",
+				Inferred: true,
+			}
+		} else if *model.VectorType == "dense" {
+			opts.Metric = Option[string]{
+				Value:    "cosine",
+				Inferred: true,
+			}
+		}
+	}
+
+	// Set field map for embedding models (common pattern)
+	if model.Type == "embed" {
+		opts.FieldMap = Option[map[string]string]{
+			Value:    map[string]string{"text": "text"},
+			Inferred: true,
+		}
+	}
+
+	// Set read/write parameters for embedding models
+	if model.Type == "embed" {
+		opts.ReadParameters = Option[map[string]string]{
+			Value:    map[string]string{"input_type": "query", "truncate": "END"},
+			Inferred: true,
+		}
+		opts.WriteParameters = Option[map[string]string]{
+			Value:    map[string]string{"input_type": "passage", "truncate": "END"},
+			Inferred: true,
+		}
+	}
+}
+
+// inferredCreateOptionsFallback provides fallback behavior when models can't be fetched
+// func inferredCreateOptionsFallback(opts CreateOptions) CreateOptions {
+// 	// This is the original hardcoded logic as a fallback
+// 	if EmbeddingModel(opts.Model.Value) == "default" || EmbeddingModel(opts.Model.Value) == "default-dense" {
+// 		opts.Model = Option[string]{
+// 			Value:    string(LlamaTextEmbedV2),
+// 			Inferred: true,
+// 		}
+// 	}
+
+// 	if EmbeddingModel(opts.Model.Value) == "default-sparse" {
+// 		opts.Model = Option[string]{
+// 			Value:    string(PineconeSparseEnglishV0),
+// 			Inferred: true,
+// 		}
+// 	}
+
+// 	// Apply the original inference logic using hardcoded model data
+// 	// This is a fallback when API is not available
+// 	applyModelInferenceFallback(&opts, opts.Model.Value)
+
+// 	// ... rest of the original logic
+// 	return opts
+// }
+
+// applyModelInferenceFallback provides hardcoded inference rules as fallback
+// func applyModelInferenceFallback(opts *CreateOptions, modelName string) {
+// 	switch EmbeddingModel(modelName) {
+// 	case LlamaTextEmbedV2:
+// 		opts.Serverless = Option[bool]{
+// 			Value:    true,
+// 			Inferred: true,
+// 		}
+// 		opts.FieldMap = Option[map[string]string]{
+// 			Value:    map[string]string{"text": "text"},
+// 			Inferred: true,
+// 		}
+// 		opts.ReadParameters = Option[map[string]string]{
+// 			Value:    map[string]string{"input_type": "query", "truncate": "END"},
+// 			Inferred: true,
+// 		}
+// 		opts.WriteParameters = Option[map[string]string]{
+// 			Value:    map[string]string{"input_type": "passage", "truncate": "END"},
+// 			Inferred: true,
+// 		}
+
+// 	case MultilingualE5Large:
+// 		opts.Serverless = Option[bool]{
+// 			Value:    true,
+// 			Inferred: true,
+// 		}
+// 		opts.FieldMap = Option[map[string]string]{
+// 			Value:    map[string]string{"text": "text"},
+// 			Inferred: true,
+// 		}
+// 		opts.ReadParameters = Option[map[string]string]{
+// 			Value:    map[string]string{"input_type": "query", "truncate": "END"},
+// 			Inferred: true,
+// 		}
+// 		opts.WriteParameters = Option[map[string]string]{
+// 			Value:    map[string]string{"input_type": "passage", "truncate": "END"},
+// 			Inferred: true,
+// 		}
+
+// 	case PineconeSparseEnglishV0:
+// 		opts.Serverless = Option[bool]{
+// 			Value:    true,
+// 			Inferred: true,
+// 		}
+// 		opts.FieldMap = Option[map[string]string]{
+// 			Value:    map[string]string{"text": "text"},
+// 			Inferred: true,
+// 		}
+// 		opts.ReadParameters = Option[map[string]string]{
+// 			Value:    map[string]string{"input_type": "query", "truncate": "END"},
+// 			Inferred: true,
+// 		}
+// 		opts.WriteParameters = Option[map[string]string]{
+// 			Value:    map[string]string{"input_type": "passage", "truncate": "END"},
+// 			Inferred: true,
+// 		}
+// 		opts.Dimension = Option[int32]{
+// 			Value:    0,
+// 			Inferred: true,
+// 		}
+// 		opts.VectorType = Option[string]{
+// 			Value:    "sparse",
+// 			Inferred: true,
+// 		}
+// 		opts.Metric = Option[string]{
+// 			Value:    "dotproduct",
+// 			Inferred: true,
+// 		}
+// 	}
+// }

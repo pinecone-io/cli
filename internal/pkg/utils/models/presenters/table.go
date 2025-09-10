@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/models"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
-	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 )
 
 // PrintModelsTable creates and renders a table showing model information
-func PrintModelsTable(models []pinecone.ModelInfo) {
+func PrintModelsTable(models []models.ModelInfo) {
 	if len(models) == 0 {
 		fmt.Println("No models found.")
 		return
@@ -67,7 +67,7 @@ func PrintModelsTable(models []pinecone.ModelInfo) {
 }
 
 // PrintModelsTableWithTitle creates and renders a models table with a title
-func PrintModelsTableWithTitle(title string, models []pinecone.ModelInfo) {
+func PrintModelsTableWithTitle(title string, models []models.ModelInfo) {
 	fmt.Println()
 	fmt.Printf("%s\n\n", title)
 	PrintModelsTable(models)

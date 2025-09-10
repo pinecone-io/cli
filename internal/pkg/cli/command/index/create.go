@@ -1,7 +1,6 @@
 package index
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
@@ -34,25 +33,40 @@ func NewCreateIndexCmd() *cobra.Command {
 		Use:   "create <name>",
 		Short: "Create a new index with the specified configuration",
 		Long: heredoc.Docf(`
-		The %s command creates a new index with the specified configuration. There are several different types of indexes
-		you can create depending on the configuration provided:
+		The %s command creates a new index with the specified configuration. There are different types of indexes
+		you can create:
 
 			- Serverless (dense or sparse)
-			- Integrated 
-			- Pod
+			- Pod (dense only)
+
+		For serverless indexes, you can specify an embedding model to use via the %s flag:
+
+		The CLI will try to automatically infer missing settings from those provided.
 
 		For detailed documentation, see:
 		%s
-		`, style.Code("pc index create"), style.URL(docslinks.DocsIndexCreate)),
+		`, style.Code("pc index create"),
+			style.Emphasis("--model"),
+			style.URL(docslinks.DocsIndexCreate)),
 		Example: heredoc.Doc(`
-		# create a serverless index
-		$ pc index create my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1
+		# create default index (serverless)
+		$ pc index create my-index
 
-		# create a pod index
-		$ pc index create my-index --dimension 1536 --metric cosine --environment us-east-1-aws --pod-type p1.x1 --shards 2 --replicas 2
+		# create serverless index
+		$ pc index create my-index --serverless
 
-		# create an integrated index
-		$ pc index create my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1 --model multilingual-e5-large --field_map text=chunk_text
+		# create pod index
+		$ pc index create my-index --pod	
+
+		# create a serverless index with explicit model
+		$ pc index create my-index --model llama-text-embed-v2 --cloud aws --region us-east-1
+
+		# create a serverless index with the default dense model
+		$ pc index create my-index --model dense --cloud aws --region us-east-1
+
+		# create a serverless index with the default sparse model
+		$ pc index create my-index --model sparse --cloud aws --region us-east-1
+
 		`),
 		Args:         index.ValidateIndexNameArgs,
 		SilenceUsage: true,
@@ -84,7 +98,7 @@ func NewCreateIndexCmd() *cobra.Command {
 	cmd.Flags().StringSliceVar(&options.CreateOptions.MetadataConfig.Value, "metadata_config", []string{}, "Metadata configuration to limit the fields that are indexed for search")
 
 	// Integrated flags
-	cmd.Flags().StringVar(&options.CreateOptions.Model.Value, "model", "", "The name of the embedding model to use for the index")
+	cmd.Flags().StringVar(&options.CreateOptions.Model.Value, "model", "", fmt.Sprintf("Embedding model to use (e.g., llama-text-embed-v2, default, sparse). Use %s to see available models", style.Code("pc models")))
 	cmd.Flags().StringToStringVar(&options.CreateOptions.FieldMap.Value, "field_map", map[string]string{}, "Identifies the name of the text field from your document model that will be embedded")
 	cmd.Flags().StringToStringVar(&options.CreateOptions.ReadParameters.Value, "read_parameters", map[string]string{}, "The read parameters for the embedding model")
 	cmd.Flags().StringToStringVar(&options.CreateOptions.WriteParameters.Value, "write_parameters", map[string]string{}, "The write parameters for the embedding model")
@@ -101,6 +115,7 @@ func NewCreateIndexCmd() *cobra.Command {
 }
 
 func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []string) {
+	ctx := cmd.Context()
 
 	// validationErrors := index.ValidateCreateOptions(options.CreateOptions)
 	// if len(validationErrors) > 0 {
@@ -108,7 +123,7 @@ func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []st
 	// 	exit.Error(errors.New(validationErrors[0])) // Use first error for exit code
 	// }
 
-	inferredOptions := index.InferredCreateOptions(options.CreateOptions)
+	inferredOptions := index.InferredCreateOptions(ctx, options.CreateOptions)
 	validationErrors := index.ValidateCreateOptions(inferredOptions)
 	if len(validationErrors) > 0 {
 		msg.FailMsgMultiLine(validationErrors...)
@@ -143,7 +158,6 @@ func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []st
 	// created index
 	var idx *pinecone.Index
 	var err error
-	ctx := context.Background()
 	pc := sdk.NewPineconeClient()
 
 	switch inferredOptions.GetCreateFlow() {
