@@ -60,7 +60,7 @@ func ValidateCreateOptions(config CreateOptions) []string {
 
 // validateConfigIndexTypeFlags checks that serverless and pod flags are not both set
 func validateConfigIndexTypeFlags(config *CreateOptions) string {
-	if config.Serverless && config.Pod {
+	if config.Serverless.Value && config.Pod.Value {
 		return fmt.Sprintf("%s and %s cannot be provided together", style.Code("serverless"), style.Code("pod"))
 	}
 	return ""
@@ -68,7 +68,7 @@ func validateConfigIndexTypeFlags(config *CreateOptions) string {
 
 // validateConfigHasName checks if the config has a non-empty name
 func validateConfigHasName(config *CreateOptions) string {
-	if strings.TrimSpace(config.Name) == "" {
+	if strings.TrimSpace(config.Name.Value) == "" {
 		return "index must have a name"
 	}
 	return ""
@@ -76,7 +76,7 @@ func validateConfigHasName(config *CreateOptions) string {
 
 // validateConfigNameLength checks if the config name is 1-45 characters long
 func validateConfigNameLength(config *CreateOptions) string {
-	name := strings.TrimSpace(config.Name)
+	name := strings.TrimSpace(config.Name.Value)
 	if len(name) < 1 || len(name) > 45 {
 		return "index name must be 1-45 characters long"
 	}
@@ -85,7 +85,7 @@ func validateConfigNameLength(config *CreateOptions) string {
 
 // validateConfigNameStartsWithAlphanumeric checks if the config name starts with an alphanumeric character
 func validateConfigNameStartsWithAlphanumeric(config *CreateOptions) string {
-	name := strings.TrimSpace(config.Name)
+	name := strings.TrimSpace(config.Name.Value)
 	if len(name) > 0 {
 		first := name[0]
 		if !((first >= 'a' && first <= 'z') || (first >= '0' && first <= '9')) {
@@ -97,7 +97,7 @@ func validateConfigNameStartsWithAlphanumeric(config *CreateOptions) string {
 
 // validateConfigNameEndsWithAlphanumeric checks if the config name ends with an alphanumeric character
 func validateConfigNameEndsWithAlphanumeric(config *CreateOptions) string {
-	name := strings.TrimSpace(config.Name)
+	name := strings.TrimSpace(config.Name.Value)
 	if len(name) > 0 {
 		last := name[len(name)-1]
 		if !((last >= 'a' && last <= 'z') || (last >= '0' && last <= '9')) {
@@ -109,7 +109,7 @@ func validateConfigNameEndsWithAlphanumeric(config *CreateOptions) string {
 
 // validateConfigNameCharacters checks if the config name consists only of lowercase alphanumeric characters or '-'
 func validateConfigNameCharacters(config *CreateOptions) string {
-	name := strings.TrimSpace(config.Name)
+	name := strings.TrimSpace(config.Name.Value)
 	for _, char := range name {
 		if !((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9') || char == '-') {
 			return "index name must consist only of lowercase alphanumeric characters or '-'"
@@ -120,39 +120,39 @@ func validateConfigNameCharacters(config *CreateOptions) string {
 
 // validateConfigServerlessCloud checks that cloud is provided for serverless indexes
 func validateConfigServerlessCloud(config *CreateOptions) string {
-	if config.GetSpec() == IndexSpecServerless && config.Cloud == "" {
-		return fmt.Sprintf("%s is required  for %s indexes", style.Code("cloud"), style.Code("serverless"))
+	if config.GetSpec() == IndexSpecServerless && config.Cloud.Value == "" {
+		return fmt.Sprintf("%s is required for %s indexes", style.Code("cloud"), style.Code("serverless"))
 	}
 	return ""
 }
 
 // validateConfigServerlessRegion checks that region is provided for serverless indexes
 func validateConfigServerlessRegion(config *CreateOptions) string {
-	if config.GetSpec() == IndexSpecServerless && config.Region == "" {
-		return fmt.Sprintf("%s is required  for %s indexes", style.Code("region"), style.Code("serverless"))
+	if config.GetSpec() == IndexSpecServerless && config.Region.Value == "" {
+		return fmt.Sprintf("%s is required for %s indexes", style.Code("region"), style.Code("serverless"))
 	}
 	return ""
 }
 
 // validateConfigPodEnvironment checks that environment is provided for pod indexes
 func validateConfigPodEnvironment(config *CreateOptions) string {
-	if config.GetSpec() == IndexSpecPod && config.Environment == "" {
-		return fmt.Sprintf("%s is required  for %s indexes", style.Code("environment"), style.Code("pod"))
+	if config.GetSpec() == IndexSpecPod && config.Environment.Value == "" {
+		return fmt.Sprintf("%s is required for %s indexes", style.Code("environment"), style.Code("pod"))
 	}
 	return ""
 }
 
 // validateConfigPodType checks that pod_type is provided for pod indexes
 func validateConfigPodType(config *CreateOptions) string {
-	if config.GetSpec() == IndexSpecPod && config.PodType == "" {
-		return fmt.Sprintf("%s is required  for %s indexes", style.Code("pod_type"), style.Code("pod"))
+	if config.GetSpec() == IndexSpecPod && config.PodType.Value == "" {
+		return fmt.Sprintf("%s is required for %s indexes", style.Code("pod_type"), style.Code("pod"))
 	}
 	return ""
 }
 
 // validateConfigPodSparseVector checks that pod indexes cannot use sparse vector type
 func validateConfigPodSparseVector(config *CreateOptions) string {
-	if config.GetSpec() == IndexSpecPod && config.VectorType == "sparse" {
+	if config.GetSpec() == IndexSpecPod && config.VectorType.Value == "sparse" {
 		return fmt.Sprintf("%s vector type is not supported for %s indexes", style.Code("sparse"), style.Code("pod"))
 	}
 	return ""
@@ -160,7 +160,7 @@ func validateConfigPodSparseVector(config *CreateOptions) string {
 
 // validateConfigSparseVectorDimension checks that dimension should not be specified for sparse vector type
 func validateConfigSparseVectorDimension(config *CreateOptions) string {
-	if config.VectorType == "sparse" && config.Dimension > 0 {
+	if config.VectorType.Value == "sparse" && config.Dimension.Value > 0 {
 		return fmt.Sprintf("%s should not be specified when vector type is %s", style.Code("dimension"), style.Code("sparse"))
 	}
 	return ""
@@ -168,8 +168,8 @@ func validateConfigSparseVectorDimension(config *CreateOptions) string {
 
 // validateConfigSparseVectorMetric checks that metric should be 'dotproduct' for sparse vector type
 func validateConfigSparseVectorMetric(config *CreateOptions) string {
-	if config.VectorType == "sparse" && config.Metric != "dotproduct" {
-		return "metric should be 'dotproduct' when vector type is 'sparse'"
+	if config.VectorType.Value == "sparse" && config.Metric.Value != "" && config.Metric.Value != "dotproduct" {
+		return fmt.Sprintf("metric should be %s when vector type is %s", style.Code("dotproduct"), style.Code("sparse"))
 	}
 	return ""
 }
@@ -177,7 +177,7 @@ func validateConfigSparseVectorMetric(config *CreateOptions) string {
 // validateConfigDenseVectorDimension checks that dimension is provided for dense vector indexes
 func validateConfigDenseVectorDimension(config *CreateOptions) string {
 	// Check if it's a dense vector type (empty string means dense, or explicitly "dense")
-	if config.VectorType == "dense" && config.Dimension <= 0 {
+	if config.VectorType.Value == "dense" && config.Dimension.Value <= 0 {
 		return fmt.Sprintf("%s is required when vector type is %s", style.Code("dimension"), style.Code("dense"))
 	}
 	return ""

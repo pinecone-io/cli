@@ -57,43 +57,43 @@ func NewCreateIndexCmd() *cobra.Command {
 		Args:         index.ValidateIndexNameArgs,
 		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {
-			options.CreateOptions.Name = args[0]
+			options.CreateOptions.Name.Value = args[0]
 			runCreateIndexCmd(options, cmd, args)
 		},
 	}
 
 	// index type flags
-	cmd.Flags().BoolVar(&options.CreateOptions.Serverless, "serverless", false, "Create a serverless index (default)")
-	cmd.Flags().BoolVar(&options.CreateOptions.Pod, "pod", false, "Create a pod index")
+	cmd.Flags().BoolVar(&options.CreateOptions.Serverless.Value, "serverless", false, "Create a serverless index (default)")
+	cmd.Flags().BoolVar(&options.CreateOptions.Pod.Value, "pod", false, "Create a pod index")
 
 	// Serverless & Pods
-	cmd.Flags().StringVar(&options.CreateOptions.SourceCollection, "source_collection", "", "When creating an index from a collection")
+	cmd.Flags().StringVar(&options.CreateOptions.SourceCollection.Value, "source_collection", "", "When creating an index from a collection")
 
 	// Serverless & Integrated
-	cmd.Flags().StringVarP(&options.CreateOptions.Cloud, "cloud", "c", "", "Cloud provider where you would like to deploy your index")
-	cmd.Flags().StringVarP(&options.CreateOptions.Region, "region", "r", "", "Cloud region where you would like to deploy your index")
+	cmd.Flags().StringVarP(&options.CreateOptions.Cloud.Value, "cloud", "c", "", "Cloud provider where you would like to deploy your index")
+	cmd.Flags().StringVarP(&options.CreateOptions.Region.Value, "region", "r", "", "Cloud region where you would like to deploy your index")
 
 	// Serverless flags
-	cmd.Flags().StringVarP(&options.CreateOptions.VectorType, "vector_type", "v", "", "Vector type to use. One of: dense, sparse")
+	cmd.Flags().StringVarP(&options.CreateOptions.VectorType.Value, "vector_type", "v", "", "Vector type to use. One of: dense, sparse")
 
 	// Pod flags
-	cmd.Flags().StringVar(&options.CreateOptions.Environment, "environment", "", "Environment of the index to create")
-	cmd.Flags().StringVar(&options.CreateOptions.PodType, "pod_type", "", "Type of pod to use")
-	cmd.Flags().Int32Var(&options.CreateOptions.Shards, "shards", 1, "Shards of the index to create")
-	cmd.Flags().Int32Var(&options.CreateOptions.Replicas, "replicas", 1, "Replicas of the index to create")
-	cmd.Flags().StringSliceVar(&options.CreateOptions.MetadataConfig, "metadata_config", []string{}, "Metadata configuration to limit the fields that are indexed for search")
+	cmd.Flags().StringVar(&options.CreateOptions.Environment.Value, "environment", "", "Environment of the index to create")
+	cmd.Flags().StringVar(&options.CreateOptions.PodType.Value, "pod_type", "", "Type of pod to use")
+	cmd.Flags().Int32Var(&options.CreateOptions.Shards.Value, "shards", 1, "Shards of the index to create")
+	cmd.Flags().Int32Var(&options.CreateOptions.Replicas.Value, "replicas", 1, "Replicas of the index to create")
+	cmd.Flags().StringSliceVar(&options.CreateOptions.MetadataConfig.Value, "metadata_config", []string{}, "Metadata configuration to limit the fields that are indexed for search")
 
 	// Integrated flags
-	cmd.Flags().StringVar(&options.CreateOptions.Model, "model", "", "The name of the embedding model to use for the index")
-	cmd.Flags().StringToStringVar(&options.CreateOptions.FieldMap, "field_map", map[string]string{}, "Identifies the name of the text field from your document model that will be embedded")
-	cmd.Flags().StringToStringVar(&options.CreateOptions.ReadParameters, "read_parameters", map[string]string{}, "The read parameters for the embedding model")
-	cmd.Flags().StringToStringVar(&options.CreateOptions.WriteParameters, "write_parameters", map[string]string{}, "The write parameters for the embedding model")
+	cmd.Flags().StringVar(&options.CreateOptions.Model.Value, "model", "", "The name of the embedding model to use for the index")
+	cmd.Flags().StringToStringVar(&options.CreateOptions.FieldMap.Value, "field_map", map[string]string{}, "Identifies the name of the text field from your document model that will be embedded")
+	cmd.Flags().StringToStringVar(&options.CreateOptions.ReadParameters.Value, "read_parameters", map[string]string{}, "The read parameters for the embedding model")
+	cmd.Flags().StringToStringVar(&options.CreateOptions.WriteParameters.Value, "write_parameters", map[string]string{}, "The write parameters for the embedding model")
 
 	// Optional flags
-	cmd.Flags().Int32VarP(&options.CreateOptions.Dimension, "dimension", "d", 0, "Dimension of the index to create")
-	cmd.Flags().StringVarP(&options.CreateOptions.Metric, "metric", "m", "", "Metric to use. One of: cosine, euclidean, dotproduct")
-	cmd.Flags().StringVar(&options.CreateOptions.DeletionProtection, "deletion_protection", "", "Whether to enable deletion protection for the index. One of: enabled, disabled")
-	cmd.Flags().StringToStringVar(&options.CreateOptions.Tags, "tags", map[string]string{}, "Custom user tags to add to an index")
+	cmd.Flags().Int32VarP(&options.CreateOptions.Dimension.Value, "dimension", "d", 0, "Dimension of the index to create")
+	cmd.Flags().StringVarP(&options.CreateOptions.Metric.Value, "metric", "m", "", "Metric to use. One of: cosine, euclidean, dotproduct")
+	cmd.Flags().StringVar(&options.CreateOptions.DeletionProtection.Value, "deletion_protection", "", "Whether to enable deletion protection for the index. One of: enabled, disabled")
+	cmd.Flags().StringToStringVar(&options.CreateOptions.Tags.Value, "tags", map[string]string{}, "Custom user tags to add to an index")
 
 	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 
@@ -102,7 +102,14 @@ func NewCreateIndexCmd() *cobra.Command {
 
 func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []string) {
 
-	validationErrors := index.ValidateCreateOptions(options.CreateOptions)
+	// validationErrors := index.ValidateCreateOptions(options.CreateOptions)
+	// if len(validationErrors) > 0 {
+	// 	msg.FailMsgMultiLine(validationErrors...)
+	// 	exit.Error(errors.New(validationErrors[0])) // Use first error for exit code
+	// }
+
+	inferredOptions := index.InferredCreateOptions(options.CreateOptions)
+	validationErrors := index.ValidateCreateOptions(inferredOptions)
 	if len(validationErrors) > 0 {
 		msg.FailMsgMultiLine(validationErrors...)
 		exit.Error(errors.New(validationErrors[0])) // Use first error for exit code
@@ -112,12 +119,12 @@ func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []st
 	pcio.Println()
 	pcio.Printf("%s\n\n",
 		pcio.Sprintf("Creating %s index %s with the following configuration:",
-			style.Emphasis(string(options.CreateOptions.GetSpec())),
-			style.ResourceName(options.CreateOptions.Name),
+			style.Emphasis(string(inferredOptions.GetSpec())),
+			style.ResourceName(inferredOptions.Name.Value),
 		),
 	)
 
-	indexpresenters.PrintIndexCreateConfigTable(&options.CreateOptions)
+	indexpresenters.PrintIndexCreateConfigTable(&inferredOptions)
 
 	// Ask for user confirmation
 	question := "Is this configuration correct? Do you want to proceed with creating the index?"
@@ -128,8 +135,8 @@ func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []st
 
 	// index tags
 	var indexTags *pinecone.IndexTags
-	if len(options.CreateOptions.Tags) > 0 {
-		tags := pinecone.IndexTags(options.CreateOptions.Tags)
+	if len(inferredOptions.Tags.Value) > 0 {
+		tags := pinecone.IndexTags(inferredOptions.Tags.Value)
 		indexTags = &tags
 	}
 
@@ -139,19 +146,19 @@ func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []st
 	ctx := context.Background()
 	pc := sdk.NewPineconeClient()
 
-	switch options.CreateOptions.GetSpec() {
-	case index.IndexSpecServerless:
+	switch inferredOptions.GetCreateFlow() {
+	case index.Serverless:
 		// create serverless index
 		req := pinecone.CreateServerlessIndexRequest{
-			Name:               options.CreateOptions.Name,
-			Cloud:              pinecone.Cloud(options.CreateOptions.Cloud),
-			Region:             options.CreateOptions.Region,
-			Metric:             pointerOrNil(pinecone.IndexMetric(options.CreateOptions.Metric)),
-			DeletionProtection: pointerOrNil(pinecone.DeletionProtection(options.CreateOptions.DeletionProtection)),
-			Dimension:          pointerOrNil(options.CreateOptions.Dimension),
-			VectorType:         pointerOrNil(options.CreateOptions.VectorType),
+			Name:               inferredOptions.Name.Value,
+			Cloud:              pinecone.Cloud(inferredOptions.Cloud.Value),
+			Region:             inferredOptions.Region.Value,
+			Metric:             pointerOrNil(pinecone.IndexMetric(inferredOptions.Metric.Value)),
+			DeletionProtection: pointerOrNil(pinecone.DeletionProtection(inferredOptions.DeletionProtection.Value)),
+			Dimension:          pointerOrNil(inferredOptions.Dimension.Value),
+			VectorType:         pointerOrNil(inferredOptions.VectorType.Value),
 			Tags:               indexTags,
-			SourceCollection:   pointerOrNil(options.CreateOptions.SourceCollection),
+			SourceCollection:   pointerOrNil(inferredOptions.SourceCollection.Value),
 		}
 
 		idx, err = pc.CreateServerlessIndex(ctx, &req)
@@ -159,24 +166,24 @@ func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []st
 			errorutil.HandleIndexAPIError(err, cmd, args)
 			exit.Error(err)
 		}
-	case index.IndexSpecPod:
+	case index.Pod:
 		// create pod index
 		var metadataConfig *pinecone.PodSpecMetadataConfig
-		if len(options.CreateOptions.MetadataConfig) > 0 {
+		if len(inferredOptions.MetadataConfig.Value) > 0 {
 			metadataConfig = &pinecone.PodSpecMetadataConfig{
-				Indexed: &options.CreateOptions.MetadataConfig,
+				Indexed: &inferredOptions.MetadataConfig.Value,
 			}
 		}
 		req := pinecone.CreatePodIndexRequest{
-			Name:               options.CreateOptions.Name,
-			Dimension:          options.CreateOptions.Dimension,
-			Environment:        options.CreateOptions.Environment,
-			PodType:            options.CreateOptions.PodType,
-			Shards:             options.CreateOptions.Shards,
-			Replicas:           options.CreateOptions.Replicas,
-			Metric:             pointerOrNil(pinecone.IndexMetric(options.CreateOptions.Metric)),
-			DeletionProtection: pointerOrNil(pinecone.DeletionProtection(options.CreateOptions.DeletionProtection)),
-			SourceCollection:   pointerOrNil(options.CreateOptions.SourceCollection),
+			Name:               inferredOptions.Name.Value,
+			Dimension:          inferredOptions.Dimension.Value,
+			Environment:        inferredOptions.Environment.Value,
+			PodType:            inferredOptions.PodType.Value,
+			Shards:             inferredOptions.Shards.Value,
+			Replicas:           inferredOptions.Replicas.Value,
+			Metric:             pointerOrNil(pinecone.IndexMetric(inferredOptions.Metric.Value)),
+			DeletionProtection: pointerOrNil(pinecone.DeletionProtection(inferredOptions.DeletionProtection.Value)),
+			SourceCollection:   pointerOrNil(inferredOptions.SourceCollection.Value),
 			Tags:               indexTags,
 			MetadataConfig:     metadataConfig,
 		}
@@ -186,29 +193,29 @@ func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []st
 			errorutil.HandleIndexAPIError(err, cmd, args)
 			exit.Error(err)
 		}
-	// case indexTypeIntegrated:
-	// 	// create integrated index
-	// 	readParams := toInterfaceMap(options.readParameters)
-	// 	writeParams := toInterfaceMap(options.writeParameters)
+	case index.Integrated:
+		// create integrated index
+		readParams := toInterfaceMap(inferredOptions.ReadParameters.Value)
+		writeParams := toInterfaceMap(inferredOptions.WriteParameters.Value)
 
-	// 	req := pinecone.CreateIndexForModelRequest{
-	// 		Name:               options.name,
-	// 		Cloud:              pinecone.Cloud(options.cloud),
-	// 		Region:             options.region,
-	// 		DeletionProtection: pointerOrNil(pinecone.DeletionProtection(options.deletionProtection)),
-	// 		Embed: pinecone.CreateIndexForModelEmbed{
-	// 			Model:           options.model,
-	// 			FieldMap:        toInterfaceMap(options.fieldMap),
-	// 			ReadParameters:  &readParams,
-	// 			WriteParameters: &writeParams,
-	// 		},
-	// 	}
+		req := pinecone.CreateIndexForModelRequest{
+			Name:               inferredOptions.Name.Value,
+			Cloud:              pinecone.Cloud(inferredOptions.Cloud.Value),
+			Region:             inferredOptions.Region.Value,
+			DeletionProtection: pointerOrNil(pinecone.DeletionProtection(inferredOptions.DeletionProtection.Value)),
+			Embed: pinecone.CreateIndexForModelEmbed{
+				Model:           inferredOptions.Model.Value,
+				FieldMap:        toInterfaceMap(inferredOptions.FieldMap.Value),
+				ReadParameters:  &readParams,
+				WriteParameters: &writeParams,
+			},
+		}
 
-	// 	idx, err = pc.CreateIndexForModel(ctx, &req)
-	// 	if err != nil {
-	// 		errorutil.HandleIndexAPIError(err, cmd, args)
-	// 		exit.Error(err)
-	// 	}
+		idx, err = pc.CreateIndexForModel(ctx, &req)
+		if err != nil {
+			errorutil.HandleIndexAPIError(err, cmd, args)
+			exit.Error(err)
+		}
 	default:
 		err := pcio.Errorf("invalid index type")
 		log.Error().Err(err).Msg("Error creating index")
@@ -240,4 +247,16 @@ func pointerOrNil[T comparable](value T) *T {
 		return nil
 	}
 	return &value
+}
+
+func toInterfaceMap(in map[string]string) map[string]any {
+	if in == nil {
+		return nil
+	}
+
+	interfaceMap := make(map[string]any, len(in))
+	for k, v := range in {
+		interfaceMap[k] = v
+	}
+	return interfaceMap
 }
