@@ -3,10 +3,8 @@ package sdk
 import (
 	"context"
 	"crypto/rand"
-	"encoding/base32"
-	"strings"
+	"io"
 
-	"github.com/google/uuid"
 	"github.com/pinecone-io/cli/internal/pkg/utils/auth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
@@ -42,6 +40,7 @@ func NewPineconeClient() *pinecone.Client {
 	clientId := secrets.ClientId.Get()
 	clientSecret := secrets.ClientSecret.Get()
 
+	// If there's a global API key set, it takes priority over user/service account tokens and associated keys
 	if secrets.GlobalApiKey.Get() != "" {
 		if oauth2Token.AccessToken != "" {
 			msg.WarnMsg("You are currently logged in and also have an API key set in your environment and/or local configuration. The API key (which is linked to a specific project) will be used in preference to any user authentication and target context that may be present.\n")
@@ -50,18 +49,20 @@ func NewPineconeClient() *pinecone.Client {
 		log.Debug().Msg("Creating client for machine using stored API key")
 		return NewClientForAPIKey(secrets.GlobalApiKey.Get())
 	}
-
 	log.Debug().Msg("No API key is stored in configuration, attempting to create a client using user access token")
 
+	// If neither user token or service account credentials are set, we cannot instantiate a client
 	if oauth2Token.AccessToken == "" && (clientId == "" && clientSecret == "") {
 		msg.FailMsg("Please configure user credentials before attempting this operation. Log in with %s, configure a service account with %s, or set an explicit API key with %s.", style.Code("pc login"), style.Code("pc auth configure --client-id --client-secret"), style.Code("pc config set-api-key"))
 		exit.ErrorMsg("User credentials are not configured")
 	}
 
-	// if targetOrgId == "" || targetProjectId == "" {
-	// 	msg.FailMsg("You are logged in, but need to target a project with %s", style.Code("pc target"))
-	// 	exit.ErrorMsg("No target organization set")
-	// }
+	// Lastly, if the user is not targeting a project, we cannot instantiate the client for
+	// user or service account scenarios
+	if targetProjectId == "" {
+		msg.FailMsg("You are logged in, but need to target a project with %s", style.Code("pc target"))
+		exit.ErrorMsg("No target project set")
+	}
 
 	return NewPineconeClientForProjectById(targetProjectId)
 }
@@ -76,12 +77,14 @@ func NewPineconeClientForProjectById(projectId string) *pinecone.Client {
 		exit.Error(err)
 	}
 
+	// Get the stored ManagedKey for the project, a new key is created if one doesn't exist
 	key, err := getCLIAPIKeyForProject(ctx, ac, project)
 	if err != nil {
 		msg.FailMsg("Failed to retrieve or create an API key for the project %s (ID: %s)", project.Name, project.Id)
 		exit.Error(pcio.Errorf("failed to retrieve or create API key for project: %w", err))
 	}
 
+	// Header is required for allowing user token to work across data/control plane APIs
 	headers := make(map[string]string)
 	headers["X-Project-Id"] = projectId
 
@@ -125,6 +128,8 @@ func NewPineconeAdminClient() *pinecone.AdminClient {
 	clientId := secrets.ClientId.Get()
 	clientSecret := secrets.ClientSecret.Get()
 
+	// AdminClient can accept either user token or service account credentials
+	// If both are provided, the client will use the user token
 	if oauth2Token.AccessToken == "" && (clientId == "" || clientSecret == "") {
 		msg.FailMsg("Please login with %s or configure credentials with %s before attempting this operation.", style.Code("pc auth login"), style.Code("pc auth configure"))
 		exit.ErrorMsg("User is not logged in")
@@ -193,11 +198,29 @@ func getPineconeHostURL() string {
 	return connectionConfig.PineconeGCPURL
 }
 
-func generateCLIAPIKeyName() string {
-	bytes := make([]byte, 3)
-	if _, err := rand.Read(bytes); err != nil {
-		return CLIAPIKeyName + strings.ToLower(uuid.NewString()[:6])
+func randStringFromCharset(length int) (string, error) {
+	charset := "abcdefghijklmnopqrstuvwxyz0123456789"
+	idxMax := 256 - (256 % len(charset))
+	out := make([]byte, length)
+	var b [1]byte
+	for i := 0; i < length; {
+		if _, err := io.ReadFull(rand.Reader, b[:]); err != nil {
+			return "", err
+		}
+		if int(b[0]) >= idxMax {
+			continue // reject 252-255 to keep uniform distribution
+		}
+		out[i] = charset[int(b[0])%len(charset)]
+		i++
 	}
-	str := base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(bytes)
-	return CLIAPIKeyName + strings.ToLower(str)
+	return string(out), nil
+}
+
+func generateCLIAPIKeyName() string {
+	const suffixLength = 6
+	s, err := randStringFromCharset(suffixLength)
+	if err != nil {
+		return CLIAPIKeyName + "000000" // fallback if randomization errors
+	}
+	return CLIAPIKeyName + s
 }
