@@ -1,15 +1,12 @@
 package target
 
 import (
-	"io"
 	"os"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 
-	"github.com/pinecone-io/cli/internal/pkg/dashboard"
+	"github.com/pinecone-io/cli/internal/pkg/utils/auth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -17,11 +14,13 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/login"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	pc_oauth2 "github.com/pinecone-io/cli/internal/pkg/utils/oauth2"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
+	"github.com/pinecone-io/cli/internal/pkg/utils/prompt"
+	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
+	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 	"github.com/spf13/cobra"
 )
 
@@ -83,13 +82,24 @@ func NewTargetCmd() *cobra.Command {
 				return
 			}
 
-			access_token := secrets.OAuth2Token.Get()
-			if access_token.AccessToken == "" {
-				msg.FailMsg("You must be logged in to set a target context. Run %s to log in.", style.Code("pc login"))
-				exit.ErrorMsg("You must be logged in to set a target context")
+			// TODO - you don't need to be logged in, you should be able to target with client_id and client_secret
+			// But we also need to handle the case where it's a service account rather than a user
+			// In that case, we will not have an orgId from the token, we'll need to fetch the org via Admin API
+			accessToken, err := auth.Token(cmd.Context())
+			if err != nil {
+				log.Error().Err(err).Msg("Error retrieving oauth token")
+				msg.FailMsg("Error retrieving oauth token: %s", err)
+				exit.Error(pcio.Errorf("error retrieving oauth token: %w", err))
 				return
 			}
-			claims, err := pc_oauth2.ParseClaimsUnverified(&access_token)
+			clientId := secrets.ClientId.Get()
+			clientSecret := secrets.ClientSecret.Get()
+			if accessToken.AccessToken == "" && clientId == "" && clientSecret == "" {
+				msg.FailMsg("You must be logged in or have service account credentials configured to set a target context. Run %s to log in, or %s to configure credentials.", style.Code("pc login"), style.Code("pc auth configure"))
+				exit.ErrorMsg("You must be logged in or have service account credentials configured to set a target context")
+				return
+			}
+			claims, err := auth.ParseClaimsUnverified(accessToken)
 			if err != nil {
 				log.Error().Msg("Error parsing claims from access token")
 				msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
@@ -98,56 +108,72 @@ func NewTargetCmd() *cobra.Command {
 			}
 			currentTokenOrgId := claims.OrgId
 
-			// Interactive targeting if logged in
+			ac := sdk.NewPineconeAdminClient()
+
+			// Fetch the user's organizations
+			orgs, err := ac.Organization.List(cmd.Context())
+			if err != nil {
+				log.Error().Msg("Error fetching organizations")
+				exit.Error(pcio.Errorf("error fetching organizations: %s", err))
+				return
+			}
+
+			// Interactive targeting - no options passed
 			if options.Org == "" && options.Project == "" && !options.show {
-				// Fetch the user's organizations and projects
-				orgsResponse, err := dashboard.ListOrganizations()
-				if err != nil {
-					log.Error().Msg("Error fetching organizations")
-					exit.Error(pcio.Errorf("error fetching organizations: %s", err))
-					return
-				}
 
 				// Ask the user to choose a target org
-				targetOrg := postLoginSetTargetOrg(orgsResponse)
-				pcio.Println()
-				pcio.Printf(style.SuccessMsg("Target org set to %s.\n"), style.Emphasis(targetOrg.Name))
+				targetOrg := postLoginInteractiveTargetOrg(orgs)
+				if targetOrg == nil {
+					msg.FailMsg("Failed to target an organization")
+					exit.Error(pcio.Errorf("failed to target an organization"))
+					return
+				} else {
+					pcio.Println()
+					pcio.Printf(style.SuccessMsg("Target org set to %s.\n"), style.Emphasis(targetOrg.Name))
 
-				// If the org chosen differs from the current orgId in the token, we need to login again
-				if currentTokenOrgId != targetOrg.Id {
-					err = login.GetAndSetAccessToken(&targetOrg.Id)
-					if err != nil {
-						msg.FailMsg("Failed to get access token: %s", err)
-						exit.Error(pcio.Errorf("error getting access token: %w", err))
-						return
+					// If the org chosen differs from the current orgId in the token, we need to login again
+					if currentTokenOrgId != "" && currentTokenOrgId != targetOrg.Id {
+						err = login.GetAndSetAccessToken(&targetOrg.Id)
+						if err != nil {
+							msg.FailMsg("Failed to get access token: %s", err)
+							exit.Error(pcio.Errorf("error getting access token: %w", err))
+							return
+						}
+						// Re-create the admin client as the token context has changed
+						ac = sdk.NewPineconeAdminClient()
 					}
 				}
 
-				// Fetch orgs again since this currently also populates projects
-				// TODO: uncouple the org and project fetching
-				orgsResponse, err = dashboard.ListOrganizations()
+				// Fetch the user's projects
+				projects, err := ac.Project.List(cmd.Context())
 				if err != nil {
-					log.Error().Msg("Error fetching organizations")
-					exit.Error(pcio.Errorf("error fetching organizations: %s", err))
+					log.Error().Msg("Error fetching projects")
+					exit.Error(pcio.Errorf("error fetching projects: %w", err))
 					return
 				}
 
 				// Ask the user to choose a target project
-				targetProject := postLoginSetupTargetProject(orgsResponse, targetOrg.Name)
-				pcio.Printf(style.SuccessMsg("Target project set %s.\n"), style.Emphasis(targetProject))
-				return
+				targetProject := postLoginInteractiveTargetProject(projects)
+				if targetProject == nil {
+					msg.FailMsg("Failed to target a project")
+					exit.Error(pcio.Errorf("failed to target a project"))
+					return
+				} else {
+					pcio.Printf(style.SuccessMsg("Target project set %s.\n"), style.Emphasis(targetProject.Name))
+					return
+				}
 			}
 
-			orgs, err := dashboard.ListOrganizations()
-			if err != nil {
-				msg.FailMsg("Failed to get organizations: %s", err)
-				exit.Error(err)
-				return
-			}
-
-			// Update the organization target
-			var org dashboard.Organization
 			if options.Org != "" {
+				// Update the organization target based on passed flag
+				var org *pinecone.Organization
+				orgs, err := ac.Organization.List(cmd.Context())
+				if err != nil {
+					msg.FailMsg("Failed to get organizations: %s", err)
+					exit.Error(err)
+					return
+				}
+
 				// User passed an org flag, need to verify it exists and
 				// lookup the id for it.
 				org, err = getOrg(orgs, options.Org)
@@ -161,51 +187,50 @@ func NewTargetCmd() *cobra.Command {
 				}
 				var oldOrg = state.TargetOrg.Get().Name
 
-				// If the org has changed, we need to swap to a new access token
 				// If the org chosen differs from the current orgId in the token, we need to login again
 				if currentTokenOrgId != org.Id {
-					pcio.Printf("GET/SET NEW ACCESS TOKEN FOR ORG %s WITH ID %s\n", org.Name, org.Id)
 					err = login.GetAndSetAccessToken(&org.Id)
 					if err != nil {
 						msg.FailMsg("Failed to get access token: %s", err)
 						exit.Error(pcio.Errorf("error getting access token: %w", err))
 						return
 					}
+					// Re-create the admin client as the token context has changed
+					ac = sdk.NewPineconeAdminClient()
 				}
 
 				// Save the new target org
-				state.TargetOrg.Set(&state.TargetOrganization{
+				state.TargetOrg.Set(state.TargetOrganization{
 					Name: org.Name,
 					Id:   org.Id,
 				})
 
 				// If the org has changed, reset the project context
 				if oldOrg != org.Name {
-					state.TargetProj.Set(&state.TargetProject{
+					state.TargetProj.Set(state.TargetProject{
 						Name: "",
 						Id:   "",
 					})
 				}
-			} else {
-				// Read the current target org if no org is specified
-				// with flags
-				org, err = getOrg(orgs, state.TargetOrg.Get().Name)
-				if err != nil {
-					msg.FailMsg("Failed to get organization: %s", err)
-					exit.Error(err)
-					return
-				}
 			}
 
-			// Update the project target
+			// Update the project target based on passed flags
 			if options.Project != "" {
+				// Fetch the user's projects
+				projects, err := ac.Project.List(cmd.Context())
+				if err != nil {
+					log.Error().Msg("Error fetching projects")
+					exit.Error(pcio.Errorf("error fetching projects: %w", err))
+					return
+				}
+
 				// User passed a project flag, need to verify it exists and
 				// lookup the id for it.
-				proj := getProject(org, options.Project)
+				proj := getProject(projects, options.Project)
 				if !options.json {
 					msg.SuccessMsg("Target project updated to %s", style.Emphasis(proj.Name))
 				}
-				state.TargetProj.Set(&state.TargetProject{
+				state.TargetProj.Set(state.TargetProject{
 					Name: proj.Name,
 					Id:   proj.Id,
 				})
@@ -234,16 +259,16 @@ func NewTargetCmd() *cobra.Command {
 	return cmd
 }
 
-func getOrg(orgs *dashboard.OrganizationsResponse, orgName string) (dashboard.Organization, error) {
-	for _, org := range orgs.Organizations {
+func getOrg(orgs []*pinecone.Organization, orgName string) (*pinecone.Organization, error) {
+	for _, org := range orgs {
 		if org.Name == orgName {
 			return org, nil
 		}
 	}
 
 	// Join org names for error message
-	orgNames := make([]string, len(orgs.Organizations))
-	for i, org := range orgs.Organizations {
+	orgNames := make([]string, len(orgs))
+	for i, org := range orgs {
 		orgNames[i] = org.Name
 	}
 
@@ -251,58 +276,51 @@ func getOrg(orgs *dashboard.OrganizationsResponse, orgName string) (dashboard.Or
 	log.Error().Str("orgName", orgName).Str("availableOrgs", availableOrgs).Msg("Failed to find organization")
 	msg.FailMsg("Failed to find organization %s. Available organizations: %s.", style.Emphasis(orgName), availableOrgs)
 	exit.ErrorMsg(pcio.Sprintf("organization %s not found", style.Emphasis(orgName)))
-	return dashboard.Organization{}, pcio.Errorf("organization %s not found", orgName)
+	return nil, pcio.Errorf("organization %s not found", orgName)
 }
 
-func getProject(org dashboard.Organization, projectName string) dashboard.Project {
-	if org.Projects != nil {
-		orgProjects := *org.Projects
-		for _, project := range orgProjects {
-			if project.Name == projectName {
-				return project
-			}
+func getProject(projects []*pinecone.Project, projectName string) *pinecone.Project {
+	for _, project := range projects {
+		if project.Name == projectName {
+			return project
 		}
-
-		availableProjects := make([]string, len(orgProjects))
-		for i, project := range orgProjects {
-			availableProjects[i] = project.Name
-		}
-		msg.FailMsg("Failed to find project %s in org %s. Available projects: %s.", style.Emphasis(projectName), style.Emphasis(org.Name), strings.Join(availableProjects, ", "))
-		exit.Error(pcio.Errorf("project %s not found in organization %s", projectName, org.Name))
-		return dashboard.Project{}
-	} else {
-		msg.FailMsg("Cannot load projects for current organization. Please log into organization to retrieve projects.")
-		exit.Error(pcio.Errorf("project %s not found in organization %s", projectName, org.Name))
-		return dashboard.Project{}
 	}
+
+	availableProjects := make([]string, len(projects))
+	for i, project := range projects {
+		availableProjects[i] = project.Name
+	}
+	msg.FailMsg("Failed to find project %s. Available projects: %s.", style.Emphasis(projectName), strings.Join(availableProjects, ", "))
+	exit.Error(pcio.Errorf("project %s not found", projectName))
+	return nil
 }
 
-func postLoginSetTargetOrg(orgsResponse *dashboard.OrganizationsResponse) dashboard.Organization {
-	if len(orgsResponse.Organizations) < 1 {
+func postLoginInteractiveTargetOrg(orgsList []*pinecone.Organization) *pinecone.Organization {
+	if len(orgsList) < 1 {
 		log.Debug().Msg("No organizations found. Please create an organization before proceeding.")
 		exit.ErrorMsg("No organizations found. Please create an organization before proceeding.")
 	}
 
-	// var org dashboard.Organization
 	var orgName string
-	var organization dashboard.Organization
-	if len(orgsResponse.Organizations) == 1 {
-		orgName = orgsResponse.Organizations[0].Name
-		log.Info().Msgf("Only 1 org present so target org set to %s", orgName)
+	var organization *pinecone.Organization
+	if len(orgsList) == 1 {
+		organization = orgsList[0]
+		orgName = organization.Name
+		log.Info().Msgf("Only 1 organization present. Target organization set to %s", orgName)
 	} else {
 		pcio.Println("Many API operations take place in the context of a specific org and project.")
 		pcio.Println(pcio.Sprintf("This CLI maintains a piece of state called the %s so it knows which \n", style.Emphasis("target")) +
 			"organization and project to use when calling the API on your behalf.")
 
 		orgNames := []string{}
-		for _, org := range orgsResponse.Organizations {
+		for _, org := range orgsList {
 			orgNames = append(orgNames, org.Name)
 		}
 
 		orgName = uiOrgSelector(orgNames)
-		for _, org := range orgsResponse.Organizations {
+		for _, org := range orgsList {
 			if org.Name == orgName {
-				state.TargetOrg.Set(&state.TargetOrganization{
+				state.TargetOrg.Set(state.TargetOrganization{
 					Name: org.Name,
 					Id:   org.Id,
 				})
@@ -314,60 +332,44 @@ func postLoginSetTargetOrg(orgsResponse *dashboard.OrganizationsResponse) dashbo
 	return organization
 }
 
-func postLoginSetupTargetProject(orgs *dashboard.OrganizationsResponse, targetOrg string) string {
-	for _, org := range orgs.Organizations {
-		if org.Name == targetOrg {
-			// Attempt to fetch projects for a given org. We assume the token retrieved from the
-			// device auth flow is valid for listing projects for the given org.
-			projectsList, err := dashboard.ListProjects(org.Id)
-			if err != nil {
-				log.Error().Msg("Error fetching projects")
-				exit.Error(pcio.Errorf("error fetching projects: %w", err))
-				return ""
-			}
+func postLoginInteractiveTargetProject(projectList []*pinecone.Project) *pinecone.Project {
+	var project *pinecone.Project
+	if len(projectList) < 1 {
+		log.Debug().Msg("No projects available for organization. Please create a project before proceeding.")
+		exit.ErrorMsg("No projects found. Please create a project before proceeding.")
+		return nil
+	} else if len(projectList) == 1 {
+		project = projectList[0]
+		state.TargetProj.Set(state.TargetProject{
+			Name: projectList[0].Name,
+			Id:   projectList[0].Id,
+		})
+		return projectList[0]
+	} else {
+		projectItems := []string{}
+		for _, proj := range projectList {
+			projectItems = append(projectItems, proj.Name)
+		}
+		projectName := uiProjectSelector(projectItems)
 
-			orgProjects := projectsList.Projects
-			if len(orgProjects) < 1 {
-				log.Debug().Msg("No projects available for organization. Please create a project before proceeding.")
-				exit.ErrorMsg("No projects found. Please create a project before proceeding.")
-				return ""
-			} else {
-				if len(orgProjects) < 1 {
-					log.Debug().Msg("No projects found. Please create a project before proceeding.")
-					exit.ErrorMsg("No projects found. Please create a project before proceeding.")
-					return ""
-				} else if len(orgProjects) == 1 {
-					state.TargetProj.Set(&state.TargetProject{
-						Name: orgProjects[0].Name,
-						Id:   orgProjects[0].Id,
-					})
-					return orgProjects[0].Name
-				} else {
-					projectItems := []string{}
-					for _, proj := range orgProjects {
-						projectItems = append(projectItems, proj.Name)
-					}
-					projectName := uiProjectSelector(projectItems)
-
-					for _, proj := range orgProjects {
-						if proj.Name == projectName {
-							state.TargetProj.Set(&state.TargetProject{
-								Name: proj.Name,
-								Id:   proj.Id,
-							})
-							return proj.Name
-						}
-					}
-				}
+		for _, proj := range projectList {
+			if proj.Name == projectName {
+				project = proj
+				state.TargetProj.Set(state.TargetProject{
+					Name: proj.Name,
+					Id:   proj.Id,
+				})
+				return project
 			}
 		}
 	}
-	return ""
+
+	return project
 }
 
 func uiProjectSelector(projectItems []string) string {
 	var targetProject string = ""
-	m2 := NewList(projectItems, len(projectItems)+6, "Choose a project to target", func() {
+	m2 := prompt.NewList(projectItems, len(projectItems)+6, "Choose a project to target", func() {
 		pcio.Println("Exiting without targeting a project.")
 		pcio.Printf("You can always run %s to set or change a project context later.\n", style.Code("pc target"))
 		exit.Success()
@@ -384,7 +386,7 @@ func uiProjectSelector(projectItems []string) string {
 
 func uiOrgSelector(orgNames []string) string {
 	var orgName string
-	m := NewList(orgNames, len(orgNames)+6, "Choose an organization to target", func() {
+	m := prompt.NewList(orgNames, len(orgNames)+6, "Choose an organization to target", func() {
 		pcio.Println("Exiting without targeting an organization.")
 		pcio.Printf("You can always run %s to set or change a project context later.\n", style.Code("pc target"))
 		exit.Success()
@@ -397,116 +399,4 @@ func uiOrgSelector(orgNames []string) string {
 		os.Exit(1)
 	}
 	return orgName
-}
-
-type ListModel struct {
-	list     list.Model
-	choice   string
-	quitting bool
-	onQuit   func()
-	onChoice func(string) string
-}
-
-func (m ListModel) Init() tea.Cmd {
-	return nil
-}
-
-func (m ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		m.list.SetWidth(msg.Width)
-		return m, nil
-
-	case tea.KeyMsg:
-		switch keypress := msg.String(); keypress {
-		case "q", "ctrl+c":
-			m.quitting = true
-			return m, tea.Quit
-
-		case "enter":
-			i, ok := m.list.SelectedItem().(item)
-			if ok {
-				m.choice = string(i)
-			}
-			m.onChoice(m.choice)
-			return m, tea.Quit
-		}
-	}
-
-	var cmd tea.Cmd
-	m.list, cmd = m.list.Update(msg)
-	return m, cmd
-}
-
-func (m ListModel) View() string {
-	if m.choice != "" {
-		return "sounds great " + m.choice
-	}
-	if m.quitting {
-		m.onQuit()
-		return ""
-	}
-	return "\n" + m.list.View()
-}
-
-func mapStringsToItems(strings []string) []list.Item {
-	items := make([]list.Item, len(strings))
-	for i, s := range strings {
-		items[i] = item(s)
-	}
-	return items
-}
-
-func NewList(items []string, listHeight int, title string, onQuit func(), onChoice func(string) string) ListModel {
-	const defaultWidth = 20
-
-	l := list.New(mapStringsToItems(items), itemDelegate{}, defaultWidth, listHeight)
-	l.SetShowHelp(false)
-	l.Title = title
-	l.SetShowStatusBar(false)
-	l.SetFilteringEnabled(false)
-	l.Styles.Title = titleStyle
-	l.Styles.PaginationStyle = paginationStyle
-
-	return ListModel{
-		list:     l,
-		onQuit:   onQuit,
-		onChoice: onChoice,
-	}
-}
-
-const listHeight = 14
-
-var (
-	titleStyle        = lipgloss.NewStyle().MarginLeft(0)
-	itemStyle         = lipgloss.NewStyle().PaddingLeft(3)
-	selectedItemStyle = lipgloss.NewStyle().PaddingLeft(1).Foreground(lipgloss.Color("5"))
-	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
-)
-
-type item string
-
-func (i item) FilterValue() string { return "" }
-
-type itemDelegate struct{}
-
-func (d itemDelegate) Height() int                             { return 1 }
-func (d itemDelegate) Spacing() int                            { return 0 }
-func (d itemDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd { return nil }
-func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
-	i, ok := listItem.(item)
-	if !ok {
-		return
-	}
-
-	str := pcio.Sprintf("%d. %s", index+1, i)
-
-	fn := itemStyle.Render
-	if index == m.Index() {
-		fn = func(s ...string) string {
-			return selectedItemStyle.Render("> " + strings.Join(s, " "))
-		}
-	}
-
-	pcio.Fprint(w, fn(str))
 }

@@ -2,6 +2,19 @@ package state
 
 import "github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 
+type TargetOrganization struct {
+	Name string `json:"name"`
+	Id   string `json:"id"`
+}
+
+type TargetProject struct {
+	Name string `json:"name"`
+	Id   string `json:"id"`
+}
+
+type CredentialsContext struct {
+}
+
 type TargetContext struct {
 	Project TargetProject
 	Org     TargetOrganization

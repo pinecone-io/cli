@@ -70,7 +70,7 @@ func NewDeleteProjectCmd() *cobra.Command {
 
 			// Clear target project if the deleted project is the target project
 			if state.TargetProj.Get().Name == projToDelete.Name {
-				state.TargetProj.Set(&state.TargetProject{
+				state.TargetProj.Set(state.TargetProject{
 					Id:   "",
 					Name: "",
 				})
@@ -116,7 +116,7 @@ func confirmDelete(projectName string) {
 
 func verifyNoIndexes(projectId string, projectName string) {
 	// Check if project contains indexes
-	pc := sdk.NewPineconeClientForUser(projectId)
+	pc := sdk.NewPineconeClientForProjectById(projectId)
 	ctx := context.Background()
 
 	idxs, err := pc.ListIndexes(ctx)
@@ -133,7 +133,7 @@ func verifyNoIndexes(projectId string, projectName string) {
 
 func verifyNoCollections(projectId string, projectName string) {
 	// Check if project contains collections
-	pc := sdk.NewPineconeClientForUser(projectId)
+	pc := sdk.NewPineconeClientForProjectById(projectId)
 	ctx := context.Background()
 
 	collections, err := pc.ListCollections(ctx)

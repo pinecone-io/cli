@@ -56,7 +56,7 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 
 			// Clear target project if the deleted project is the target project
 			if state.TargetOrg.Get().Id == options.organizationID {
-				state.TargetOrg.Set(&state.TargetOrganization{
+				state.TargetOrg.Set(state.TargetOrganization{
 					Id:   "",
 					Name: "",
 				})

@@ -5,8 +5,8 @@ import (
 )
 
 type EnvironmentConnectionSettings struct {
-	DashboardUrl         string
-	IndexControlPlaneUrl string
+	DashboardUrl   string
+	PineconeGCPURL string
 
 	Auth0ClientId string
 	Auth0URL      string
@@ -15,8 +15,8 @@ type EnvironmentConnectionSettings struct {
 
 var (
 	Prod = EnvironmentConnectionSettings{
-		DashboardUrl:         "https://console-api.pinecone.io",
-		IndexControlPlaneUrl: "https://api.pinecone.io",
+		DashboardUrl:   "https://console-api.pinecone.io",
+		PineconeGCPURL: "https://api.pinecone.io",
 
 		Auth0ClientId: "A4ONXSaOGstwwir0zUztoI6zjyt9zsRH",
 		Auth0URL:      "https://login.pinecone.io",
@@ -24,8 +24,8 @@ var (
 	}
 
 	Staging = EnvironmentConnectionSettings{
-		DashboardUrl:         "https://staging.console-api.pinecone.io",
-		IndexControlPlaneUrl: "https://api-staging.pinecone.io",
+		DashboardUrl:   "https://staging.console-api.pinecone.io",
+		PineconeGCPURL: "https://api-staging.pinecone.io",
 
 		Auth0ClientId: "jnuhtpQxTzYw0zrpWdFUEMXS9Bx4FDAR",
 		Auth0URL:      "https://internal-beta-pinecone-io.us.auth0.com",
@@ -42,5 +42,5 @@ func GetEnvConfig(env string) (EnvironmentConnectionSettings, error) {
 		return Staging, nil
 	}
 
-	return EnvironmentConnectionSettings{}, fmt.Errorf("unknown environment: %s", env)
+	return EnvironmentConnectionSettings{}, fmt.Errorf("unknown environment configured: %s", env)
 }

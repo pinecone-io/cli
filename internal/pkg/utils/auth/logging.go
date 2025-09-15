@@ -1,4 +1,4 @@
-package oauth2
+package auth
 
 import (
 	"strings"
@@ -25,7 +25,6 @@ func LogTokenClaims(token *oauth2.Token, msg string) {
 		return
 	}
 
-	// TODO: make sure we verify elsewhere in the stack if we're using unverified here to print
 	_, _, err := p.ParseUnverified(token.AccessToken, &claims)
 	if err != nil {
 		log.Error().Msg("unable to ")
@@ -37,6 +36,7 @@ func LogTokenClaims(token *oauth2.Token, msg string) {
 	log.Debug().
 		Str("scope", claims.Scope).
 		Str("email", claims.Email).
+		Str("orgId", claims.OrgId).
 		Str("sub", claims.Subject).
 		Str("iss", claims.Issuer).
 		Str("aud", strings.Join(claims.Audience, " ")).

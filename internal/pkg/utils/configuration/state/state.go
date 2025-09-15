@@ -7,21 +7,11 @@ import (
 
 var StateViper *viper.Viper = viper.New()
 
-type TargetOrganization struct {
-	Name string `json:"name"`
-	Id   string `json:"id"`
-}
-
-type TargetProject struct {
-	Name string `json:"name"`
-	Id   string `json:"global_id"`
-}
-
 var (
 	TargetProj = configuration.MarshaledProperty[TargetProject]{
 		KeyName:    "target_project",
 		ViperStore: StateViper,
-		DefaultValue: &TargetProject{
+		DefaultValue: TargetProject{
 			Name: "",
 			Id:   "",
 		},
@@ -29,7 +19,7 @@ var (
 	TargetOrg = configuration.MarshaledProperty[TargetOrganization]{
 		KeyName:    "target_org",
 		ViperStore: StateViper,
-		DefaultValue: &TargetOrganization{
+		DefaultValue: TargetOrganization{
 			Name: "",
 			Id:   "",
 		},

@@ -1,12 +1,15 @@
 package config
 
 import (
+	"github.com/pinecone-io/cli/internal/pkg/utils/auth"
 	conf "github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
+	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
 )
@@ -47,15 +50,21 @@ func NewSetEnvCmd() *cobra.Command {
 			conf.Environment.Set(settingValue)
 			msg.SuccessMsg("Config property %s updated to %s", style.Emphasis("environment"), style.Emphasis(settingValue))
 
-			if secrets.OAuth2Token.Get().AccessToken != "" {
-				secrets.OAuth2Token.Clear()
+			token, err := auth.Token(cmd.Context())
+			if err != nil {
+				log.Error().Err(err).Msg("Error retrieving oauth token")
+				msg.FailMsg("Error retrieving oauth token: %s", err)
+				exit.Error(pcio.Errorf("error retrieving oauth token: %w", err))
+			}
+			if token.AccessToken != "" || token.RefreshToken != "" {
+				auth.Logout()
 				msg.InfoMsg("You have been logged out; to login again, run %s", style.Code("pc login"))
 			} else {
 				msg.InfoMsg("To login, run %s", style.Code("pc login"))
 			}
 
-			if secrets.ApiKey.Get() != "" {
-				secrets.ApiKey.Clear()
+			if secrets.GlobalApiKey.Get() != "" {
+				secrets.GlobalApiKey.Clear()
 				msg.InfoMsg("API key cleared; to set a new API key, run %s", style.Code("pc config set-api-key"))
 			} else {
 				msg.InfoMsg("To set a new API key, run %s", style.Code("pc config set-api-key"))

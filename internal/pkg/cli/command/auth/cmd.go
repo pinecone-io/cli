@@ -13,6 +13,7 @@ func NewAuthCmd() *cobra.Command {
 	}
 
 	cmd.AddGroup(help.GROUP_AUTH)
+	cmd.AddCommand(NewCmdAuthStatus())
 	cmd.AddCommand(NewLoginCmd())
 	cmd.AddCommand(NewLogoutCmd())
 	cmd.AddCommand(NewWhoAmICmd())
