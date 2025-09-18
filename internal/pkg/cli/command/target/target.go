@@ -133,17 +133,17 @@ func NewTargetCmd() *cobra.Command {
 
 					// If the org chosen differs from the current orgId in the token, we need to login again
 					if currentTokenOrgId != "" && currentTokenOrgId != targetOrg.Id {
+						auth.Logout()
 						err = login.GetAndSetAccessToken(&targetOrg.Id)
 						if err != nil {
 							msg.FailMsg("Failed to get access token: %s", err)
 							exit.Error(pcio.Errorf("error getting access token: %w", err))
 							return
 						}
-						// Re-create the admin client as the token context has changed
-						ac = sdk.NewPineconeAdminClient()
 					}
 				}
 
+				ac := sdk.NewPineconeAdminClient()
 				// Fetch the user's projects
 				projects, err := ac.Project.List(cmd.Context())
 				if err != nil {
@@ -189,14 +189,13 @@ func NewTargetCmd() *cobra.Command {
 
 				// If the org chosen differs from the current orgId in the token, we need to login again
 				if currentTokenOrgId != org.Id {
+					auth.Logout()
 					err = login.GetAndSetAccessToken(&org.Id)
 					if err != nil {
 						msg.FailMsg("Failed to get access token: %s", err)
 						exit.Error(pcio.Errorf("error getting access token: %w", err))
 						return
 					}
-					// Re-create the admin client as the token context has changed
-					ac = sdk.NewPineconeAdminClient()
 				}
 
 				// Save the new target org
@@ -216,6 +215,7 @@ func NewTargetCmd() *cobra.Command {
 
 			// Update the project target based on passed flags
 			if options.Project != "" {
+				ac := sdk.NewPineconeAdminClient()
 				// Fetch the user's projects
 				projects, err := ac.Project.List(cmd.Context())
 				if err != nil {

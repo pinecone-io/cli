@@ -34,6 +34,7 @@ func runAuthStatus(cmd *cobra.Command) error {
 	if err != nil { // This should only error on a network request to refresh the token
 		log.Error().Err(err).Msg("Error retrieving oauth token")
 	}
+
 	apiKey := secrets.GlobalApiKey.Get()
 	clientID := secrets.ClientId.Get()
 	clientSecret := secrets.ClientSecret.Get()
@@ -63,8 +64,10 @@ func runAuthStatus(cmd *cobra.Command) error {
 	}
 
 	scope := ""
+	orgId := ""
 	if claims != nil {
 		scope = claims.Scope
+		orgId = claims.OrgId
 	}
 
 	type row struct {
@@ -74,6 +77,7 @@ func runAuthStatus(cmd *cobra.Command) error {
 	rows := []row{
 		{Key: "Environment", Value: environment},
 		{Key: "Authentication Mode", Value: authMode},
+		{Key: "Token Organization ID", Value: orgId},
 		{Key: "Token Expiry", Value: expStr},
 		{Key: "Token Remaining", Value: remaining},
 		{Key: "Token Scope", Value: scope},

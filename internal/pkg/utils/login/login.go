@@ -188,7 +188,7 @@ func GetAndSetAccessToken(orgId *string) error {
 				return
 			}
 		case <-time.After(5 * time.Minute):
-			// extra precaution to prevent hanging indefinitel on stdin
+			// extra precaution to prevent hanging indefinitely on stdin
 			return
 		}
 	}(serverCtx)
@@ -207,6 +207,7 @@ func GetAndSetAccessToken(orgId *string) error {
 	if token != nil {
 		secrets.SetOAuth2Token(*token)
 	}
+
 	return nil
 }
 
