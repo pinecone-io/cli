@@ -11,7 +11,7 @@ import (
 
 func labelUnsetIfEmpty(value string) string {
 	if value == "" {
-		return style.StatusRed("UNSET")
+		return style.ErrorStyle().Render("UNSET")
 	}
 	return value
 }
