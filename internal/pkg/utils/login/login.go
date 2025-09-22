@@ -12,13 +12,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/auth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/browser"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/oauth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -50,13 +50,13 @@ func Run(ctx context.Context, io IO, opts Options) {
 	}
 
 	// Parse token claims to get orgId
-	accessToken, err := auth.Token(ctx)
+	accessToken, err := oauth.Token(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Error retrieving oauth token")
 		msg.FailMsg("Error retrieving oauth token: %s", err)
 		exit.Error(pcio.Errorf("error retrieving oauth token: %w", err))
 	}
-	claims, err := auth.ParseClaimsUnverified(accessToken)
+	claims, err := oauth.ParseClaimsUnverified(accessToken)
 	if err != nil {
 		log.Error().Err(err).Msg("Error parsing authentication token claims")
 		msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
@@ -125,7 +125,7 @@ func Run(ctx context.Context, io IO, opts Options) {
 // If a token is successfully acquired it's set in the secrets store, and the user is considered logged in with state.AuthUserToken.
 func GetAndSetAccessToken(orgId *string) error {
 	ctx := context.Background()
-	a := auth.Auth{}
+	a := oauth.Auth{}
 
 	// CSRF state
 	csrfState := randomCSRFState()
@@ -204,7 +204,7 @@ func GetAndSetAccessToken(orgId *string) error {
 		exit.Error(pcio.Errorf("error exchanging auth code for access token: %w", err))
 	}
 
-	claims, err := auth.ParseClaimsUnverified(token)
+	claims, err := oauth.ParseClaimsUnverified(token)
 	if err != nil {
 		log.Error().Err(err).Msg("error parsing claims from access token")
 		return err

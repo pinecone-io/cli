@@ -6,7 +6,6 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/auth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -14,6 +13,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/login"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/oauth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/prompt"
@@ -85,7 +85,7 @@ func NewTargetCmd() *cobra.Command {
 			// TODO - you don't need to be logged in, you should be able to target with client_id and client_secret
 			// But we also need to handle the case where it's a service account rather than a user
 			// In that case, we will not have an orgId from the token, we'll need to fetch the org via Admin API
-			accessToken, err := auth.Token(cmd.Context())
+			accessToken, err := oauth.Token(cmd.Context())
 			if err != nil {
 				log.Error().Err(err).Msg("Error retrieving oauth token")
 				msg.FailMsg("Error retrieving oauth token: %s", err)
@@ -99,7 +99,7 @@ func NewTargetCmd() *cobra.Command {
 				exit.ErrorMsg("You must be logged in or have service account credentials configured to set a target context")
 				return
 			}
-			claims, err := auth.ParseClaimsUnverified(accessToken)
+			claims, err := oauth.ParseClaimsUnverified(accessToken)
 			if err != nil {
 				log.Error().Msg("Error parsing claims from access token")
 				msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
@@ -133,7 +133,7 @@ func NewTargetCmd() *cobra.Command {
 
 					// If the org chosen differs from the current orgId in the token, we need to login again
 					if currentTokenOrgId != "" && currentTokenOrgId != targetOrg.Id {
-						auth.Logout()
+						oauth.Logout()
 						err = login.GetAndSetAccessToken(&targetOrg.Id)
 						if err != nil {
 							msg.FailMsg("Failed to get access token: %s", err)
@@ -189,7 +189,7 @@ func NewTargetCmd() *cobra.Command {
 
 				// If the org chosen differs from the current orgId in the token, we need to login again
 				if currentTokenOrgId != org.Id {
-					auth.Logout()
+					oauth.Logout()
 					err = login.GetAndSetAccessToken(&org.Id)
 					if err != nil {
 						msg.FailMsg("Failed to get access token: %s", err)

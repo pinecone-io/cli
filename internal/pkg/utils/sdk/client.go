@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"io"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/auth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
@@ -13,6 +12,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/oauth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 
@@ -33,7 +33,7 @@ func NewPineconeClient() *pinecone.Client {
 		Msg("Loading target context")
 
 	ctx := context.Background()
-	oauth2Token, err := auth.Token(ctx)
+	oauth2Token, err := oauth.Token(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Error retrieving oauth token")
 	}
@@ -122,7 +122,7 @@ func NewClientForAPIKey(apiKey string) *pinecone.Client {
 
 func NewPineconeAdminClient() *pinecone.AdminClient {
 	ctx := context.Background()
-	oauth2Token, err := auth.Token(ctx)
+	oauth2Token, err := oauth.Token(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Error retrieving oauth token")
 	}

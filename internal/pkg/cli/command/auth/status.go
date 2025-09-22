@@ -3,13 +3,13 @@ package auth
 import (
 	"time"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/auth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
+	"github.com/pinecone-io/cli/internal/pkg/utils/oauth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -40,7 +40,7 @@ func NewCmdAuthStatus() *cobra.Command {
 }
 
 func runAuthStatus(cmd *cobra.Command, options AuthStatusCmdOptions) error {
-	token, err := auth.Token(cmd.Context())
+	token, err := oauth.Token(cmd.Context())
 	if err != nil { // This should only error on a network request to refresh the token
 		return err
 	}
@@ -58,7 +58,7 @@ func runAuthStatus(cmd *cobra.Command, options AuthStatusCmdOptions) error {
 	clientSecret := secrets.ClientSecret.Get()
 
 	// Extract token information
-	var claims *auth.MyCustomClaims
+	var claims *oauth.MyCustomClaims
 	expStr := ""
 	remaining := ""
 	scope := ""
@@ -66,7 +66,7 @@ func runAuthStatus(cmd *cobra.Command, options AuthStatusCmdOptions) error {
 
 	if token != nil {
 		if token.AccessToken != "" {
-			claims, _ = auth.ParseClaimsUnverified(token)
+			claims, _ = oauth.ParseClaimsUnverified(token)
 		}
 
 		if !token.Expiry.IsZero() {

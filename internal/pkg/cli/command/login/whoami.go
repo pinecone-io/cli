@@ -1,11 +1,11 @@
 package login
 
 import (
-	"github.com/pinecone-io/cli/internal/pkg/utils/auth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/oauth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
@@ -18,7 +18,7 @@ func NewWhoAmICmd() *cobra.Command {
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 
-			accessToken, err := auth.Token(cmd.Context())
+			accessToken, err := oauth.Token(cmd.Context())
 			if err != nil {
 				log.Error().Err(err).Msg("Error retrieving oauth token")
 				msg.FailMsg("Error retrieving oauth token: %s", err)
@@ -30,7 +30,7 @@ func NewWhoAmICmd() *cobra.Command {
 				return
 			}
 
-			claims, err := auth.ParseClaimsUnverified(accessToken)
+			claims, err := oauth.ParseClaimsUnverified(accessToken)
 			if err != nil {
 				log.Error().Msg("Error parsing claims")
 				msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)

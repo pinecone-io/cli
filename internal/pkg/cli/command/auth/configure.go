@@ -8,13 +8,13 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/auth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/oauth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/prompt"
@@ -110,7 +110,7 @@ func Run(ctx context.Context, io IO, opts ConfigureCmdOptions) {
 	// If provided credentials are not empty, store them
 	if clientID != "" && clientSecret != "" {
 		// Clear any existing user token login
-		auth.Logout()
+		oauth.Logout()
 
 		secrets.ClientId.Set(clientID)
 		secrets.ClientSecret.Set(clientSecret)
@@ -194,7 +194,7 @@ func Run(ctx context.Context, io IO, opts ConfigureCmdOptions) {
 		// Log out and clear oauth2 token if previously logged in and we've configured a service account
 		oauth2Token := secrets.GetOAuth2Token()
 		if oauth2Token.AccessToken != "" {
-			auth.Logout()
+			oauth.Logout()
 		}
 	}
 

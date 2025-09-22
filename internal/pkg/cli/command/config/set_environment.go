@@ -1,7 +1,6 @@
 package config
 
 import (
-	"github.com/pinecone-io/cli/internal/pkg/utils/auth"
 	conf "github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
@@ -9,6 +8,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/oauth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
@@ -50,14 +50,14 @@ func NewSetEnvCmd() *cobra.Command {
 			conf.Environment.Set(settingValue)
 			msg.SuccessMsg("Config property %s updated to %s", style.Emphasis("environment"), style.Emphasis(settingValue))
 
-			token, err := auth.Token(cmd.Context())
+			token, err := oauth.Token(cmd.Context())
 			if err != nil {
 				log.Error().Err(err).Msg("Error retrieving oauth token")
 				msg.FailMsg("Error retrieving oauth token: %s", err)
 				exit.Error(pcio.Errorf("error retrieving oauth token: %w", err))
 			}
 			if token.AccessToken != "" || token.RefreshToken != "" {
-				auth.Logout()
+				oauth.Logout()
 				msg.InfoMsg("You have been logged out; to login again, run %s", style.Code("pc login"))
 			} else {
 				msg.InfoMsg("To login, run %s", style.Code("pc login"))
