@@ -2,56 +2,16 @@ package presenters
 
 import (
 	"strings"
-	"time"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/auth"
-	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
-	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
-	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"golang.org/x/oauth2"
 )
 
-func PrintAuthStatus(token *oauth2.Token) {
-	authMode := string(state.TargetCreds.Get().AuthContext)
-	orgName := state.TargetOrg.Get().Name
-	projName := state.TargetProj.Get().Name
-	environment := config.Environment.Get()
-
-	// Global API Key
-	globalAPIKey := secrets.GlobalApiKey.Get()
-
-	// Service Account
-	clientId := secrets.ClientId.Get()
-	clientSecret := secrets.ClientSecret.Get()
-
-	// Extract token information
-	var claims *auth.MyCustomClaims
-	expStr := ""
-	remaining := ""
-	scope := ""
-	orgId := ""
-
-	if token != nil {
-		if token.AccessToken != "" {
-			claims, _ = auth.ParseClaimsUnverified(token)
-		}
-
-		if !token.Expiry.IsZero() {
-			expStr = token.Expiry.Format(time.RFC3339)
-			remaining = time.Until(token.Expiry).Round(time.Second).String()
-		}
-
-		if claims != nil {
-			scope = claims.Scope
-			orgId = claims.OrgId
-		}
-	}
-
+func PrintAuthStatus(authStatus AuthStatus) {
 	log.Info().
-		Str("org", orgName).
-		Str("project", projName).
+		Str("org", authStatus.OrganizationName).
+		Str("project", authStatus.ProjectName).
 		Msg("Printing target context")
 	writer := NewTabWriter()
 
@@ -59,15 +19,30 @@ func PrintAuthStatus(token *oauth2.Token) {
 	header := strings.Join(columns, "\t") + "\n"
 	pcio.Fprint(writer, header)
 
-	pcio.Fprintf(writer, "Authentication Mode\t%s\n", labelUnsetIfEmpty(string(authMode)))
-	pcio.Fprintf(writer, "Global API Key\t%s\n", labelUnsetIfEmpty(globalAPIKey))
-	pcio.Fprintf(writer, "Service Account Client ID\t%s\n", labelUnsetIfEmpty(clientId))
-	pcio.Fprintf(writer, "Service Account Client Secret\t%s\n", labelUnsetIfEmpty(clientSecret))
-	pcio.Fprintf(writer, "Token Expiry\t%s\n", labelUnsetIfEmpty(expStr))
-	pcio.Fprintf(writer, "Token Time Remaining\t%s\n", labelUnsetIfEmpty(remaining))
-	pcio.Fprintf(writer, "Token Scope\t%s\n", labelUnsetIfEmpty(scope))
-	pcio.Fprintf(writer, "Token Organization ID\t%s\n", labelUnsetIfEmpty(orgId))
-	pcio.Fprintf(writer, "Environment\t%s\n", labelUnsetIfEmpty(environment))
+	pcio.Fprintf(writer, "Authentication Mode\t%s\n", labelUnsetIfEmpty(authStatus.AuthMode))
+	pcio.Fprintf(writer, "Global API Key\t%s\n", labelUnsetIfEmpty(authStatus.GlobalAPIKey))
+	pcio.Fprintf(writer, "Service Account Client ID\t%s\n", labelUnsetIfEmpty(authStatus.ClientID))
+	pcio.Fprintf(writer, "Service Account Client Secret\t%s\n", labelUnsetIfEmpty(authStatus.ClientSecret))
+	pcio.Fprintf(writer, "Token Expiry\t%s\n", labelUnsetIfEmpty(authStatus.TokenExpiry))
+	pcio.Fprintf(writer, "Token Time Remaining\t%s\n", labelUnsetIfEmpty(authStatus.TokenTimeRemaining))
+	pcio.Fprintf(writer, "Token Scope\t%s\n", labelUnsetIfEmpty(authStatus.TokenScope))
+	pcio.Fprintf(writer, "Token Organization ID\t%s\n", labelUnsetIfEmpty(authStatus.TokenOrganizationID))
+	pcio.Fprintf(writer, "Environment\t%s\n", labelUnsetIfEmpty(authStatus.Environment))
 
 	writer.Flush()
+}
+
+type AuthStatus struct {
+	AuthMode            string        `json:"auth_mode,omitempty"`
+	ClientID            string        `json:"client_id,omitempty"`
+	ClientSecret        string        `json:"client_secret,omitempty"`
+	Environment         string        `json:"environment,omitempty"`
+	GlobalAPIKey        string        `json:"global_api_key,omitempty"`
+	OrganizationName    string        `json:"organization_name,omitempty"`
+	ProjectName         string        `json:"project_name,omitempty"`
+	Token               *oauth2.Token `json:"token,omitempty"`
+	TokenExpiry         string        `json:"token_expiry,omitempty"`
+	TokenOrganizationID string        `json:"token_organization_id,omitempty"`
+	TokenScope          string        `json:"token_scope,omitempty"`
+	TokenTimeRemaining  string        `json:"token_time_remaining,omitempty"`
 }

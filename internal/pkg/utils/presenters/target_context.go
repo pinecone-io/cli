@@ -27,11 +27,11 @@ func PrintTargetContext(context *state.TargetContext) {
 	header := strings.Join(columns, "\t") + "\n"
 	pcio.Fprint(writer, header)
 
-	pcio.Fprintf(writer, "Org\t%s\n", labelUnsetIfEmpty(string(context.Organization.Name)))
-	pcio.Fprintf(writer, "Org ID\t%s\n", labelUnsetIfEmpty(string(context.Organization.Id)))
+	pcio.Fprintf(writer, "Organization\t%s\n", labelUnsetIfEmpty(string(context.Organization.Name)))
+	pcio.Fprintf(writer, "Organization ID\t%s\n", labelUnsetIfEmpty(string(context.Organization.Id)))
 	pcio.Fprintf(writer, "Project\t%s\n", labelUnsetIfEmpty(string(context.Project.Name)))
 	pcio.Fprintf(writer, "Project ID\t%s\n", labelUnsetIfEmpty(string(context.Project.Id)))
-	pcio.Fprintf(writer, "Authentication Context\t%s\n", labelUnsetIfEmpty(string(context.Credentials.AuthContext)))
+	pcio.Fprintf(writer, "Authentication Mode\t%s\n", labelUnsetIfEmpty(string(context.Credentials.AuthContext)))
 	pcio.Fprintf(writer, "Email\t%s\n", labelUnsetIfEmpty(string(context.Credentials.Email)))
 
 	writer.Flush()
