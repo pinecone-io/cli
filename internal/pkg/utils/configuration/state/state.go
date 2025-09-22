@@ -24,10 +24,19 @@ var (
 			Id:   "",
 		},
 	}
+	TargetCreds = configuration.MarshaledProperty[TargetUser]{
+		KeyName:    "user_context",
+		ViperStore: StateViper,
+		DefaultValue: TargetUser{
+			AuthContext: AuthNone,
+			Email:       "",
+		},
+	}
 )
 var properties = []configuration.Property{
 	TargetOrg,
 	TargetProj,
+	TargetCreds,
 }
 
 var ConfigFile = configuration.ConfigFile{

@@ -115,14 +115,14 @@ func Run(ctx context.Context, io IO, opts Options) {
 	}
 
 	pcio.Println()
-	pcio.Println(style.CodeHint("Run %s to change the target context.", "pc target"))
+	pcio.Println(style.CodeHint("Run %s to change the target context.", style.Code("pc target")))
 
 	pcio.Println()
 	pcio.Printf("Now try %s to learn about index operations.\n", style.Code("pc index -h"))
 }
 
-// Takes an optional orgId, and attempts to acquire an access token scoped to the orgId if provided
-// If a token is successfully acquired it's set in the secrets store, and the user is considered logged in
+// Takes an optional orgId, and attempts to acquire an access token scoped to the orgId if provided.
+// If a token is successfully acquired it's set in the secrets store, and the user is considered logged in with state.AuthUserToken.
 func GetAndSetAccessToken(orgId *string) error {
 	ctx := context.Background()
 	a := auth.Auth{}
@@ -204,8 +204,25 @@ func GetAndSetAccessToken(orgId *string) error {
 		exit.Error(pcio.Errorf("error exchanging auth code for access token: %w", err))
 	}
 
+	claims, err := auth.ParseClaimsUnverified(token)
+	if err != nil {
+		log.Error().Err(err).Msg("error parsing claims from access token")
+		return err
+	}
+
 	if token != nil {
+		// Store the token
 		secrets.SetOAuth2Token(*token)
+
+		// Clear any existing client_id and client_secret values
+		secrets.ClientId.Set("")
+		secrets.ClientSecret.Set("")
+
+		// Update target credentials context
+		state.TargetCreds.Set(state.TargetUser{
+			AuthContext: state.AuthUserToken,
+			Email:       claims.Email,
+		})
 	}
 
 	return nil
