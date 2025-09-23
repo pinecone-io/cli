@@ -153,6 +153,7 @@ const (
 // Either the CLI created it to work with a project, or a user created it and stored it explicitly
 type ManagedKey struct {
 	Name           string           `json:"name,omitempty"`
+	Id             string           `json:"id,omitempty"`
 	Value          string           `json:"value,omitempty"`
 	Origin         ManagedKeyOrigin `json:"origin,omitempty"`
 	ProjectId      string           `json:"project_id,omitempty"`

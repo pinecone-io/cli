@@ -6,25 +6,23 @@ import (
 	"text/tabwriter"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
-	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 )
 
-type ListCredentialsCmdOptions struct {
+type ListLocalKeysCmdOptions struct {
 	reveal bool
 	json   bool
 }
 
-func NewListCredentialsCmd() *cobra.Command {
-	options := ListCredentialsCmdOptions{}
+func NewListLocalKeysCmd() *cobra.Command {
+	options := ListLocalKeysCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:     "list",
-		Short:   "List the project credentials the CLI is currently managing",
-		GroupID: help.GROUP_AUTH.ID,
+		Use:   "list",
+		Short: "List the project API keys that the CLI is currently managing",
 		Run: func(cmd *cobra.Command, args []string) {
 			managedKeys := secrets.GetManagedProjectKeys()
 			if options.json {
@@ -36,7 +34,7 @@ func NewListCredentialsCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVar(&options.reveal, "reveal", false, "Reveal the credential key values in the output")
+	cmd.Flags().BoolVar(&options.reveal, "reveal", false, "Reveal the API key values in the output")
 	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 
 	return cmd

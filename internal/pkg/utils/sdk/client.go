@@ -180,6 +180,7 @@ func getCLIAPIKeyForProject(ctx context.Context, ac *pinecone.AdminClient, proje
 		OrganizationId: project.OrganizationId,
 		Value:          newKey.Value,
 		Name:           newKeyName,
+		Id:             newKey.Key.Id,
 		Origin:         secrets.OriginCLICreated,
 	}
 
