@@ -59,6 +59,7 @@ func runPruneLocalKeys(ctx context.Context, options PruneLocalKeysCmdOptions) {
 	}
 
 	// Build dry run plan
+	var plan []planItem
 	for projectID, managedKey := range managedKeys {
 		// Check key origin and what was passed in --origin
 		if !includeByOrigin(managedKey.Origin, options.origin) {
@@ -128,7 +129,6 @@ func runPruneLocalKeys(ctx context.Context, options PruneLocalKeysCmdOptions) {
 }
 
 func includeByOrigin(origin secrets.ManagedKeyOrigin, filter string) bool {
-	fmt.Printf("FILTER: %s, ORIGIN: %s\n", filter, origin)
 	switch strings.ToLower(filter) {
 	case "cli":
 		return origin == secrets.OriginCLICreated
@@ -196,5 +196,3 @@ type planItem struct {
 	managedKey secrets.ManagedKey
 	onServer   bool
 }
-
-var plan []planItem
