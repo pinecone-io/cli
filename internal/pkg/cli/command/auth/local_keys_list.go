@@ -43,7 +43,7 @@ func NewListLocalKeysCmd() *cobra.Command {
 func printTable(managedKeys map[string]secrets.ManagedKey, reveal bool) {
 	writer := tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
 
-	columns := []string{"PROJECT ID", "API KEY NAME", "API KEY VALUE", "ORIGIN", "ORGANIZATION ID"}
+	columns := []string{"PROJECT ID", "API KEY NAME", "API KEY ID", "API KEY VALUE", "ORIGIN", "ORGANIZATION ID"}
 	header := strings.Join(columns, "\t") + "\n"
 	pcio.Fprint(writer, header)
 
@@ -52,7 +52,7 @@ func printTable(managedKeys map[string]secrets.ManagedKey, reveal bool) {
 		if !reveal {
 			keyValue = presenters.MaskHeadTail(keyValue, 4, 4)
 		}
-		values := []string{projectId, managedKey.Name, keyValue, string(managedKey.Origin), managedKey.OrganizationId}
+		values := []string{projectId, managedKey.Name, managedKey.Id, keyValue, string(managedKey.Origin), managedKey.OrganizationId}
 		pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
 	}
 
