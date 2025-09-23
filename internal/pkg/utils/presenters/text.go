@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/go-pinecone/v4/pinecone"
@@ -67,6 +68,23 @@ func FormatTags(tags *pinecone.IndexTags) string {
 	}
 
 	return strings.Join(tagStrings, ", ")
+}
+
+// FormatDate formats an RFC3339 timestamp into a user-friendly format
+// Returns "Sep 23, 2025 at 11:32" format (e.g., "Sep 23, 2025 at 11:32")
+// If parsing fails, returns the original string
+func FormatDate(timestamp string) string {
+	if timestamp == "" {
+		return "-"
+	}
+
+	// Try to parse the timestamp and format it nicely
+	if parsedTime, err := time.Parse(time.RFC3339, timestamp); err == nil {
+		return parsedTime.Format("Jan 02, 2006 at 15:04")
+	}
+
+	// If parsing fails, return the raw value
+	return timestamp
 }
 
 // ColorizeStatus applies appropriate styling to any status string

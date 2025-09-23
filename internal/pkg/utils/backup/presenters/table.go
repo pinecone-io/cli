@@ -2,7 +2,6 @@ package presenters
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -53,7 +52,7 @@ func ConvertBackupToDisplayData(backup *pinecone.Backup) *BackupDisplayData {
 
 	// Metadata information
 	if backup.CreatedAt != nil {
-		data.CreatedAt = *backup.CreatedAt
+		data.CreatedAt = presenters.FormatDate(*backup.CreatedAt)
 	}
 	if backup.SizeBytes != nil {
 		data.SizeBytes = fmt.Sprintf("%d", *backup.SizeBytes)
@@ -190,7 +189,7 @@ func PrintBackupTable(backups []*pinecone.Backup) {
 		{Title: "ID", Width: 40},
 		{Title: "SOURCE INDEX", Width: 20},
 		{Title: "STATUS", Width: 12},
-		{Title: "CREATED", Width: 16},
+		{Title: "CREATED", Width: 25},
 		{Title: "SIZE", Width: 8},
 	}
 
@@ -204,13 +203,7 @@ func PrintBackupTable(backups []*pinecone.Backup) {
 
 		created := "-"
 		if backup.CreatedAt != nil {
-			// Try to parse the timestamp and format it nicely
-			if parsedTime, err := time.Parse(time.RFC3339, *backup.CreatedAt); err == nil {
-				created = parsedTime.Format("Jan 02 15:04")
-			} else {
-				// If parsing fails, use the raw value
-				created = *backup.CreatedAt
-			}
+			created = presenters.FormatDate(*backup.CreatedAt)
 		}
 
 		size := "-"
@@ -237,6 +230,6 @@ func PrintBackupTable(backups []*pinecone.Backup) {
 	fmt.Println()
 
 	// Add a note about full details
-	hint := fmt.Sprintf("Use %s to see backup details", style.Code("pc backup describe --id <backup-id>"))
+	hint := fmt.Sprintf("Use %s to see backup details", style.Code("pc backup describe <backup-id>"))
 	fmt.Println(style.Hint(hint))
 }

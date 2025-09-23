@@ -2,6 +2,7 @@ package backup
 
 import (
 	"context"
+	"fmt"
 
 	backuppresenters "github.com/pinecone-io/cli/internal/pkg/utils/backup/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -45,13 +46,7 @@ func NewCreateBackupCmd() *cobra.Command {
 				json := text.IndentJSON(backup)
 				pcio.Println(json)
 			} else {
-				describeCommand := pcio.Sprintf("pc backup describe --id %s", backup.BackupId)
-				backupName := "unnamed"
-				if backup.Name != nil {
-					backupName = *backup.Name
-				}
-				msg.SuccessMsg("Backup %s created successfully. Run %s to check status. \n\n", style.Emphasis(backupName), style.Code(describeCommand))
-				backuppresenters.PrintDescribeBackupTable(backup)
+				renderSuccessOutput(backup)
 			}
 		},
 	}
@@ -66,4 +61,19 @@ func NewCreateBackupCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	return cmd
+}
+
+func renderSuccessOutput(backup *pinecone.Backup) {
+	backupName := "unnamed"
+	if backup.Name != nil {
+		backupName = *backup.Name
+	}
+
+	msg.SuccessMsg("Backup %s created successfully.", style.ResourceName(backupName))
+
+	backuppresenters.PrintDescribeBackupTable(backup)
+
+	describeCommand := pcio.Sprintf("pc backup describe %s", backup.BackupId)
+	hint := fmt.Sprintf("Run %s at any time to check the status. \n\n", style.Code(describeCommand))
+	pcio.Println(style.Hint(hint))
 }

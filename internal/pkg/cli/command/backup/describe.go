@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/backup"
 	backuppresenters "github.com/pinecone-io/cli/internal/pkg/utils/backup/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -13,7 +14,6 @@ import (
 )
 
 type DescribeBackupCmdOptions struct {
-	id   string
 	json bool
 }
 
@@ -21,15 +21,18 @@ func NewDescribeBackupCmd() *cobra.Command {
 	options := DescribeBackupCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "describe",
-		Short: "Get information on a backup",
+		Use:          "describe <backup-id>",
+		Short:        "Get information on a backup",
+		Args:         backup.ValidateBackupIDArgs,
+		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {
+			backupID := args[0]
 			ctx := context.Background()
 			pc := sdk.NewPineconeClient()
 
-			backup, err := pc.DescribeBackup(ctx, options.id)
+			backup, err := pc.DescribeBackup(ctx, backupID)
 			if err != nil {
-				msg.FailMsg("Failed to describe backup %s: %s\n", options.id, err)
+				msg.FailMsg("Failed to describe backup %s: %s\n", backupID, err)
 				exit.Error(err)
 			}
 
@@ -42,9 +45,7 @@ func NewDescribeBackupCmd() *cobra.Command {
 		},
 	}
 
-	// required flags
-	cmd.Flags().StringVarP(&options.id, "id", "i", "", "ID of backup to describe")
-	_ = cmd.MarkFlagRequired("id")
+	// No required flags - using positional argument
 
 	// optional flags
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")

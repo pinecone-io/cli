@@ -22,9 +22,9 @@ func NewBackupCmd() *cobra.Command {
 		Example: heredoc.Doc(`
 			$ pc backup list
 			$ pc backup create --name my-backup --index my-serverless-index
-			$ pc backup describe --id backup-123
+			$ pc backup describe backup-123
 			$ pc backup restore --index restored-index --backup-id backup-123
-			$ pc backup delete --id backup-123
+			$ pc backup delete backup-123
 		`),
 		GroupID: help.GROUP_VECTORDB.ID,
 	}

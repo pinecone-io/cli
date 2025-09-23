@@ -3,6 +3,7 @@ package backup
 import (
 	"context"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/backup"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
@@ -10,33 +11,28 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type DeleteBackupCmdOptions struct {
-	id string
-}
-
 func NewDeleteBackupCmd() *cobra.Command {
-	options := DeleteBackupCmdOptions{}
-
 	cmd := &cobra.Command{
-		Use:   "delete",
-		Short: "Delete a backup",
+		Use:          "delete <backup-id>",
+		Short:        "Delete a backup",
+		Args:         backup.ValidateBackupIDArgs,
+		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {
+			backupID := args[0]
 			ctx := context.Background()
 			pc := sdk.NewPineconeClient()
 
-			err := pc.DeleteBackup(ctx, options.id)
+			err := pc.DeleteBackup(ctx, backupID)
 			if err != nil {
-				msg.FailMsg("Failed to delete backup %s: %s\n", style.Emphasis(options.id), err)
+				msg.FailMsg("Failed to delete backup %s: %s\n", style.Emphasis(backupID), err)
 				exit.Error(err)
 			}
 
-			msg.SuccessMsg("Backup %s deleted.\n", style.Emphasis(options.id))
+			msg.SuccessMsg("Backup %s deleted.\n", style.Emphasis(backupID))
 		},
 	}
 
-	// required flags
-	cmd.Flags().StringVarP(&options.id, "id", "i", "", "ID of backup to delete")
-	_ = cmd.MarkFlagRequired("id")
+	// No flags needed - using positional argument
 
 	return cmd
 }
