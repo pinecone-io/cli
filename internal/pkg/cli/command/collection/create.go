@@ -2,11 +2,13 @@ package collection
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/collection/presenters"
+	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
-	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -37,7 +39,7 @@ func NewCreateCollectionCmd() *cobra.Command {
 			}
 			collection, err := pc.CreateCollection(ctx, req)
 			if err != nil {
-				msg.FailMsg("Failed to create collection: %s\n", err)
+				errorutil.HandleAPIError(err, cmd, args)
 				exit.Error(err)
 			}
 
@@ -45,9 +47,7 @@ func NewCreateCollectionCmd() *cobra.Command {
 				json := text.IndentJSON(collection)
 				pcio.Println(json)
 			} else {
-				describeCommand := pcio.Sprintf("pc collection describe --name %s", collection.Name)
-				msg.SuccessMsg("Collection %s created successfully. Run %s to check status. \n\n", style.Emphasis(collection.Name), style.Code(describeCommand))
-				presenters.PrintDescribeCollectionTable(collection)
+				renderSuccessOutput(collection)
 			}
 		},
 	}
@@ -55,11 +55,21 @@ func NewCreateCollectionCmd() *cobra.Command {
 	// Required flags
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name you want to give the collection")
 	_ = cmd.MarkFlagRequired("name")
-	cmd.Flags().StringVarP(&options.sourceIndex, "source", "s", "", "name of the index to use as the source for the collection")
+	cmd.Flags().StringVarP(&options.sourceIndex, "source", "s", "", "name of the pod-based index to use as the source for the collection")
 	_ = cmd.MarkFlagRequired("source")
 
 	// Optional flags
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	return cmd
+}
+
+func renderSuccessOutput(collection *pinecone.Collection) {
+	msg.SuccessMsg("Collection %s created successfully.", style.ResourceName(collection.Name))
+
+	presenters.PrintDescribeCollectionTable(collection)
+
+	describeCommand := pcio.Sprintf("pc collection describe %s", collection.Name)
+	hint := fmt.Sprintf("Run %s at any time to check the status. \n\n", style.Code(describeCommand))
+	pcio.Println(style.Hint(hint))
 }
