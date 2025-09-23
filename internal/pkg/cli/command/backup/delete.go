@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/backup"
+	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
@@ -24,7 +25,7 @@ func NewDeleteBackupCmd() *cobra.Command {
 
 			err := pc.DeleteBackup(ctx, backupID)
 			if err != nil {
-				msg.FailMsg("Failed to delete backup %s: %s\n", style.Emphasis(backupID), err)
+				errorutil.HandleAPIError(err, cmd, args)
 				exit.Error(err)
 			}
 

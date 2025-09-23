@@ -49,7 +49,7 @@ func NewDeleteCmd() *cobra.Command {
 
 			err := pc.DeleteIndex(ctx, options.name)
 			if err != nil {
-				errorutil.HandleIndexAPIError(err, cmd, args)
+				errorutil.HandleAPIError(err, cmd, args)
 				exit.Error(err)
 			}
 

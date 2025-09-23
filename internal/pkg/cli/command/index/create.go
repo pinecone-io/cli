@@ -441,7 +441,7 @@ func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []st
 
 		idx, err = pc.CreateServerlessIndex(ctx, &req)
 		if err != nil {
-			errorutil.HandleIndexAPIError(err, cmd, args)
+			errorutil.HandleAPIError(err, cmd, args)
 			exit.Error(err)
 		}
 	case index.Pod:
@@ -468,7 +468,7 @@ func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []st
 
 		idx, err = pc.CreatePodIndex(ctx, &req)
 		if err != nil {
-			errorutil.HandleIndexAPIError(err, cmd, args)
+			errorutil.HandleAPIError(err, cmd, args)
 			exit.Error(err)
 		}
 	case index.Integrated:
@@ -491,7 +491,7 @@ func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []st
 
 		idx, err = pc.CreateIndexForModel(ctx, &req)
 		if err != nil {
-			errorutil.HandleIndexAPIError(err, cmd, args)
+			errorutil.HandleAPIError(err, cmd, args)
 			exit.Error(err)
 		}
 	default:

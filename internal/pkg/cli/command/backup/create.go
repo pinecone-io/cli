@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	backuppresenters "github.com/pinecone-io/cli/internal/pkg/utils/backup/presenters"
+	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
@@ -38,7 +39,7 @@ func NewCreateBackupCmd() *cobra.Command {
 			}
 			backup, err := pc.CreateBackup(ctx, req)
 			if err != nil {
-				msg.FailMsg("Failed to create backup: %s\n", err)
+				errorutil.HandleAPIError(err, cmd, args)
 				exit.Error(err)
 			}
 

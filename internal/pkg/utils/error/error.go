@@ -16,9 +16,9 @@ type APIError struct {
 	Message    string `json:"message"`
 }
 
-// HandleIndexAPIError is a convenience function specifically for index operations
-// It extracts the operation from the command context and uses the first argument as index name
-func HandleIndexAPIError(err error, cmd *cobra.Command, args []string) {
+// HandleAPIError is a generic function that extracts user-friendly error messages from API responses
+// It parses JSON error responses and displays clean error messages
+func HandleAPIError(err error, cmd *cobra.Command, args []string) {
 	if err == nil {
 		return
 	}

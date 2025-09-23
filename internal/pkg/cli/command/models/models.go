@@ -32,7 +32,7 @@ func NewModelsCmd() *cobra.Command {
 			useCache := !options.noCache
 			models, err := models.GetModels(ctx, useCache)
 			if err != nil {
-				errorutil.HandleIndexAPIError(err, cmd, []string{})
+				errorutil.HandleAPIError(err, cmd, []string{})
 				exit.Error(err)
 			}
 

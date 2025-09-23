@@ -59,7 +59,7 @@ func runConfigureIndexCmd(options configureIndexOptions, cmd *cobra.Command, arg
 		DeletionProtection: pinecone.DeletionProtection(options.deletionProtection),
 	})
 	if err != nil {
-		errorutil.HandleIndexAPIError(err, cmd, args)
+		errorutil.HandleAPIError(err, cmd, args)
 		exit.Error(err)
 	}
 

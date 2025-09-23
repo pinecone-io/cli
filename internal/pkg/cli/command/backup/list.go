@@ -6,8 +6,8 @@ import (
 	"sort"
 
 	backuppresenters "github.com/pinecone-io/cli/internal/pkg/utils/backup/presenters"
+	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
-	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -37,7 +37,7 @@ func NewListBackupsCmd() *cobra.Command {
 
 			backups, err := pc.ListBackups(ctx, params)
 			if err != nil {
-				msg.FailMsg("Failed to list backups: %s\n", err)
+				errorutil.HandleAPIError(err, cmd, args)
 				exit.Error(err)
 			}
 

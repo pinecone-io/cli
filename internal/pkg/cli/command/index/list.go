@@ -29,7 +29,7 @@ func NewListCmd() *cobra.Command {
 
 			idxs, err := pc.ListIndexes(ctx)
 			if err != nil {
-				errorutil.HandleIndexAPIError(err, cmd, []string{})
+				errorutil.HandleAPIError(err, cmd, []string{})
 				exit.Error(err)
 			}
 

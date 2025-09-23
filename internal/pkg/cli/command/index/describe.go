@@ -31,7 +31,7 @@ func NewDescribeCmd() *cobra.Command {
 
 			idx, err := pc.DescribeIndex(cmd.Context(), options.name)
 			if err != nil {
-				errorutil.HandleIndexAPIError(err, cmd, args)
+				errorutil.HandleAPIError(err, cmd, args)
 				exit.Error(err)
 			}
 

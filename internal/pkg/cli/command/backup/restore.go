@@ -3,6 +3,7 @@ package backup
 import (
 	"context"
 
+	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
@@ -36,7 +37,7 @@ func NewRestoreBackupCmd() *cobra.Command {
 			}
 			restoreJob, err := pc.CreateIndexFromBackup(ctx, req)
 			if err != nil {
-				msg.FailMsg("Failed to restore index from backup: %s\n", err)
+				errorutil.HandleAPIError(err, cmd, args)
 				exit.Error(err)
 			}
 

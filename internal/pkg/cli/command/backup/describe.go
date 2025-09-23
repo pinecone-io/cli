@@ -6,8 +6,8 @@ import (
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/backup"
 	backuppresenters "github.com/pinecone-io/cli/internal/pkg/utils/backup/presenters"
+	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
-	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -32,7 +32,7 @@ func NewDescribeBackupCmd() *cobra.Command {
 
 			backup, err := pc.DescribeBackup(ctx, backupID)
 			if err != nil {
-				msg.FailMsg("Failed to describe backup %s: %s\n", backupID, err)
+				errorutil.HandleAPIError(err, cmd, args)
 				exit.Error(err)
 			}
 
