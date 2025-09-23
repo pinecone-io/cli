@@ -238,7 +238,7 @@ func PrintIndexDisplayTable(data *IndexDisplayData) {
 
 	// State information (only show if we have status data)
 	if data.Status != "" {
-		rows = append(rows, presenters.Row{"Status", data.Status})
+		rows = append(rows, presenters.Row{"Status", presenters.ColorizeStatus(data.Status)})
 		rows = append(rows, presenters.Row{"Host URL", data.Host})
 		rows = append(rows, presenters.Row{"Deletion Protection", data.DeletionProtection})
 		rows = append(rows, presenters.Row{"", ""})
@@ -368,20 +368,6 @@ func PrintIndexCreateConfigTable(config *index.CreateOptions) {
 	// Convert to display data and print with inferred values
 	data := ConvertCreateOptionsToDisplayData(config)
 	PrintIndexDisplayTable(data)
-}
-
-// ColorizeState applies appropriate styling to index state
-func ColorizeState(state pinecone.IndexStatusState) string {
-	switch state {
-	case pinecone.Ready:
-		return style.SuccessStyle().Render(string(state))
-	case pinecone.Initializing, pinecone.Terminating, pinecone.ScalingDown, pinecone.ScalingDownPodSize, pinecone.ScalingUp, pinecone.ScalingUpPodSize:
-		return style.WarningStyle().Render(string(state))
-	case pinecone.InitializationFailed:
-		return style.ErrorStyle().Render(string(state))
-	default:
-		return string(state)
-	}
 }
 
 // ColorizeDeletionProtection applies appropriate styling to deletion protection status

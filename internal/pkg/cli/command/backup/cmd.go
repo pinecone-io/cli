@@ -1,6 +1,7 @@
 package backup
 
 import (
+	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -15,9 +16,16 @@ environments from production data.
 
 func NewBackupCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "backup <command>",
-		Short:   "Work with backups",
-		Long:    backupHelpText,
+		Use:   "backup <command>",
+		Short: "Work with backups",
+		Long:  backupHelpText,
+		Example: heredoc.Doc(`
+			$ pc backup list
+			$ pc backup create --name my-backup --index my-serverless-index
+			$ pc backup describe --id backup-123
+			$ pc backup restore --index restored-index --backup-id backup-123
+			$ pc backup delete --id backup-123
+		`),
 		GroupID: help.GROUP_VECTORDB.ID,
 	}
 

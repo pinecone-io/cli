@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	backuppresenters "github.com/pinecone-io/cli/internal/pkg/utils/backup/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -37,7 +37,7 @@ func NewDescribeBackupCmd() *cobra.Command {
 				json := text.IndentJSON(backup)
 				fmt.Println(json)
 			} else {
-				presenters.PrintDescribeBackupTable(backup)
+				backuppresenters.PrintDescribeBackupTable(backup)
 			}
 		},
 	}

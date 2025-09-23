@@ -3,11 +3,9 @@ package backup
 import (
 	"context"
 	"fmt"
-	"os"
 	"sort"
-	"strings"
-	"text/tabwriter"
 
+	backuppresenters "github.com/pinecone-io/cli/internal/pkg/utils/backup/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
@@ -60,7 +58,7 @@ func NewListBackupsCmd() *cobra.Command {
 				json := text.IndentJSON(backups)
 				fmt.Println(json)
 			} else {
-				printTable(backups.Data)
+				backuppresenters.PrintBackupTable(backups.Data)
 			}
 		},
 	}
@@ -70,39 +68,4 @@ func NewListBackupsCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&options.indexName, "index", "i", "", "filter backups by index name")
 
 	return cmd
-}
-
-func printTable(backups []*pinecone.Backup) {
-	writer := tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
-
-	columns := []string{"NAME", "ID", "INDEX", "STATUS", "CREATED", "SIZE"}
-	header := strings.Join(columns, "\t") + "\n"
-	fmt.Fprint(writer, header)
-
-	for _, backup := range backups {
-		created := "-"
-		if backup.CreatedAt != nil {
-			created = *backup.CreatedAt
-		}
-
-		size := "-"
-		if backup.SizeBytes != nil {
-			size = fmt.Sprintf("%d", *backup.SizeBytes)
-		}
-
-		backupName := "unnamed"
-		if backup.Name != nil {
-			backupName = *backup.Name
-		}
-		values := []string{
-			backupName,
-			backup.BackupId,
-			backup.SourceIndexName,
-			backup.Status,
-			created,
-			size,
-		}
-		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
-	}
-	writer.Flush()
 }

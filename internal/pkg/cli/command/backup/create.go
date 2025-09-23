@@ -3,10 +3,10 @@ package backup
 import (
 	"context"
 
+	backuppresenters "github.com/pinecone-io/cli/internal/pkg/utils/backup/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
-	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -51,7 +51,7 @@ func NewCreateBackupCmd() *cobra.Command {
 					backupName = *backup.Name
 				}
 				msg.SuccessMsg("Backup %s created successfully. Run %s to check status. \n\n", style.Emphasis(backupName), style.Code(describeCommand))
-				presenters.PrintDescribeBackupTable(backup)
+				backuppresenters.PrintDescribeBackupTable(backup)
 			}
 		},
 	}
