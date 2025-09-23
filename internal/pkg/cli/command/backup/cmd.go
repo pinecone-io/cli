@@ -9,8 +9,8 @@ import (
 
 var backupHelpText = text.WordWrap(`
 A backup is a snapshot of a serverless index that can be used to restore 
-the index to a previous state or create a new index. Backups are useful 
-for disaster recovery, data migration, and creating development 
+the index to a previous state or create a new serverless index. Backups are 
+useful for disaster recovery, data migration, and creating development 
 environments from production data.
 `, 80)
 
@@ -21,7 +21,7 @@ func NewBackupCmd() *cobra.Command {
 		Long:  backupHelpText,
 		Example: heredoc.Doc(`
 			$ pc backup list
-			$ pc backup create --name my-backup --index my-serverless-index
+			$ pc backup create --name my-backup --source my-serverless-index
 			$ pc backup describe backup-123
 			$ pc backup restore --index restored-index --backup-id backup-123
 			$ pc backup delete backup-123

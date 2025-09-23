@@ -4,16 +4,16 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/collection"
+	"github.com/pinecone-io/cli/internal/pkg/utils/collection/presenters"
+	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
-	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 )
 
 type DescribeCollectionCmdOptions struct {
-	name string
 	json bool
 }
 
@@ -21,15 +21,18 @@ func NewDescribeCollectionCmd() *cobra.Command {
 	options := DescribeCollectionCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "describe",
-		Short: "Get information on a collection",
+		Use:          "describe <name>",
+		Short:        "Get information on a collection",
+		Args:         collection.ValidateCollectionNameArgs,
+		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {
+			collectionName := args[0]
 			ctx := context.Background()
 			pc := sdk.NewPineconeClient()
 
-			collection, err := pc.DescribeCollection(ctx, options.name)
+			collection, err := pc.DescribeCollection(ctx, collectionName)
 			if err != nil {
-				msg.FailMsg("Failed to describe collection %s: %s\n", options.name, err)
+				errorutil.HandleAPIError(err, cmd, args)
 				exit.Error(err)
 			}
 
@@ -41,10 +44,6 @@ func NewDescribeCollectionCmd() *cobra.Command {
 			}
 		},
 	}
-
-	// required flags
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of collection to describe")
-	_ = cmd.MarkFlagRequired("name")
 
 	// optional flags
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")

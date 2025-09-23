@@ -3,19 +3,14 @@ package collection
 import (
 	"context"
 	"fmt"
-	"os"
 	"sort"
-	"strconv"
-	"strings"
-	"text/tabwriter"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/collection/presenters"
+	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
-	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
-
-	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 )
 
 type ListCollectionsCmdOptions struct {
@@ -34,7 +29,7 @@ func NewListCollectionsCmd() *cobra.Command {
 
 			collections, err := pc.ListCollections(ctx)
 			if err != nil {
-				msg.FailMsg("Failed to list collections: %s\n", err)
+				errorutil.HandleAPIError(err, cmd, args)
 				exit.Error(err)
 			}
 
@@ -47,7 +42,7 @@ func NewListCollectionsCmd() *cobra.Command {
 				json := text.IndentJSON(collections)
 				fmt.Println(json)
 			} else {
-				printTable(collections)
+				presenters.PrintCollectionTable(collections)
 			}
 		},
 	}
@@ -56,18 +51,4 @@ func NewListCollectionsCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	return cmd
-}
-
-func printTable(collections []*pinecone.Collection) {
-	writer := tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
-
-	columns := []string{"NAME", "DIMENSION", "SIZE", "STATUS", "VECTORS", "ENVIRONMENT"}
-	header := strings.Join(columns, "\t") + "\n"
-	fmt.Fprint(writer, header)
-
-	for _, coll := range collections {
-		values := []string{coll.Name, string(coll.Dimension), strconv.FormatInt(coll.Size, 10), string(coll.Status), string(coll.VectorCount), coll.Environment}
-		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
-	}
-	writer.Flush()
 }

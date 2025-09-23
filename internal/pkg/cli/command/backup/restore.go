@@ -26,7 +26,7 @@ func NewRestoreBackupCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "restore",
-		Short: "Create a new index from a backup",
+		Short: "Create a new serverless index from a backup",
 		Run: func(cmd *cobra.Command, args []string) {
 			pc := sdk.NewPineconeClient()
 			ctx := context.Background()
@@ -52,7 +52,7 @@ func NewRestoreBackupCmd() *cobra.Command {
 	}
 
 	// Required flags
-	cmd.Flags().StringVarP(&options.indexName, "index", "i", "", "name for the new index to create")
+	cmd.Flags().StringVarP(&options.indexName, "index", "i", "", "name for the new serverless index to create")
 	_ = cmd.MarkFlagRequired("index")
 	cmd.Flags().StringVarP(&options.backupID, "backup-id", "b", "", "ID of the backup to restore from")
 	_ = cmd.MarkFlagRequired("backup-id")

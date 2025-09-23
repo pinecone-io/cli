@@ -55,8 +55,8 @@ func NewCreateBackupCmd() *cobra.Command {
 	// Required flags
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name you want to give the backup")
 	_ = cmd.MarkFlagRequired("name")
-	cmd.Flags().StringVarP(&options.indexName, "index", "i", "", "name of the serverless index to backup")
-	_ = cmd.MarkFlagRequired("index")
+	cmd.Flags().StringVarP(&options.indexName, "source", "s", "", "name of the serverless index to backup")
+	_ = cmd.MarkFlagRequired("source")
 
 	// Optional flags
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
