@@ -65,11 +65,6 @@ func (t *TokenManager) Token(ctx context.Context) (*oauth2.Token, error) {
 		return &empty, nil
 	}
 
-	// Force refresh slightly before expiry
-	if !latestToken.Expiry.IsZero() && time.Until(latestToken.Expiry) <= t.prefetch {
-		latestToken.Expiry = time.Now().Add(-time.Minute)
-	}
-
 	// Check if we need to refresh
 	// - AccessToken is empty but there's a RefreshToken
 	// - Inside the prefetch window
@@ -91,7 +86,7 @@ func (t *TokenManager) Token(ctx context.Context) (*oauth2.Token, error) {
 	}
 
 	// Persist token if changed
-	if !tokensEqual(t.cur, newToken) {
+	if shouldPersistToken(t.cur, newToken) {
 		secrets.SetOAuth2Token(*newToken)
 	}
 	t.cur = newToken
@@ -199,18 +194,13 @@ func isEmptyToken(token *oauth2.Token) bool {
 	return token == nil || (token.AccessToken == "" && token.RefreshToken == "")
 }
 
-func tokensEqual(t1, t2 *oauth2.Token) bool {
-	if t1 == nil || t2 == nil {
-		return t1 == t2
+func shouldPersistToken(old, new *oauth2.Token) bool {
+	if old == nil || new == nil {
+		return old != new
 	}
 
-	if t1.AccessToken != t2.AccessToken || t1.RefreshToken != t2.RefreshToken {
+	if old.AccessToken != new.AccessToken || old.RefreshToken != new.RefreshToken {
 		return true
 	}
-
-	diff := t1.Expiry.Sub(t2.Expiry)
-	if diff < 0 {
-		diff = -diff
-	}
-	return diff > 2*time.Second
+	return false
 }

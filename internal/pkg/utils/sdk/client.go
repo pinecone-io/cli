@@ -168,7 +168,8 @@ func getCLIAPIKeyForProject(ctx context.Context, ac *pinecone.AdminClient, proje
 	// If we don't have a managed key at this point, we need to create a new one
 	newKeyName := generateCLIAPIKeyName()
 	newKey, err := ac.APIKey.Create(ctx, project.Id, &pinecone.CreateAPIKeyParams{
-		Name: newKeyName,
+		Name:  newKeyName,
+		Roles: &[]string{"ProjectEditor"},
 	})
 	if err != nil {
 		msg.FailMsg("Failed to create a CLI managed API key for project %s: %s", style.Emphasis(project.Name), err)
