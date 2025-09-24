@@ -82,9 +82,6 @@ func NewTargetCmd() *cobra.Command {
 				return
 			}
 
-			// TODO - you don't need to be logged in, you should be able to target with client_id and client_secret
-			// But we also need to handle the case where it's a service account rather than a user
-			// In that case, we will not have an orgId from the token, we'll need to fetch the org via Admin API
 			accessToken, err := oauth.Token(cmd.Context())
 			if err != nil {
 				log.Error().Err(err).Msg("Error retrieving oauth token")
