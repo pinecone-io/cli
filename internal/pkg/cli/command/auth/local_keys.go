@@ -8,7 +8,7 @@ import (
 func NewLocalKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "local-keys <command>",
-		Short:   "Work with API keys that the CLI is managing locally",
+		Short:   "Work with API keys that the CLI is managing in local state",
 		GroupID: help.GROUP_AUTH.ID,
 	}
 

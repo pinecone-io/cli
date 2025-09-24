@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -17,8 +18,18 @@ func NewClearCmd() *cobra.Command {
 	options := ClearCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:     "clear",
-		Short:   "Allows you to clear a configured service account (client id and secret), or global API key",
+		Use:   "clear",
+		Short: "Allows you to clear a configured service account (client id and secret), or global API key",
+		Example: heredoc.Doc(`
+		# Clear configured service account credentials
+		$ pc auth clear --service-account
+
+		# Clear configured global API key
+		$ pc auth clear --global-api-key
+
+		# Clear both configured service account credentials and global API key
+		$ pc auth clear --service-account --global-api-key
+		`),
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			if !options.serviceAccount && !options.globalAPIKey {

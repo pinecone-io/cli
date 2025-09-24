@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
@@ -31,6 +32,18 @@ func NewPruneLocalKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prune",
 		Short: "Clean up project API keys that the CLI is managing",
+		Example: heredoc.Doc(`
+		# Prune all locally managed keys that the CLI has created
+		$ pc auth local-keys prune --origin cli --skip-confirmation
+
+		# Prune all locally managed keys that the user has created and stored
+		$ pc auth local-keys prune --origin user --skip-confirmation
+
+		# Show a dry run plan of pruning all keys (origin defaults to "all")
+		# and then apply the changes
+		$ pc auth local-keys prune --dry-run --skip-confirmation
+		$ pc auth local-keys prune --skip-confirmation
+		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runPruneLocalKeys(cmd.Context(), options)
 		},

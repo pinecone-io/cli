@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/MakeNowJust/heredoc"
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
@@ -39,8 +40,15 @@ func NewConfigureCmd() *cobra.Command {
 	options := ConfigureCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:     "configure",
-		Short:   "Initilize authentication credentials for the Pinecone CLI",
+		Use:   "configure",
+		Short: "Configure authentication credentials for the Pinecone CLI",
+		Example: heredoc.Doc(`
+		# Configure service account credentials
+		$ pc auth configure --client-id <client-id> --client-secret <client-secret>
+
+		# Configure global API key
+		$ pc auth configure --global-api-key <global-api-key>
+		`),
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			out := cmd.OutOrStdout()

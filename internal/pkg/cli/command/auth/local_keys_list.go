@@ -5,6 +5,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
@@ -22,9 +23,13 @@ func NewListLocalKeysCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List the project API keys that the CLI is currently managing",
+		Short: "List the project API keys that the CLI is currently managing in local state",
+		Example: heredoc.Doc(`
+		$ pc auth local-keys list --reveal
+		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			managedKeys := secrets.GetManagedProjectKeys()
+			// TODO - handle reveal for JSON printing case
 			if options.json {
 				json := text.IndentJSON(managedKeys)
 				pcio.Println(json)
