@@ -16,6 +16,8 @@ import (
 
 const defaultPrefetch = 90 * time.Second
 
+// Token is a convenience function that gets the current OAuth2 token for the CLI
+// It is a wrapper around the TokenManager.Token method
 func Token(ctx context.Context) (*oauth2.Token, error) {
 	m, err := getTokenManager()
 	if err != nil {
@@ -24,6 +26,8 @@ func Token(ctx context.Context) (*oauth2.Token, error) {
 	return m.Token(ctx)
 }
 
+// TokenManager is a that manages access to the OAuth2 token for the CLI
+// It is also responsible for refreshing the token when it is expired
 type TokenManager struct {
 	cfg      *oauth2.Config
 	cur      *oauth2.Token
@@ -37,6 +41,8 @@ var (
 	mgrErr  error
 )
 
+// getTokenManager is a helper function that initializes the TokenManager
+// It is responsible for creating a new TokenManager and storing it as a singleton/global variable
 func getTokenManager() (*TokenManager, error) {
 	mgrOnce.Do(func() {
 		var cfg *oauth2.Config
@@ -52,6 +58,8 @@ func getTokenManager() (*TokenManager, error) {
 	return mgr, mgrErr
 }
 
+// Token is a method that gets the current OAuth2 token for the CLI
+// It determines whether the currently stored token needs to be refreshed, and persists the new token if it is changed
 func (t *TokenManager) Token(ctx context.Context) (*oauth2.Token, error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
