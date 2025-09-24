@@ -29,9 +29,9 @@ func NewListLocalKeysCmd() *cobra.Command {
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			managedKeys := secrets.GetManagedProjectKeys()
-			// TODO - handle reveal for JSON printing case
 			if options.json {
-				json := text.IndentJSON(managedKeys)
+				maskedMap := maskForJSON(managedKeys, options.reveal)
+				json := text.IndentJSON(maskedMap)
 				pcio.Println(json)
 			} else {
 				printTable(managedKeys, options.reveal)
@@ -62,4 +62,15 @@ func printTable(managedKeys map[string]secrets.ManagedKey, reveal bool) {
 	}
 
 	writer.Flush()
+}
+
+func maskForJSON(src map[string]secrets.ManagedKey, reveal bool) map[string]secrets.ManagedKey {
+	out := make(map[string]secrets.ManagedKey)
+	for projectId, managedKey := range src {
+		if !reveal {
+			managedKey.Value = presenters.MaskHeadTail(managedKey.Value, 4, 4)
+		}
+		out[projectId] = managedKey
+	}
+	return out
 }
