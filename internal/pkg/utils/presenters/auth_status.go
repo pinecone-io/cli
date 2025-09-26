@@ -20,7 +20,7 @@ func PrintAuthStatus(authStatus AuthStatus) {
 	pcio.Fprint(writer, header)
 
 	pcio.Fprintf(writer, "Authentication Mode\t%s\n", labelUnsetIfEmpty(authStatus.AuthMode))
-	pcio.Fprintf(writer, "Global API Key\t%s\n", labelUnsetIfEmpty(authStatus.GlobalAPIKey))
+	pcio.Fprintf(writer, "Global API Key\t%s\n", labelUnsetIfEmpty(MaskHeadTail(authStatus.GlobalAPIKey, 4, 4)))
 	pcio.Fprintf(writer, "Service Account Client ID\t%s\n", labelUnsetIfEmpty(authStatus.ClientID))
 	pcio.Fprintf(writer, "Service Account Client Secret\t%s\n", labelUnsetIfEmpty(authStatus.ClientSecret))
 	pcio.Fprintf(writer, "Token Expiry\t%s\n", labelUnsetIfEmpty(authStatus.TokenExpiry))
