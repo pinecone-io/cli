@@ -1,15 +1,19 @@
 package index
 
 import (
-	"context"
+	"errors"
+	"fmt"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/docslinks"
+	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/index"
+	indexpresenters "github.com/pinecone-io/cli/internal/pkg/utils/index/presenters"
+	"github.com/pinecone-io/cli/internal/pkg/utils/interactive"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
-	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -17,214 +21,216 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type indexType string
-
-const (
-	indexTypeServerless indexType = "serverless"
-	indexTypeIntegrated indexType = "integrated"
-	indexTypePod        indexType = "pod"
-)
-
 type createIndexOptions struct {
-	// required for all index types
-	name string
-
-	// serverless only
-	vectorType string
-
-	// serverless & integrated
-	cloud  string
-	region string
-
-	// serverless & pods
-	sourceCollection string
-
-	// pods only
-	environment    string
-	podType        string
-	shards         int32
-	replicas       int32
-	metadataConfig []string
-
-	// integrated only
-	model           string
-	fieldMap        map[string]string
-	readParameters  map[string]string
-	writeParameters map[string]string
-
-	// optional for all index types
-	dimension          int32
-	metric             string
-	deletionProtection string
-	tags               map[string]string
-
-	json bool
+	CreateOptions index.CreateOptions
+	json          bool
 }
 
 func NewCreateIndexCmd() *cobra.Command {
 	options := createIndexOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "create",
+		Use:   "create <name>",
 		Short: "Create a new index with the specified configuration",
 		Long: heredoc.Docf(`
-		The %s command creates a new index with the specified configuration. There are several different types of indexes
-		you can create depending on the configuration provided:
+		The %s command creates a new index with the specified configuration. There are different types of indexes
+		you can create:
 
 			- Serverless (dense or sparse)
-			- Integrated 
-			- Pod
+			- Pod (dense only)
+
+		For serverless indexes, you can specify an embedding model to use via the %s flag:
+
+		The CLI will try to automatically infer missing settings from those provided.
 
 		For detailed documentation, see:
 		%s
-		`, style.Code("pc index create"), style.URL(docslinks.DocsIndexCreate)),
+		`, style.Code("pc index create"),
+			style.Emphasis("--model"),
+			style.URL(docslinks.DocsIndexCreate)),
 		Example: heredoc.Doc(`
-		# create a serverless index
-		$ pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1
+		# create default index (serverless)
+		$ pc index create my-index
 
-		# create a pod index
-		$ pc index create --name my-index --dimension 1536 --metric cosine --environment us-east-1-aws --pod-type p1.x1 --shards 2 --replicas 2
+		# create serverless index
+		$ pc index create my-index --serverless
 
-		# create an integrated index
-		$ pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1 --model multilingual-e5-large --field_map text=chunk_text
+		# create pod index
+		$ pc index create my-index --pod	
+
+		# create a serverless index with explicit model
+		$ pc index create my-index --model llama-text-embed-v2 --cloud aws --region us-east-1
+
+		# create a serverless index with the default dense model
+		$ pc index create my-index --model dense --cloud aws --region us-east-1
+
+		# create a serverless index with the default sparse model
+		$ pc index create my-index --model sparse --cloud aws --region us-east-1
+
 		`),
+		Args:         index.ValidateIndexNameArgs,
+		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {
-			runCreateIndexCmd(options)
+			options.CreateOptions.Name.Value = args[0]
+			runCreateIndexCmd(options, cmd, args)
 		},
 	}
 
-	// Required flags
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "Name of index to create")
-	_ = cmd.MarkFlagRequired("name")
+	// index type flags
+	cmd.Flags().BoolVar(&options.CreateOptions.Serverless.Value, "serverless", false, "Create a serverless index (default)")
+	cmd.Flags().BoolVar(&options.CreateOptions.Pod.Value, "pod", false, "Create a pod index")
 
 	// Serverless & Pods
-	cmd.Flags().StringVar(&options.sourceCollection, "source_collection", "", "When creating an index from a collection")
+	cmd.Flags().StringVar(&options.CreateOptions.SourceCollection.Value, "source_collection", "", "When creating an index from a collection")
 
 	// Serverless & Integrated
-	cmd.Flags().StringVarP(&options.cloud, "cloud", "c", "", "Cloud provider where you would like to deploy your index")
-	cmd.Flags().StringVarP(&options.region, "region", "r", "", "Cloud region where you would like to deploy your index")
+	cmd.Flags().StringVarP(&options.CreateOptions.Cloud.Value, "cloud", "c", "", "Cloud provider where you would like to deploy your index")
+	cmd.Flags().StringVarP(&options.CreateOptions.Region.Value, "region", "r", "", "Cloud region where you would like to deploy your index")
 
 	// Serverless flags
-	cmd.Flags().StringVarP(&options.vectorType, "vector_type", "v", "", "Vector type to use. One of: dense, sparse")
+	cmd.Flags().StringVarP(&options.CreateOptions.VectorType.Value, "vector_type", "v", "", "Vector type to use. One of: dense, sparse")
 
 	// Pod flags
-	cmd.Flags().StringVar(&options.environment, "environment", "", "Environment of the index to create")
-	cmd.Flags().StringVar(&options.podType, "pod_type", "", "Type of pod to use")
-	cmd.Flags().Int32Var(&options.shards, "shards", 1, "Shards of the index to create")
-	cmd.Flags().Int32Var(&options.replicas, "replicas", 1, "Replicas of the index to create")
-	cmd.Flags().StringSliceVar(&options.metadataConfig, "metadata_config", []string{}, "Metadata configuration to limit the fields that are indexed for search")
+	cmd.Flags().StringVar(&options.CreateOptions.Environment.Value, "environment", "", "Environment of the index to create")
+	cmd.Flags().StringVar(&options.CreateOptions.PodType.Value, "pod_type", "", "Type of pod to use")
+	cmd.Flags().Int32Var(&options.CreateOptions.Shards.Value, "shards", 1, "Shards of the index to create")
+	cmd.Flags().Int32Var(&options.CreateOptions.Replicas.Value, "replicas", 1, "Replicas of the index to create")
+	cmd.Flags().StringSliceVar(&options.CreateOptions.MetadataConfig.Value, "metadata_config", []string{}, "Metadata configuration to limit the fields that are indexed for search")
 
 	// Integrated flags
-	cmd.Flags().StringVar(&options.model, "model", "", "The name of the embedding model to use for the index")
-	cmd.Flags().StringToStringVar(&options.fieldMap, "field_map", map[string]string{}, "Identifies the name of the text field from your document model that will be embedded")
-	cmd.Flags().StringToStringVar(&options.readParameters, "read_parameters", map[string]string{}, "The read parameters for the embedding model")
-	cmd.Flags().StringToStringVar(&options.writeParameters, "write_parameters", map[string]string{}, "The write parameters for the embedding model")
+	cmd.Flags().StringVar(&options.CreateOptions.Model.Value, "model", "", fmt.Sprintf("Embedding model to use (e.g., llama-text-embed-v2, default, sparse). Use %s to see available models", style.Code("pc models")))
+	cmd.Flags().StringToStringVar(&options.CreateOptions.FieldMap.Value, "field_map", map[string]string{}, "Identifies the name of the text field from your document model that will be embedded")
+	cmd.Flags().StringToStringVar(&options.CreateOptions.ReadParameters.Value, "read_parameters", map[string]string{}, "The read parameters for the embedding model")
+	cmd.Flags().StringToStringVar(&options.CreateOptions.WriteParameters.Value, "write_parameters", map[string]string{}, "The write parameters for the embedding model")
 
 	// Optional flags
-	cmd.Flags().Int32VarP(&options.dimension, "dimension", "d", 0, "Dimension of the index to create")
-	cmd.Flags().StringVarP(&options.metric, "metric", "m", "cosine", "Metric to use. One of: cosine, euclidean, dotproduct")
-	cmd.Flags().StringVar(&options.deletionProtection, "deletion_protection", "", "Whether to enable deletion protection for the index. One of: enabled, disabled")
-	cmd.Flags().StringToStringVar(&options.tags, "tags", map[string]string{}, "Custom user tags to add to an index")
+	cmd.Flags().Int32VarP(&options.CreateOptions.Dimension.Value, "dimension", "d", 0, "Dimension of the index to create")
+	cmd.Flags().StringVarP(&options.CreateOptions.Metric.Value, "metric", "m", "", "Metric to use. One of: cosine, euclidean, dotproduct")
+	cmd.Flags().StringVar(&options.CreateOptions.DeletionProtection.Value, "deletion_protection", "", "Whether to enable deletion protection for the index. One of: enabled, disabled")
+	cmd.Flags().StringToStringVar(&options.CreateOptions.Tags.Value, "tags", map[string]string{}, "Custom user tags to add to an index")
 
 	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 
 	return cmd
 }
 
-func runCreateIndexCmd(options createIndexOptions) {
-	ctx := context.Background()
-	pc := sdk.NewPineconeClient()
+func runCreateIndexCmd(options createIndexOptions, cmd *cobra.Command, args []string) {
+	ctx := cmd.Context()
 
-	// validate and derive index type from arguments
-	err := options.validate()
-	if err != nil {
-		exit.Error(err)
-		return
+	// validationErrors := index.ValidateCreateOptions(options.CreateOptions)
+	// if len(validationErrors) > 0 {
+	// 	msg.FailMsgMultiLine(validationErrors...)
+	// 	exit.Error(errors.New(validationErrors[0])) // Use first error for exit code
+	// }
+
+	inferredOptions := index.InferredCreateOptions(ctx, options.CreateOptions)
+	validationErrors := index.ValidateCreateOptions(inferredOptions)
+	if len(validationErrors) > 0 {
+		msg.FailMsgMultiLine(validationErrors...)
+		exit.Error(errors.New(validationErrors[0])) // Use first error for exit code
 	}
-	idxType, err := options.deriveIndexType()
-	if err != nil {
-		exit.Error(err)
-		return
+
+	// Print preview of what will be created
+	pcio.Println()
+	pcio.Printf("%s\n\n",
+		pcio.Sprintf("Creating %s index %s with the following configuration:",
+			style.Emphasis(string(inferredOptions.GetSpec())),
+			style.ResourceName(inferredOptions.Name.Value),
+		),
+	)
+
+	indexpresenters.PrintIndexCreateConfigTable(&inferredOptions)
+
+	// Ask for user confirmation unless -y flag is set
+	assumeYes, _ := cmd.Flags().GetBool("assume-yes")
+	if !assumeYes {
+		question := "Is this configuration correct? Do you want to proceed with creating the index?"
+		if !interactive.GetConfirmation(question) {
+			pcio.Println(style.InfoMsg("Index creation cancelled."))
+			return
+		}
 	}
 
 	// index tags
 	var indexTags *pinecone.IndexTags
-	if len(options.tags) > 0 {
-		tags := pinecone.IndexTags(options.tags)
+	if len(inferredOptions.Tags.Value) > 0 {
+		tags := pinecone.IndexTags(inferredOptions.Tags.Value)
 		indexTags = &tags
 	}
 
 	// created index
 	var idx *pinecone.Index
+	var err error
+	pc := sdk.NewPineconeClient()
 
-	switch idxType {
-	case indexTypeServerless:
+	switch inferredOptions.GetCreateFlow() {
+	case index.Serverless:
 		// create serverless index
-		args := pinecone.CreateServerlessIndexRequest{
-			Name:               options.name,
-			Cloud:              pinecone.Cloud(options.cloud),
-			Region:             options.region,
-			Metric:             pointerOrNil(pinecone.IndexMetric(options.metric)),
-			DeletionProtection: pointerOrNil(pinecone.DeletionProtection(options.deletionProtection)),
-			Dimension:          pointerOrNil(options.dimension),
-			VectorType:         pointerOrNil(options.vectorType),
+		req := pinecone.CreateServerlessIndexRequest{
+			Name:               inferredOptions.Name.Value,
+			Cloud:              pinecone.Cloud(inferredOptions.Cloud.Value),
+			Region:             inferredOptions.Region.Value,
+			Metric:             pointerOrNil(pinecone.IndexMetric(inferredOptions.Metric.Value)),
+			DeletionProtection: pointerOrNil(pinecone.DeletionProtection(inferredOptions.DeletionProtection.Value)),
+			Dimension:          pointerOrNil(inferredOptions.Dimension.Value),
+			VectorType:         pointerOrNil(inferredOptions.VectorType.Value),
 			Tags:               indexTags,
-			SourceCollection:   pointerOrNil(options.sourceCollection),
+			SourceCollection:   pointerOrNil(inferredOptions.SourceCollection.Value),
 		}
 
-		idx, err = pc.CreateServerlessIndex(ctx, &args)
+		idx, err = pc.CreateServerlessIndex(ctx, &req)
 		if err != nil {
-			msg.FailMsg("Failed to create serverless index %s: %s\n", style.Emphasis(options.name), err)
+			errorutil.HandleIndexAPIError(err, cmd, args)
 			exit.Error(err)
 		}
-	case indexTypePod:
+	case index.Pod:
 		// create pod index
 		var metadataConfig *pinecone.PodSpecMetadataConfig
-		if len(options.metadataConfig) > 0 {
+		if len(inferredOptions.MetadataConfig.Value) > 0 {
 			metadataConfig = &pinecone.PodSpecMetadataConfig{
-				Indexed: &options.metadataConfig,
+				Indexed: &inferredOptions.MetadataConfig.Value,
 			}
 		}
-		args := pinecone.CreatePodIndexRequest{
-			Name:               options.name,
-			Dimension:          options.dimension,
-			Environment:        options.environment,
-			PodType:            options.podType,
-			Shards:             options.shards,
-			Replicas:           options.replicas,
-			Metric:             pointerOrNil(pinecone.IndexMetric(options.metric)),
-			DeletionProtection: pointerOrNil(pinecone.DeletionProtection(options.deletionProtection)),
-			SourceCollection:   pointerOrNil(options.sourceCollection),
+		req := pinecone.CreatePodIndexRequest{
+			Name:               inferredOptions.Name.Value,
+			Dimension:          inferredOptions.Dimension.Value,
+			Environment:        inferredOptions.Environment.Value,
+			PodType:            inferredOptions.PodType.Value,
+			Shards:             inferredOptions.Shards.Value,
+			Replicas:           inferredOptions.Replicas.Value,
+			Metric:             pointerOrNil(pinecone.IndexMetric(inferredOptions.Metric.Value)),
+			DeletionProtection: pointerOrNil(pinecone.DeletionProtection(inferredOptions.DeletionProtection.Value)),
+			SourceCollection:   pointerOrNil(inferredOptions.SourceCollection.Value),
 			Tags:               indexTags,
 			MetadataConfig:     metadataConfig,
 		}
 
-		idx, err = pc.CreatePodIndex(ctx, &args)
+		idx, err = pc.CreatePodIndex(ctx, &req)
 		if err != nil {
-			msg.FailMsg("Failed to create pod index %s: %s\n", style.Emphasis(options.name), err)
+			errorutil.HandleIndexAPIError(err, cmd, args)
 			exit.Error(err)
 		}
-	case indexTypeIntegrated:
+	case index.Integrated:
 		// create integrated index
-		readParams := toInterfaceMap(options.readParameters)
-		writeParams := toInterfaceMap(options.writeParameters)
+		readParams := toInterfaceMap(inferredOptions.ReadParameters.Value)
+		writeParams := toInterfaceMap(inferredOptions.WriteParameters.Value)
 
-		args := pinecone.CreateIndexForModelRequest{
-			Name:               options.name,
-			Cloud:              pinecone.Cloud(options.cloud),
-			Region:             options.region,
-			DeletionProtection: pointerOrNil(pinecone.DeletionProtection(options.deletionProtection)),
+		req := pinecone.CreateIndexForModelRequest{
+			Name:               inferredOptions.Name.Value,
+			Cloud:              pinecone.Cloud(inferredOptions.Cloud.Value),
+			Region:             inferredOptions.Region.Value,
+			DeletionProtection: pointerOrNil(pinecone.DeletionProtection(inferredOptions.DeletionProtection.Value)),
 			Embed: pinecone.CreateIndexForModelEmbed{
-				Model:           options.model,
-				FieldMap:        toInterfaceMap(options.fieldMap),
+				Model:           inferredOptions.Model.Value,
+				FieldMap:        toInterfaceMap(inferredOptions.FieldMap.Value),
 				ReadParameters:  &readParams,
 				WriteParameters: &writeParams,
 			},
 		}
 
-		idx, err = pc.CreateIndexForModel(ctx, &args)
+		idx, err = pc.CreateIndexForModel(ctx, &req)
 		if err != nil {
-			msg.FailMsg("Failed to create integrated index %s: %s\n", style.Emphasis(options.name), err)
+			errorutil.HandleIndexAPIError(err, cmd, args)
 			exit.Error(err)
 		}
 	default:
@@ -233,53 +239,23 @@ func runCreateIndexCmd(options createIndexOptions) {
 		exit.Error(err)
 	}
 
-	renderSuccessOutput(idx, options)
+	renderSuccessOutput(idx, options.json)
 }
 
-func renderSuccessOutput(idx *pinecone.Index, options createIndexOptions) {
-	if options.json {
+func renderSuccessOutput(idx *pinecone.Index, jsonOutput bool) {
+	if jsonOutput {
 		json := text.IndentJSON(idx)
 		pcio.Println(json)
 		return
 	}
 
-	describeCommand := pcio.Sprintf("pc index describe --name %s", idx.Name)
-	msg.SuccessMsg("Index %s created successfully. Run %s to check status. \n\n", style.Emphasis(idx.Name), style.Code(describeCommand))
-	presenters.PrintDescribeIndexTable(idx)
-}
+	msg.SuccessMsg("Index %s created successfully.", style.ResourceName(idx.Name))
 
-// validate specific input params
-func (c *createIndexOptions) validate() error {
-	// name required for all index types
-	if c.name == "" {
-		err := pcio.Errorf("name is required")
-		log.Error().Err(err).Msg("Error creating index")
-		return err
-	}
+	indexpresenters.PrintDescribeIndexTable(idx)
 
-	// environment and cloud/region cannot be provided together
-	if c.cloud != "" && c.region != "" && c.environment != "" {
-		err := pcio.Errorf("cloud, region, and environment cannot be provided together")
-		log.Error().Err(err).Msg("Error creating index")
-		return err
-	}
-
-	return nil
-}
-
-// determine the type of index being created based on high level input params
-func (c *createIndexOptions) deriveIndexType() (indexType, error) {
-	if c.cloud != "" && c.region != "" {
-		if c.model != "" {
-			return indexTypeIntegrated, nil
-		} else {
-			return indexTypeServerless, nil
-		}
-	}
-	if c.environment != "" {
-		return indexTypePod, nil
-	}
-	return "", pcio.Error("invalid index type. Please provide either environment, or cloud and region")
+	describeCommand := pcio.Sprintf("pc index describe %s", idx.Name)
+	hint := fmt.Sprintf("Run %s at any time to check the status. \n\n", style.Code(describeCommand))
+	pcio.Println(style.Hint(hint))
 }
 
 func pointerOrNil[T comparable](value T) *T {

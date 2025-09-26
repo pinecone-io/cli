@@ -1,25 +1,21 @@
 package apiKey
 
 import (
-	"bufio"
-	"fmt"
-	"os"
-	"strings"
-
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
+	"github.com/pinecone-io/cli/internal/pkg/utils/interactive"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
 )
 
 type DeleteApiKeyOptions struct {
-	apiKeyId         string
-	skipConfirmation bool
+	apiKeyId string
 }
 
 func NewDeleteKeyCmd() *cobra.Command {
@@ -31,7 +27,8 @@ func NewDeleteKeyCmd() *cobra.Command {
 		GroupID: help.GROUP_API_KEYS.ID,
 		Example: heredoc.Doc(`
 		$ pc target -o "my-org" -p "my-project"
-		$ pc api-key delete -i "api-key-id" 
+		$ pc api-key delete -i "api-key-id"
+		$ pc api-key delete -i "api-key-id" -y
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()
@@ -45,7 +42,9 @@ func NewDeleteKeyCmd() *cobra.Command {
 				exit.Error(err)
 			}
 
-			if !options.skipConfirmation {
+			// Check if -y flag is set
+			assumeYes, _ := cmd.Flags().GetBool("assume-yes")
+			if !assumeYes {
 				confirmDeleteApiKey(keyToDelete.Name)
 			}
 
@@ -68,34 +67,20 @@ func NewDeleteKeyCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&options.apiKeyId, "id", "i", "", "The ID of the API key to delete")
 	_ = cmd.MarkFlagRequired("id")
 
-	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "Skip deletion confirmation prompt")
 	return cmd
 }
 
 func confirmDeleteApiKey(apiKeyName string) {
-	msg.WarnMsg("This operation will delete API Key %s from project %s.", style.Emphasis(apiKeyName), style.Emphasis(state.TargetProj.Get().Name))
-	msg.WarnMsg("Any integrations you have that auth with this API Key will stop working.")
-	msg.WarnMsg("This action cannot be undone.")
+	msg.WarnMsgMultiLine(
+		pcio.Sprintf("This operation will delete API Key %s from project %s.", style.Emphasis(apiKeyName), style.Emphasis(state.TargetProj.Get().Name)),
+		"Any integrations you have that auth with this API Key will stop working.",
+		"This action cannot be undone.",
+	)
 
-	// Prompt the user
-	fmt.Print("Do you want to continue? (y/N): ")
-
-	// Read the user's input
-	reader := bufio.NewReader(os.Stdin)
-	input, err := reader.ReadString('\n')
-	if err != nil {
-		fmt.Println("Error reading input:", err)
-		return
-	}
-
-	// Trim any whitespace from the input and convert to lowercase
-	input = strings.TrimSpace(strings.ToLower(input))
-
-	// Check if the user entered "y" or "yes"
-	if input == "y" || input == "yes" {
-		msg.InfoMsg("You chose to continue delete.")
-	} else {
+	question := "Are you sure you want to proceed with deleting this API key?"
+	if !interactive.GetConfirmation(question) {
 		msg.InfoMsg("Operation canceled.")
 		exit.Success()
 	}
+	msg.InfoMsg("You chose to continue delete.")
 }
