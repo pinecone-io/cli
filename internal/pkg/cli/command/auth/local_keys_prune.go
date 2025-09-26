@@ -200,12 +200,16 @@ func printDryRunPlan(plan []planItem, options PruneLocalKeysCmdOptions) {
 	} else {
 		for _, key := range plan {
 			if key.onServer {
-				msg.WarnMsg("Would delete remote key %s and local record (project %s)",
+				msg.WarnMsg("API key %s (ID: %s) will be deleted locally and remotely from project %s (ID: %s)",
+					style.Emphasis(key.managedKey.Name),
 					style.Emphasis(key.managedKey.Id),
+					style.Emphasis(key.managedKey.ProjectName),
 					style.Emphasis(key.projectId))
 			} else {
-				msg.WarnMsg("Would delete local record for key %s (not found on server, project %s)",
+				msg.WarnMsg("Local API key %s (ID: %s) was not found in project %s (ID: %s) and will be deleted locally ",
+					style.Emphasis(key.managedKey.Name),
 					style.Emphasis(key.managedKey.Id),
+					style.Emphasis(key.managedKey.ProjectName),
 					style.Emphasis(key.projectId))
 			}
 		}
