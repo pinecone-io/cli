@@ -12,16 +12,17 @@ import (
 	"os"
 	"time"
 
-	"github.com/pinecone-io/cli/internal/pkg/dashboard"
 	"github.com/pinecone-io/cli/internal/pkg/utils/browser"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	pc_oauth2 "github.com/pinecone-io/cli/internal/pkg/utils/oauth2"
+	"github.com/pinecone-io/cli/internal/pkg/utils/oauth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
+	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 )
 
 //go:embed assets/redirect_success.html
@@ -49,8 +50,13 @@ func Run(ctx context.Context, io IO, opts Options) {
 	}
 
 	// Parse token claims to get orgId
-	accessToken := secrets.OAuth2Token.Get()
-	claims, err := pc_oauth2.ParseClaimsUnverified(&accessToken)
+	accessToken, err := oauth.Token(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("Error retrieving oauth token")
+		msg.FailMsg("Error retrieving oauth token: %s", err)
+		exit.Error(pcio.Errorf("error retrieving oauth token: %w", err))
+	}
+	claims, err := oauth.ParseClaimsUnverified(accessToken)
 	if err != nil {
 		log.Error().Err(err).Msg("Error parsing authentication token claims")
 		msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
@@ -58,36 +64,48 @@ func Run(ctx context.Context, io IO, opts Options) {
 	}
 	msg.SuccessMsg("Logged in as " + style.Emphasis(claims.Email) + ". Defaulted to organization ID: " + style.Emphasis(claims.OrgId))
 
-	// Fetch the user's organizations and projects for the default org associated with the JWT token (if it exists)
-	orgsResponse, err := dashboard.ListOrganizations()
+	ac := sdk.NewPineconeAdminClient()
 	if err != nil {
-		log.Error().Msg("Error fetching organizations")
+		log.Error().Err(err).Msg("Error creating Pinecone admin client")
+		exit.Error(pcio.Errorf("error creating Pinecone admin client: %w", err))
+	}
+
+	// Fetch the user's organizations and projects for the default org associated with the JWT token (if it exists)
+	orgs, err := ac.Organization.List(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("Error fetching organizations")
 		exit.Error(pcio.Errorf("error fetching organizations: %w", err))
 	}
 
+	projects, err := ac.Project.List(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("Error fetching projects")
+		exit.Error(pcio.Errorf("error fetching projects: %w", err))
+	}
+
 	// target organization is whatever the JWT token's orgId is - defaults on first login currently
-	var targetOrg *dashboard.Organization
-	for _, org := range orgsResponse.Organizations {
+	var targetOrg *pinecone.Organization
+	for _, org := range orgs {
 		if org.Id == claims.OrgId {
-			targetOrg = &org
+			targetOrg = org
 			break
 		}
 	}
 
-	state.TargetOrg.Set(&state.TargetOrganization{
+	state.TargetOrg.Set(state.TargetOrganization{
 		Name: targetOrg.Name,
 		Id:   targetOrg.Id,
 	})
 	pcio.Println()
 	pcio.Printf(style.InfoMsg("Target org set to %s.\n"), style.Emphasis(targetOrg.Name))
 
-	if targetOrg.Projects != nil {
-		if len(*targetOrg.Projects) == 0 {
+	if projects != nil {
+		if len(projects) == 0 {
 			pcio.Printf(style.InfoMsg("No projects found for organization %s.\n"), style.Emphasis(targetOrg.Name))
 			pcio.Println(style.InfoMsg("Please create a project for this organization to work with project resources."))
 		} else {
-			targetProj := (*targetOrg.Projects)[0]
-			state.TargetProj.Set(&state.TargetProject{
+			targetProj := projects[0]
+			state.TargetProj.Set(state.TargetProject{
 				Name: targetProj.Name,
 				Id:   targetProj.Id,
 			})
@@ -97,17 +115,17 @@ func Run(ctx context.Context, io IO, opts Options) {
 	}
 
 	pcio.Println()
-	pcio.Println(style.CodeHint("Run %s to change the target context.", "pc target"))
+	pcio.Println(style.CodeHint("Run %s to change the target context.", style.Code("pc target")))
 
 	pcio.Println()
 	pcio.Printf("Now try %s to learn about index operations.\n", style.Code("pc index -h"))
 }
 
-// Takes an optional orgId, and attempts to acquire an access token scoped to the orgId if provided
-// If a token is successfully acquired it's set in the secrets store, and the user is considered logged in
+// Takes an optional orgId, and attempts to acquire an access token scoped to the orgId if provided.
+// If a token is successfully acquired it's set in the secrets store, and the user is considered logged in with state.AuthUserToken.
 func GetAndSetAccessToken(orgId *string) error {
 	ctx := context.Background()
-	a := pc_oauth2.Auth{}
+	a := oauth.Auth{}
 
 	// CSRF state
 	csrfState := randomCSRFState()
@@ -170,7 +188,7 @@ func GetAndSetAccessToken(orgId *string) error {
 				return
 			}
 		case <-time.After(5 * time.Minute):
-			// extra precaution to prevent hanging indefinitel on stdin
+			// extra precaution to prevent hanging indefinitely on stdin
 			return
 		}
 	}(serverCtx)
@@ -186,7 +204,34 @@ func GetAndSetAccessToken(orgId *string) error {
 		exit.Error(pcio.Errorf("error exchanging auth code for access token: %w", err))
 	}
 
-	secrets.OAuth2Token.Set(token)
+	claims, err := oauth.ParseClaimsUnverified(token)
+	if err != nil {
+		log.Error().Err(err).Msg("error parsing claims from access token")
+		return err
+	}
+
+	if token != nil {
+		// Store the token
+		secrets.SetOAuth2Token(*token)
+
+		// Clear any existing client_id and client_secret values
+		secrets.ClientId.Set("")
+		secrets.ClientSecret.Set("")
+
+		// Update target credentials context
+		// TODO - proper getters / setters for state
+		globalAPIKey := secrets.GlobalApiKey.Get()
+		authContext := state.AuthUserToken
+		if state.TargetCreds.Get().AuthContext == state.AuthGlobalAPIKey {
+			authContext = state.AuthGlobalAPIKey
+		}
+		state.TargetCreds.Set(state.TargetUser{
+			AuthContext:  authContext,
+			Email:        claims.Email,
+			GlobalAPIKey: globalAPIKey,
+		})
+	}
+
 	return nil
 }
 

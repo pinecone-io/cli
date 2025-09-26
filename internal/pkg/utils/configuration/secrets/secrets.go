@@ -1,6 +1,8 @@
 package secrets
 
 import (
+	"sync"
+
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
@@ -8,12 +10,11 @@ import (
 
 var SecretsViper *viper.Viper = viper.New()
 
-var OAuth2Token = configuration.MarshaledProperty[oauth2.Token]{
-	KeyName:    "oauth2_token",
-	ViperStore: SecretsViper,
-	DefaultValue: &oauth2.Token{
-		AccessToken: "",
-	},
+var oauth2TokenMu sync.RWMutex
+var oAuth2Token = configuration.MarshaledProperty[oauth2.Token]{
+	KeyName:      "oauth2_token",
+	ViperStore:   SecretsViper,
+	DefaultValue: oauth2.Token{},
 }
 
 var ClientId = configuration.ConfigProperty[string]{
@@ -28,24 +29,25 @@ var ClientSecret = configuration.ConfigProperty[string]{
 	DefaultValue: "",
 }
 
-var ApiKey = configuration.ConfigProperty[string]{
+var GlobalApiKey = configuration.ConfigProperty[string]{
 	KeyName:      "api_key",
 	ViperStore:   SecretsViper,
 	DefaultValue: "",
 }
 
-var ProjectAPIKeys = configuration.MarshaledProperty[map[string]string]{
+var managedKeysMu sync.RWMutex
+var ManagedAPIKeys = configuration.MarshaledProperty[map[string]ManagedKey]{
 	KeyName:      "project_api_keys",
 	ViperStore:   SecretsViper,
-	DefaultValue: &map[string]string{},
+	DefaultValue: map[string]ManagedKey{},
 }
 
 var properties = []configuration.Property{
-	ApiKey,
+	GlobalApiKey,
 	ClientId,
 	ClientSecret,
-	OAuth2Token,
-	ProjectAPIKeys,
+	oAuth2Token,
+	ManagedAPIKeys,
 }
 
 var ConfigFile = configuration.ConfigFile{
@@ -60,46 +62,101 @@ func init() {
 
 	// Bind environment variables to their associated properties
 	SecretsViper.SetEnvPrefix("pinecone")
-	_ = SecretsViper.BindEnv(ApiKey.KeyName)
+	_ = SecretsViper.BindEnv(GlobalApiKey.KeyName)
 	_ = SecretsViper.BindEnv(ClientId.KeyName)
 	_ = SecretsViper.BindEnv(ClientSecret.KeyName)
 }
 
-func GetProjectAPIKeys() map[string]string {
-	keys := ProjectAPIKeys.Get()
+func GetOAuth2Token() oauth2.Token {
+	oauth2TokenMu.RLock()
+	defer oauth2TokenMu.RUnlock()
+	return oAuth2Token.Get()
+}
+
+func SetOAuth2Token(token oauth2.Token) {
+	oauth2TokenMu.Lock()
+	defer oauth2TokenMu.Unlock()
+	oAuth2Token.Set(token)
+}
+
+func ClearOAuth2Token() {
+	oauth2TokenMu.Lock()
+	defer oauth2TokenMu.Unlock()
+	oAuth2Token.Clear()
+}
+
+func GetManagedProjectKeys() map[string]ManagedKey {
+	managedKeysMu.RLock()
+	defer managedKeysMu.RUnlock()
+
+	keys := ManagedAPIKeys.Get()
 	if keys == nil {
 		// if the value is nil, return an empty map to work with
-		return map[string]string{}
+		return map[string]ManagedKey{}
 	}
 
 	return keys
 }
 
-func GetProjectAPIKey(projectId string) (string, bool) {
-	keys := ProjectAPIKeys.Get()
+func GetProjectManagedKey(projectId string) (ManagedKey, bool) {
+	managedKeysMu.RLock()
+	defer managedKeysMu.RUnlock()
+
+	keys := ManagedAPIKeys.Get()
 	if keys == nil {
-		return "", false
+		return ManagedKey{}, false
 	}
 
 	key, ok := keys[projectId]
 	return key, ok
 }
 
-func SetProjectAPIKey(projectId string, apiKey string) {
-	keys := ProjectAPIKeys.Get()
+func SetProjectManagedKey(managedKey ManagedKey) {
+	managedKeysMu.Lock()
+	defer managedKeysMu.Unlock()
+
+	keys := ManagedAPIKeys.Get()
 	if keys == nil {
-		keys = map[string]string{}
+		keys = map[string]ManagedKey{}
 	}
 
-	keys[projectId] = apiKey
-	ProjectAPIKeys.Set(&keys)
+	keys[managedKey.ProjectId] = managedKey
+	ManagedAPIKeys.Set(keys)
 }
 
-func DeleteProjectAPIKey(projectId string) {
-	keys := ProjectAPIKeys.Get()
+func DeleteProjectManagedKey(projectId string) {
+	managedKeysMu.Lock()
+	defer managedKeysMu.Unlock()
+
+	keys := ManagedAPIKeys.Get()
 	if keys == nil {
 		return
 	}
 	delete(keys, projectId)
-	ProjectAPIKeys.Set(&keys)
+	ManagedAPIKeys.Set(keys)
+}
+
+func ClearManagedProjectKeys() {
+	managedKeysMu.Lock()
+	defer managedKeysMu.Unlock()
+	ManagedAPIKeys.Clear()
+}
+
+type ManagedKeyOrigin string
+
+const (
+	OriginCLICreated  ManagedKeyOrigin = "cli_created"
+	OriginUserCreated ManagedKeyOrigin = "user_created"
+)
+
+// ManagedKey represents an API key that is being actively managed by the CLI
+// Either the CLI created it to work with a project, or a user created it and stored it explicitly
+type ManagedKey struct {
+	Name           string           `json:"name,omitempty"`
+	Id             string           `json:"id,omitempty"`
+	Value          string           `json:"value,omitempty"`
+	Origin         ManagedKeyOrigin `json:"origin,omitempty"`
+	ProjectId      string           `json:"project_id,omitempty"`
+	ProjectName    string           `json:"project_name,omitempty"`
+	OrganizationId string           `json:"organization_id,omitempty"`
 }

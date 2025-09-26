@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -54,6 +55,13 @@ func NewDeleteKeyCmd() *cobra.Command {
 				exit.Error(err)
 			}
 			msg.SuccessMsg("API key %s deleted", style.Emphasis(keyToDelete.Name))
+
+			// Check if the key is locally stored and clean it up if so
+			managedKey, ok := secrets.GetProjectManagedKey(keyToDelete.ProjectId)
+			if ok && managedKey.Id == keyToDelete.Id {
+				secrets.DeleteProjectManagedKey(keyToDelete.ProjectId)
+				msg.SuccessMsg("Deleted local record for key %s (project %s)", style.Emphasis(keyToDelete.Id), style.Emphasis(keyToDelete.ProjectId))
+			}
 		},
 	}
 

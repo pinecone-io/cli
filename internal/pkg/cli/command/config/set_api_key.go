@@ -13,7 +13,7 @@ func NewSetApiKeyCmd() *cobra.Command {
 		Short: "Manually set the API key for the Pinecone CLI",
 		Run: func(cmd *cobra.Command, args []string) {
 			newApiKey := args[0]
-			secrets.ApiKey.Set(newApiKey)
+			secrets.GlobalApiKey.Set(newApiKey)
 			msg.SuccessMsg("Config property %s updated.", style.Emphasis("api_key"))
 			msg.InfoMsg("To clear saved keys, run %s.", style.Code("pc logout"))
 		},

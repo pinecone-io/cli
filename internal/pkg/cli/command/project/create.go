@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -20,6 +21,7 @@ type CreateProjectCmdOptions struct {
 	name                    string
 	forceEncryptionWithCMEK bool
 	maxPods                 int
+	target                  bool
 	json                    bool
 }
 
@@ -62,6 +64,15 @@ func NewCreateProjectCmd() *cobra.Command {
 
 			msg.SuccessMsg("Project %s created successfully.\n", style.Emphasis(proj.Name))
 			presenters.PrintDescribeProjectTable(proj)
+
+			// If the user has requested to swap targeting to the newly created project
+			if options.target {
+				state.TargetProj.Set(state.TargetProject{
+					Name: proj.Name,
+					Id:   proj.Id,
+				})
+				msg.SuccessMsg("Target project set to %s", style.Emphasis(proj.Name))
+			}
 		},
 	}
 
@@ -72,6 +83,7 @@ func NewCreateProjectCmd() *cobra.Command {
 	// optional flags
 	cmd.Flags().IntVarP(&options.maxPods, "max-pods", "p", 5, "Maximum number of Pods that can be created in the project across all indexes")
 	cmd.Flags().BoolVar(&options.forceEncryptionWithCMEK, "force-encryption", false, "Whether to force encryption with a customer-managed encryption key (CMEK). Default is 'false'. Once enabled, CMEK encryption cannot be disabled.")
+	cmd.Flags().BoolVar(&options.target, "target", false, "Target the newly created project")
 	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 	return cmd
 }

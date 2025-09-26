@@ -1,12 +1,12 @@
 package login
 
 import (
-	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
+	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	pc_oauth2 "github.com/pinecone-io/cli/internal/pkg/utils/oauth2"
+	"github.com/pinecone-io/cli/internal/pkg/utils/oauth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
@@ -14,18 +14,27 @@ import (
 
 func NewWhoAmICmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "whoami",
-		Short:   "See the current logged in user",
+		Use:   "whoami",
+		Short: "See the current logged in user",
+		Example: heredoc.Doc(`
+		$ pc whoami
+		`),
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 
-			accessToken := secrets.OAuth2Token.Get()
+			accessToken, err := oauth.Token(cmd.Context())
+			if err != nil {
+				log.Error().Err(err).Msg("Error retrieving oauth token")
+				msg.FailMsg("Error retrieving oauth token: %s", err)
+				exit.Error(pcio.Errorf("error retrieving oauth token: %w", err))
+				return
+			}
 			if accessToken.AccessToken == "" {
 				msg.InfoMsg("You are not logged in. Please run %s to log in.", style.Code("pc login"))
 				return
 			}
 
-			claims, err := pc_oauth2.ParseClaimsUnverified(&accessToken)
+			claims, err := oauth.ParseClaimsUnverified(accessToken)
 			if err != nil {
 				log.Error().Msg("Error parsing claims")
 				msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)

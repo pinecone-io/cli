@@ -1,4 +1,4 @@
-package oauth2
+package oauth
 
 import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"

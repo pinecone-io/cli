@@ -20,3 +20,8 @@ func Success() {
 	log.Info().Msg("Exiting successfully")
 	os.Exit(0)
 }
+
+func SuccessMsg(msg string) {
+	log.Info().Msg(msg)
+	os.Exit(0)
+}

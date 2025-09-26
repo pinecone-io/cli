@@ -6,30 +6,50 @@ import (
 	"os"
 	"strings"
 
+	"github.com/MakeNowJust/heredoc"
+	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/oauth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
+	"github.com/pinecone-io/cli/internal/pkg/utils/prompt"
+	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
+	"github.com/pinecone-io/cli/internal/pkg/utils/text"
+	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
 
-type InitCmdOptions struct {
+type ConfigureCmdOptions struct {
 	clientID            string
 	clientSecret        string
+	projectId           string
+	apiKey              string
 	readSecretFromStdin bool
 	promptIfMissing     bool
+	json                bool
 }
 
 func NewConfigureCmd() *cobra.Command {
-	options := InitCmdOptions{}
+	options := ConfigureCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:     "configure",
-		Short:   "Initilize authentication credentials for the Pinecone CLI",
+		Use:   "configure",
+		Short: "Configure authentication credentials for the Pinecone CLI",
+		Example: heredoc.Doc(`
+		# Configure service account credentials
+		$ pc auth configure --client-id <client-id> --client-secret <client-secret>
+
+		# Configure global API key
+		$ pc auth configure --global-api-key <global-api-key>
+		`),
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			out := cmd.OutOrStdout()
@@ -46,9 +66,12 @@ func NewConfigureCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&options.clientID, "client-id", "", "Service account client id for the Pinecone CLI")
-	cmd.Flags().StringVar(&options.clientSecret, "client-secret", "", "Service accountclient secret for the Pinecone CLI")
+	cmd.Flags().StringVar(&options.clientSecret, "client-secret", "", "Service account client secret for the Pinecone CLI")
+	cmd.Flags().StringVarP(&options.projectId, "project-id", "p", "", "The id of the project to target after authenticating with service account credentials")
+	cmd.Flags().StringVar(&options.apiKey, "global-api-key", "", "Global API key override for the Pinecone CLI")
 	cmd.Flags().BoolVar(&options.readSecretFromStdin, "client-secret-stdin", false, "Read the client secret from stdin")
 	cmd.Flags().BoolVar(&options.promptIfMissing, "prompt-if-missing", false, "Prompt for missing credentials if not provided")
+	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	return cmd
 }
@@ -59,16 +82,20 @@ type IO struct {
 	Err io.Writer
 }
 
-func Run(ctx context.Context, io IO, opts InitCmdOptions) {
-	secret := strings.TrimSpace(opts.clientSecret)
-	if secret == "" {
+func Run(ctx context.Context, io IO, opts ConfigureCmdOptions) {
+	clientID := strings.TrimSpace(opts.clientID)
+	clientSecret := strings.TrimSpace(opts.clientSecret)
+	globalAPIKey := strings.TrimSpace(opts.apiKey)
+
+	// If clientSecret is not provided via options, prompt if needed
+	if clientSecret == "" {
 		if opts.readSecretFromStdin {
 			secretBytes, err := ioReadAll(io.In)
 			if err != nil {
 				log.Error().Err(err).Msg("Error reading client secret from stdin")
 				exit.Error(pcio.Errorf("error reading client secret from stdin: %w", err))
 			}
-			secret = string(secretBytes)
+			clientSecret = string(secretBytes)
 		} else if opts.promptIfMissing && isTerminal(os.Stdin) {
 			pcio.Fprint(io.Out, "Client Secret: ")
 			secretBytes, err := term.ReadPassword(int(os.Stdin.Fd()))
@@ -76,20 +103,136 @@ func Run(ctx context.Context, io IO, opts InitCmdOptions) {
 				log.Error().Err(err).Msg("Error reading client secret from terminal")
 				exit.Error(pcio.Errorf("error reading client secret from terminal: %w", err))
 			}
-			secret = string(secretBytes)
+			clientSecret = string(secretBytes)
 		}
 	}
 
-	if secret == "" {
+	// If client_id is provided without a client_secret, error
+	if clientID != "" && clientSecret == "" {
 		log.Error().Msg("Error configuring authentication credentials")
-		msg.FailMsg("Client secret is required (use %s or %s to provide it)", style.Emphasis("--client-secret"), style.Emphasis("--client-secret-stdin"))
+		if !opts.json {
+			msg.FailMsg("Client secret is required (use %s or %s to provide it)", style.Emphasis("--client-secret"), style.Emphasis("--client-secret-stdin"))
+		}
 		exit.Error(pcio.Errorf("client secret is required"))
 		return
 	}
 
-	// store values
-	secrets.ClientId.Set(strings.TrimSpace(opts.clientID))
-	secrets.ClientSecret.Set(secret)
+	// If client_id and client_secret are configured, we need to use the AdminClient to fetch organization and project information for the service account
+	if clientID != "" && clientSecret != "" {
+		// Clear any existing user token login
+		oauth.Logout()
+
+		secrets.ClientId.Set(clientID)
+		secrets.ClientSecret.Set(clientSecret)
+
+		// Use Admin API to fetch organization and project information for the service account
+		// so that we can set the target context, or allow the user to set it like they do through the login or target flow
+		ac := sdk.NewPineconeAdminClient()
+
+		// There should only be one organization listed for a service account
+		orgs, err := ac.Organization.List(ctx)
+		if err != nil {
+			log.Error().Err(err).Msg("Error listing service account organizations")
+			exit.Error(pcio.Errorf("Error listing service account organizations: %w", err))
+		}
+
+		if len(orgs) == 0 {
+			log.Error().Msg("No organizations found for service account")
+			exit.ErrorMsg("No organizations found for service account")
+		}
+
+		targetOrg := orgs[0]
+
+		state.TargetOrg.Set(state.TargetOrganization{
+			Name: targetOrg.Name,
+			Id:   targetOrg.Id,
+		})
+		if !opts.json {
+			msg.SuccessMsg("Target organization set to %s", style.Emphasis(targetOrg.Name))
+		}
+
+		// List projects, and allow the user to pick one, or match the project-id if provided through the command
+		projects, err := ac.Project.List(ctx)
+		if err != nil {
+			log.Error().Err(err).Msg("Error listing projects for service account")
+			exit.Error(pcio.Errorf("Error listing projects for service account: %w", err))
+		}
+
+		var targetProject *pinecone.Project
+
+		//  If the user has no projects, they can create one by running the project create command
+		if len(projects) == 0 {
+			log.Info().Msg("No projects found for service account")
+			exit.SuccessMsg(pcio.Sprintf("No projects found for service account, you can create a project by running %s", style.Code("pc project create")))
+		}
+
+		// If the user has one project, set it as the target project
+		if len(projects) == 1 {
+			targetProject = projects[0]
+			state.TargetProj.Set(state.TargetProject{
+				Name: targetProject.Name,
+				Id:   targetProject.Id,
+			})
+			if !opts.json {
+				msg.SuccessMsg("Target project set to %s", style.Emphasis(targetProject.Name))
+			}
+			exit.Success()
+		}
+
+		// If there are multiple projects, select based on project-id, or allow the user to select one
+		if opts.projectId != "" {
+			for _, project := range projects {
+				if project.Id == opts.projectId {
+					targetProject = project
+					break
+				}
+			}
+		} else {
+			targetProject = uiProjectSelector(projects)
+		}
+
+		state.TargetProj.Set(state.TargetProject{
+			Name: targetProject.Name,
+			Id:   targetProject.Id,
+		})
+		if !opts.json {
+			msg.SuccessMsg("Target project set to %s", style.Emphasis(targetProject.Name))
+		}
+
+		// Update target credentials context
+		state.TargetCreds.Set(state.TargetUser{
+			AuthContext: state.AuthServiceAccount,
+			Email:       "",
+		})
+
+		// Log out and clear oauth2 token if previously logged in and we've configured a service account
+		oauth2Token := secrets.GetOAuth2Token()
+		if oauth2Token.AccessToken != "" {
+			oauth.Logout()
+		}
+	}
+
+	// If a global API key has been configured store it and update the target credentials context
+	// This will override the AuthContext: state.AuthServiceAccount if set previously
+	if globalAPIKey != "" {
+		secrets.GlobalApiKey.Set(globalAPIKey)
+		state.TargetCreds.Set(state.TargetUser{
+			AuthContext: state.AuthGlobalAPIKey,
+			// Redact API key for presentational layer
+			GlobalAPIKey: presenters.MaskHeadTail(globalAPIKey, 4, 4),
+			Email:        "",
+		})
+	}
+
+	// Output JSON if the option was passed
+	if opts.json {
+		json := text.IndentJSON(state.GetTargetContext())
+		pcio.Println(json)
+		return
+	}
+
+	pcio.Println()
+	presenters.PrintTargetContext(state.GetTargetContext())
 }
 
 func ioReadAll(r io.Reader) ([]byte, error) {
@@ -118,4 +261,32 @@ func isTerminal(f *os.File) bool {
 		return false
 	}
 	return term.IsTerminal(int(f.Fd()))
+}
+
+func uiProjectSelector(projects []*pinecone.Project) *pinecone.Project {
+	var targetProject *pinecone.Project
+	var targetProjectName string
+
+	projectItems := []string{}
+	projectMap := make(map[string]*pinecone.Project)
+	for _, project := range projects {
+		projectItems = append(projectItems, project.Name)
+		projectMap[project.Name] = project
+	}
+
+	m2 := prompt.NewList(projectItems, len(projectItems)+6, "Choose a project to target", func() {
+		pcio.Println("Exiting without targeting a project.")
+		pcio.Printf("You can always run %s to set or change a project context later.\n", style.Code("pc target"))
+		exit.Success()
+	}, func(choice string) string {
+		targetProjectName = choice
+		return "Target project: " + choice
+	})
+	if _, err := tea.NewProgram(m2).Run(); err != nil {
+		pcio.Println("Error running program:", err)
+		os.Exit(1)
+	}
+
+	targetProject = projectMap[targetProjectName]
+	return targetProject
 }

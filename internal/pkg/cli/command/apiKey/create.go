@@ -2,6 +2,7 @@ package apiKey
 
 import (
 	"github.com/MakeNowJust/heredoc"
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -18,6 +19,7 @@ import (
 type CreateApiKeyOptions struct {
 	projectId string
 	name      string
+	store     bool
 	roles     []string
 	json      bool
 }
@@ -46,6 +48,12 @@ func NewCreateApiKeyCmd() *cobra.Command {
 				}
 			}
 
+			targetOrgId, err := state.GetTargetOrgId()
+			if err != nil {
+				msg.FailMsg("Failed to get target organization ID: %s", err)
+				exit.Error(err)
+			}
+
 			// Only set non-empty values
 			createParams := &pinecone.CreateAPIKeyParams{}
 			if options.name != "" {
@@ -71,6 +79,30 @@ func NewCreateApiKeyCmd() *cobra.Command {
 				msg.SuccessMsg("API Key %s created successfully.\n", style.Emphasis(keyWithSecret.Key.Name))
 				presenters.PrintDescribeAPIKeyWithSecretTable(keyWithSecret)
 			}
+
+			// If the user requested to store the key locally
+			if options.store {
+				// If a key for the project is already stored locally, delete it if its CLI managed
+				managedKey, ok := secrets.GetProjectManagedKey(keyWithSecret.Key.ProjectId)
+				if ok && managedKey.Origin == secrets.OriginCLICreated {
+					err := ac.APIKey.Delete(cmd.Context(), managedKey.Id)
+					if err != nil {
+						msg.FailMsg("Failed to delete previously managed API key: %s, %+v", style.Emphasis(managedKey.Id), err)
+					}
+					msg.SuccessMsg("Deleted previously managed API key: %s", style.Emphasis(managedKey.Id))
+				}
+
+				// Store the new key
+				msg.SuccessMsg("Storing key %s locally for future CLI operations", style.Emphasis(keyWithSecret.Key.Name))
+				secrets.SetProjectManagedKey(secrets.ManagedKey{
+					Name:           keyWithSecret.Key.Name,
+					Id:             keyWithSecret.Key.Id,
+					Value:          keyWithSecret.Value,
+					ProjectId:      keyWithSecret.Key.ProjectId,
+					OrganizationId: targetOrgId,
+					Origin:         secrets.OriginUserCreated,
+				})
+			}
 		},
 	}
 
@@ -80,6 +112,7 @@ func NewCreateApiKeyCmd() *cobra.Command {
 
 	// optional flags
 	cmd.Flags().StringVarP(&options.projectId, "id", "i", "", "ID of the project to create the key for if not the target project")
+	cmd.Flags().BoolVar(&options.store, "store", false, "Stores the created key locally so it can be used for future CLI operations")
 	cmd.Flags().StringSliceVar(&options.roles, "roles", []string{}, "Roles to assign to the key. The default is 'ProjectEditor'")
 	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 

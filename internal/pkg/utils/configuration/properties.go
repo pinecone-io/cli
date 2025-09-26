@@ -43,7 +43,7 @@ func (c ConfigProperty[T]) Clear() {
 }
 
 type MarshaledProperty[T any] struct {
-	DefaultValue *T
+	DefaultValue T
 	KeyName      string
 	ViperStore   *viper.Viper
 }
@@ -57,7 +57,7 @@ func (c MarshaledProperty[T]) Init() {
 	c.ViperStore.SetDefault(c.KeyName, string(bytes))
 }
 
-func (c MarshaledProperty[T]) Set(value *T) {
+func (c MarshaledProperty[T]) Set(value T) {
 	log.Trace().Str("key", c.KeyName).Msg("Setting value for property")
 	bytes, err := json.Marshal(value)
 	if err != nil {
@@ -72,9 +72,13 @@ func (c MarshaledProperty[T]) Set(value *T) {
 
 func (c MarshaledProperty[T]) Get() T {
 	log.Trace().Str("key", c.KeyName).Msg("Reading value for property")
-	bytes := []byte(c.ViperStore.GetString(c.KeyName))
+	str := c.ViperStore.GetString(c.KeyName)
+	if str == "" {
+		return c.DefaultValue
+	}
+
 	var value T
-	err := json.Unmarshal(bytes, &value)
+	err := json.Unmarshal([]byte(str), &value)
 	if err != nil {
 		exit.Error(err)
 	}
