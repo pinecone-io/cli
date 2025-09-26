@@ -2,19 +2,15 @@ package index
 
 import (
 	"context"
-	"os"
+	"fmt"
 	"sort"
-	"strings"
-	"text/tabwriter"
 
+	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
-	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
-
-	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 )
 
 type ListIndexCmdOptions struct {
@@ -33,7 +29,7 @@ func NewListCmd() *cobra.Command {
 
 			idxs, err := pc.ListIndexes(ctx)
 			if err != nil {
-				msg.FailMsg("Failed to list indexes: %s\n", err)
+				errorutil.HandleIndexAPIError(err, cmd, []string{})
 				exit.Error(err)
 			}
 
@@ -43,10 +39,16 @@ func NewListCmd() *cobra.Command {
 			})
 
 			if options.json {
+				// Use fmt for data output - should not be suppressed by -q flag
 				json := text.IndentJSON(idxs)
-				pcio.Println(json)
+				fmt.Println(json)
 			} else {
-				printTable(idxs)
+				// Show essential and state information
+				// Note: presenters functions now use fmt internally for data output
+				presenters.PrintIndexTableWithIndexAttributesGroups(idxs, []presenters.IndexAttributesGroup{
+					presenters.IndexAttributesGroupEssential,
+					presenters.IndexAttributesGroupState,
+				})
 			}
 		},
 	}
@@ -54,29 +56,4 @@ func NewListCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	return cmd
-}
-
-func printTable(idxs []*pinecone.Index) {
-	writer := tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
-
-	columns := []string{"NAME", "STATUS", "HOST", "DIMENSION", "METRIC", "SPEC"}
-	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
-
-	for _, idx := range idxs {
-		dimension := "nil"
-		if idx.Dimension != nil {
-			dimension = pcio.Sprintf("%d", *idx.Dimension)
-		}
-		if idx.Spec.Serverless == nil {
-			// Pod index
-			values := []string{idx.Name, string(idx.Status.State), idx.Host, dimension, string(idx.Metric), "pod"}
-			pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
-		} else {
-			// Serverless index
-			values := []string{idx.Name, string(idx.Status.State), idx.Host, dimension, string(idx.Metric), "serverless"}
-			pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
-		}
-	}
-	writer.Flush()
 }

@@ -23,7 +23,8 @@ import (
 var rootCmd *cobra.Command
 
 type GlobalOptions struct {
-	quiet bool
+	quiet   bool
+	verbose bool
 }
 
 func Execute() {
@@ -53,6 +54,8 @@ Get started by logging in with
   %s
 		`, style.CodeWithPrompt("pc login")),
 	}
+
+	rootCmd.SetErrPrefix("\r")
 
 	rootCmd.SetUsageTemplate(help.HelpTemplate)
 
@@ -87,4 +90,5 @@ Get started by logging in with
 
 	// Global flags
 	rootCmd.PersistentFlags().BoolVarP(&globalOptions.quiet, "quiet", "q", false, "suppress output")
+	rootCmd.PersistentFlags().BoolVarP(&globalOptions.verbose, "verbose", "V", false, "show detailed error information")
 }
