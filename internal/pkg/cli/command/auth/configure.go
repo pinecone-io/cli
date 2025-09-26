@@ -117,20 +117,14 @@ func Run(ctx context.Context, io IO, opts ConfigureCmdOptions) {
 		return
 	}
 
-	// If provided credentials are not empty, store them
+	// If client_id and client_secret are configured, we need to use the AdminClient to fetch organization and project information for the service account
 	if clientID != "" && clientSecret != "" {
 		// Clear any existing user token login
 		oauth.Logout()
 
 		secrets.ClientId.Set(clientID)
 		secrets.ClientSecret.Set(clientSecret)
-	}
-	if globalAPIKey != "" {
-		secrets.GlobalApiKey.Set(globalAPIKey)
-	}
 
-	// If client_id and client_secret are configured, we need to use the AdminClient to fetch organization and project information for the service account
-	if secrets.ClientId.Get() != "" && secrets.ClientSecret.Get() != "" {
 		// Use Admin API to fetch organization and project information for the service account
 		// so that we can set the target context, or allow the user to set it like they do through the login or target flow
 		ac := sdk.NewPineconeAdminClient()
@@ -218,9 +212,10 @@ func Run(ctx context.Context, io IO, opts ConfigureCmdOptions) {
 		}
 	}
 
-	// If a global API key has been configured, update the target credentials context
+	// If a global API key has been configured store it and update the target credentials context
 	// This will override the AuthContext: state.AuthServiceAccount if set previously
 	if globalAPIKey != "" {
+		secrets.GlobalApiKey.Set(globalAPIKey)
 		state.TargetCreds.Set(state.TargetUser{
 			AuthContext: state.AuthGlobalAPIKey,
 			Email:       "",
