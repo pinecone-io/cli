@@ -31,6 +31,7 @@ func PrintTargetContext(context *state.TargetContext) {
 	pcio.Fprintf(writer, "Organization ID\t%s\n", labelUnsetIfEmpty(string(context.Organization.Id)))
 	pcio.Fprintf(writer, "Project\t%s\n", labelUnsetIfEmpty(string(context.Project.Name)))
 	pcio.Fprintf(writer, "Project ID\t%s\n", labelUnsetIfEmpty(string(context.Project.Id)))
+	pcio.Fprintf(writer, "Global API Key\t%s\n", labelUnsetIfEmpty(string(context.Credentials.GlobalAPIKey)))
 
 	writer.Flush()
 }

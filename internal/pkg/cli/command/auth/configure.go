@@ -218,7 +218,9 @@ func Run(ctx context.Context, io IO, opts ConfigureCmdOptions) {
 		secrets.GlobalApiKey.Set(globalAPIKey)
 		state.TargetCreds.Set(state.TargetUser{
 			AuthContext: state.AuthGlobalAPIKey,
-			Email:       "",
+			// Redact API key for presentational layer
+			GlobalAPIKey: presenters.MaskHeadTail(globalAPIKey, 4, 4),
+			Email:        "",
 		})
 	}
 

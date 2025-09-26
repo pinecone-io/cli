@@ -22,8 +22,9 @@ const (
 )
 
 type TargetUser struct {
-	AuthContext AuthContext `json:"auth_context"`
-	Email       string      `json:"email"`
+	AuthContext  AuthContext `json:"auth_context"`
+	Email        string      `json:"email"`
+	GlobalAPIKey string      `json:"global_api_key"`
 }
 
 type TargetContext struct {
