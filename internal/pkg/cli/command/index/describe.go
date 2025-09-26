@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/index"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
@@ -22,9 +23,11 @@ func NewDescribeCmd() *cobra.Command {
 	options := DescribeCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "describe",
+		Use:   "describe <name>",
 		Short: "Get configuration and status information for an index",
+		Args:  index.ValidateIndexNameArgs,
 		Run: func(cmd *cobra.Command, args []string) {
+			options.name = args[0]
 			pc := sdk.NewPineconeClient()
 
 			idx, err := pc.DescribeIndex(cmd.Context(), options.name)
@@ -45,10 +48,6 @@ func NewDescribeCmd() *cobra.Command {
 			}
 		},
 	}
-
-	// required flags
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of index to describe")
-	_ = cmd.MarkFlagRequired("name")
 
 	// optional flags
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
