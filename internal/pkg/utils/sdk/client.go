@@ -178,6 +178,7 @@ func getCLIAPIKeyForProject(ctx context.Context, ac *pinecone.AdminClient, proje
 
 	managedKey = secrets.ManagedKey{
 		ProjectId:      project.Id,
+		ProjectName:    project.Name,
 		OrganizationId: project.OrganizationId,
 		Value:          newKey.Value,
 		Name:           newKeyName,

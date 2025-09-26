@@ -30,6 +30,7 @@ import (
 type ConfigureCmdOptions struct {
 	clientID            string
 	clientSecret        string
+	projectId           string
 	apiKey              string
 	readSecretFromStdin bool
 	promptIfMissing     bool
@@ -66,6 +67,7 @@ func NewConfigureCmd() *cobra.Command {
 
 	cmd.Flags().StringVar(&options.clientID, "client-id", "", "Service account client id for the Pinecone CLI")
 	cmd.Flags().StringVar(&options.clientSecret, "client-secret", "", "Service account client secret for the Pinecone CLI")
+	cmd.Flags().StringVarP(&options.projectId, "project-id", "p", "", "The id of the project to target after authenticating with service account credentials")
 	cmd.Flags().StringVar(&options.apiKey, "global-api-key", "", "Global API key override for the Pinecone CLI")
 	cmd.Flags().BoolVar(&options.readSecretFromStdin, "client-secret-stdin", false, "Read the client secret from stdin")
 	cmd.Flags().BoolVar(&options.promptIfMissing, "prompt-if-missing", false, "Prompt for missing credentials if not provided")
@@ -183,8 +185,18 @@ func Run(ctx context.Context, io IO, opts ConfigureCmdOptions) {
 			exit.Success()
 		}
 
-		// If there are multiple projects, allow the user to select one
-		targetProject = uiProjectSelector(projects)
+		// If there are multiple projects, select based on project-id, or allow the user to select one
+		if opts.projectId != "" {
+			for _, project := range projects {
+				if project.Id == opts.projectId {
+					targetProject = project
+					break
+				}
+			}
+		} else {
+			targetProject = uiProjectSelector(projects)
+		}
+
 		state.TargetProj.Set(state.TargetProject{
 			Name: targetProject.Name,
 			Id:   targetProject.Id,

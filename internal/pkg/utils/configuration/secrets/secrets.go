@@ -157,5 +157,6 @@ type ManagedKey struct {
 	Value          string           `json:"value,omitempty"`
 	Origin         ManagedKeyOrigin `json:"origin,omitempty"`
 	ProjectId      string           `json:"project_id,omitempty"`
+	ProjectName    string           `json:"project_name,omitempty"`
 	OrganizationId string           `json:"organization_id,omitempty"`
 }
