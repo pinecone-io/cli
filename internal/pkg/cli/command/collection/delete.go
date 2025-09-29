@@ -3,6 +3,8 @@ package collection
 import (
 	"context"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/collection"
+	errorutil "github.com/pinecone-io/cli/internal/pkg/utils/error"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
@@ -10,34 +12,26 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type DeleteCollectionCmdOptions struct {
-	name string
-	json bool
-}
-
 func NewDeleteCollectionCmd() *cobra.Command {
-	options := DeleteCollectionCmdOptions{}
-
 	cmd := &cobra.Command{
-		Use:   "delete",
-		Short: "Delete a collection",
+		Use:          "delete <name>",
+		Short:        "Delete a collection",
+		Args:         collection.ValidateCollectionNameArgs,
+		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {
+			collectionName := args[0]
 			ctx := context.Background()
 			pc := sdk.NewPineconeClient()
 
-			err := pc.DeleteCollection(ctx, options.name)
+			err := pc.DeleteCollection(ctx, collectionName)
 			if err != nil {
-				msg.FailMsg("Failed to delete collection %s: %s\n", style.Emphasis(options.name), err)
+				errorutil.HandleAPIError(err, cmd, args)
 				exit.Error(err)
 			}
 
-			msg.SuccessMsg("Collection %s deleted.\n", style.Emphasis(options.name))
+			msg.SuccessMsg("Collection %s deleted.\n", style.Emphasis(collectionName))
 		},
 	}
-
-	// required flags
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of collection to delete")
-	_ = cmd.MarkFlagRequired("name")
 
 	return cmd
 }
