@@ -18,9 +18,11 @@ func NewConfigCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(NewSetColorCmd())
+	cmd.AddCommand(NewSetColorSchemeCmd())
 	cmd.AddCommand(NewSetApiKeyCmd())
 	cmd.AddCommand(NewGetApiKeyCmd())
 	cmd.AddCommand(NewSetEnvCmd())
+	cmd.AddCommand(NewShowColorSchemeCmd())
 
 	return cmd
 }

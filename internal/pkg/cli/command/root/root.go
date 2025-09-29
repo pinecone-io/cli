@@ -10,6 +10,7 @@ import (
 	index "github.com/pinecone-io/cli/internal/pkg/cli/command/index"
 	login "github.com/pinecone-io/cli/internal/pkg/cli/command/login"
 	logout "github.com/pinecone-io/cli/internal/pkg/cli/command/logout"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/models"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/organization"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/project"
 	target "github.com/pinecone-io/cli/internal/pkg/cli/command/target"
@@ -23,7 +24,9 @@ import (
 var rootCmd *cobra.Command
 
 type GlobalOptions struct {
-	quiet bool
+	quiet     bool
+	verbose   bool
+	assumeYes bool
 }
 
 func Execute() {
@@ -54,6 +57,8 @@ Get started by logging in with
 		`, style.CodeWithPrompt("pc login")),
 	}
 
+	rootCmd.SetErrPrefix("\r")
+
 	rootCmd.SetUsageTemplate(help.HelpTemplate)
 
 	// Auth group
@@ -74,6 +79,7 @@ Get started by logging in with
 	rootCmd.AddGroup(help.GROUP_VECTORDB)
 	rootCmd.AddCommand(index.NewIndexCmd())
 	rootCmd.AddCommand(collection.NewCollectionCmd())
+	rootCmd.AddCommand(models.NewModelsCmd())
 
 	// Misc group
 	rootCmd.AddCommand(version.NewVersionCmd())
@@ -87,4 +93,6 @@ Get started by logging in with
 
 	// Global flags
 	rootCmd.PersistentFlags().BoolVarP(&globalOptions.quiet, "quiet", "q", false, "suppress output")
+	rootCmd.PersistentFlags().BoolVarP(&globalOptions.verbose, "verbose", "V", false, "show detailed error information")
+	rootCmd.PersistentFlags().BoolVarP(&globalOptions.assumeYes, "assume-yes", "y", false, "assume yes to all confirmation requests")
 }
