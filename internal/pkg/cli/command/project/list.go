@@ -7,7 +7,6 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -30,8 +29,8 @@ func NewListProjectsCmd() *cobra.Command {
 		Use:     "list",
 		Short:   "list all projects in the organization available to the authenticated user",
 		GroupID: help.GROUP_PROJECTS.ID,
-		Example: heredoc.Doc(`
-		$ pc project list
+		Example: help.Examples(`
+			pc project list
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()

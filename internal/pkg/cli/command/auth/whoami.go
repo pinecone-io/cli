@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
@@ -16,8 +15,8 @@ func NewWhoAmICmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "whoami",
 		Short: "See the current logged in user",
-		Example: heredoc.Doc(`
-		$ pc auth whoami
+		Example: help.Examples(`
+			pc auth whoami
 		`),
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {

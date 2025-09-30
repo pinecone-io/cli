@@ -5,7 +5,6 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/MakeNowJust/heredoc"
 	"github.com/spf13/cobra"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -27,8 +26,8 @@ func NewListOrganizationsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List all organizations available to the currently authenticated user",
-		Example: heredoc.Doc(`
-		$ pc organization list
+		Example: help.Examples(`
+			pc organization list
 		`),
 		GroupID: help.GROUP_ORGANIZATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {

@@ -9,6 +9,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
@@ -28,6 +29,9 @@ func NewListCollectionsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "See the list of collections in your project",
+		Example: help.Examples(`
+			pc collection list
+		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			pc := sdk.NewPineconeClient()
 			ctx := context.Background()

@@ -1,7 +1,6 @@
 package apiKey
 
 import (
-	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -28,8 +27,8 @@ func NewUpdateAPIKeyCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update an existing API key by ID with the specified configuration",
-		Example: heredoc.Doc(`
-		$ pc api-key update --id <api-key-id> --name <new-name> --roles <new-roles>
+		Example: help.Examples(`
+			pc api-key update --id <api-key-id> --name <new-name> --roles <new-roles>
 		`),
 		GroupID: help.GROUP_API_KEYS.ID,
 		Run: func(cmd *cobra.Command, args []string) {

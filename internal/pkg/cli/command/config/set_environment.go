@@ -18,10 +18,10 @@ func NewSetEnvCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-environment <production|staging>",
 		Short: "Configure the environment (production or staging)",
-		Example: help.Examples([]string{
-			"pc config set-environment production",
-			"pc config set-environment staging",
-		}),
+		Example: help.Examples(`
+			pc config set-environment production
+			pc config set-environment staging
+		`),
 		Hidden: false,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {

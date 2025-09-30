@@ -41,11 +41,11 @@ func init() {
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			pcio.SetQuiet(globalOptions.quiet)
 		},
-		Example: help.Examples([]string{
-			"pc login",
-			"pc target",
-			"pc index create-serverless --help",
-		}),
+		Example: help.Examples(`
+		    pc login
+			pc target
+			pc index create-serverless --help
+		`),
 		Long: pcio.Sprintf(`pc is a CLI tool for managing your Pinecone resources
 
 Get started by logging in with

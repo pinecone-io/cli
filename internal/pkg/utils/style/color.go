@@ -17,6 +17,10 @@ func applyStyle(s string, c color.Attribute) string {
 	return colored(s)
 }
 
+func Faint(s string) string {
+	return applyStyle(s, color.Faint)
+}
+
 func CodeWithPrompt(s string) string {
 	return (applyStyle("$ ", color.Faint) + applyColor(s, color.New(color.FgMagenta, color.Bold)))
 }

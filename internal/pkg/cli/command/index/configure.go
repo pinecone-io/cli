@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
@@ -27,9 +28,11 @@ func NewConfigureIndexCmd() *cobra.Command {
 	options := configureIndexOptions{}
 
 	cmd := &cobra.Command{
-		Use:     "configure",
-		Short:   "Configure an existing index with the specified configuration",
-		Example: "",
+		Use:   "configure",
+		Short: "Configure an existing index with the specified configuration",
+		Example: help.Examples(`
+			pc index configure --name my-index --deletion-protection enabled
+		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runConfigureIndexCmd(options)
 		},

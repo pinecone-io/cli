@@ -3,7 +3,6 @@ package auth
 import (
 	"time"
 
-	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
@@ -26,8 +25,8 @@ func NewCmdAuthStatus() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
 		Short: "Show the current authentication status of the Pinecone CLI",
-		Example: heredoc.Doc(`
-		$ pc auth status --json
+		Example: help.Examples(`
+			pc auth status --json
 		`),
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {

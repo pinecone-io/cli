@@ -1,7 +1,6 @@
 package organization
 
 import (
-	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -25,8 +24,8 @@ func NewDescribeOrganizationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe",
 		Short: "Describe an organization by ID or the target organization",
-		Example: heredoc.Doc(`
-		$ pc organization describe -i <organization-id>
+		Example: help.Examples(`
+			pc organization describe --id <organization-id>
 		`),
 		GroupID: help.GROUP_ORGANIZATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {

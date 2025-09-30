@@ -1,7 +1,6 @@
 package index
 
 import (
-	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -17,7 +16,7 @@ func NewIndexCmd() *cobra.Command {
 		Use:   "index",
 		Short: "Work with indexes",
 		Long:  helpText,
-		Example: heredoc.Doc(`
+		Example: help.Examples(`
 			$ pc index list
 			$ pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1
 			$ pc index describe --name my-index

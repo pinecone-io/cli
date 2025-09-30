@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -29,9 +28,9 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete an organization by ID",
-		Example: heredoc.Doc(`
-		$ pc organization delete -i <organization-id>
-		$ pc organization delete -i <organization-id> --skip-confirmation
+		Example: help.Examples(`
+			pc organization delete --id <organization-id>
+			pc organization delete --id <organization-id> --skip-confirmation
 		`),
 		GroupID: help.GROUP_ORGANIZATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {

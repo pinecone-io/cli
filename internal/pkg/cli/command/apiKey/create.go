@@ -1,7 +1,6 @@
 package apiKey
 
 import (
-	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -31,9 +30,9 @@ func NewCreateApiKeyCmd() *cobra.Command {
 		Use:     "create",
 		Short:   "Create an API key for a specific project by ID or the target project",
 		GroupID: help.GROUP_API_KEYS.ID,
-		Example: heredoc.Doc(`
-		$ pc target -o "my-org" -p "my-project"
-		$ pc api-key create -n "my-key" 
+		Example: help.Examples(`
+			pc target -o "my-org" -p "my-project"
+			pc api-key create -n "my-key" 
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()

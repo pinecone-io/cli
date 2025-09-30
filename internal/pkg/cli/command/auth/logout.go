@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -12,9 +11,9 @@ import (
 func NewLogoutCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "logout",
-		Short: "Delete all saved tokens and keys",
-		Example: heredoc.Doc(`
-		$ pc auth logout
+		Short: "Clear your authentication credentials, and delete all saved tokens and keys",
+		Example: help.Examples(`
+			pc auth logout
 		`),
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {

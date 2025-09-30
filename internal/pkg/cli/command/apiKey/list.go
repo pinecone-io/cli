@@ -4,7 +4,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -29,9 +28,9 @@ func NewListKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List the API keys in a specific project by ID or the target project",
-		Example: heredoc.Doc(`
-		$ pc target -o "my-org" -p "my-project"
-		$ pc api-key list
+		Example: help.Examples(`
+			pc target -o "my-org" -p "my-project"
+			pc api-key list
 		`),
 		GroupID: help.GROUP_API_KEYS.ID,
 		Run: func(cmd *cobra.Command, args []string) {

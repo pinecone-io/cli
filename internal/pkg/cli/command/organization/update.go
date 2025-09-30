@@ -1,7 +1,6 @@
 package organization
 
 import (
-	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -28,8 +27,8 @@ func NewUpdateOrganizationCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update an existing organization by ID or the target organization with the specified configuration",
-		Example: heredoc.Doc(`
-		$ pc organization update -i <organization-id> --n <new-name>
+		Example: help.Examples(`
+			pc organization update --id <organization-id> --name <new-name>
 		`),
 		GroupID: help.GROUP_ORGANIZATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {

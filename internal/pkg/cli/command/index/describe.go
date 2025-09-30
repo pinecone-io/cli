@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
@@ -24,6 +25,9 @@ func NewDescribeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe",
 		Short: "Get configuration and status information for an index",
+		Example: help.Examples(`
+			pc index describe --name my-index
+		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			pc := sdk.NewPineconeClient()
 

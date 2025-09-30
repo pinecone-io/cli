@@ -1,7 +1,6 @@
 package apiKey
 
 import (
-	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -24,8 +23,8 @@ func NewDescribeAPIKeyCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe",
 		Short: "Describe an API key by ID",
-		Example: heredoc.Doc(`
-		$ pc api-key describe -i <api-key-id>
+		Example: help.Examples(`
+			pc api-key describe -i <api-key-id>
 		`),
 		GroupID: help.GROUP_API_KEYS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
