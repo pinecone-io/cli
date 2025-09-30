@@ -44,7 +44,7 @@ func init() {
 		Example: help.Examples(`
 		    pc login
 			pc target
-			pc index create-serverless --help
+			pc index create --help
 		`),
 		Long: pcio.Sprintf(`pc is a CLI tool for managing your Pinecone resources
 

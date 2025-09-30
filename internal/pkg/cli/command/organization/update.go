@@ -28,7 +28,7 @@ func NewUpdateOrganizationCmd() *cobra.Command {
 		Use:   "update",
 		Short: "Update an existing organization by ID or the target organization with the specified configuration",
 		Example: help.Examples(`
-			pc organization update --id <organization-id> --name <new-name>
+			pc organization update --id "organization-id" --name "new-name"
 		`),
 		GroupID: help.GROUP_ORGANIZATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {

@@ -21,9 +21,9 @@ func NewDeleteCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "delete",
-		Short: "Delete an index",
+		Short: "Delete an index by name",
 		Example: help.Examples(`
-			pc index delete --name my-index
+			pc index delete --name "index-name"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()

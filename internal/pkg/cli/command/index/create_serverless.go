@@ -34,7 +34,7 @@ func NewCreateServerlessCmd() *cobra.Command {
 		Use:   "create-serverless",
 		Short: "Create a serverless index with the specified configuration",
 		Example: help.Examples(`
-			pc index create-serverless --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1
+			pc index create-serverless --name "my-index" --dimension 1536 --metric "cosine" --cloud "aws" --region "us-east-1"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runCreateServerlessCmd(options)

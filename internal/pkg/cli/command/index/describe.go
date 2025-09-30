@@ -24,9 +24,9 @@ func NewDescribeCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "describe",
-		Short: "Get configuration and status information for an index",
+		Short: "Get configuration and status information for an index by name",
 		Example: help.Examples(`
-			pc index describe --name my-index
+			pc index describe --name "index-name"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			pc := sdk.NewPineconeClient()

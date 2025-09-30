@@ -25,7 +25,7 @@ func NewDescribeOrganizationCmd() *cobra.Command {
 		Use:   "describe",
 		Short: "Describe an organization by ID or the target organization",
 		Example: help.Examples(`
-			pc organization describe --id <organization-id>
+			pc organization describe --id "organization-id"
 		`),
 		GroupID: help.GROUP_ORGANIZATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {

@@ -29,7 +29,7 @@ func NewDeleteKeyCmd() *cobra.Command {
 		Short:   "Delete an API key by ID",
 		GroupID: help.GROUP_API_KEYS.ID,
 		Example: help.Examples(`
-			pc api-key delete -i "api-key-id" 
+			pc api-key delete --id "api-key-id" 
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()

@@ -28,7 +28,7 @@ func NewDescribeProjectCmd() *cobra.Command {
 		Short:   "Describe a specific project by ID or the target project",
 		GroupID: help.GROUP_PROJECTS.ID,
 		Example: help.Examples(`
-			pc project describe --id <project-id>
+			pc project describe --id "project-id"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()

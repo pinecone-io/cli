@@ -30,7 +30,11 @@ func NewDeleteProjectCmd() *cobra.Command {
 		Use:   "delete",
 		Short: "Delete a specific project by ID or the target project",
 		Example: help.Examples(`
-			pc project delete --id <project-id>
+			# Delete the target project
+			pc project delete
+
+			# Delete a specific project by ID
+			pc project delete --id "project-id"
 		`),
 		GroupID: help.GROUP_PROJECTS.ID,
 		Run: func(cmd *cobra.Command, args []string) {

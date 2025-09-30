@@ -23,9 +23,9 @@ func NewDescribeCollectionCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "describe",
-		Short: "Get information on a collection",
+		Short: "Describe a collection by name",
 		Example: help.Examples(`
-			pc collection describe --name my-collection
+			pc collection describe --name "collection-name"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()

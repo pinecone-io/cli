@@ -19,8 +19,8 @@ func NewSetEnvCmd() *cobra.Command {
 		Use:   "set-environment <production|staging>",
 		Short: "Configure the environment (production or staging)",
 		Example: help.Examples(`
-			pc config set-environment production
-			pc config set-environment staging
+			pc config set-environment "production"
+			pc config set-environment "staging"
 		`),
 		Hidden: false,
 		Run: func(cmd *cobra.Command, args []string) {

@@ -29,8 +29,12 @@ func NewListKeysCmd() *cobra.Command {
 		Use:   "list",
 		Short: "List the API keys in a specific project by ID or the target project",
 		Example: help.Examples(`
-			pc target -o "my-org" -p "my-project"
+			# List API keys for the target project
+			pc target --org "org-name" --project "project-name"
 			pc api-key list
+
+			# List API keys for a specific project
+			pc api-key list --id "project-id"
 		`),
 		GroupID: help.GROUP_API_KEYS.ID,
 		Run: func(cmd *cobra.Command, args []string) {

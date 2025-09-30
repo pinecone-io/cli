@@ -13,7 +13,6 @@ import (
 
 type DeleteCollectionCmdOptions struct {
 	name string
-	json bool
 }
 
 func NewDeleteCollectionCmd() *cobra.Command {
@@ -23,7 +22,7 @@ func NewDeleteCollectionCmd() *cobra.Command {
 		Use:   "delete",
 		Short: "Delete a collection",
 		Example: help.Examples(`
-			pc collection delete --name my-collection
+			pc collection delete --name "collection-name"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()

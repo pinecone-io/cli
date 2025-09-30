@@ -32,7 +32,6 @@ func NewCreateProjectCmd() *cobra.Command {
 		Short:   "Create a project for the target organization determined by user credentials",
 		GroupID: help.GROUP_PROJECTS.ID,
 		Example: help.Examples(`
-			pc target -o "my-organization-name"
 			pc project create --name "demo-project" --max-pods 10 --force-encryption
 		`),
 		Run: func(cmd *cobra.Command, args []string) {

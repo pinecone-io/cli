@@ -31,8 +31,12 @@ func NewCreateApiKeyCmd() *cobra.Command {
 		Short:   "Create an API key for a specific project by ID or the target project",
 		GroupID: help.GROUP_API_KEYS.ID,
 		Example: help.Examples(`
-			pc target -o "my-org" -p "my-project"
-			pc api-key create -n "my-key" 
+		    # Create a new API key for the target project
+			pc target --org "org-name" --project "project-name"
+			pc api-key create --name "key-name" 
+
+			# Create a new API key for a specific project
+			pc api-key create --id "project-id" --name "key-name"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()

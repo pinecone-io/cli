@@ -13,7 +13,7 @@ func NewSetApiKeyCmd() *cobra.Command {
 		Use:   "set-api-key",
 		Short: "Manually set the global API key for the Pinecone CLI",
 		Example: help.Examples(`
-		    pc config set-api-key <api-key>
+		    pc config set-api-key "api-key-value"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			newApiKey := args[0]

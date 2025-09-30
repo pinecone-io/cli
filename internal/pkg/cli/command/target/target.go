@@ -58,10 +58,10 @@ func NewTargetCmd() *cobra.Command {
 			pc target
 
 			# Target an organization and project by name
-			pc target -o <organization-name> -p <project-name>
+			pc target --org "organization-name" -project "project-name"
 
 			# Target a project by name
-			pc target -p <project-name>
+			pc target --project "project-name"
 		`),
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {

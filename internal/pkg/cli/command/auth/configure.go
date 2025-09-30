@@ -44,10 +44,10 @@ func NewConfigureCmd() *cobra.Command {
 		Short: "Configure authentication credentials for the Pinecone CLI",
 		Example: help.Examples(`
 			# Configure service account credentials
-			pc auth configure --client-id <client-id> --client-secret <client-secret>
+			pc auth configure --client-id "client-id" --client-secret "client-secret"
 
 			# Configure global API key
-			pc auth configure --global-api-key <global-api-key>
+			pc auth configure --global-api-key "global-api-key"
 		`),
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {

@@ -29,7 +29,7 @@ func NewCreateCollectionCmd() *cobra.Command {
 		Use:   "create",
 		Short: "Create a collection from a pod-based index",
 		Example: help.Examples(`
-			pc collection create --name my-collection --source my-index
+			pc collection create --name "collection-name" --source "index-source-name"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			pc := sdk.NewPineconeClient()

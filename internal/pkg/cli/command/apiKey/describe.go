@@ -24,7 +24,7 @@ func NewDescribeAPIKeyCmd() *cobra.Command {
 		Use:   "describe",
 		Short: "Describe an API key by ID",
 		Example: help.Examples(`
-			pc api-key describe -i <api-key-id>
+			pc api-key describe --id "api-key-id"
 		`),
 		GroupID: help.GROUP_API_KEYS.ID,
 		Run: func(cmd *cobra.Command, args []string) {

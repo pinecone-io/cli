@@ -38,7 +38,7 @@ func NewCreatePodCmd() *cobra.Command {
 		Use:   "create-pod",
 		Short: "Create a pod index with the specified configuration",
 		Example: help.Examples(`
-			pc index create-pod --name my-index --dimension 1536 --metric cosine --environment us-east-1-aws --pod-type p1.x1 --shards 2 --replicas 2
+			pc index create-pod --name "my-index" --dimension 1536 --metric "cosine" --environment "us-east-1-aws" --pod-type "p1.x1" --shards 2 --replicas 2
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runCreatePodCmd(options)
