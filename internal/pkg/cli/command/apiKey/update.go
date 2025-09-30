@@ -39,7 +39,7 @@ func NewUpdateAPIKeyCmd() *cobra.Command {
 			if options.name != "" {
 				updateParams.Name = &options.name
 			}
-			if options.roles != nil {
+			if len(options.roles) > 0 {
 				updateParams.Roles = &options.roles
 			}
 

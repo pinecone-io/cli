@@ -62,7 +62,7 @@ func NewCreateApiKeyCmd() *cobra.Command {
 			if options.name != "" {
 				createParams.Name = options.name
 			}
-			if options.roles != nil {
+			if len(options.roles) > 0 {
 				createParams.Roles = &options.roles
 			} else {
 				// Default to 'ProjectEditor' role if no roles are provided
