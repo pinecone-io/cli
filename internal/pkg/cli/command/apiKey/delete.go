@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -29,9 +28,8 @@ func NewDeleteKeyCmd() *cobra.Command {
 		Use:     "delete",
 		Short:   "Delete an API key by ID",
 		GroupID: help.GROUP_API_KEYS.ID,
-		Example: heredoc.Doc(`
-		$ pc target -o "my-org" -p "my-project"
-		$ pc api-key delete -i "api-key-id" 
+		Example: help.Examples(`
+			pc api-key delete --id "api-key-id" 
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()

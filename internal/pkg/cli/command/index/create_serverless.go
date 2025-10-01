@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
@@ -32,6 +33,9 @@ func NewCreateServerlessCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-serverless",
 		Short: "Create a serverless index with the specified configuration",
+		Example: help.Examples(`
+			pc index create-serverless --name "my-index" --dimension 1536 --metric "cosine" --cloud "aws" --region "us-east-1"
+		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runCreateServerlessCmd(options)
 		},

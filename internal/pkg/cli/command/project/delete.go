@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -30,8 +29,12 @@ func NewDeleteProjectCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete a specific project by ID or the target project",
-		Example: heredoc.Doc(`
-		$ pc project delete -i <project-id>
+		Example: help.Examples(`
+			# Delete the target project
+			pc project delete
+
+			# Delete a specific project by ID
+			pc project delete --id "project-id"
 		`),
 		GroupID: help.GROUP_PROJECTS.ID,
 		Run: func(cmd *cobra.Command, args []string) {

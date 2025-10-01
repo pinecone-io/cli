@@ -3,7 +3,6 @@ package project
 import (
 	"context"
 
-	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -32,8 +31,8 @@ func NewUpdateProjectCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update an existing project by ID or the target project with the specified configuration",
-		Example: heredoc.Doc(`
-		$ pc project update --id <project-id> --name <new-name> --max-pods <new-max-pods>
+		Example: help.Examples(`
+			pc project update --id "project-id" --name "new-name" --max-pods 5
 		`),
 		GroupID: help.GROUP_PROJECTS.ID,
 		Run: func(cmd *cobra.Command, args []string) {

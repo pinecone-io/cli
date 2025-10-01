@@ -3,7 +3,6 @@ package project
 import (
 	"context"
 
-	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -32,9 +31,8 @@ func NewCreateProjectCmd() *cobra.Command {
 		Use:     "create",
 		Short:   "Create a project for the target organization determined by user credentials",
 		GroupID: help.GROUP_PROJECTS.ID,
-		Example: heredoc.Doc(`
-		$ pc target -o "my-organization-name"
-		$ pc project create --name "demo-project" --max-pods 10 --force-encryption
+		Example: help.Examples(`
+			pc project create --name "demo-project" --max-pods 10 --force-encryption
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()

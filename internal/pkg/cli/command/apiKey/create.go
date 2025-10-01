@@ -1,7 +1,6 @@
 package apiKey
 
 import (
-	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -31,9 +30,13 @@ func NewCreateApiKeyCmd() *cobra.Command {
 		Use:     "create",
 		Short:   "Create an API key for a specific project by ID or the target project",
 		GroupID: help.GROUP_API_KEYS.ID,
-		Example: heredoc.Doc(`
-		$ pc target -o "my-org" -p "my-project"
-		$ pc api-key create -n "my-key" 
+		Example: help.Examples(`
+		    # Create a new API key for the target project
+			pc target --org "org-name" --project "project-name"
+			pc api-key create --name "key-name" 
+
+			# Create a new API key for a specific project
+			pc api-key create --id "project-id" --name "key-name"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()
@@ -59,7 +62,7 @@ func NewCreateApiKeyCmd() *cobra.Command {
 			if options.name != "" {
 				createParams.Name = options.name
 			}
-			if options.roles != nil {
+			if len(options.roles) > 0 {
 				createParams.Roles = &options.roles
 			} else {
 				// Default to 'ProjectEditor' role if no roles are provided

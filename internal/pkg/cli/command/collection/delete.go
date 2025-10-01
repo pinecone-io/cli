@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -12,7 +13,6 @@ import (
 
 type DeleteCollectionCmdOptions struct {
 	name string
-	json bool
 }
 
 func NewDeleteCollectionCmd() *cobra.Command {
@@ -21,6 +21,9 @@ func NewDeleteCollectionCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete a collection",
+		Example: help.Examples(`
+			pc collection delete --name "collection-name"
+		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()
 			pc := sdk.NewPineconeClient()

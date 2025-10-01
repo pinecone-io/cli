@@ -14,10 +14,10 @@ func NewSetColorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-color",
 		Short: "Configure whether the CLI prints output with color",
-		Example: help.Examples([]string{
-			"pc config set-color true",
-			"pc config set-color false",
-		}),
+		Example: help.Examples(`
+			pc config set-color true
+			pc config set-color false
+		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 				msg.FailMsg("Please provide a value for color. Accepted values are 'true', 'false'")

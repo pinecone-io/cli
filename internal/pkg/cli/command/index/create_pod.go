@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
@@ -34,9 +35,11 @@ func NewCreatePodCmd() *cobra.Command {
 	options := createPodOptions{}
 
 	cmd := &cobra.Command{
-		Use:     "create-pod",
-		Short:   "Create a pod index with the specified configuration",
-		Example: "",
+		Use:   "create-pod",
+		Short: "Create a pod index with the specified configuration",
+		Example: help.Examples(`
+			pc index create-pod --name "my-index" --dimension 1536 --metric "cosine" --environment "us-east-1-aws" --pod-type "p1.x1" --shards 2 --replicas 2
+		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runCreatePodCmd(options)
 		},

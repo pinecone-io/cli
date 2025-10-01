@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
@@ -22,7 +23,10 @@ func NewDescribeCollectionCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "describe",
-		Short: "Get information on a collection",
+		Short: "Describe a collection by name",
+		Example: help.Examples(`
+			pc collection describe --name "collection-name"
+		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()
 			pc := sdk.NewPineconeClient()

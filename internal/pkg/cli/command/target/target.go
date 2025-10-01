@@ -50,9 +50,19 @@ func NewTargetCmd() *cobra.Command {
 	options := TargetCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:     "target <flags>",
-		Short:   "Set context for the CLI",
-		Long:    targetHelp,
+		Use:   "target <flags>",
+		Short: "Set context for the CLI",
+		Long:  targetHelp,
+		Example: help.Examples(`
+			# Interactively target from available organizations and projects
+			pc target
+
+			# Target an organization and project by name
+			pc target --org "organization-name" -project "project-name"
+
+			# Target a project by name
+			pc target --project "project-name"
+		`),
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debug().

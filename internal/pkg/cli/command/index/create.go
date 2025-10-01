@@ -6,6 +6,7 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/docslinks"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
+	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
@@ -78,15 +79,15 @@ func NewCreateIndexCmd() *cobra.Command {
 		For detailed documentation, see:
 		%s
 		`, style.Code("pc index create"), style.URL(docslinks.DocsIndexCreate)),
-		Example: heredoc.Doc(`
-		# create a serverless index
-		$ pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1
+		Example: help.Examples(`
+			# create a serverless index
+			pc index create --name "my-index" --dimension 1536 --metric "cosine" --cloud "aws" --region "us-east-1"
 
-		# create a pod index
-		$ pc index create --name my-index --dimension 1536 --metric cosine --environment us-east-1-aws --pod-type p1.x1 --shards 2 --replicas 2
+			# create a pod index
+			pc index create --name "my-index" --dimension 1536 --metric "cosine" --environment "us-east-1-aws" --pod-type "p1.x1" --shards 2 --replicas 2
 
-		# create an integrated index
-		$ pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1 --model multilingual-e5-large --field_map text=chunk_text
+			# create an integrated index
+			pc index create --name "my-index" --dimension 1536 --metric "cosine" --cloud "aws" --region "us-east-1" --model "multilingual-e5-large" --field_map "text=chunk_text"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runCreateIndexCmd(options)
