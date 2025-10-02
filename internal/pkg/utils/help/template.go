@@ -26,7 +26,7 @@ var part2 = fmt.Sprintf(`
 {{.NameAndAliases}}{{end}}{{if .HasExample}}
 
 %s
-{{.Example}}{{end}}{{if .HasAvailableSubCommands}}{{$cmds := .Commands}}{{if eq (len .Groups) 0}}
+{{pcExamples .Example}}{{end}}{{if .HasAvailableSubCommands}}{{$cmds := .Commands}}{{if eq (len .Groups) 0}}
 
 `, style.Heading("Aliases"), style.Heading("Examples"))
 

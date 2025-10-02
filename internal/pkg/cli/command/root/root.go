@@ -1,19 +1,19 @@
-package pinecone
+package root
 
 import (
 	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/apiKey"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/auth"
-	collection "github.com/pinecone-io/cli/internal/pkg/cli/command/collection"
-	configCmd "github.com/pinecone-io/cli/internal/pkg/cli/command/config"
-	index "github.com/pinecone-io/cli/internal/pkg/cli/command/index"
-	login "github.com/pinecone-io/cli/internal/pkg/cli/command/login"
-	logout "github.com/pinecone-io/cli/internal/pkg/cli/command/logout"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/collection"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/config"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/index"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/login"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/logout"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/organization"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/project"
-	target "github.com/pinecone-io/cli/internal/pkg/cli/command/target"
-	version "github.com/pinecone-io/cli/internal/pkg/cli/command/version"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/target"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/version"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -31,6 +31,10 @@ func Execute() {
 	if err != nil {
 		os.Exit(1)
 	}
+}
+
+func GetRootCmd() *cobra.Command {
+	return rootCmd
 }
 
 func init() {
@@ -54,7 +58,8 @@ Get started by logging in with
 		`, style.CodeWithPrompt("pc login")),
 	}
 
-	rootCmd.SetUsageTemplate(help.HelpTemplate)
+	rootCmd.SetHelpTemplate(help.HelpTemplate)
+	help.EnableColorizedHelp(rootCmd)
 
 	// Auth group
 	rootCmd.AddGroup(help.GROUP_AUTH)
@@ -77,7 +82,7 @@ Get started by logging in with
 
 	// Misc group
 	rootCmd.AddCommand(version.NewVersionCmd())
-	rootCmd.AddCommand(configCmd.NewConfigCmd())
+	rootCmd.AddCommand(config.NewConfigCmd())
 
 	// Declutter default stuff
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
