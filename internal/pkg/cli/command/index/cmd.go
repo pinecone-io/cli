@@ -17,10 +17,10 @@ func NewIndexCmd() *cobra.Command {
 		Short: "Work with indexes",
 		Long:  helpText,
 		Example: help.Examples(`
-			$ pc index list
-			$ pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1
-			$ pc index describe --name my-index
-			$ pc index delete --name my-index
+			pc index list
+			pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1
+			pc index describe --name my-index
+			pc index delete --name my-index
 		`),
 		GroupID: help.GROUP_VECTORDB.ID,
 	}
