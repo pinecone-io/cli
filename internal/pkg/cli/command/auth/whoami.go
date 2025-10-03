@@ -14,7 +14,7 @@ import (
 func NewWhoAmICmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "whoami",
-		Short: "See the current logged in user",
+		Short: "See the currently logged in user",
 		Example: help.Examples(`
 			pc auth whoami
 		`),

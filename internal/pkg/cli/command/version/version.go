@@ -1,4 +1,4 @@
-package auth
+package version
 
 import (
 	"github.com/pinecone-io/cli/internal/build"

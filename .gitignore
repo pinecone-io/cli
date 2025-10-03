@@ -32,3 +32,6 @@ secrets
 
 # Jetbrains IDE
 .idea/
+
+# Man pages
+man/
