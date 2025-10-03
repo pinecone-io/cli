@@ -8,7 +8,8 @@ import (
 
 const pad = "  "
 
-// Examples normalizes a Cobra Example block
+//	Normalizes a Cobra Example block
+//
 // - Accepts a multi-line string with possible indentation
 // - De-indents with heredoc.Doc, trims leading/trailing whitespace, preserves interior blank lines
 // - Left-indents each line and adds $ for command lines
@@ -43,18 +44,12 @@ func Examples(examples string) string {
 	return strings.Join(out, "\n")
 }
 
-func Short(shortDesc string) string {
-	return strings.TrimSpace(heredoc.Doc(shortDesc))
-}
-
-func ShortF(shortDesc string, args ...any) string {
-	return strings.TrimSpace(heredoc.Docf(shortDesc, args...))
-}
-
+// Normalizes a Cobra Long block
 func Long(longDesc string) string {
 	return normalize(heredoc.Doc(longDesc))
 }
 
+// Normalizes a Cobra Long block with variadic args for formatting
 func LongF(longDesc string, args ...any) string {
 	return normalize(heredoc.Docf(longDesc, args...))
 }

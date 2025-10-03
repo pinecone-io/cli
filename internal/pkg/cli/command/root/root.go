@@ -57,7 +57,7 @@ func init() {
 	}
 
 	rootCmd.SetHelpTemplate(help.HelpTemplate)
-	help.EnableColorizedHelp(rootCmd)
+	help.EnableHelpRendering(rootCmd)
 
 	// Auth group
 	rootCmd.AddGroup(help.GROUP_AUTH)

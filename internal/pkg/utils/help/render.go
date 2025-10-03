@@ -18,7 +18,7 @@ const (
 	maxWidth     = 90
 )
 
-func EnableColorizedHelp(root *cobra.Command) {
+func EnableHelpRendering(root *cobra.Command) {
 	cobra.AddTemplateFunc("pcExamples", renderExamples)
 	cobra.AddTemplateFunc("pcBlock", renderLongBlock)
 }
