@@ -16,7 +16,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/version"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
-	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
 )
 
@@ -50,12 +49,11 @@ func init() {
 			pc target
 			pc index create --help
 		`),
-		Long: pcio.Sprintf(`pc is a CLI tool for managing your Pinecone resources
+		Long: help.Long(`
+			pc is a CLI tool for managing your Pinecone resources
 
-Get started by logging in with
-
-  %s
-		`, style.CodeWithPrompt("pc login")),
+			Get started by logging in with $ pc login
+		`),
 	}
 
 	rootCmd.SetHelpTemplate(help.HelpTemplate)

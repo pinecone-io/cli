@@ -16,11 +16,15 @@ import (
 
 var dot = style.Emphasis(style.Dot)
 
-var part1 = fmt.Sprintf(`%s{{if .Runnable}}
+var description = `{{with (or .Long .Short)}}{{pcBlock .}}{{end}}
+
+`
+
+var usage = fmt.Sprintf(`%s{{if .Runnable}}
 {{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}
     {{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}`, style.Heading("Usage"))
 
-var part2 = fmt.Sprintf(`
+var aliasesAndExamples = fmt.Sprintf(`
 
 %s
 {{.NameAndAliases}}{{end}}{{if .HasExample}}
@@ -30,22 +34,22 @@ var part2 = fmt.Sprintf(`
 
 `, style.Heading("Aliases"), style.Heading("Examples"))
 
-var part3 = fmt.Sprintf(`Available Commands{{range $cmds}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
+var noGroupCmds = fmt.Sprintf(`Available Commands{{range $cmds}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
   %s {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{else}}{{range $group := .Groups}}
 
 `, dot)
 
-var part4 = fmt.Sprintf(`{{.Title}}{{range $cmds}}{{if (and (eq .GroupID $group.ID) (or .IsAvailableCommand (eq .Name "help")))}}
+var groupCmds = fmt.Sprintf(`{{.Title}}{{range $cmds}}{{if (and (eq .GroupID $group.ID) (or .IsAvailableCommand (eq .Name "help")))}}
   %s {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if not .AllChildCommandsHaveGroup}}
 
 `, dot)
 
-var part5 = fmt.Sprintf(`%s{{range $cmds}}{{if (and (eq .GroupID "") (or .IsAvailableCommand (eq .Name "help")))}}
+var additionalCmds = fmt.Sprintf(`%s{{range $cmds}}{{if (and (eq .GroupID "") (or .IsAvailableCommand (eq .Name "help")))}}
   %s {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
 
 `, style.Heading("Additional Commands"), dot)
 
-var part6 = fmt.Sprintf(`%s
+var flagsAndFooter = fmt.Sprintf(`%s
 {{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableInheritedFlags}}
 
 %s
@@ -56,4 +60,10 @@ Use "{{.CommandPath}} [command] --help" for more information about a command.{{e
 For in-depth documentation and resources, visit %s
 `, style.Heading("Flags"), style.Heading("Global Flags"), style.URL(docslinks.DocsHome))
 
-var HelpTemplate = part1 + part2 + part3 + part4 + part5 + part6
+var HelpTemplate = description +
+	usage +
+	aliasesAndExamples +
+	noGroupCmds +
+	groupCmds +
+	additionalCmds +
+	flagsAndFooter
