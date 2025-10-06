@@ -53,13 +53,15 @@ func main() {
 	// List generated files for verbose
 	if *verbose {
 		files, err := filepath.Glob(filepath.Join(*output, "*.1"))
-		if err == nil {
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Failed to list generated files: %s\n", err)
+		} else if len(files) == 0 {
+			fmt.Printf("No man pages found in output directory: %s\n", *output)
+		} else {
 			fmt.Printf("Generated %d man pages:\n", len(files))
 			for _, file := range files {
 				fmt.Printf(" - %s\n", filepath.Base(file))
 			}
-		} else {
-			fmt.Fprintf(os.Stderr, "Warning: Failed to list generated files: %s\n", err)
 		}
 	}
 
