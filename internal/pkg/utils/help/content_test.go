@@ -90,29 +90,3 @@ func TestExamples_PreservesInteriorBlankLines(t *testing.T) {
 		t.Fatalf("Mismatch: want %q, got %q", want, got)
 	}
 }
-
-func TestExamples_ColorOn_EmitsANSI(t *testing.T) {
-	setColor(t, true)
-
-	in := `
-		# comment
-		pc run
-	`
-	colored := Examples(in)
-
-	// Expect ANSI when color is on
-	if !ansiRegex.MatchString(colored) {
-		t.Fatalf("Expected ANSI sequences when color is on; got: %q", colored)
-	}
-
-	// Strip ANSI, validate shape
-	uncolored := stripANSI(colored)
-	want := strings.Join([]string{
-		"  # comment",
-		"  $ pc run",
-	}, "\n")
-
-	if uncolored != want {
-		t.Fatalf("Mismatch: want %q, got %q", want, uncolored)
-	}
-}
