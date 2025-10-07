@@ -18,7 +18,7 @@ func NewGetApiKeyCmd() *cobra.Command {
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			apiKey := secrets.GlobalApiKey.Get()
-			pcio.Printf("Currently configured global API Key: %s", presenters.MaskHeadTail(apiKey, 4, 4))
+			pcio.Printf("Currently configured global API key: %s", presenters.MaskHeadTail(apiKey, 4, 4))
 		},
 	}
 

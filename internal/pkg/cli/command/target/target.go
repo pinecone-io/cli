@@ -43,8 +43,8 @@ func NewTargetCmd() *cobra.Command {
 			When using the CLI interactively (i.e. via the oauth2 authentication flow) you
 			should use this command to set the current project context for the CLI.
 
-			For automation use cases relying on API Keys for authentication, there's no need
-			to specify a project context as the API Key is already associated with a specific
+			For automation use cases relying on API keys for authentication, there's no need
+			to specify a project context as the API key is already associated with a specific
 			project in the backend.
 		`),
 		Example: help.Examples(`

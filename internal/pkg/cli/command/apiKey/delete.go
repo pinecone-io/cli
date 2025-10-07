@@ -71,8 +71,8 @@ func NewDeleteKeyCmd() *cobra.Command {
 }
 
 func confirmDeleteApiKey(apiKeyName string) {
-	msg.WarnMsg("This operation will delete API Key %s from project %s.", style.Emphasis(apiKeyName), style.Emphasis(state.TargetProj.Get().Name))
-	msg.WarnMsg("Any integrations you have that auth with this API Key will stop working.")
+	msg.WarnMsg("This operation will delete API key %s from project %s.", style.Emphasis(apiKeyName), style.Emphasis(state.TargetProj.Get().Name))
+	msg.WarnMsg("Any integrations you have that auth with this API key will stop working.")
 	msg.WarnMsg("This action cannot be undone.")
 
 	// Prompt the user

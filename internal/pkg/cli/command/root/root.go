@@ -52,7 +52,7 @@ func init() {
 		Long: help.Long(`
 			pc is a CLI tool for managing your Pinecone resources
 
-			Get started by logging in with $ pc login
+			Get started by logging in with pc login
 		`),
 	}
 

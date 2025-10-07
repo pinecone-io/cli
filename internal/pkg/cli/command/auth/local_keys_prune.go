@@ -166,9 +166,9 @@ func createKeysMap(keys []*pinecone.APIKey) map[string]struct{} {
 }
 
 func confirmPruneKeys(plan []planItem, options PruneLocalKeysCmdOptions) (bool, error) {
-	msg.WarnMsg("This operation will delete the following API Keys:")
+	msg.WarnMsg("This operation will delete the following API keys:")
 	printDryRunPlan(plan, options)
-	msg.WarnMsg("Any integrations you have that auth with these API Keys will stop working.")
+	msg.WarnMsg("Any integrations you have that auth with these API keys will stop working.")
 	msg.WarnMsg("This action cannot be undone.")
 
 	// Prompt the user

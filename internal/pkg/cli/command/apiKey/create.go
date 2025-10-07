@@ -79,7 +79,7 @@ func NewCreateApiKeyCmd() *cobra.Command {
 				json := text.IndentJSON(keyWithSecret)
 				pcio.Println(json)
 			} else {
-				msg.SuccessMsg("API Key %s created successfully.\n", style.Emphasis(keyWithSecret.Key.Name))
+				msg.SuccessMsg("API key %s created successfully.\n", style.Emphasis(keyWithSecret.Key.Name))
 				presenters.PrintDescribeAPIKeyWithSecretTable(keyWithSecret)
 			}
 
