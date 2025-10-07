@@ -9,6 +9,7 @@ before:
   hooks:
     - go mod tidy
     - go generate ./...
+    - go run ./cmd/gen-manpages/main.go
 
 builds:
   - env:
@@ -39,6 +40,8 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
+    files:
+      - "man/man1/*.1"
     # use zip for windows archives
     format_overrides:
       - goos: windows
@@ -87,3 +90,12 @@ brews:
     install: |
       bin.install "pc"
       bin.install_symlink "pc" => "pinecone"
+
+      # Install man pages
+      man1.install Dir["man/man1/*.1"]
+
+      # Add aliases: pc*.1 -> pinecone*.1, etc
+      Dir["man/man1/*.1"].each do |src|
+        dest = File.basename(src).sub(/\Apc\b/, "pinecone") # Replace leading "pc" with "pinecone"
+        man1.install src => dest
+      end

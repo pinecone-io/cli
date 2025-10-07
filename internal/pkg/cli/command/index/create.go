@@ -3,7 +3,6 @@ package index
 import (
 	"context"
 
-	"github.com/MakeNowJust/heredoc"
 	"github.com/pinecone-io/cli/internal/pkg/utils/docslinks"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -68,17 +67,17 @@ func NewCreateIndexCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a new index with the specified configuration",
-		Long: heredoc.Docf(`
-		The %s command creates a new index with the specified configuration. There are several different types of indexes
-		you can create depending on the configuration provided:
+		Long: help.LongF(`
+			The %s command creates a new index with the specified configuration. There are several different types of indexes
+			you can create depending on the configuration provided:
 
-			- Serverless (dense or sparse)
-			- Integrated 
-			- Pod
+				- Serverless (dense or sparse)
+				- Integrated 
+				- Pod
 
-		For detailed documentation, see:
-		%s
-		`, style.Code("pc index create"), style.URL(docslinks.DocsIndexCreate)),
+			For detailed documentation, see:
+			%s
+			`, "pc index create", docslinks.DocsIndexCreate),
 		Example: help.Examples(`
 			# create a serverless index
 			pc index create --name "my-index" --dimension 1536 --metric "cosine" --cloud "aws" --region "us-east-1"

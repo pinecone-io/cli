@@ -1,22 +1,21 @@
-package pinecone
+package root
 
 import (
 	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/apiKey"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/auth"
-	collection "github.com/pinecone-io/cli/internal/pkg/cli/command/collection"
-	configCmd "github.com/pinecone-io/cli/internal/pkg/cli/command/config"
-	index "github.com/pinecone-io/cli/internal/pkg/cli/command/index"
-	login "github.com/pinecone-io/cli/internal/pkg/cli/command/login"
-	logout "github.com/pinecone-io/cli/internal/pkg/cli/command/logout"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/collection"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/config"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/index"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/login"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/logout"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/organization"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/project"
-	target "github.com/pinecone-io/cli/internal/pkg/cli/command/target"
-	version "github.com/pinecone-io/cli/internal/pkg/cli/command/version"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/target"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/version"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
-	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
 )
 
@@ -33,6 +32,10 @@ func Execute() {
 	}
 }
 
+func GetRootCmd() *cobra.Command {
+	return rootCmd
+}
+
 func init() {
 	globalOptions := GlobalOptions{}
 	rootCmd = &cobra.Command{
@@ -46,15 +49,15 @@ func init() {
 			pc target
 			pc index create --help
 		`),
-		Long: pcio.Sprintf(`pc is a CLI tool for managing your Pinecone resources
+		Long: help.Long(`
+			pc is a CLI tool for managing your Pinecone resources
 
-Get started by logging in with
-
-  %s
-		`, style.CodeWithPrompt("pc login")),
+			Get started by logging in with $ pc login
+		`),
 	}
 
-	rootCmd.SetUsageTemplate(help.HelpTemplate)
+	rootCmd.SetHelpTemplate(help.HelpTemplate)
+	help.EnableHelpRendering(rootCmd)
 
 	// Auth group
 	rootCmd.AddGroup(help.GROUP_AUTH)
@@ -77,7 +80,7 @@ Get started by logging in with
 
 	// Misc group
 	rootCmd.AddCommand(version.NewVersionCmd())
-	rootCmd.AddCommand(configCmd.NewConfigCmd())
+	rootCmd.AddCommand(config.NewConfigCmd())
 
 	// Declutter default stuff
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
