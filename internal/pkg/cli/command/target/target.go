@@ -25,11 +25,13 @@ import (
 )
 
 type targetCmdOptions struct {
-	org     string
-	project string
-	json    bool
-	clear   bool
-	show    bool
+	org       string
+	orgID     string
+	project   string
+	projectID string
+	json      bool
+	clear     bool
+	show      bool
 }
 
 func NewTargetCmd() *cobra.Command {
@@ -62,8 +64,17 @@ func NewTargetCmd() *cobra.Command {
 			log.Debug().
 				Str("org", options.org).
 				Str("project", options.project).
+				Str("organization-id", options.orgID).
+				Str("project-id", options.projectID).
 				Bool("json", options.json).
 				Msg("target command invoked")
+
+			if err := validateTargetOptions(options); err != nil {
+				log.Error().Err(err).Msg("Invalid target options")
+				msg.FailMsg("Invalid target options: %s", err)
+				exit.Error(pcio.Errorf("Invalid target options: %w", err))
+				return
+			}
 
 			// Clear targets if clear flag is set
 			if options.clear {
@@ -86,13 +97,22 @@ func NewTargetCmd() *cobra.Command {
 				return
 			}
 
+			// Get the current access token and parse the orgID from the claims
 			accessToken, err := oauth.Token(cmd.Context())
 			if err != nil {
-				log.Error().Err(err).Msg("Error retrieving oauth token")
 				msg.FailMsg("Error retrieving oauth token: %s", err)
 				exit.Error(pcio.Errorf("error retrieving oauth token: %w", err))
 				return
 			}
+
+			claims, err := oauth.ParseClaimsUnverified(accessToken)
+			if err != nil {
+				msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
+				exit.Error(pcio.Errorf("error parsing claims from access token: %w", err))
+				return
+			}
+			currentTokenOrgId := claims.OrgId
+
 			clientId := secrets.ClientId.Get()
 			clientSecret := secrets.ClientSecret.Get()
 			if accessToken.AccessToken == "" && clientId == "" && clientSecret == "" {
@@ -100,27 +120,21 @@ func NewTargetCmd() *cobra.Command {
 				exit.ErrorMsg("You must be logged in or have service account credentials configured to set a target context")
 				return
 			}
-			claims, err := oauth.ParseClaimsUnverified(accessToken)
-			if err != nil {
-				log.Error().Msg("Error parsing claims from access token")
-				msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
-				exit.Error(pcio.Errorf("error parsing claims from access token: %w", err))
-				return
-			}
-			currentTokenOrgId := claims.OrgId
 
 			ac := sdk.NewPineconeAdminClient()
 
 			// Fetch the user's organizations
 			orgs, err := ac.Organization.List(cmd.Context())
 			if err != nil {
-				log.Error().Msg("Error fetching organizations")
 				exit.Error(pcio.Errorf("error fetching organizations: %s", err))
 				return
 			}
 
 			// Interactive targeting - no options passed
-			if options.org == "" && options.project == "" && !options.show {
+			if options.org == "" &&
+				options.orgID == "" &&
+				options.project == "" &&
+				options.projectID == "" {
 
 				// Ask the user to choose a target org
 				targetOrg := postLoginInteractiveTargetOrg(orgs)
@@ -148,7 +162,6 @@ func NewTargetCmd() *cobra.Command {
 				// Fetch the user's projects
 				projects, err := ac.Project.List(cmd.Context())
 				if err != nil {
-					log.Error().Msg("Error fetching projects")
 					exit.Error(pcio.Errorf("error fetching projects: %w", err))
 					return
 				}
@@ -165,19 +178,13 @@ func NewTargetCmd() *cobra.Command {
 				}
 			}
 
-			if options.org != "" {
-				// Update the organization target based on passed flag
+			// Programmatic targeting - org or orgID flag provided
+			if options.org != "" || options.orgID != "" {
+				// User organizations were fetched earlier
 				var org *pinecone.Organization
-				orgs, err := ac.Organization.List(cmd.Context())
-				if err != nil {
-					msg.FailMsg("Failed to get organizations: %s", err)
-					exit.Error(err)
-					return
-				}
 
-				// User passed an org flag, need to verify it exists and
-				// lookup the id for it.
-				org, err = getOrg(orgs, options.org)
+				// Use the provided flag to look up the organization
+				org, err = getOrgForTarget(orgs, options.org, options.orgID)
 				if err != nil {
 					msg.FailMsg("Failed to get organization: %s", err)
 					exit.Error(err)
@@ -214,26 +221,32 @@ func NewTargetCmd() *cobra.Command {
 				}
 			}
 
-			// Update the project target based on passed flags
-			if options.project != "" {
+			// Programmatic targeting - project or projectID flag provided
+			if options.project != "" || options.projectID != "" {
+				// We need to reinstantiate the admin client to ensure any auth changes that have happened above
+				// are properly reflected
 				ac := sdk.NewPineconeAdminClient()
+
 				// Fetch the user's projects
 				projects, err := ac.Project.List(cmd.Context())
 				if err != nil {
-					log.Error().Msg("Error fetching projects")
 					exit.Error(pcio.Errorf("error fetching projects: %w", err))
 					return
 				}
 
-				// User passed a project flag, need to verify it exists and
-				// lookup the id for it.
-				proj := getProject(projects, options.project)
+				// Use the provided flag to look up the project
+				project, err := getProjectForTarget(projects, options.project, options.projectID)
+				if err != nil {
+					msg.FailMsg("Failed to get project: %s", err)
+					exit.Error(err)
+					return
+				}
 				if !options.json {
-					msg.SuccessMsg("Target project updated to %s", style.Emphasis(proj.Name))
+					msg.SuccessMsg("Target project updated to %s", style.Emphasis(project.Name))
 				}
 				state.TargetProj.Set(state.TargetProject{
-					Name: proj.Name,
-					Id:   proj.Id,
+					Name: project.Name,
+					Id:   project.Id,
 				})
 			}
 
@@ -252,7 +265,9 @@ func NewTargetCmd() *cobra.Command {
 
 	// Required options
 	cmd.Flags().StringVarP(&options.org, "org", "o", "", "Organization name")
+	cmd.Flags().StringVar(&options.orgID, "organization-id", "", "Organization ID")
 	cmd.Flags().StringVarP(&options.project, "project", "p", "", "Project name")
+	cmd.Flags().StringVar(&options.projectID, "project-id", "", "Project ID")
 	cmd.Flags().BoolVarP(&options.show, "show", "s", false, "Show the current context")
 	cmd.Flags().BoolVar(&options.clear, "clear", false, "Clear the target context")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
@@ -260,40 +275,104 @@ func NewTargetCmd() *cobra.Command {
 	return cmd
 }
 
-func getOrg(orgs []*pinecone.Organization, orgName string) (*pinecone.Organization, error) {
-	for _, org := range orgs {
-		if org.Name == orgName {
-			return org, nil
-		}
+func validateTargetOptions(options targetCmdOptions) error {
+	// Check organization targeting
+	if options.org != "" && options.orgID != "" {
+		return pcio.Errorf("cannot specify both --org and --organization-id, use one or the other")
 	}
 
-	// Join org names for error message
-	orgNames := make([]string, len(orgs))
-	for i, org := range orgs {
-		orgNames[i] = org.Name
+	// Check project targeting
+	if options.project != "" && options.projectID != "" {
+		return pcio.Errorf("cannot specify both --project and --project-id, use one or the other")
 	}
 
-	availableOrgs := strings.Join(orgNames, ", ")
-	log.Error().Str("orgName", orgName).Str("availableOrgs", availableOrgs).Msg("Failed to find organization")
-	msg.FailMsg("Failed to find organization %s. Available organizations: %s.", style.Emphasis(orgName), availableOrgs)
-	exit.ErrorMsg(pcio.Sprintf("organization %s not found", style.Emphasis(orgName)))
-	return nil, pcio.Errorf("organization %s not found", orgName)
+	return nil
 }
 
-func getProject(projects []*pinecone.Project, projectName string) *pinecone.Project {
-	for _, project := range projects {
-		if project.Name == projectName {
-			return project
+func getOrgForTarget(orgs []*pinecone.Organization, orgName, orgID string) (*pinecone.Organization, error) {
+	var targetOrg *pinecone.Organization
+	var searchType string
+	var searchValue string
+
+	if orgName != "" {
+		// Search by name
+		for _, org := range orgs {
+			if org.Name == orgName {
+				targetOrg = org
+				searchValue = orgName
+				searchType = "Name"
+				break
+			}
+		}
+	} else if orgID != "" {
+		// Search by ID
+		for _, org := range orgs {
+			if org.Id == orgID {
+				targetOrg = org
+				searchValue = orgID
+				searchType = "ID"
+				break
+			}
 		}
 	}
 
-	availableProjects := make([]string, len(projects))
-	for i, project := range projects {
-		availableProjects[i] = project.Name
+	if targetOrg == nil {
+		// Join org names for error message
+		orgNames := make([]string, len(orgs))
+		for i, org := range orgs {
+			orgNames[i] = org.Name
+		}
+		availableOrgs := strings.Join(orgNames, ", ")
+		return nil, pcio.Errorf("organization %s: %s not found. Available organizations: %s",
+			style.Emphasis(searchType),
+			style.Emphasis(searchValue),
+			availableOrgs)
 	}
-	msg.FailMsg("Failed to find project %s. Available projects: %s.", style.Emphasis(projectName), strings.Join(availableProjects, ", "))
-	exit.Error(pcio.Errorf("project %s not found", projectName))
-	return nil
+
+	return targetOrg, nil
+}
+
+func getProjectForTarget(projects []*pinecone.Project, projectName, projectID string) (*pinecone.Project, error) {
+	var targetProject *pinecone.Project
+	var searchType string
+	var searchValue string
+
+	if projectName != "" {
+		// Search by name
+		for _, project := range projects {
+			if project.Name == projectName {
+				targetProject = project
+				searchType = "Name"
+				searchValue = projectName
+				break
+			}
+		}
+	} else if projectID != "" {
+		// Search by ID
+		for _, project := range projects {
+			if project.Id == projectID {
+				targetProject = project
+				searchType = "ID"
+				searchValue = projectID
+				break
+			}
+		}
+	}
+
+	if targetProject == nil {
+		// Join project names for error message
+		projectNames := make([]string, len(projects))
+		for i, project := range projects {
+			projectNames[i] = project.Name
+		}
+		availableProjects := strings.Join(projectNames, ", ")
+		return nil, pcio.Errorf("project %s: %s not found. Available projects: %s",
+			style.Emphasis(searchType),
+			style.Emphasis(searchValue),
+			availableProjects)
+	}
+
+	return targetProject, nil
 }
 
 func postLoginInteractiveTargetOrg(orgsList []*pinecone.Organization) *pinecone.Organization {
