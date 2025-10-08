@@ -27,9 +27,9 @@ func NewSetApiKeyCmd() *cobra.Command {
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			newApiKey := args[0]
-			secrets.GlobalApiKey.Set(newApiKey)
+			secrets.DefaultAPIKey.Set(newApiKey)
 			msg.SuccessMsg("Config property %s updated.", style.Emphasis("api_key"))
-			msg.InfoMsg("To clear the global API key, run %s.", style.Code("pc auth clear --global-api-key"))
+			msg.InfoMsg("To clear the default API key, run %s.", style.Code("pc auth clear --api-key"))
 		},
 	}
 

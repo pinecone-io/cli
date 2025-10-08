@@ -29,7 +29,7 @@ var ClientSecret = configuration.ConfigProperty[string]{
 	DefaultValue: "",
 }
 
-var GlobalApiKey = configuration.ConfigProperty[string]{
+var DefaultAPIKey = configuration.ConfigProperty[string]{
 	KeyName:      "api_key",
 	ViperStore:   SecretsViper,
 	DefaultValue: "",
@@ -43,7 +43,7 @@ var ManagedAPIKeys = configuration.MarshaledProperty[map[string]ManagedKey]{
 }
 
 var properties = []configuration.Property{
-	GlobalApiKey,
+	DefaultAPIKey,
 	ClientId,
 	ClientSecret,
 	oAuth2Token,
@@ -62,7 +62,7 @@ func init() {
 
 	// Bind environment variables to their associated properties
 	SecretsViper.SetEnvPrefix("pinecone")
-	_ = SecretsViper.BindEnv(GlobalApiKey.KeyName)
+	_ = SecretsViper.BindEnv(DefaultAPIKey.KeyName)
 	_ = SecretsViper.BindEnv(ClientId.KeyName)
 	_ = SecretsViper.BindEnv(ClientSecret.KeyName)
 }

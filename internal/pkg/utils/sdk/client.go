@@ -39,18 +39,18 @@ func NewPineconeClient() *pinecone.Client {
 	}
 	clientId := secrets.ClientId.Get()
 	clientSecret := secrets.ClientSecret.Get()
-	globalAPIKey := secrets.GlobalApiKey.Get()
+	globalAPIKey := secrets.DefaultAPIKey.Get()
 
-	// If there's a global API key set, it takes priority over user/service account tokens and associated keys
-	if secrets.GlobalApiKey.Get() != "" {
+	// If there's a default API key set, it takes priority over user/service account tokens and associated keys
+	if secrets.DefaultAPIKey.Get() != "" {
 		if oauth2Token.AccessToken != "" {
 			msg.WarnMsg("You are currently logged in and also have an API key set in your environment and/or local configuration. The API key (which is linked to a specific project) will be used in preference to any user authentication and target context that may be present.\n")
 		}
 
 		log.Debug().Msg("Creating client for machine using stored API key")
-		return NewClientForAPIKey(secrets.GlobalApiKey.Get())
+		return NewClientForAPIKey(secrets.DefaultAPIKey.Get())
 	}
-	log.Debug().Msg("No global API key is stored in configuration, attempting to create a client using user access token")
+	log.Debug().Msg("No default API key is stored in configuration, attempting to create a client using user access token")
 
 	// If neither user token or service account credentials are set, we cannot instantiate a client
 	if oauth2Token.AccessToken == "" && (clientId == "" && clientSecret == "") && globalAPIKey == "" {

@@ -22,7 +22,7 @@ func NewGetApiKeyCmd() *cobra.Command {
 		    pc config get-api-key
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			apiKey := secrets.GlobalApiKey.Get()
+			apiKey := secrets.DefaultAPIKey.Get()
 			if !options.reveal {
 				apiKey = presenters.MaskHeadTail(apiKey, 4, 4)
 			}

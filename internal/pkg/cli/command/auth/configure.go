@@ -62,8 +62,8 @@ func NewConfigureCmd() *cobra.Command {
 			# Configure service account credentials
 			pc auth configure --client-id "client-id" --client-secret "client-secret"
 
-			# Configure global API key
-			pc auth configure --global-api-key "global-api-key"
+			# Configure default API key
+			pc auth configure --api-key "api-key"
 		`),
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -83,7 +83,7 @@ func NewConfigureCmd() *cobra.Command {
 	cmd.Flags().StringVar(&options.clientID, "client-id", "", "Service account client id for the Pinecone CLI")
 	cmd.Flags().StringVar(&options.clientSecret, "client-secret", "", "Service account client secret for the Pinecone CLI")
 	cmd.Flags().StringVarP(&options.projectId, "project-id", "p", "", "The id of the project to target after authenticating with service account credentials")
-	cmd.Flags().StringVar(&options.apiKey, "global-api-key", "", "Global API key override for the Pinecone CLI")
+	cmd.Flags().StringVar(&options.apiKey, "api-key", "", "Default API key override for the Pinecone CLI")
 	cmd.Flags().BoolVar(&options.readSecretFromStdin, "client-secret-stdin", false, "Read the client secret from stdin")
 	cmd.Flags().BoolVar(&options.promptIfMissing, "prompt-if-missing", false, "Prompt for missing credentials if not provided")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
@@ -227,10 +227,10 @@ func Run(ctx context.Context, io IO, opts ConfigureCmdOptions) {
 		}
 	}
 
-	// If a global API key has been configured store it and update the target credentials context
+	// If a default API key has been configured, store it and update the target credentials context
 	// This will override the AuthContext: state.AuthServiceAccount if set previously
 	if globalAPIKey != "" {
-		secrets.GlobalApiKey.Set(globalAPIKey)
+		secrets.DefaultAPIKey.Set(globalAPIKey)
 		state.TargetCreds.Set(state.TargetUser{
 			AuthContext: state.AuthGlobalAPIKey,
 			// Redact API key for presentational layer

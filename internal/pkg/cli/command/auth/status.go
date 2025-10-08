@@ -54,7 +54,7 @@ func runAuthStatus(cmd *cobra.Command, options AuthStatusCmdOptions) error {
 	environment := config.Environment.Get()
 
 	// Global API Key
-	globalAPIKey := secrets.GlobalApiKey.Get()
+	globalAPIKey := secrets.DefaultAPIKey.Get()
 
 	// Service Account
 	clientId := secrets.ClientId.Get()

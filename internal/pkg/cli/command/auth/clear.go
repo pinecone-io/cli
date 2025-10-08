@@ -10,7 +10,7 @@ import (
 
 type ClearCmdOptions struct {
 	serviceAccount bool
-	globalAPIKey   bool
+	defaultAPIKey  bool
 }
 
 func NewClearCmd() *cobra.Command {
@@ -23,15 +23,15 @@ func NewClearCmd() *cobra.Command {
 		    # Clear configured service account credentials
 		    pc auth clear --service-account
 
-		    # Clear configured global API key
-		    pc auth clear --global-api-key
+		    # Clear configured default API key
+		    pc auth clear --api-key
 
-			# Clear both configured service account credentials and global API key
-			pc auth clear --service-account --global-api-key
+			# Clear both configured service account credentials and default API key
+			pc auth clear --service-account --api-key
 		`),
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			if !options.serviceAccount && !options.globalAPIKey {
+			if !options.serviceAccount && !options.defaultAPIKey {
 				msg.FailMsg("Please specify either --service-account or --global-api-key")
 				exit.ErrorMsg("No option specified")
 			}
@@ -42,15 +42,15 @@ func NewClearCmd() *cobra.Command {
 				msg.SuccessMsg("Service account (client ID and secret) cleared from local storage")
 			}
 
-			if options.globalAPIKey {
-				secrets.GlobalApiKey.Clear()
+			if options.defaultAPIKey {
+				secrets.DefaultAPIKey.Clear()
 				msg.SuccessMsg("Default API key cleared")
 			}
 		},
 	}
 
 	cmd.Flags().BoolVar(&options.serviceAccount, "service-account", false, "Clear the configured service account (client ID and secret) from local storage")
-	cmd.Flags().BoolVar(&options.globalAPIKey, "global-api-key", false, "Clear the default API key from local storage")
+	cmd.Flags().BoolVar(&options.defaultAPIKey, "api-key", false, "Clear the default API key from local storage")
 
 	return cmd
 }
