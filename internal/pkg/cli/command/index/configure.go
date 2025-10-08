@@ -29,7 +29,7 @@ func NewConfigureIndexCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "configure",
-		Short: "Configure an existing index with the specified configuration",
+		Short: "Configure an existing index",
 		Example: help.Examples(`
 			pc index configure --name "index-name" --deletion-protection "enabled"
 		`),

@@ -28,12 +28,29 @@ type PruneLocalKeysCmdOptions struct {
 	json             bool
 }
 
+var (
+	pruneHelp = help.Long(`
+		Delete project API keys that the CLI is managing in local state.
+
+		This operation will remove managed keys from local storage, and delete them
+		from Pinecone servers. Any integrations you have that authenticate with these
+		keys outside of the CLI will stop working.
+
+		By default, prune will delete all project keys that the CLI is managing, whether
+		they were created by the CLI or the user. You can filter the operation by 
+		project ID or key origin. Options for origin are: 'cli', 'user', or 'all' (default).
+
+		See: https://docs.pinecone.io/reference/tools/cli-authentication#deleting-api-keys
+	`)
+)
+
 func NewPruneLocalKeysCmd() *cobra.Command {
 	options := PruneLocalKeysCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "prune",
-		Short: "Clean up project API keys that the CLI is managing",
+		Short: "Delete project API keys that the CLI is managing in local state",
+		Long:  pruneHelp,
 		Example: help.Examples(`
 			# Prune all locally managed keys that the CLI has created
 			pc auth local-keys prune --origin cli --skip-confirmation

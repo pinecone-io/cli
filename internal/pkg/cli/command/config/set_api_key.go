@@ -8,10 +8,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	setAPIKeyHelp = help.Long(`
+		Configure the global API key for the CLI.
+
+		This will override any target context set through user login or service account credentials.
+		You can clear the global API key by running pc auth clear --global-api-key.
+	`)
+)
+
 func NewSetApiKeyCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-api-key",
-		Short: "Manually set the global API key for the Pinecone CLI",
+		Short: "Configure the global API key for the CLI",
+		Long:  setAPIKeyHelp,
 		Example: help.Examples(`
 		    pc config set-api-key "api-key-value"
 		`),

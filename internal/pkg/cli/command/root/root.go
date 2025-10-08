@@ -14,6 +14,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/project"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/target"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/version"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/whoami"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/spf13/cobra"
@@ -36,11 +37,24 @@ func GetRootCmd() *cobra.Command {
 	return rootCmd
 }
 
+var (
+	rootHelp = help.Long(`
+		Work seamlessly with Pinecone from the command line.
+
+		pc is a CLI tool for managing Pinecone infrastructure (projects, organizations,
+		API keys, indexes) directly from your terminal.
+		
+		Get started by logging in with pc login
+
+		See: https://docs.pinecone.io/reference/tools/cli-overview
+	`)
+)
+
 func init() {
 	globalOptions := GlobalOptions{}
 	rootCmd = &cobra.Command{
 		Use:   "pc",
-		Short: "Work seamlessly with Pinecone from the command line.",
+		Short: "Work seamlessly with Pinecone from the command line",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			pcio.SetQuiet(globalOptions.quiet)
 		},
@@ -49,11 +63,7 @@ func init() {
 			pc target
 			pc index create --help
 		`),
-		Long: help.Long(`
-			pc is a CLI tool for managing your Pinecone resources
-
-			Get started by logging in with pc login
-		`),
+		Long: rootHelp,
 	}
 
 	rootCmd.SetHelpTemplate(help.HelpTemplate)
@@ -65,7 +75,7 @@ func init() {
 	rootCmd.AddCommand(login.NewLoginCmd())
 	rootCmd.AddCommand(logout.NewLogoutCmd())
 	rootCmd.AddCommand(target.NewTargetCmd())
-	rootCmd.AddCommand(login.NewWhoAmICmd())
+	rootCmd.AddCommand(whoami.NewWhoAmICmd())
 
 	// Admin management group
 	rootCmd.AddGroup(help.GROUP_ADMIN)

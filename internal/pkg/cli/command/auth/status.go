@@ -24,7 +24,7 @@ func NewCmdAuthStatus() *cobra.Command {
 	options := AuthStatusCmdOptions{}
 	cmd := &cobra.Command{
 		Use:   "status",
-		Short: "Show the current authentication status of the Pinecone CLI",
+		Short: "Show the current authentication configuration for the Pinecone CLI",
 		Example: help.Examples(`
 			pc auth status --json
 		`),

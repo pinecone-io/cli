@@ -1,4 +1,4 @@
-package login
+package whoami
 
 import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -14,7 +14,7 @@ import (
 func NewWhoAmICmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "whoami",
-		Short: "See the current logged in user",
+		Short: "See the currently logged in user",
 		Example: help.Examples(`
 			pc whoami
 		`),

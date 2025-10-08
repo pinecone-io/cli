@@ -23,7 +23,7 @@ func NewDescribeOrganizationCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "describe",
-		Short: "Describe an organization by ID or the target organization",
+		Short: "Describe an organization by ID, or the target organization",
 		Example: help.Examples(`
 			pc organization describe --id "organization-id"
 		`),

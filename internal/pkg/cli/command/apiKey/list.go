@@ -27,7 +27,7 @@ func NewListKeysCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List the API keys in a specific project by ID or the target project",
+		Short: "List the API keys in a specific project by ID, or the target project",
 		Example: help.Examples(`
 			# List API keys for the target project
 			pc target --org "org-name" --project "project-name"

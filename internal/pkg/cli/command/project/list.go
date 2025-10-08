@@ -27,7 +27,7 @@ func NewListProjectsCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:     "list",
-		Short:   "list all projects in the organization available to the authenticated user",
+		Short:   "List all projects in the target organization determined by user credentials",
 		GroupID: help.GROUP_PROJECTS.ID,
 		Example: help.Examples(`
 			pc project list

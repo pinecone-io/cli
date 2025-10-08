@@ -21,12 +21,22 @@ type DeleteApiKeyOptions struct {
 	skipConfirmation bool
 }
 
+var (
+	deleteHelp = help.Long(`
+		Delete an API key by ID. 
+		
+		Any integrations using this API key will stop working.
+		If you have stored the key locally, it will also be deleted from your local storage.
+	`)
+)
+
 func NewDeleteKeyCmd() *cobra.Command {
 	options := DeleteApiKeyOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "delete",
 		Short:   "Delete an API key by ID",
+		Long:    deleteHelp,
 		GroupID: help.GROUP_API_KEYS.ID,
 		Example: help.Examples(`
 			pc api-key delete --id "api-key-id" 

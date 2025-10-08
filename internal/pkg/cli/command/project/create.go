@@ -24,12 +24,24 @@ type CreateProjectCmdOptions struct {
 	json                    bool
 }
 
+var (
+	createHelp = help.Long(`
+		Create a project for the target organization determined by user credentials.
+		
+		If you'd like to set the created project as the target project within the CLI,
+		you can provide the --target flag.
+
+		See: https://docs.pinecone.io/guides/projects/manage-projects
+	`)
+)
+
 func NewCreateProjectCmd() *cobra.Command {
 	options := CreateProjectCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "create",
 		Short:   "Create a project for the target organization determined by user credentials",
+		Long:    createHelp,
 		GroupID: help.GROUP_PROJECTS.ID,
 		Example: help.Examples(`
 			pc project create --name "demo-project" --max-pods 10 --force-encryption

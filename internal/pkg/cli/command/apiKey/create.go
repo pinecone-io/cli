@@ -23,12 +23,31 @@ type CreateApiKeyOptions struct {
 	json      bool
 }
 
+var (
+	createHelp = help.Long(`
+		Create an API key for a specific project by ID. If no project ID is provided,
+		the CLI will create a key for the currently targeted project. If you provide the 
+		--store flag, the key will be stored locally for use by the CLI when accessing control
+		and data plane resources.
+
+		If no roles are provided for the new key it will default to having the 'ProjectEditor' role.
+		Roles: 
+			- 'ProjectEditor'
+			- 'ProjectViewer'
+			- 'ControlPlaneEditor'
+			- 'ControlPlaneViewer'
+			- 'DataPlaneEditor'
+			- 'DataPlaneViewer'
+	`)
+)
+
 func NewCreateApiKeyCmd() *cobra.Command {
 	options := CreateApiKeyOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "create",
-		Short:   "Create an API key for a specific project by ID or the target project",
+		Short:   "Create an API key for a specific project by ID",
+		Long:    createHelp,
 		GroupID: help.GROUP_API_KEYS.ID,
 		Example: help.Examples(`
 		    # Create a new API key for the target project

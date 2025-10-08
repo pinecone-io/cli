@@ -36,12 +36,26 @@ type ConfigureCmdOptions struct {
 	json                bool
 }
 
+var (
+	configureHelp = help.Long(`
+		Configure authentication credentials for the Pinecone CLI.
+
+		You can configure a service account (client ID & secret) or a global API key. Service
+		accounts automatically target an organization and will prompt to select a project, which
+		can be overridden with the --project-id flag. Configuring a service account will clear
+		any existing user login credentials.
+
+		A global API key overrides any target organization/project context. 
+	`)
+)
+
 func NewConfigureCmd() *cobra.Command {
 	options := ConfigureCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "configure",
 		Short: "Configure authentication credentials for the Pinecone CLI",
+		Long:  configureHelp,
 		Example: help.Examples(`
 			# Configure service account credentials
 			pc auth configure --client-id "client-id" --client-secret "client-secret"

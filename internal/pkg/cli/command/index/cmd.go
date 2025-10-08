@@ -5,16 +5,23 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	indexHelp = help.Long(`
+		Work with Pinecone indexes.
+
+		An index is the highest-level organizational unit of vector data in Pinecone. 
+		You store vector data in an index, and perform queries and operations on the data stored.
+		There are two types of indexes: dense and sparse.
+		
+		See: https://docs.pinecone.io/guides/index-data/indexing-overview
+	`)
+)
+
 func NewIndexCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "index",
 		Short: "Work with indexes",
-		Long: help.Long(`
-			An index is the highest-level organizational unit of 
-			vector data in Pinecone. It accepts and stores vectors, serves queries 
-			over the vectors it contains, and does other vector operations over 
-			its contents.
-		`),
+		Long:  indexHelp,
 		Example: help.Examples(`
 			pc index list
 			pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1

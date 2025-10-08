@@ -61,33 +61,37 @@ type createIndexOptions struct {
 	json bool
 }
 
+var (
+	createIndexHelp = help.LongF(`
+		Create a new index with the specified configuration.
+		
+		You can specify the measure of similarity, the dimension of vectors to be stored, and which cloud
+		provider you would like to deploy with. You can also control whether the index is 'sparse', or 'dense',
+		or any integrated embedding configuration you would like to use.
+
+		See: %s
+	`, docslinks.DocsIndexCreate)
+
+	createIndexExample = help.Examples(`
+		# create a serverless index
+		pc index create --name "my-index" --dimension 1536 --metric "cosine" --cloud "aws" --region "us-east-1"
+
+		# create a pod index
+		pc index create --name "my-index" --dimension 1536 --metric "cosine" --environment "us-east-1-aws" --pod-type "p1.x1" --shards 2 --replicas 2
+
+		# create an integrated index
+		pc index create --name "my-index" --dimension 1536 --metric "cosine" --cloud "aws" --region "us-east-1" --model "multilingual-e5-large" --field_map "text=chunk_text"
+	`)
+)
+
 func NewCreateIndexCmd() *cobra.Command {
 	options := createIndexOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "create",
-		Short: "Create a new index with the specified configuration",
-		Long: help.LongF(`
-			The %s command creates a new index with the specified configuration. There are several different types of indexes
-			you can create depending on the configuration provided:
-
-				- Serverless (dense or sparse)
-				- Integrated 
-				- Pod
-
-			For detailed documentation, see:
-			%s
-			`, "pc index create", docslinks.DocsIndexCreate),
-		Example: help.Examples(`
-			# create a serverless index
-			pc index create --name "my-index" --dimension 1536 --metric "cosine" --cloud "aws" --region "us-east-1"
-
-			# create a pod index
-			pc index create --name "my-index" --dimension 1536 --metric "cosine" --environment "us-east-1-aws" --pod-type "p1.x1" --shards 2 --replicas 2
-
-			# create an integrated index
-			pc index create --name "my-index" --dimension 1536 --metric "cosine" --cloud "aws" --region "us-east-1" --model "multilingual-e5-large" --field_map "text=chunk_text"
-		`),
+		Use:     "create",
+		Short:   "Create a new index with the specified configuration",
+		Long:    createIndexHelp,
+		Example: createIndexExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			runCreateIndexCmd(options)
 		},
