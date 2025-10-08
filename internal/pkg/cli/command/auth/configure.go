@@ -26,10 +26,10 @@ import (
 	"golang.org/x/term"
 )
 
-type ConfigureCmdOptions struct {
+type configureCmdOptions struct {
 	clientID            string
 	clientSecret        string
-	projectId           string
+	projectID           string
 	apiKey              string
 	readSecretFromStdin bool
 	promptIfMissing     bool
@@ -37,7 +37,7 @@ type ConfigureCmdOptions struct {
 }
 
 func NewConfigureCmd() *cobra.Command {
-	options := ConfigureCmdOptions{}
+	options := configureCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "configure",
@@ -66,7 +66,7 @@ func NewConfigureCmd() *cobra.Command {
 
 	cmd.Flags().StringVar(&options.clientID, "client-id", "", "Service account client id for the Pinecone CLI")
 	cmd.Flags().StringVar(&options.clientSecret, "client-secret", "", "Service account client secret for the Pinecone CLI")
-	cmd.Flags().StringVarP(&options.projectId, "project-id", "p", "", "The id of the project to target after authenticating with service account credentials")
+	cmd.Flags().StringVarP(&options.projectID, "project-id", "p", "", "The id of the project to target after authenticating with service account credentials")
 	cmd.Flags().StringVar(&options.apiKey, "global-api-key", "", "Global API key override for the Pinecone CLI")
 	cmd.Flags().BoolVar(&options.readSecretFromStdin, "client-secret-stdin", false, "Read the client secret from stdin")
 	cmd.Flags().BoolVar(&options.promptIfMissing, "prompt-if-missing", false, "Prompt for missing credentials if not provided")
@@ -81,7 +81,7 @@ type IO struct {
 	Err io.Writer
 }
 
-func Run(ctx context.Context, io IO, opts ConfigureCmdOptions) {
+func Run(ctx context.Context, io IO, opts configureCmdOptions) {
 	clientID := strings.TrimSpace(opts.clientID)
 	clientSecret := strings.TrimSpace(opts.clientSecret)
 	globalAPIKey := strings.TrimSpace(opts.apiKey)
@@ -179,9 +179,9 @@ func Run(ctx context.Context, io IO, opts ConfigureCmdOptions) {
 		}
 
 		// If there are multiple projects, select based on project-id, or allow the user to select one
-		if opts.projectId != "" {
+		if opts.projectID != "" {
 			for _, project := range projects {
-				if project.Id == opts.projectId {
+				if project.Id == opts.projectID {
 					targetProject = project
 					break
 				}

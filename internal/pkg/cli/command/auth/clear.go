@@ -8,13 +8,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type ClearCmdOptions struct {
+type clearCmdOptions struct {
 	serviceAccount bool
 	globalAPIKey   bool
 }
 
 func NewClearCmd() *cobra.Command {
-	options := ClearCmdOptions{}
+	options := clearCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "clear",

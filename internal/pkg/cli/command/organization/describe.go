@@ -13,13 +13,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type DescribeOrganizationCmdOptions struct {
+type describeOrganizationCmdOptions struct {
 	organizationID string
 	json           bool
 }
 
 func NewDescribeOrganizationCmd() *cobra.Command {
-	options := DescribeOrganizationCmdOptions{}
+	options := describeOrganizationCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "describe",

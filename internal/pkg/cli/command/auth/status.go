@@ -16,12 +16,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type AuthStatusCmdOptions struct {
+type authStatusCmdOptions struct {
 	json bool
 }
 
 func NewCmdAuthStatus() *cobra.Command {
-	options := AuthStatusCmdOptions{}
+	options := authStatusCmdOptions{}
 	cmd := &cobra.Command{
 		Use:   "status",
 		Short: "Show the current authentication status of the Pinecone CLI",
@@ -42,7 +42,7 @@ func NewCmdAuthStatus() *cobra.Command {
 	return cmd
 }
 
-func runAuthStatus(cmd *cobra.Command, options AuthStatusCmdOptions) error {
+func runAuthStatus(cmd *cobra.Command, options authStatusCmdOptions) error {
 	token, err := oauth.Token(cmd.Context())
 	if err != nil { // This should only error on a network request to refresh the token
 		return err

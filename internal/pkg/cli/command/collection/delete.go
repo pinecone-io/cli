@@ -11,12 +11,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type DeleteCollectionCmdOptions struct {
+type deleteCollectionCmdOptions struct {
 	name string
 }
 
 func NewDeleteCollectionCmd() *cobra.Command {
-	options := DeleteCollectionCmdOptions{}
+	options := deleteCollectionCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "delete",

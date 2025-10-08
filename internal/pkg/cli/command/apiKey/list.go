@@ -17,13 +17,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type ListKeysCmdCmdOptions struct {
-	projectId string
+type listKeysCmdCmdOptions struct {
+	projectID string
 	json      bool
 }
 
 func NewListKeysCmd() *cobra.Command {
-	options := ListKeysCmdCmdOptions{}
+	options := listKeysCmdCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -41,7 +41,7 @@ func NewListKeysCmd() *cobra.Command {
 			ac := sdk.NewPineconeAdminClient()
 
 			var err error
-			projId := options.projectId
+			projId := options.projectID
 			if projId == "" {
 				projId, err = state.GetTargetProjectId()
 				if err != nil {
@@ -71,7 +71,7 @@ func NewListKeysCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.projectId, "id", "i", "", "ID of the project to list the keys for if not the target project")
+	cmd.Flags().StringVarP(&options.projectID, "id", "i", "", "ID of the project to list the keys for if not the target project")
 	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
 	return cmd
 }

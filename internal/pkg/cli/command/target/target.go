@@ -24,16 +24,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type TargetCmdOptions struct {
-	Org     string
-	Project string
+type targetCmdOptions struct {
+	org     string
+	project string
 	json    bool
 	clear   bool
 	show    bool
 }
 
 func NewTargetCmd() *cobra.Command {
-	options := TargetCmdOptions{}
+	options := targetCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "target <flags>",
@@ -60,8 +60,8 @@ func NewTargetCmd() *cobra.Command {
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debug().
-				Str("org", options.Org).
-				Str("project", options.Project).
+				Str("org", options.org).
+				Str("project", options.project).
 				Bool("json", options.json).
 				Msg("target command invoked")
 
@@ -120,7 +120,7 @@ func NewTargetCmd() *cobra.Command {
 			}
 
 			// Interactive targeting - no options passed
-			if options.Org == "" && options.Project == "" && !options.show {
+			if options.org == "" && options.project == "" && !options.show {
 
 				// Ask the user to choose a target org
 				targetOrg := postLoginInteractiveTargetOrg(orgs)
@@ -165,7 +165,7 @@ func NewTargetCmd() *cobra.Command {
 				}
 			}
 
-			if options.Org != "" {
+			if options.org != "" {
 				// Update the organization target based on passed flag
 				var org *pinecone.Organization
 				orgs, err := ac.Organization.List(cmd.Context())
@@ -177,7 +177,7 @@ func NewTargetCmd() *cobra.Command {
 
 				// User passed an org flag, need to verify it exists and
 				// lookup the id for it.
-				org, err = getOrg(orgs, options.Org)
+				org, err = getOrg(orgs, options.org)
 				if err != nil {
 					msg.FailMsg("Failed to get organization: %s", err)
 					exit.Error(err)
@@ -215,7 +215,7 @@ func NewTargetCmd() *cobra.Command {
 			}
 
 			// Update the project target based on passed flags
-			if options.Project != "" {
+			if options.project != "" {
 				ac := sdk.NewPineconeAdminClient()
 				// Fetch the user's projects
 				projects, err := ac.Project.List(cmd.Context())
@@ -227,7 +227,7 @@ func NewTargetCmd() *cobra.Command {
 
 				// User passed a project flag, need to verify it exists and
 				// lookup the id for it.
-				proj := getProject(projects, options.Project)
+				proj := getProject(projects, options.project)
 				if !options.json {
 					msg.SuccessMsg("Target project updated to %s", style.Emphasis(proj.Name))
 				}
@@ -251,8 +251,8 @@ func NewTargetCmd() *cobra.Command {
 	}
 
 	// Required options
-	cmd.Flags().StringVarP(&options.Org, "org", "o", "", "Organization name")
-	cmd.Flags().StringVarP(&options.Project, "project", "p", "", "Project name")
+	cmd.Flags().StringVarP(&options.org, "org", "o", "", "Organization name")
+	cmd.Flags().StringVarP(&options.project, "project", "p", "", "Project name")
 	cmd.Flags().BoolVarP(&options.show, "show", "s", false, "Show the current context")
 	cmd.Flags().BoolVar(&options.clear, "clear", false, "Clear the target context")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
@@ -342,10 +342,10 @@ func postLoginInteractiveTargetProject(projectList []*pinecone.Project) *pinecon
 	} else if len(projectList) == 1 {
 		project = projectList[0]
 		state.TargetProj.Set(state.TargetProject{
-			Name: projectList[0].Name,
-			Id:   projectList[0].Id,
+			Name: project.Name,
+			Id:   project.Id,
 		})
-		return projectList[0]
+		return project
 	} else {
 		projectItems := []string{}
 		for _, proj := range projectList {

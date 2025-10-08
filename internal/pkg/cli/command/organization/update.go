@@ -14,15 +14,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type UpdateOrganizationCmdOptions struct {
+type updateOrganizationCmdOptions struct {
 	organizationID string
 	name           string
-
-	json bool
+	json           bool
 }
 
 func NewUpdateOrganizationCmd() *cobra.Command {
-	options := UpdateOrganizationCmdOptions{}
+	options := updateOrganizationCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "update",

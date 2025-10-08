@@ -16,14 +16,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type DeleteOrganizationCmdOptions struct {
+type deleteOrganizationCmdOptions struct {
 	organizationID   string
 	skipConfirmation bool
 	json             bool
 }
 
 func NewDeleteOrganizationCmd() *cobra.Command {
-	options := DeleteOrganizationCmdOptions{}
+	options := deleteOrganizationCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "delete",

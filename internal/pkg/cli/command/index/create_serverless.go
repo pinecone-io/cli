@@ -23,8 +23,7 @@ type createServerlessOptions struct {
 	cloud              string
 	region             string
 	deletionProtection string
-
-	json bool
+	json               bool
 }
 
 func NewCreateServerlessCmd() *cobra.Command {

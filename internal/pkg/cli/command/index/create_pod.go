@@ -26,9 +26,7 @@ type createPodOptions struct {
 	replicas           int32
 	sourceCollection   string
 	deletionProtection string
-	// metadataConfig   *PodSpecMetadataConfig
-
-	json bool
+	json               bool
 }
 
 func NewCreatePodCmd() *cobra.Command {

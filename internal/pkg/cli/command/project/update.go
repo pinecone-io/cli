@@ -16,17 +16,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type UpdateProjectCmdOptions struct {
+type updateProjectCmdOptions struct {
 	projectId               string
 	name                    string
 	forceEncryptionWithCMEK bool
 	maxPods                 int
-
-	json bool
+	json                    bool
 }
 
 func NewUpdateProjectCmd() *cobra.Command {
-	options := UpdateProjectCmdOptions{}
+	options := updateProjectCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "update",

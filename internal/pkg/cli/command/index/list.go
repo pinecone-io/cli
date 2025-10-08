@@ -18,12 +18,12 @@ import (
 	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 )
 
-type ListIndexCmdOptions struct {
+type listIndexCmdOptions struct {
 	json bool
 }
 
 func NewListCmd() *cobra.Command {
-	options := ListIndexCmdOptions{}
+	options := listIndexCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "list",
