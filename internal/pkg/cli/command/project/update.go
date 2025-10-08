@@ -30,7 +30,7 @@ func NewUpdateProjectCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "update",
-		Short: "Update an existing project by ID, or the target project",
+		Short: "Update a project (the target project, or a specific project ID)",
 		Example: help.Examples(`
 			pc project update --id "project-id" --name "new-name" --max-pods 5
 		`),

@@ -8,10 +8,11 @@ import (
 var (
 	indexHelp = help.Long(`
 		Work with Pinecone indexes.
-
-		An index is the highest-level organizational unit of vector data in Pinecone. 
-		You store vector data in an index, and perform queries and operations on the data stored.
-		There are two types of indexes: dense and sparse.
+		
+		An index is the primary resource for storing, managing, and querying your
+		vector data. Pinecone offers two types of indexes: dense and sparse. Dense
+		indexes are best for semantic search, and sparse indexes are best for keyword
+		search.
 		
 		See: https://docs.pinecone.io/guides/index-data/indexing-overview
 	`)

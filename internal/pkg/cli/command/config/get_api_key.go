@@ -17,7 +17,7 @@ func NewGetApiKeyCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "get-api-key",
-		Short: "Get the current global API key configured for the Pinecone CLI",
+		Short: "Get the current default API key configured for the Pinecone CLI",
 		Example: help.Examples(`
 		    pc config get-api-key
 		`),
@@ -26,7 +26,7 @@ func NewGetApiKeyCmd() *cobra.Command {
 			if !options.reveal {
 				apiKey = presenters.MaskHeadTail(apiKey, 4, 4)
 			}
-			pcio.Printf("Currently configured global API key: %s", apiKey)
+			pcio.Printf("Current default API key: %s", apiKey)
 		},
 	}
 

@@ -32,15 +32,28 @@ var (
 	pruneHelp = help.Long(`
 		Delete project API keys that the CLI is managing in local state.
 
-		This operation will remove managed keys from local storage, and delete them
-		from Pinecone servers. Any integrations you have that authenticate with these
-		keys outside of the CLI will stop working.
+		This operation removes managed keys from local storage and deletes them
+		from Pinecone servers. Any integrations that authenticate with these
+		keys outside of the CLI will immediately stop working.
 
-		By default, prune will delete all project keys that the CLI is managing, whether
+		By default, this command deletes all API keys that the CLI is managing, whether
 		they were created by the CLI or the user. You can filter the operation by 
 		project ID or key origin. Options for origin are: 'cli', 'user', or 'all' (default).
 
-		See: https://docs.pinecone.io/reference/tools/cli-authentication#deleting-api-keys
+		See: https://docs.pinecone.io/reference/tools/cli-authentication
+	`)
+
+	pruneExample = help.Examples(`
+		# Prune all locally managed keys that the CLI has created
+		pc auth local-keys prune --origin cli --skip-confirmation
+
+		# Prune all locally managed keys that the user has created and stored
+		pc auth local-keys prune --origin user --skip-confirmation
+
+		# Show a dry run plan of pruning all keys (origin defaults to "all")
+		# and then apply the changes
+		pc auth local-keys prune --dry-run --skip-confirmation
+		pc auth local-keys prune --skip-confirmation
 	`)
 )
 
@@ -48,21 +61,10 @@ func NewPruneLocalKeysCmd() *cobra.Command {
 	options := PruneLocalKeysCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "prune",
-		Short: "Delete project API keys that the CLI is managing in local state",
-		Long:  pruneHelp,
-		Example: help.Examples(`
-			# Prune all locally managed keys that the CLI has created
-			pc auth local-keys prune --origin cli --skip-confirmation
-
-			# Prune all locally managed keys that the user has created and stored
-			pc auth local-keys prune --origin user --skip-confirmation
-
-			# Show a dry run plan of pruning all keys (origin defaults to "all")
-			# and then apply the changes
-			pc auth local-keys prune --dry-run --skip-confirmation
-			pc auth local-keys prune --skip-confirmation
-		`),
+		Use:     "prune",
+		Short:   "Delete project API keys that the CLI is managing in local storage",
+		Long:    pruneHelp,
+		Example: pruneExample,
 		Run: func(cmd *cobra.Command, args []string) {
 			runPruneLocalKeys(cmd.Context(), options)
 		},
@@ -185,7 +187,7 @@ func createKeysMap(keys []*pinecone.APIKey) map[string]struct{} {
 func confirmPruneKeys(plan []planItem, options PruneLocalKeysCmdOptions) (bool, error) {
 	msg.WarnMsg("This operation will delete the following API keys:")
 	printDryRunPlan(plan, options)
-	msg.WarnMsg("Any integrations you have that auth with these API keys will stop working.")
+	msg.WarnMsg("Any integrations you have that authenticate with these API keys will immediately stop working.")
 	msg.WarnMsg("This action cannot be undone.")
 
 	// Prompt the user

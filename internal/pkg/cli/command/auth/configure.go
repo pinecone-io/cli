@@ -38,14 +38,16 @@ type ConfigureCmdOptions struct {
 
 var (
 	configureHelp = help.Long(`
-		Configure authentication credentials for the Pinecone CLI.
-
-		You can configure a service account (client ID & secret) or a global API key. Service
-		accounts automatically target an organization and will prompt to select a project, which
-		can be overridden with the --project-id flag. Configuring a service account will clear
-		any existing user login credentials.
-
-		A global API key overrides any target organization/project context. 
+		Configure the CLI to use a service account or API key for authentication.
+		
+		When you configure a service account, the CLI automatically targets the organization
+		associated with that account, and prompts you to select a project if multiple exist.
+		
+		An API overrides any explicitly targeted organization and project, instead targeting
+		the organization and project associated with the API key itself. API keys do not grant
+		Admin API access.
+		
+		See: http://docs.pinecone.io/reference/tools/cli-authentication
 	`)
 )
 

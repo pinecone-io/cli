@@ -22,10 +22,10 @@ var (
 	listHelp = help.Long(`
 		List the project API keys that the CLI is currently managing in local state.
 
-		The CLI will only store one API key per project, as needed. API key values will
-		be obscured in the output by default.
+		The CLI stores only one API key per project, as needed. API key values are
+		obscured in the output by default.
 
-		See: https://docs.pinecone.io/reference/tools/cli-authentication#identifying-managed-keys
+		See: https://docs.pinecone.io/reference/tools/cli-authentication
 	`)
 )
 

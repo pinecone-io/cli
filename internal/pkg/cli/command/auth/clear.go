@@ -18,7 +18,7 @@ func NewClearCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "clear",
-		Short: "Allows you to clear a configured service account (client ID & secret), or global API key",
+		Short: "Clear a service account (client ID and secret) or API key from local storage",
 		Example: help.Examples(`
 		    # Clear configured service account credentials
 		    pc auth clear --service-account
@@ -39,18 +39,18 @@ func NewClearCmd() *cobra.Command {
 			if options.serviceAccount {
 				secrets.ClientId.Clear()
 				secrets.ClientSecret.Clear()
-				msg.SuccessMsg("Service account (client ID & secret) cleared")
+				msg.SuccessMsg("Service account (client ID and secret) cleared from local storage")
 			}
 
 			if options.globalAPIKey {
 				secrets.GlobalApiKey.Clear()
-				msg.SuccessMsg("Global API key cleared")
+				msg.SuccessMsg("Default API key cleared")
 			}
 		},
 	}
 
-	cmd.Flags().BoolVar(&options.serviceAccount, "service-account", false, "Clear the configured service account (client ID & secret)")
-	cmd.Flags().BoolVar(&options.globalAPIKey, "global-api-key", false, "Clear the configured global API key")
+	cmd.Flags().BoolVar(&options.serviceAccount, "service-account", false, "Clear the configured service account (client ID and secret) from local storage")
+	cmd.Flags().BoolVar(&options.globalAPIKey, "global-api-key", false, "Clear the default API key from local storage")
 
 	return cmd
 }

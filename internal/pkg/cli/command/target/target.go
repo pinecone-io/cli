@@ -40,7 +40,7 @@ var (
 		After authenticating through the CLI with user login or service account credentials, you can use
 		this command to set the target organization or project context for control and data plane operations.
 
-		When using a global API key for authentication, there's no need to specify a project context as the API 
+		When using a global API key for authentication, there's no need to specify a project context, because the API 
 		key is already associated with a specific organization and project.
 	`)
 

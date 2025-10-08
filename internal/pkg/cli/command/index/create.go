@@ -66,8 +66,8 @@ var (
 		Create a new index with the specified configuration.
 		
 		You can specify the measure of similarity, the dimension of vectors to be stored, and which cloud
-		provider you would like to deploy with. You can also control whether the index is 'sparse', or 'dense',
-		or any integrated embedding configuration you would like to use.
+		provider to deploy with. You can also control whether the index is 'sparse' or 'dense',
+		and any integrated embedding configuration you'd like to use.
 
 		See: %s
 	`, docslinks.DocsIndexCreate)

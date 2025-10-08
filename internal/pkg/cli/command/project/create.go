@@ -26,11 +26,13 @@ type CreateProjectCmdOptions struct {
 
 var (
 	createHelp = help.Long(`
-		Create a project for the target organization determined by user credentials.
+		Create a new project in your target organization.
 		
-		If you'd like to set the created project as the target project within the CLI,
-		you can provide the --target flag.
-
+		In Pinecone, projects are organizational containers where you create and
+		manage indexes. All indexes must belong to a project, and each project has
+		its own API keys.
+		
+		To target the newly created project, include the '--target' flag.
 		See: https://docs.pinecone.io/guides/projects/manage-projects
 	`)
 )

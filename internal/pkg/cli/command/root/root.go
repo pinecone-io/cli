@@ -39,12 +39,23 @@ func GetRootCmd() *cobra.Command {
 
 var (
 	rootHelp = help.Long(`
-		Work seamlessly with Pinecone from the command line.
+		The Pinecone CLI (pc) provides a complete interface for managing your
+		vector database infrastructure, from authentication and project setup to
+		creating indexes and managing API keys.
 
-		pc is a CLI tool for managing Pinecone infrastructure (projects, organizations,
-		API keys, indexes) directly from your terminal.
-		
-		Get started by logging in with pc login
+		GETTING STARTED
+
+		1. Authenticate
+			$ pc login
+			Opens a browser to log in with your Pinecone account
+
+		2. Set a target context (organization + project)
+		   $ pc target --org "My organization" --project "My project"
+		   This determines where indexes and resources will be created
+
+		3. Create an index
+		   $ pc index create --name "My index" --dimension 1536 --metric "cosine" \
+		     --cloud "aws" --region "us-west-2"
 
 		See: https://docs.pinecone.io/reference/tools/cli-overview
 	`)
@@ -54,7 +65,7 @@ func init() {
 	globalOptions := GlobalOptions{}
 	rootCmd = &cobra.Command{
 		Use:   "pc",
-		Short: "Work seamlessly with Pinecone from the command line",
+		Short: "Manage your Pinecone vector database infrastructure from the command line",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			pcio.SetQuiet(globalOptions.quiet)
 		},
