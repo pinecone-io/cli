@@ -8,19 +8,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type GetAPIKeyCmdOptions struct {
+	reveal bool
+}
+
 func NewGetApiKeyCmd() *cobra.Command {
+	options := GetAPIKeyCmdOptions{}
+
 	cmd := &cobra.Command{
 		Use:   "get-api-key",
-		Short: "Get the current API key configured for the Pinecone CLI",
+		Short: "Get the current default API key configured for the Pinecone CLI",
 		Example: help.Examples(`
-		    pc config set-color true
-		    pc config set-color false
+		    pc config get-api-key
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			apiKey := secrets.GlobalApiKey.Get()
-			pcio.Printf("Currently configured global API Key: %s", presenters.MaskHeadTail(apiKey, 4, 4))
+			apiKey := secrets.DefaultAPIKey.Get()
+			if !options.reveal {
+				apiKey = presenters.MaskHeadTail(apiKey, 4, 4)
+			}
+			pcio.Printf("Current default API key: %s", apiKey)
 		},
 	}
+
+	cmd.Flags().BoolVar(&options.reveal, "reveal", false, "Reveal the full API key value in the output")
 
 	return cmd
 }

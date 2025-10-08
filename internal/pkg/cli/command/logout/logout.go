@@ -11,7 +11,7 @@ import (
 func NewLogoutCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "logout",
-		Short: "Clear your authentication credentials, and delete all saved tokens and keys",
+		Short: "Clears locally stored API keys (managed and default), service account details (client ID and secret), and user login token. Also clears organization and project target context. This command is an alias for 'pc auth logout'.",
 		Example: help.Examples(`
 			pc logout
 		`),

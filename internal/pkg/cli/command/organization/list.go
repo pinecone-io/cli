@@ -25,7 +25,7 @@ func NewListOrganizationsCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List all organizations available to the currently authenticated user",
+		Short: "List all organizations available to the authenticated user",
 		Example: help.Examples(`
 			pc organization list
 		`),

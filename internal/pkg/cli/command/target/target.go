@@ -34,31 +34,38 @@ type targetCmdOptions struct {
 	show      bool
 }
 
+var (
+	targetHelp = help.Long(`
+		Set the target organization and project context for the CLI.
+
+		Operations for resources within the control and data plane take place in the context of a specific project.
+		After authenticating through the CLI with user login or service account credentials, you can use
+		this command to set the target organization or project context for control and data plane operations.
+
+		When using a default API key for authentication, there's no need to specify a project context, because the API 
+		key is already associated with a specific organization and project.
+	`)
+
+	targetExample = help.Examples(`
+		# Interactively target from available organizations and projects
+		pc target
+
+		# Target an organization and project by name
+		pc target --org "organization-name" -project "project-name"
+
+		# Target a project by name
+		pc target --project "project-name"
+	`)
+)
+
 func NewTargetCmd() *cobra.Command {
 	options := targetCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "target <flags>",
-		Short: "Set context for the CLI",
-		Long: help.Long(`
-			Many API calls take place in the context of a specific project.
-			When using the CLI interactively (i.e. via the oauth2 authentication flow) you
-			should use this command to set the current project context for the CLI.
-
-			For automation use cases relying on API Keys for authentication, there's no need
-			to specify a project context as the API Key is already associated with a specific
-			project in the backend.
-		`),
-		Example: help.Examples(`
-			# Interactively target from available organizations and projects
-			pc target
-
-			# Target an organization and project by name
-			pc target --org "organization-name" -project "project-name"
-
-			# Target a project by name
-			pc target --project "project-name"
-		`),
+		Use:     "target <flags>",
+		Short:   "Set the target organization and project context for the CLI",
+		Long:    targetHelp,
+		Example: targetExample,
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Debug().

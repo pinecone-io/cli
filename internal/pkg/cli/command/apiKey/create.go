@@ -23,12 +23,29 @@ type createAPIKeyOptions struct {
 	json      bool
 }
 
+var (
+	createHelp = help.Long(`
+		Create a new API key for a project.
+
+		Creates a key for the currently targeted project unless a project ID is specified
+		with the '--id' flag.
+
+		To save the key locally for automatic use by the CLI, use the '--store' flag.
+		The new key defaults to the 'ProjectEditor' role. You can specify other roles
+		with the '--roles' flag. Available roles include 'ProjectEditor', 'ProjectViewer', 
+		'ControlPlaneEditor', 'ControlPlaneViewer', 'DataPlaneEditor', and 'DataPlaneViewer'.
+		
+		See: https://docs.pinecone.io/guides/assistant/admin/manage-api-keys
+	`)
+)
+
 func NewCreateApiKeyCmd() *cobra.Command {
 	options := createAPIKeyOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "create",
-		Short:   "Create an API key for a specific project by ID or the target project",
+		Short:   "Create a new API key for a project (targeted project, or a specific project ID)",
+		Long:    createHelp,
 		GroupID: help.GROUP_API_KEYS.ID,
 		Example: help.Examples(`
 		    # Create a new API key for the target project
@@ -79,7 +96,7 @@ func NewCreateApiKeyCmd() *cobra.Command {
 				json := text.IndentJSON(keyWithSecret)
 				pcio.Println(json)
 			} else {
-				msg.SuccessMsg("API Key %s created successfully.\n", style.Emphasis(keyWithSecret.Key.Name))
+				msg.SuccessMsg("API key %s created successfully.\n", style.Emphasis(keyWithSecret.Key.Name))
 				presenters.PrintDescribeAPIKeyWithSecretTable(keyWithSecret)
 			}
 

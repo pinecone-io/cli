@@ -24,7 +24,7 @@ func NewCmdAuthStatus() *cobra.Command {
 	options := authStatusCmdOptions{}
 	cmd := &cobra.Command{
 		Use:   "status",
-		Short: "Show the current authentication status of the Pinecone CLI",
+		Short: "Show the current authentication configuration for the Pinecone CLI",
 		Example: help.Examples(`
 			pc auth status --json
 		`),
@@ -54,7 +54,7 @@ func runAuthStatus(cmd *cobra.Command, options authStatusCmdOptions) error {
 	environment := config.Environment.Get()
 
 	// Global API Key
-	globalAPIKey := secrets.GlobalApiKey.Get()
+	globalAPIKey := secrets.DefaultAPIKey.Get()
 
 	// Service Account
 	clientId := secrets.ClientId.Get()

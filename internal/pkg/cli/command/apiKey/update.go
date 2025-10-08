@@ -24,7 +24,7 @@ func NewUpdateAPIKeyCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "update",
-		Short: "Update an existing API key by ID with the specified configuration",
+		Short: "Update an API key by ID",
 		Example: help.Examples(`
 			pc api-key update --id "api-key-id" --name "updated-name" --roles "ProjectEditor"
 		`),

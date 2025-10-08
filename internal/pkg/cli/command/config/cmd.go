@@ -6,12 +6,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	configHelp = help.LongF(`
+		Manage configuration for the Pinecone CLI.
+
+		Configuration for this CLI is stored in a file called config.yaml in the %s directory.
+	`, configuration.NewConfigLocations().ConfigPath)
+)
+
 func NewConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config <command>",
 		Short: "Manage configuration for the Pinecone CLI",
-		Long: help.LongF(`Configuration for this CLI is stored in a file called config.yaml in the %s directory.`,
-			configuration.NewConfigLocations().ConfigPath),
+		Long:  configHelp,
 	}
 
 	cmd.AddCommand(NewSetColorCmd())

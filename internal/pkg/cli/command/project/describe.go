@@ -25,7 +25,7 @@ func NewDescribeProjectCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:     "describe",
-		Short:   "Describe a specific project by ID or the target project",
+		Short:   "Describe a project (the target project, or a specific project ID)",
 		GroupID: help.GROUP_PROJECTS.ID,
 		Example: help.Examples(`
 			pc project describe --id "project-id"

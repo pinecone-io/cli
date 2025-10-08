@@ -27,7 +27,7 @@ func NewListCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "See the list of indexes in the targeted project",
+		Short: "List all indexes in the target project",
 		Example: help.Examples(`
 			pc index list
 		`),

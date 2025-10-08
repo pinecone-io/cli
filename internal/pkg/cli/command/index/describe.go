@@ -24,7 +24,7 @@ func NewDescribeCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "describe",
-		Short: "Get configuration and status information for an index by name",
+		Short: "Describe an index by name",
 		Example: help.Examples(`
 			pc index describe --name "index-name"
 		`),
