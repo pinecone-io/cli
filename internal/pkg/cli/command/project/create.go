@@ -24,12 +24,26 @@ type CreateProjectCmdOptions struct {
 	json                    bool
 }
 
+var (
+	createHelp = help.Long(`
+		Create a new project in your target organization.
+		
+		In Pinecone, projects are organizational containers where you create and
+		manage indexes. All indexes must belong to a project, and each project has
+		its own API keys.
+		
+		To target the newly created project, include the '--target' flag.
+		See: https://docs.pinecone.io/guides/projects/manage-projects
+	`)
+)
+
 func NewCreateProjectCmd() *cobra.Command {
 	options := CreateProjectCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "create",
 		Short:   "Create a project for the target organization determined by user credentials",
+		Long:    createHelp,
 		GroupID: help.GROUP_PROJECTS.ID,
 		Example: help.Examples(`
 			pc project create --name "demo-project" --max-pods 10 --force-encryption

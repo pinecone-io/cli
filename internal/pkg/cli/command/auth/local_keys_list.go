@@ -18,12 +18,24 @@ type ListLocalKeysCmdOptions struct {
 	json   bool
 }
 
+var (
+	listHelp = help.Long(`
+		List the project API keys that the CLI is currently managing in local state.
+
+		The CLI stores only one API key per project, as needed. API key values are
+		obscured in the output by default.
+
+		See: https://docs.pinecone.io/reference/tools/cli-authentication
+	`)
+)
+
 func NewListLocalKeysCmd() *cobra.Command {
 	options := ListLocalKeysCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List the project API keys that the CLI is currently managing in local state",
+		Long:  listHelp,
 		Example: help.Examples(`
 			pc auth local-keys list --reveal
 		`),

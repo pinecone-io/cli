@@ -63,8 +63,8 @@ func NewSetEnvCmd() *cobra.Command {
 				msg.InfoMsg("To login, run %s", style.Code("pc login"))
 			}
 
-			if secrets.GlobalApiKey.Get() != "" {
-				secrets.GlobalApiKey.Clear()
+			if secrets.DefaultAPIKey.Get() != "" {
+				secrets.DefaultAPIKey.Clear()
 				msg.InfoMsg("API key cleared; to set a new API key, run %s", style.Code("pc config set-api-key"))
 			} else {
 				msg.InfoMsg("To set a new API key, run %s", style.Code("pc config set-api-key"))

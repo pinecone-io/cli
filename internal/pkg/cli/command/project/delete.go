@@ -28,7 +28,7 @@ func NewDeleteProjectCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "delete",
-		Short: "Delete a specific project by ID or the target project",
+		Short: "Delete a project (the target project, or a specific project ID)",
 		Example: help.Examples(`
 			# Delete the target project
 			pc project delete

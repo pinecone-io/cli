@@ -21,12 +21,26 @@ type DeleteApiKeyOptions struct {
 	skipConfirmation bool
 }
 
+var (
+	deleteHelp = help.Long(`
+		Delete an API key permanently by its ID.
+
+		This is a destructive and irreversible action. Any applications or scripts 
+		using the deleted key will immediately fail to authenticate. If the key is stored 
+		locally by the CLI, it will be deleted from local storage.
+		
+		You'll be prompted to confirm this action. To disable the prompt,
+		use the '--skip-confirmation' flag.
+	`)
+)
+
 func NewDeleteKeyCmd() *cobra.Command {
 	options := DeleteApiKeyOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "delete",
 		Short:   "Delete an API key by ID",
+		Long:    deleteHelp,
 		GroupID: help.GROUP_API_KEYS.ID,
 		Example: help.Examples(`
 			pc api-key delete --id "api-key-id" 
@@ -71,8 +85,8 @@ func NewDeleteKeyCmd() *cobra.Command {
 }
 
 func confirmDeleteApiKey(apiKeyName string) {
-	msg.WarnMsg("This operation will delete API Key %s from project %s.", style.Emphasis(apiKeyName), style.Emphasis(state.TargetProj.Get().Name))
-	msg.WarnMsg("Any integrations you have that auth with this API Key will stop working.")
+	msg.WarnMsg("This operation will delete API key %s from project %s.", style.Emphasis(apiKeyName), style.Emphasis(state.TargetProj.Get().Name))
+	msg.WarnMsg("Any integrations that authenticate with this API key will immediately stop working.")
 	msg.WarnMsg("This action cannot be undone.")
 
 	// Prompt the user
