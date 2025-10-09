@@ -28,7 +28,7 @@ var (
 
 func NewAuthCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "auth <command>",
+		Use:     "auth",
 		Short:   "Authenticate and manage credentials for the Pinecone CLI",
 		Long:    authHelp,
 		GroupID: help.GROUP_AUTH.ID,

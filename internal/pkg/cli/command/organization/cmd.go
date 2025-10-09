@@ -25,7 +25,7 @@ var (
 
 func NewOrganizationCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "organization <command>",
+		Use:     "organization",
 		Short:   "Manage Pinecone organizations",
 		Long:    organizationHelp,
 		GroupID: help.GROUP_ADMIN.ID,
