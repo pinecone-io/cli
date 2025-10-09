@@ -66,7 +66,7 @@ brew untap pinecone-io/tap
 For users who prefer not to use Homebrew or need specific platform binaries, we provide pre-built binaries for many platforms.
 
 1. **Visit the [Releases page](https://github.com/pinecone-io/cli/releases)**
-2. **Download the appropriate binary** for your platform and architecture
+2. **Download the appropriate binary** for your platform and architecture from the "Assets" section.
 3. **Make the binary executable** (Linux/macOS):
    ```bash
    chmod +x pc
