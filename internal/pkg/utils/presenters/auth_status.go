@@ -20,7 +20,7 @@ func PrintAuthStatus(authStatus AuthStatus) {
 	pcio.Fprint(writer, header)
 
 	pcio.Fprintf(writer, "Authentication Mode\t%s\n", labelUnsetIfEmpty(authStatus.AuthMode))
-	pcio.Fprintf(writer, "Global API Key\t%s\n", labelUnsetIfEmpty(MaskHeadTail(authStatus.GlobalAPIKey, 4, 4)))
+	pcio.Fprintf(writer, "Default API Key\t%s\n", labelUnsetIfEmpty(authStatus.DefaultAPIKey))
 	pcio.Fprintf(writer, "Service Account Client ID\t%s\n", labelUnsetIfEmpty(authStatus.ClientID))
 	pcio.Fprintf(writer, "Service Account Client Secret\t%s\n", labelUnsetIfEmpty(authStatus.ClientSecret))
 	pcio.Fprintf(writer, "Token Expiry\t%s\n", labelUnsetIfEmpty(authStatus.TokenExpiry))
@@ -37,7 +37,7 @@ type AuthStatus struct {
 	ClientID            string        `json:"client_id,omitempty"`
 	ClientSecret        string        `json:"client_secret,omitempty"`
 	Environment         string        `json:"environment,omitempty"`
-	GlobalAPIKey        string        `json:"global_api_key,omitempty"`
+	DefaultAPIKey       string        `json:"default_api_key,omitempty"`
 	OrganizationName    string        `json:"organization_name,omitempty"`
 	ProjectName         string        `json:"project_name,omitempty"`
 	Token               *oauth2.Token `json:"token,omitempty"`

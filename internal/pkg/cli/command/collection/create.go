@@ -16,14 +16,14 @@ import (
 	"github.com/pinecone-io/go-pinecone/v4/pinecone"
 )
 
-type CreateCollectionCmdOptions struct {
+type createCollectionCmdOptions struct {
 	json        bool
 	name        string
 	sourceIndex string
 }
 
 func NewCreateCollectionCmd() *cobra.Command {
-	options := CreateCollectionCmdOptions{}
+	options := createCollectionCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "create",

@@ -12,13 +12,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type DescribeAPIKeyOptions struct {
-	apiKeyId string
+type describeAPIKeyOptions struct {
+	apiKeyID string
 	json     bool
 }
 
 func NewDescribeAPIKeyCmd() *cobra.Command {
-	options := DescribeAPIKeyOptions{}
+	options := describeAPIKeyOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "describe",
@@ -30,9 +30,9 @@ func NewDescribeAPIKeyCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()
 
-			apiKey, err := ac.APIKey.Describe(cmd.Context(), options.apiKeyId)
+			apiKey, err := ac.APIKey.Describe(cmd.Context(), options.apiKeyID)
 			if err != nil {
-				msg.FailMsg("Failed to describe API key %s: %s\n", style.Emphasis(options.apiKeyId), err)
+				msg.FailMsg("Failed to describe API key %s: %s\n", style.Emphasis(options.apiKeyID), err)
 				exit.Error(err)
 			}
 
@@ -46,7 +46,7 @@ func NewDescribeAPIKeyCmd() *cobra.Command {
 	}
 
 	// required flags
-	cmd.Flags().StringVarP(&options.apiKeyId, "id", "i", "", "ID of the API key to describe")
+	cmd.Flags().StringVarP(&options.apiKeyID, "id", "i", "", "ID of the API key to describe")
 	_ = cmd.MarkFlagRequired("id")
 
 	// optional flags

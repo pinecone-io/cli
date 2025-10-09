@@ -13,7 +13,7 @@ var (
 		Configure the CLI to authenticate with Pinecone using an API key.
 
 		This overrides any target context set through user login or service account credentials.
-		To clear the explicit API key, run 'pc auth clear --global-api-key'.
+		To clear the explicit API key, run 'pc auth clear --api-key'.
 	`)
 )
 

@@ -15,13 +15,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type DescribeProjectCmdOptions struct {
-	projectId string
+type describeProjectCmdOptions struct {
+	projectID string
 	json      bool
 }
 
 func NewDescribeProjectCmd() *cobra.Command {
-	options := DescribeProjectCmdOptions{}
+	options := describeProjectCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "describe",
@@ -33,7 +33,7 @@ func NewDescribeProjectCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			ac := sdk.NewPineconeAdminClient()
 
-			projId := options.projectId
+			projId := options.projectID
 			var err error
 			if projId == "" {
 				projId, err = state.GetTargetProjectId()
@@ -59,7 +59,7 @@ func NewDescribeProjectCmd() *cobra.Command {
 	}
 
 	// required flags
-	cmd.Flags().StringVarP(&options.projectId, "id", "i", "", "ID of the project to describe")
+	cmd.Flags().StringVarP(&options.projectID, "id", "i", "", "ID of the project to describe")
 	_ = cmd.MarkFlagRequired("id")
 
 	// optional flags

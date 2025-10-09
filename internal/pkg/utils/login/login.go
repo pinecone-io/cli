@@ -219,16 +219,15 @@ func GetAndSetAccessToken(orgId *string) error {
 		secrets.ClientSecret.Set("")
 
 		// Update target credentials context
-		// TODO - proper getters / setters for state
-		globalAPIKey := secrets.DefaultAPIKey.Get()
 		authContext := state.AuthUserToken
-		if state.TargetCreds.Get().AuthContext == state.AuthGlobalAPIKey {
-			authContext = state.AuthGlobalAPIKey
+
+		// If there's a default API key set, we want to keep that as the current auth context
+		if state.AuthedUser.Get().AuthContext == state.AuthDefaultAPIKey {
+			authContext = state.AuthDefaultAPIKey
 		}
-		state.TargetCreds.Set(state.TargetUser{
-			AuthContext:  authContext,
-			Email:        claims.Email,
-			GlobalAPIKey: globalAPIKey,
+		state.AuthedUser.Set(state.TargetUser{
+			AuthContext: authContext,
+			Email:       claims.Email,
 		})
 	}
 

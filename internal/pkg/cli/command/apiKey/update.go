@@ -12,15 +12,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type UpdateAPIKeyOptions struct {
-	apiKeyId string
+type updateAPIKeyOptions struct {
+	apiKeyID string
 	name     string
 	roles    []string
 	json     bool
 }
 
 func NewUpdateAPIKeyCmd() *cobra.Command {
-	options := UpdateAPIKeyOptions{}
+	options := updateAPIKeyOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "update",
@@ -41,9 +41,9 @@ func NewUpdateAPIKeyCmd() *cobra.Command {
 				updateParams.Roles = &options.roles
 			}
 
-			apiKey, err := ac.APIKey.Update(cmd.Context(), options.apiKeyId, updateParams)
+			apiKey, err := ac.APIKey.Update(cmd.Context(), options.apiKeyID, updateParams)
 			if err != nil {
-				msg.FailMsg("Failed to update API key %s: %s\n", options.apiKeyId, err)
+				msg.FailMsg("Failed to update API key %s: %s\n", options.apiKeyID, err)
 				exit.Error(err)
 			}
 
@@ -59,7 +59,7 @@ func NewUpdateAPIKeyCmd() *cobra.Command {
 	}
 
 	// required flags
-	cmd.Flags().StringVarP(&options.apiKeyId, "id", "i", "", "id of the API key to update")
+	cmd.Flags().StringVarP(&options.apiKeyID, "id", "i", "", "id of the API key to update")
 	_ = cmd.MarkFlagRequired("id")
 
 	// optional flags

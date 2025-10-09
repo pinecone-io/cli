@@ -20,9 +20,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type PruneLocalKeysCmdOptions struct {
+type pruneLocalKeysCmdOptions struct {
 	origin           string // "cli", "user", "all"
-	projectId        string // optional filter, if not provided all projects will be pruned
+	projectID        string // optional filter, if not provided all projects will be pruned
 	dryRun           bool   // preview keys that will be deleted
 	skipConfirmation bool   // skip confirmation prompt
 	json             bool
@@ -58,7 +58,7 @@ var (
 )
 
 func NewPruneLocalKeysCmd() *cobra.Command {
-	options := PruneLocalKeysCmdOptions{}
+	options := pruneLocalKeysCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "prune",
@@ -71,7 +71,7 @@ func NewPruneLocalKeysCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&options.origin, "origin", "o", "all", "Filter deletions by key origin: 'cli', 'user', 'all'")
-	cmd.Flags().StringVar(&options.projectId, "id", "", "Only prune keys for a specific project")
+	cmd.Flags().StringVar(&options.projectID, "id", "", "Only prune keys for a specific project")
 	cmd.Flags().BoolVar(&options.dryRun, "dry-run", false, "Preview keys that will be deleted without applying changes")
 	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "Skip confirmation prompt")
 	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
@@ -79,17 +79,17 @@ func NewPruneLocalKeysCmd() *cobra.Command {
 	return cmd
 }
 
-func runPruneLocalKeys(ctx context.Context, options PruneLocalKeysCmdOptions) {
+func runPruneLocalKeys(ctx context.Context, options pruneLocalKeysCmdOptions) {
 	ac := sdk.NewPineconeAdminClient()
 	managedKeys := secrets.GetManagedProjectKeys()
 
 	// Filter to projectId if provided
-	if options.projectId != "" {
-		if mk, ok := managedKeys[options.projectId]; ok {
-			managedKeys = map[string]secrets.ManagedKey{options.projectId: mk}
+	if options.projectID != "" {
+		if mk, ok := managedKeys[options.projectID]; ok {
+			managedKeys = map[string]secrets.ManagedKey{options.projectID: mk}
 		} else {
-			msg.FailMsg("No managed keys found for project ID %s", style.Emphasis(options.projectId))
-			exit.Error(pcio.Errorf("no managed keys found for project ID: %s", options.projectId))
+			msg.FailMsg("No managed keys found for project ID %s", style.Emphasis(options.projectID))
+			exit.Error(pcio.Errorf("no managed keys found for project ID: %s", options.projectID))
 		}
 	}
 
@@ -111,7 +111,7 @@ func runPruneLocalKeys(ctx context.Context, options PruneLocalKeysCmdOptions) {
 		projKeysMap := createKeysMap(projKeys)
 		_, onServer := projKeysMap[managedKey.Id]
 		if onServer {
-			plan = append(plan, planItem{projectId: projectID, managedKey: managedKey, onServer: onServer})
+			plan = append(plan, planItem{projectID: projectID, managedKey: managedKey, onServer: onServer})
 		}
 	}
 
@@ -152,12 +152,12 @@ func runPruneLocalKeys(ctx context.Context, options PruneLocalKeysCmdOptions) {
 				exit.Error(err)
 				continue // If we failed to delete the remote key, move on and keep the locally stored key for now
 			}
-			msg.SuccessMsg("Deleted remote key %s (project %s)", style.Emphasis(key.managedKey.Id), style.Emphasis(key.projectId))
+			msg.SuccessMsg("Deleted remote key %s (project %s)", style.Emphasis(key.managedKey.Id), style.Emphasis(key.projectID))
 		}
 
 		// Clean up local record
-		secrets.DeleteProjectManagedKey(key.projectId)
-		msg.SuccessMsg("Deleted local record for key %s (project %s)", style.Emphasis(key.managedKey.Id), style.Emphasis(key.projectId))
+		secrets.DeleteProjectManagedKey(key.projectID)
+		msg.SuccessMsg("Deleted local record for key %s (project %s)", style.Emphasis(key.managedKey.Id), style.Emphasis(key.projectID))
 	}
 
 	msg.SuccessMsg("Pruning operation complete")
@@ -184,8 +184,8 @@ func createKeysMap(keys []*pinecone.APIKey) map[string]struct{} {
 	return keysMap
 }
 
-func confirmPruneKeys(plan []planItem, options PruneLocalKeysCmdOptions) (bool, error) {
-	msg.WarnMsg("This operation will delete the following API keys:")
+func confirmPruneKeys(plan []planItem, options pruneLocalKeysCmdOptions) (bool, error) {
+	msg.WarnMsg("This operation will delete the following API Keys:")
 	printDryRunPlan(plan, options)
 	msg.WarnMsg("Any integrations you have that authenticate with these API keys will immediately stop working.")
 	msg.WarnMsg("This action cannot be undone.")
@@ -212,7 +212,7 @@ func confirmPruneKeys(plan []planItem, options PruneLocalKeysCmdOptions) (bool, 
 	}
 }
 
-func printDryRunPlan(plan []planItem, options PruneLocalKeysCmdOptions) {
+func printDryRunPlan(plan []planItem, options pruneLocalKeysCmdOptions) {
 	if options.json {
 		json := text.IndentJSON(plan)
 		pcio.Println(json)
@@ -223,20 +223,20 @@ func printDryRunPlan(plan []planItem, options PruneLocalKeysCmdOptions) {
 					style.Emphasis(key.managedKey.Name),
 					style.Emphasis(key.managedKey.Id),
 					style.Emphasis(key.managedKey.ProjectName),
-					style.Emphasis(key.projectId))
+					style.Emphasis(key.projectID))
 			} else {
 				msg.WarnMsg("Local API key %s (ID: %s) was not found in project %s (ID: %s) and will be deleted locally ",
 					style.Emphasis(key.managedKey.Name),
 					style.Emphasis(key.managedKey.Id),
 					style.Emphasis(key.managedKey.ProjectName),
-					style.Emphasis(key.projectId))
+					style.Emphasis(key.projectID))
 			}
 		}
 	}
 }
 
 type planItem struct {
-	projectId  string
+	projectID  string
 	managedKey secrets.ManagedKey
 	onServer   bool
 }

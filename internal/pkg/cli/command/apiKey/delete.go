@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type DeleteApiKeyOptions struct {
+type deleteAPIKeyOptions struct {
 	apiKeyId         string
 	skipConfirmation bool
 }
@@ -35,7 +35,7 @@ var (
 )
 
 func NewDeleteKeyCmd() *cobra.Command {
-	options := DeleteApiKeyOptions{}
+	options := deleteAPIKeyOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "delete",

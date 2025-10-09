@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type CreateApiKeyOptions struct {
+type createAPIKeyOptions struct {
 	projectId string
 	name      string
 	store     bool
@@ -40,7 +40,7 @@ var (
 )
 
 func NewCreateApiKeyCmd() *cobra.Command {
-	options := CreateApiKeyOptions{}
+	options := createAPIKeyOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "create",

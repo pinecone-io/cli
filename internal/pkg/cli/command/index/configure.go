@@ -20,8 +20,7 @@ type configureIndexOptions struct {
 	podType            string
 	replicas           int32
 	deletionProtection string
-
-	json bool
+	json               bool
 }
 
 func NewConfigureIndexCmd() *cobra.Command {

@@ -3,6 +3,7 @@ package presenters
 import (
 	"strings"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
@@ -27,11 +28,14 @@ func PrintTargetContext(context *state.TargetContext) {
 	header := strings.Join(columns, "\t") + "\n"
 	pcio.Fprint(writer, header)
 
+	// Get API key for presentational layer
+	defaultAPIKeyMasked := MaskHeadTail(secrets.DefaultAPIKey.Get(), 4, 4)
+
 	pcio.Fprintf(writer, "Organization\t%s\n", labelUnsetIfEmpty(string(context.Organization.Name)))
 	pcio.Fprintf(writer, "Organization ID\t%s\n", labelUnsetIfEmpty(string(context.Organization.Id)))
 	pcio.Fprintf(writer, "Project\t%s\n", labelUnsetIfEmpty(string(context.Project.Name)))
 	pcio.Fprintf(writer, "Project ID\t%s\n", labelUnsetIfEmpty(string(context.Project.Id)))
-	pcio.Fprintf(writer, "Global API Key\t%s\n", labelUnsetIfEmpty(string(context.Credentials.GlobalAPIKey)))
+	pcio.Fprintf(writer, "Default API Key\t%s\n", labelUnsetIfEmpty(defaultAPIKeyMasked))
 
 	writer.Flush()
 }

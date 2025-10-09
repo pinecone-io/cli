@@ -24,7 +24,7 @@ var (
 			Id:   "",
 		},
 	}
-	TargetCreds = configuration.MarshaledProperty[TargetUser]{
+	AuthedUser = configuration.MarshaledProperty[TargetUser]{
 		KeyName:    "user_context",
 		ViperStore: StateViper,
 		DefaultValue: TargetUser{
@@ -36,7 +36,7 @@ var (
 var properties = []configuration.Property{
 	TargetOrg,
 	TargetProj,
-	TargetCreds,
+	AuthedUser,
 }
 
 var ConfigFile = configuration.ConfigFile{

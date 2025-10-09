@@ -17,14 +17,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type DeleteProjectCmdOptions struct {
+type deleteProjectCmdOptions struct {
 	projectId        string
 	skipConfirmation bool
 	json             bool
 }
 
 func NewDeleteProjectCmd() *cobra.Command {
-	options := DeleteProjectCmdOptions{}
+	options := deleteProjectCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "delete",

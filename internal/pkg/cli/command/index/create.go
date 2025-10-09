@@ -57,8 +57,7 @@ type createIndexOptions struct {
 	metric             string
 	deletionProtection string
 	tags               map[string]string
-
-	json bool
+	json               bool
 }
 
 var (

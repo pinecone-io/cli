@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type ListLocalKeysCmdOptions struct {
+type listLocalKeysCmdOptions struct {
 	reveal bool
 	json   bool
 }
@@ -30,7 +30,7 @@ var (
 )
 
 func NewListLocalKeysCmd() *cobra.Command {
-	options := ListLocalKeysCmdOptions{}
+	options := listLocalKeysCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "list",

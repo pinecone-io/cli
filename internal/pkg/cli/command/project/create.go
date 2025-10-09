@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type CreateProjectCmdOptions struct {
+type createProjectCmdOptions struct {
 	name                    string
 	forceEncryptionWithCMEK bool
 	maxPods                 int
@@ -38,7 +38,7 @@ var (
 )
 
 func NewCreateProjectCmd() *cobra.Command {
-	options := CreateProjectCmdOptions{}
+	options := createProjectCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "create",

@@ -18,12 +18,12 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
-type ListProjectCmdOptions struct {
+type listProjectCmdOptions struct {
 	json bool
 }
 
 func NewListProjectsCmd() *cobra.Command {
-	options := ListProjectCmdOptions{}
+	options := listProjectCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:     "list",

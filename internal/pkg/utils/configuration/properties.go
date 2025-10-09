@@ -70,6 +70,13 @@ func (c MarshaledProperty[T]) Set(value T) {
 	}
 }
 
+// Update loads the current or default value, lets the caller mutate it, then writes it back
+func (c MarshaledProperty[T]) Update(mut func(*T)) {
+	curr := c.Get()
+	mut(&curr)
+	c.Set(curr)
+}
+
 func (c MarshaledProperty[T]) Get() T {
 	log.Trace().Str("key", c.KeyName).Msg("Reading value for property")
 	str := c.ViperStore.GetString(c.KeyName)

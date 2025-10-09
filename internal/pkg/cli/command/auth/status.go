@@ -16,12 +16,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type AuthStatusCmdOptions struct {
+type authStatusCmdOptions struct {
 	json bool
 }
 
 func NewCmdAuthStatus() *cobra.Command {
-	options := AuthStatusCmdOptions{}
+	options := authStatusCmdOptions{}
 	cmd := &cobra.Command{
 		Use:   "status",
 		Short: "Show the current authentication configuration for the Pinecone CLI",
@@ -42,19 +42,19 @@ func NewCmdAuthStatus() *cobra.Command {
 	return cmd
 }
 
-func runAuthStatus(cmd *cobra.Command, options AuthStatusCmdOptions) error {
+func runAuthStatus(cmd *cobra.Command, options authStatusCmdOptions) error {
 	token, err := oauth.Token(cmd.Context())
 	if err != nil { // This should only error on a network request to refresh the token
 		return err
 	}
 
-	authMode := string(state.TargetCreds.Get().AuthContext)
+	authMode := string(state.AuthedUser.Get().AuthContext)
 	orgName := state.TargetOrg.Get().Name
 	projName := state.TargetProj.Get().Name
 	environment := config.Environment.Get()
 
-	// Global API Key
-	globalAPIKey := secrets.DefaultAPIKey.Get()
+	// Default API Key
+	defaultAPIKey := secrets.DefaultAPIKey.Get()
 
 	// Service Account
 	clientId := secrets.ClientId.Get()
@@ -87,7 +87,7 @@ func runAuthStatus(cmd *cobra.Command, options AuthStatusCmdOptions) error {
 		OrganizationName:    orgName,
 		ProjectName:         projName,
 		Token:               token,
-		GlobalAPIKey:        globalAPIKey,
+		DefaultAPIKey:       presenters.MaskHeadTail(defaultAPIKey, 4, 4),
 		ClientID:            clientId,
 		ClientSecret:        presenters.MaskHeadTail(clientSecret, 4, 4),
 		TokenExpiry:         expStr,
