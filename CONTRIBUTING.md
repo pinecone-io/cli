@@ -6,21 +6,24 @@
 
 1. [Install golang](https://go.dev/doc/install) if you do not have it already
 
-2. Install goreleaser
+2. [Install just](https://github.com/casey/just?tab=readme-ov-file#installation) if you'd like to run the formulas in the [justfile](https://github.com/pinecone-io/cli/blob/main/justfile).
 
-```
-brew install goreleaser/tap/goreleaser
+3. Install goreleaser
+
+```bash
+brew install --cask goreleaser/tap/goreleaser
 ```
 
-3. Build the CLI
+4. Clone the repo, and build the CLI
 
-```
+```bash
+git clone git@github.com:pinecone-io/cli.git
 goreleaser build --single-target --snapshot --clean
 ```
 
 For manual testing in development, you can run commands like this
 
-```shell
+```bash
 ./dist/pc_darwin_arm64/pc login
 ./dist/pc_darwin_arm64/pc index list
 # etc
@@ -28,7 +31,7 @@ For manual testing in development, you can run commands like this
 
 ## Usage
 
-```shell
+```bash
 # See help
 ./dist/pc_darwin_arm64/pc --help
 
@@ -64,8 +67,8 @@ For manual testing in development, you can run commands like this
 
 Some facts that could be useful:
 
-- Configuration files are stored in `~/.config/pinecone`
-- You can enable debug output with the `PINECONE_LOG_LEVEL=DEBUG` env var
+- Configuration files are stored in `~/.config/pinecone`.
+- You can enable debug output with the `PINECONE_LOG_LEVEL=DEBUG` env var.
 - Are you pointed at the correct environment? The current value of the environment setting (i.e. prod or staging) is controlled through `pc config set-environment staging` is not clearly surfaced through the printed output. If things aren't working as you expect, you might be pointed in the wrong place. See `cat ~/.config/pinecone/config.yaml` to confirm.
 
 ## Making a Pull Request
