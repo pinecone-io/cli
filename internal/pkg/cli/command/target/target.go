@@ -55,6 +55,9 @@ var (
 
 		# Target a project by name
 		pc target --project "project-name"
+
+		# Target an organization and project by ID
+		pc target --organization-id "org-id" --project-id "project-id"
 	`)
 )
 
