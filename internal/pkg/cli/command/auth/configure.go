@@ -214,8 +214,8 @@ func Run(ctx context.Context, io IO, opts configureCmdOptions) {
 			msg.SuccessMsg("Target project set to %s", style.Emphasis(targetProject.Name))
 		}
 
-		// Update target credentials context
-		state.TargetCreds.Set(state.TargetUser{
+		// Update authed user context to service account
+		state.AuthedUser.Set(state.TargetUser{
 			AuthContext: state.AuthServiceAccount,
 			Email:       "",
 		})
@@ -227,21 +227,22 @@ func Run(ctx context.Context, io IO, opts configureCmdOptions) {
 		}
 	}
 
-	// If a default API key has been configured, store it and update the target credentials context
+	// If a default API key has been configured, store it and update the auth context
 	// This will override the AuthContext: state.AuthServiceAccount if set previously
+	// If an email was configured due to user token login, we want to hang onto that
 	if globalAPIKey != "" {
 		secrets.DefaultAPIKey.Set(globalAPIKey)
-		state.TargetCreds.Set(state.TargetUser{
-			AuthContext: state.AuthGlobalAPIKey,
-			// Redact API key for presentational layer
-			GlobalAPIKey: presenters.MaskHeadTail(globalAPIKey, 4, 4),
-			Email:        "",
+		state.AuthedUser.Update(func(u *state.TargetUser) {
+			u.AuthContext = state.AuthDefaultAPIKey
 		})
 	}
 
 	// Output JSON if the option was passed
 	if opts.json {
-		json := text.IndentJSON(state.GetTargetContext())
+		targetContext := state.GetTargetContext()
+		defaultAPIKey := secrets.DefaultAPIKey.Get()
+		targetContext.DefaultAPIKey = presenters.MaskHeadTail(defaultAPIKey, 4, 4)
+		json := text.IndentJSON(targetContext)
 		pcio.Println(json)
 		return
 	}

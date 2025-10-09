@@ -1,6 +1,8 @@
 package state
 
-import "github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+import (
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+)
 
 type TargetOrganization struct {
 	Name string `json:"name"`
@@ -18,26 +20,26 @@ const (
 	AuthNone           AuthContext = ""
 	AuthUserToken      AuthContext = "user_token"
 	AuthServiceAccount AuthContext = "service_account"
-	AuthGlobalAPIKey   AuthContext = "global_api_key"
+	AuthDefaultAPIKey  AuthContext = "default_api_key"
 )
 
 type TargetUser struct {
-	AuthContext  AuthContext `json:"auth_context"`
-	Email        string      `json:"email"`
-	GlobalAPIKey string      `json:"global_api_key"`
+	AuthContext AuthContext `json:"auth_context"`
+	Email       string      `json:"email"`
 }
 
 type TargetContext struct {
-	Project      TargetProject
-	Organization TargetOrganization
-	Credentials  TargetUser
+	Project       TargetProject      `json:"project"`
+	Organization  TargetOrganization `json:"organization"`
+	User          TargetUser         `json:"user"`
+	DefaultAPIKey string             `json:"default_api_key"`
 }
 
 func GetTargetContext() *TargetContext {
 	return &TargetContext{
 		Organization: TargetOrg.Get(),
 		Project:      TargetProj.Get(),
-		Credentials:  TargetCreds.Get(),
+		User:         AuthedUser.Get(),
 	}
 }
 
@@ -58,7 +60,7 @@ func GetTargetProjectId() (string, error) {
 }
 
 func GetTargetUserAuthContext() (string, error) {
-	context := TargetCreds.Get()
+	context := AuthedUser.Get()
 	if context.AuthContext == AuthNone {
 		return "", pcio.Errorf("no target authentication context set")
 	}
@@ -66,5 +68,5 @@ func GetTargetUserAuthContext() (string, error) {
 }
 
 func GetTargetUserEmail() string {
-	return TargetCreds.Get().Email
+	return AuthedUser.Get().Email
 }

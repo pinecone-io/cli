@@ -48,7 +48,7 @@ func runAuthStatus(cmd *cobra.Command, options authStatusCmdOptions) error {
 		return err
 	}
 
-	authMode := string(state.TargetCreds.Get().AuthContext)
+	authMode := string(state.AuthedUser.Get().AuthContext)
 	orgName := state.TargetOrg.Get().Name
 	projName := state.TargetProj.Get().Name
 	environment := config.Environment.Get()

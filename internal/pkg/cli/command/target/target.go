@@ -94,12 +94,16 @@ func NewTargetCmd() *cobra.Command {
 			if options.show {
 				if options.json {
 					log.Info().Msg("Outputting target context as JSON")
-					json := text.IndentJSON(state.GetTargetContext())
+					targetContext := state.GetTargetContext()
+					defaultAPIKey := secrets.DefaultAPIKey.Get()
+					targetContext.DefaultAPIKey = presenters.MaskHeadTail(defaultAPIKey, 4, 4)
+					json := text.IndentJSON(targetContext)
 					pcio.Println(json)
 					return
 				}
 				log.Info().
 					Msg("Outputting target context as table")
+
 				presenters.PrintTargetContext(state.GetTargetContext())
 				return
 			}
@@ -259,7 +263,10 @@ func NewTargetCmd() *cobra.Command {
 
 			// Output JSON if the option was passed
 			if options.json {
-				json := text.IndentJSON(state.GetTargetContext())
+				targetContext := state.GetTargetContext()
+				defaultAPIKey := secrets.DefaultAPIKey.Get()
+				targetContext.DefaultAPIKey = presenters.MaskHeadTail(defaultAPIKey, 4, 4)
+				json := text.IndentJSON(targetContext)
 				pcio.Println(json)
 				return
 			}
