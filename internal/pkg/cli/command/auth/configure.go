@@ -47,7 +47,7 @@ var (
 		the organization and project associated with the API key itself. API keys do not grant
 		Admin API access.
 		
-		See: http://docs.pinecone.io/reference/cli/authentication
+		See: https://docs.pinecone.io/reference/cli/authentication
 	`)
 )
 
