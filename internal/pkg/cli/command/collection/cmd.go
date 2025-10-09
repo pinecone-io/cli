@@ -26,7 +26,7 @@ var (
 
 func NewCollectionCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "collection <command>",
+		Use:     "collection",
 		Short:   "Work with collections (pod-based indexes only)",
 		Long:    collectionHelp,
 		GroupID: help.GROUP_VECTORDB.ID,

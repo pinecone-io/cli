@@ -20,7 +20,7 @@ var (
 
 func NewProjectCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "project <command>",
+		Use:     "project",
 		Short:   "Manage Pinecone projects",
 		Long:    projectHelp,
 		GroupID: help.GROUP_ADMIN.ID,

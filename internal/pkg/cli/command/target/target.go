@@ -65,7 +65,7 @@ func NewTargetCmd() *cobra.Command {
 	options := targetCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:     "target <flags>",
+		Use:     "target",
 		Short:   "Set the target organization and project context for the CLI",
 		Long:    targetHelp,
 		Example: targetExample,

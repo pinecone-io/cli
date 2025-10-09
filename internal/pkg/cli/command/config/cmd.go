@@ -16,7 +16,7 @@ var (
 
 func NewConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "config <command>",
+		Use:   "config",
 		Short: "Manage configuration for the Pinecone CLI",
 		Long:  configHelp,
 	}
