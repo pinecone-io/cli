@@ -53,8 +53,8 @@ func runAuthStatus(cmd *cobra.Command, options authStatusCmdOptions) error {
 	projName := state.TargetProj.Get().Name
 	environment := config.Environment.Get()
 
-	// Global API Key
-	globalAPIKey := secrets.DefaultAPIKey.Get()
+	// Default API Key
+	defaultAPIKey := secrets.DefaultAPIKey.Get()
 
 	// Service Account
 	clientId := secrets.ClientId.Get()
@@ -87,7 +87,7 @@ func runAuthStatus(cmd *cobra.Command, options authStatusCmdOptions) error {
 		OrganizationName:    orgName,
 		ProjectName:         projName,
 		Token:               token,
-		GlobalAPIKey:        globalAPIKey,
+		DefaultAPIKey:       presenters.MaskHeadTail(defaultAPIKey, 4, 4),
 		ClientID:            clientId,
 		ClientSecret:        presenters.MaskHeadTail(clientSecret, 4, 4),
 		TokenExpiry:         expStr,

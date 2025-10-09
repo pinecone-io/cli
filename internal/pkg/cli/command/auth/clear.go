@@ -33,7 +33,7 @@ func NewClearCmd() *cobra.Command {
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			if !options.serviceAccount && !options.defaultAPIKey {
-				msg.FailMsg("Please specify either --service-account or --global-api-key")
+				msg.FailMsg("Please specify either --service-account or --api-key")
 				exit.ErrorMsg("No option specified")
 			}
 

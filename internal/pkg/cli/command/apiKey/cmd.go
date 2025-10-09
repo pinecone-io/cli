@@ -10,7 +10,7 @@ var (
 		Work with API keys for a Pinecone project.
 
 		API keys are used to authenticate with the Pinecone API. You can set a default 
-		API key using 'pc auth configure --global-api-key', or you can create and store a 
+		API key using 'pc auth configure --api-key', or you can create and store a 
 		new one for the current project with 'pc api-key create --store'. 
 		
 		If you do not provide a key or store one, the CLI creates a "managed key" for the project.

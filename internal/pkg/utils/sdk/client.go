@@ -39,7 +39,7 @@ func NewPineconeClient() *pinecone.Client {
 	}
 	clientId := secrets.ClientId.Get()
 	clientSecret := secrets.ClientSecret.Get()
-	globalAPIKey := secrets.DefaultAPIKey.Get()
+	defaultAPIKey := secrets.DefaultAPIKey.Get()
 
 	// If there's a default API key set, it takes priority over user/service account tokens and associated keys
 	if secrets.DefaultAPIKey.Get() != "" {
@@ -53,7 +53,7 @@ func NewPineconeClient() *pinecone.Client {
 	log.Debug().Msg("No default API key is stored in configuration, attempting to create a client using user access token")
 
 	// If neither user token or service account credentials are set, we cannot instantiate a client
-	if oauth2Token.AccessToken == "" && (clientId == "" && clientSecret == "") && globalAPIKey == "" {
+	if oauth2Token.AccessToken == "" && (clientId == "" && clientSecret == "") && defaultAPIKey == "" {
 		msg.FailMsg("Please configure user credentials before attempting this operation. Log in with %s, configure a service account with %s, or set an explicit API key with %s.", style.Code("pc login"), style.Code("pc auth configure --client-id --client-secret"), style.Code("pc config set-api-key"))
 		exit.ErrorMsg("User credentials are not configured")
 	}

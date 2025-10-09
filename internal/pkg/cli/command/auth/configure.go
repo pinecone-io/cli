@@ -100,7 +100,7 @@ type IO struct {
 func Run(ctx context.Context, io IO, opts configureCmdOptions) {
 	clientID := strings.TrimSpace(opts.clientID)
 	clientSecret := strings.TrimSpace(opts.clientSecret)
-	globalAPIKey := strings.TrimSpace(opts.apiKey)
+	apiKey := strings.TrimSpace(opts.apiKey)
 
 	// If clientSecret is not provided via options, prompt if needed
 	if clientSecret == "" {
@@ -230,8 +230,8 @@ func Run(ctx context.Context, io IO, opts configureCmdOptions) {
 	// If a default API key has been configured, store it and update the auth context
 	// This will override the AuthContext: state.AuthServiceAccount if set previously
 	// If an email was configured due to user token login, we want to hang onto that
-	if globalAPIKey != "" {
-		secrets.DefaultAPIKey.Set(globalAPIKey)
+	if apiKey != "" {
+		secrets.DefaultAPIKey.Set(apiKey)
 		state.AuthedUser.Update(func(u *state.TargetUser) {
 			u.AuthContext = state.AuthDefaultAPIKey
 		})
