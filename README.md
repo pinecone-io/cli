@@ -1,83 +1,178 @@
 # Pinecone CLI
 
-> ⚠️ **Warning:** This SDK is still in an alpha state. While it is mostly built out and functional, it may undergo changes as we continue to improve the UX. Please try it out and give us your feedback, but be aware that updates may introduce breaking changes.
-
 `pc` is Pinecone on the command line.
 
-This CLI is still in an alpha state and does not support every operation available through our REST apis. Please try it out and give us your feedback, but also be prepared to upgrade as we continue building out the feature set and improving the UX.
+> ⚠️ **Note:** This CLI is in [public preview](https://docs.pinecone.io/assistant-release-notes/feature-availability) and does not yet support all features available through the Pinecone API. Please try it out and let us know of any feedback. You'll want to upgrade often as we address feedback and add additional features.
 
-## Installing
+## Installation
 
-### Via Homebrew (Mac)
+### Homebrew (macOS, Linux)
 
-The most convenient way to install this is via [Homebrew](https://brew.sh)
+The most convenient way to install the CLI on macOS and Linux is via [Homebrew](https://brew.sh).
 
-```brew
+If you don't have Homebrew installed, install it first:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+1. **Add the Pinecone tap** to your Homebrew configuration:
+
+```bash
 brew tap pinecone-io/tap
-brew install pinecone-io/tap/pinecone
+```
 
+2. **Install the Pinecone CLI**:
+
+```bash
+brew install pinecone-io/tap/pinecone
+```
+
+3. **Verify the installation**:
+
+```bash
 pc --help
 ```
 
-If you have previously installed and would like to upgrade to the latest version, run
+#### What is a Homebrew tap?
 
-```
+A [Homebrew tap](https://docs.brew.sh/Taps) is a third-party repository of Homebrew formulas. Our official tap at [pinecone-io/homebrew-tap](https://github.com/pinecone-io/homebrew-tap) contains the formula needed to install the Pinecone CLI.
+
+#### Upgrading
+
+To upgrade to the latest version:
+
+```bash
 brew update
 brew upgrade pinecone
 ```
 
-### Download artifacts from release page (Linux, Windows)
+#### Uninstalling
 
-We have pre-built binaries for many platforms available on the [Releases](https://github.com/pinecone-io/cli/releases) page.
+To remove the CLI:
+
+```bash
+brew uninstall pinecone
+```
+
+To remove the Pinecone tap entirely:
+
+```bash
+brew untap pinecone-io/tap
+```
+
+### Download artifacts from release page (Linux, Windows, macOS)
+
+For users who prefer not to use Homebrew or need specific platform binaries, we provide pre-built binaries for many platforms.
+
+1. **Visit the [Releases page](https://github.com/pinecone-io/cli/releases)**
+2. **Download the appropriate binary** for your platform and architecture
+3. **Make the binary executable** (Linux/macOS):
+   ```bash
+   chmod +x pc
+   ```
+4. **Move to a directory in your PATH** (optional but recommended):
+   ```bash
+   sudo mv pc /usr/local/bin/  # Linux/macOS
+   # or on Windows, add the directory to your PATH
+   ```
+5. **Verify the installation**:
+   ```bash
+   pc --help
+   ```
+
+#### Supported platforms
+
+- macOS (x86_64, ARM64)
+- Linux (x86_64, ARM64)
+- Windows (x86_64)
 
 ### Build from source
 
 To learn about the steps involved in building from source, see [CONTRIBUTING](./CONTRIBUTING.md)
 
-## Usage
+## Authentication
 
-In order to use the Pinecone CLI you will need to authenticate with Pinecone services. This can be done either with an API key, or using the `pc login` flow to authenticate with a Pinecone account via your browser.
+There are three ways to authenticate the Pinecone CLI: through a web browser with user login, using a service account, or with an API key.
 
-```shell
-pc --help
+This table describes the Pinecone operations supported by each authentication method:
 
-# If you have PINECONE_API_KEY set in your environment you can begin working with the CLI
-pc index list
+| Method          | Admin API | Control plane |
+| :-------------- | :-------- | :------------ |
+| User login      | ✅        | ✅            |
+| Service account | ✅        | ✅            |
+| API key         | ❌        | ✅            |
 
-# To set an API key manually, you can use the config command
-pc config set-api-key "YOUR_API_KEY"
+- Admin API–related commands (organization and project management, API key operations):
 
-# Additionally, you can authenticate through the browser using the login command
-pc login
+  - `pc organization` (`list`, `describe`, `update`, `delete`)
+  - `pc project` (`create`, `list`, `describe`, `update`, `delete`)
+  - `pc api-key` (`create`, `list`, `describe`, `update`, `delete`)
 
-# To clear your current login state or configured API key, you can use the logout command
-pc logout
+- Control plane–related commands (index management):
+  - `pc index` (`create`, `list`, `describe`, `configure`, `delete`)
+
+### 1. User Login (Recommended for Interactive Use)
+
+The standard authentication method for interactive use. Provides full access to the Admin API and control/data plane operations. You will have access to all organizations associated with the account.
+
+```bash
+pc auth login
 ```
 
-If an API key is configured along with using `pc login`, the CLI will default to using the API key over the authentication token.
+This command:
 
-If there has been an API key set using `pc config set-api-key`, and `PINECONE_API_KEY` is also present in the environment, the API set in the CLI config will be used over the environment key.
+- Opens your browser to the Pinecone login page
+- Automatically sets a target organization and project context
+- Grants access to manage organizations, projects, and other account-level resources
 
-### Managing indexes
+**View and change your current target:**
 
-```sh
-# Learn about supported index operations
-pc index --help
+```bash
+pc target -s
+pc target -o "ORGANIZATION_NAME" -p "PROJECT_NAME"
+```
 
-# Create serverless indexes.
-pc index create-serverless --help
-pc index create-serverless --name example-index --dimension 1536 --metric cosine --cloud aws --region us-west-2
-pc index create-serverless --name="example-index" --dimension=1536 --metric="cosine" --cloud="aws" --region="us-west-2"
-pc index create-serverless -n example-index -d 1536 -m cosine -c aws -r us-west-2
+### 2. Service Account Authentication
 
-# Describe index
-pc index describe --name "example-index"
-pc index describe --name "example-index" --json
+Use [service account](https://docs.pinecone.io/guides/organizations/manage-service-accounts) client credentials for authentication. Service accounts are scoped to a single organization, but you can manage projects and set a target project context.
 
-# List indexes
+```bash
+# Will prompt you to pick a target project from the projects available to the service account
+pc auth configure --client-id "YOUR_CLIENT_ID" --client-secret "YOUR_CLIENT_SECRET"
+
+# Specify a target project when configuring the service account
+pc auth configure --client-id "client-id" --client-secret "client-secret" --project-id "project-id"
+```
+
+### 3. API Key Authentication
+
+Use a project API key directly. Provides access to control/data plane operations only (no Admin API access). If an API key is set directly, it will override any configured target organization and project context.
+
+```bash
+pc auth configure --api-key "YOUR_API_KEY"
+
+# alternatively
+pc config set-api-key "YOUR_API_KEY"
+```
+
+For more detailed information, see the [CLI Authentication documentation](https://docs.pinecone.io/reference/cli/authentication).
+
+## Quick Start
+
+After installation, get started with authentication:
+
+```bash
+# Option 1: Login via browser (recommended)
+pc auth login
+
+# Option 2: Set API key directly
+pc config set-api-key "YOUR_API_KEY"
+
+# Verify authentication
+pc auth whoami
+pc auth status
+
+# List your indexes
 pc index list
-pc index list --json
-
-# Delete index
-pc index delete --name "example-index"
 ```
