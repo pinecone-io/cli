@@ -64,7 +64,7 @@ var (
 func init() {
 	globalOptions := GlobalOptions{}
 	rootCmd = &cobra.Command{
-		Use:   "pc [command] [subcommand] [flags]",
+		Use:   "pc",
 		Short: "Manage your Pinecone vector database infrastructure from the command line",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			pcio.SetQuiet(globalOptions.quiet)
