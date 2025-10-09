@@ -25,7 +25,7 @@ var (
 		The CLI stores only one API key per project, as needed. API key values are
 		obscured in the output by default.
 
-		See: https://docs.pinecone.io/reference/tools/cli-authentication
+		See: https://docs.pinecone.io/reference/cli/authentication
 	`)
 )
 

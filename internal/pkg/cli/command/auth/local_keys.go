@@ -15,7 +15,7 @@ var (
 		You can also create a new key yourself and store it as a managed key using
 		'pc api-key create --store'.
 
-		See: https://docs.pinecone.io/reference/tools/cli-authentication
+		See: https://docs.pinecone.io/reference/cli/authentication
 	`)
 )
 
