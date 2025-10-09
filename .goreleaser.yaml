@@ -95,7 +95,7 @@ brews:
       man1.install Dir["man/man1/*.1"]
 
       # Add aliases: pc*.1 -> pinecone*.1, etc
-      Dir["man/man1/*.1"].each do |src|
+      Dir[man1/"pc*.1"].each do |src|
         dest = File.basename(src).sub(/\Apc\b/, "pinecone") # Replace leading "pc" with "pinecone"
-        man1.install src => dest
+        man1.install_symlink src => dest
       end
