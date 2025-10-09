@@ -83,9 +83,9 @@ For users who prefer not to use Homebrew or need specific platform binaries, we 
 
 #### Supported platforms
 
-- macOS (x86_64, ARM64)
-- Linux (x86_64, ARM64)
-- Windows (x86_64)
+- macOS: Intel (x86_64) and Apple Silicon (ARM64)
+- Linux: x86_64, ARM64, and i386 architectures
+- Windows: x86_64 and i386 architectures
 
 ### Build from source
 
@@ -112,9 +112,9 @@ This table describes the Pinecone operations supported by each authentication me
 - Control plane–related commands (index management):
   - `pc index` (`create`, `list`, `describe`, `configure`, `delete`)
 
-### 1. User Login (Recommended for Interactive Use)
+### 1. User Login (Recommended for Interactive use)
 
-The standard authentication method for interactive use. Provides full access to the Admin API and control/data plane operations. You will have access to all organizations associated with the account.
+The standard authentication method for interactive use. Provides full access to the Admin API and control/data plane operations. When authenticated this way, you have access to all organizations associated with the account.
 
 ```bash
 pc auth login
@@ -133,21 +133,21 @@ pc target -s
 pc target -o "ORGANIZATION_NAME" -p "PROJECT_NAME"
 ```
 
-### 2. Service Account Authentication
+### 2. Service account authentication
 
 Use [service account](https://docs.pinecone.io/guides/organizations/manage-service-accounts) client credentials for authentication. Service accounts are scoped to a single organization, but you can manage projects and set a target project context.
 
 ```bash
-# Will prompt you to pick a target project from the projects available to the service account
+# Prompts you to pick a target project from the projects available to the service account
 pc auth configure --client-id "YOUR_CLIENT_ID" --client-secret "YOUR_CLIENT_SECRET"
 
 # Specify a target project when configuring the service account
 pc auth configure --client-id "client-id" --client-secret "client-secret" --project-id "project-id"
 ```
 
-### 3. API Key Authentication
+### 3. API key authentication
 
-Use a project API key directly. Provides access to control/data plane operations only (no Admin API access). If an API key is set directly, it will override any configured target organization and project context.
+Use a project API key directly. Provides access to control/data plane operations only (no Admin API access). If an API key is set directly, it overrides any configured target organization and project context.
 
 ```bash
 pc auth configure --api-key "YOUR_API_KEY"
@@ -156,11 +156,11 @@ pc auth configure --api-key "YOUR_API_KEY"
 pc config set-api-key "YOUR_API_KEY"
 ```
 
-For more detailed information, see the [CLI Authentication documentation](https://docs.pinecone.io/reference/cli/authentication).
+For more detailed information, see the [CLI authentication](https://docs.pinecone.io/reference/cli/authentication) documentation.
 
-## Quick Start
+## Quickstart
 
-After installation, get started with authentication:
+After installing the CLI, authenticate with user login or set an API key, verify your auth status, and list indexes associated with your automatically targeted project.
 
 ```bash
 # Option 1: Login via browser (recommended)
