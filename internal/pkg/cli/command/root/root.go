@@ -57,7 +57,7 @@ var (
 		   $ pc index create --name "My index" --dimension 1536 --metric "cosine" \
 		     --cloud "aws" --region "us-west-2"
 
-		See: https://docs.pinecone.io/reference/tools/cli-overview
+		See: https://docs.pinecone.io/reference/cli/overview
 	`)
 )
 

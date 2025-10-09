@@ -22,7 +22,7 @@ var (
 		Uses a project API key directly. Provides access to control/data plane
 		operations only, but no admin API access.
 
-		See: https://docs.pinecone.io/reference/tools/cli-authentication
+		See: https://docs.pinecone.io/reference/cli/authentication
 	`)
 )
 

@@ -40,7 +40,7 @@ var (
 		they were created by the CLI or the user. You can filter the operation by 
 		project ID or key origin. Options for origin are: 'cli', 'user', or 'all' (default).
 
-		See: https://docs.pinecone.io/reference/tools/cli-authentication
+		See: https://docs.pinecone.io/reference/cli/authentication
 	`)
 
 	pruneExample = help.Examples(`
