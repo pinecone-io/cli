@@ -129,7 +129,7 @@ func NewTargetCmd() *cobra.Command {
 
 			clientId := secrets.ClientId.Get()
 			clientSecret := secrets.ClientSecret.Get()
-			if accessToken.AccessToken == "" && clientId == "" && clientSecret == "" {
+			if accessToken != nil && accessToken.AccessToken == "" && clientId == "" && clientSecret == "" {
 				msg.FailMsg("You must be logged in or have service account credentials configured to set a target context. Run %s to log in, or %s to configure credentials.", style.Code("pc login"), style.Code("pc auth configure"))
 				exit.ErrorMsg("You must be logged in or have service account credentials configured to set a target context")
 				return

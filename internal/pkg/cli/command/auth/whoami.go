@@ -28,7 +28,7 @@ func NewWhoAmICmd() *cobra.Command {
 				exit.Error(pcio.Errorf("error retrieving oauth token: %w", err))
 				return
 			}
-			if accessToken.AccessToken == "" {
+			if accessToken == nil || accessToken.AccessToken == "" {
 				msg.InfoMsg("You are not logged in. Please run %s to log in.", style.Code("pc login"))
 				return
 			}

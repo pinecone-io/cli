@@ -56,7 +56,7 @@ func NewSetEnvCmd() *cobra.Command {
 				msg.FailMsg("Error retrieving oauth token: %s", err)
 				exit.Error(pcio.Errorf("error retrieving oauth token: %w", err))
 			}
-			if token.AccessToken != "" || token.RefreshToken != "" {
+			if token != nil && (token.AccessToken != "" || token.RefreshToken != "") {
 				oauth.Logout()
 				msg.InfoMsg("You have been logged out; to login again, run %s", style.Code("pc login"))
 			} else {
