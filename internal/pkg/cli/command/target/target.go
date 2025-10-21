@@ -112,14 +112,14 @@ func NewTargetCmd() *cobra.Command {
 			}
 
 			// Get the current access token and parse the orgID from the claims
-			accessToken, err := oauth.Token(cmd.Context())
+			token, err := oauth.Token(cmd.Context())
 			if err != nil {
 				msg.FailMsg("Error retrieving oauth token: %s", err)
 				exit.Error(pcio.Errorf("error retrieving oauth token: %w", err))
 				return
 			}
 
-			claims, err := oauth.ParseClaimsUnverified(accessToken)
+			claims, err := oauth.ParseClaimsUnverified(token)
 			if err != nil {
 				msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
 				exit.Error(pcio.Errorf("error parsing claims from access token: %w", err))
@@ -129,7 +129,7 @@ func NewTargetCmd() *cobra.Command {
 
 			clientId := secrets.ClientId.Get()
 			clientSecret := secrets.ClientSecret.Get()
-			if accessToken.AccessToken == "" && clientId == "" && clientSecret == "" {
+			if token != nil && token.AccessToken == "" && clientId == "" && clientSecret == "" {
 				msg.FailMsg("You must be logged in or have service account credentials configured to set a target context. Run %s to log in, or %s to configure credentials.", style.Code("pc login"), style.Code("pc auth configure"))
 				exit.ErrorMsg("You must be logged in or have service account credentials configured to set a target context")
 				return

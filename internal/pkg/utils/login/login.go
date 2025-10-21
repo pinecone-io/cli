@@ -50,13 +50,13 @@ func Run(ctx context.Context, io IO, opts Options) {
 	}
 
 	// Parse token claims to get orgId
-	accessToken, err := oauth.Token(ctx)
+	token, err := oauth.Token(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Error retrieving oauth token")
 		msg.FailMsg("Error retrieving oauth token: %s", err)
 		exit.Error(pcio.Errorf("error retrieving oauth token: %w", err))
 	}
-	claims, err := oauth.ParseClaimsUnverified(accessToken)
+	claims, err := oauth.ParseClaimsUnverified(token)
 	if err != nil {
 		log.Error().Err(err).Msg("Error parsing authentication token claims")
 		msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)

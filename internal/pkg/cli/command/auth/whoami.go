@@ -21,19 +21,19 @@ func NewWhoAmICmd() *cobra.Command {
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 
-			accessToken, err := oauth.Token(cmd.Context())
+			token, err := oauth.Token(cmd.Context())
 			if err != nil {
 				log.Error().Err(err).Msg("Error retrieving oauth token")
 				msg.FailMsg("Error retrieving oauth token: %s", err)
 				exit.Error(pcio.Errorf("error retrieving oauth token: %w", err))
 				return
 			}
-			if accessToken.AccessToken == "" {
+			if token == nil || token.AccessToken == "" {
 				msg.InfoMsg("You are not logged in. Please run %s to log in.", style.Code("pc login"))
 				return
 			}
 
-			claims, err := oauth.ParseClaimsUnverified(accessToken)
+			claims, err := oauth.ParseClaimsUnverified(token)
 			if err != nil {
 				log.Error().Msg("Error parsing claims")
 				msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
