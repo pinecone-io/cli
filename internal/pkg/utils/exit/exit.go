@@ -12,25 +12,40 @@ type exitEvent struct {
 	code int
 }
 
-func (e *exitEvent) WithCode(code int) *exitEvent       { e.code = code; return e }
-func (e *exitEvent) Msg(msg string) *exitEvent          { e.Event.Msg(msg); return e }
-func (e *exitEvent) Msgf(f string, v ...any) *exitEvent { e.Event.Msgf(f, v...); return e }
-func (e *exitEvent) Send()                              { e.Event.Send(); os.Exit(e.code) }
+// Logs the message and exits with the exitEvent.code
+func (e *exitEvent) Msg(msg string) {
+	e.Event.Msg(msg)
+	os.Exit(e.code)
+}
 
+// Logs the formatted message and exits with the exitEvent.code
+func (e *exitEvent) Msgf(f string, v ...any) {
+	e.Event.Msgf(f, v...)
+	os.Exit(e.code)
+}
+
+// Equivalent to calling Msg("") then exiting with the exitEvent.code
+func (e *exitEvent) Send() {
+	e.Event.Send()
+	os.Exit(e.code)
+}
+
+// Returns a new exitEvent/zerolog.Event with error level and code 1
 func Error() *exitEvent {
 	return &exitEvent{Event: log.Error(), code: 1}
 }
 
+// Returns a new exitEvent/zerolog.Event with info level and code 0
 func Success() *exitEvent {
 	return &exitEvent{Event: log.Info(), code: 0}
 }
 
+// Convenience function for printing a success message and exiting
 func SuccessMsg(msg string) {
-	log.Info().Msg(msg)
-	os.Exit(0)
+	Success().Msg(msg)
 }
 
+// Convenience function for printing an error message and exiting
 func ErrorMsg(msg string) {
-	log.Error().Msg(msg)
-	os.Exit(1)
+	Error().Msg(msg)
 }
