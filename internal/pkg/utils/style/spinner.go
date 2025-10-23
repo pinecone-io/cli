@@ -37,7 +37,7 @@ func loading(initialMsg, doneMsg, failMsg string, fn func() error) error {
 	s.Writer = pcio.Messages
 
 	if err := s.Color(spinnerColor); err != nil {
-		exit.Error(err)
+		exit.Error().Err(err).Msg("Error setting spinner color")
 	}
 
 	s.Start()

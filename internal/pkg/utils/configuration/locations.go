@@ -30,13 +30,13 @@ func doesFileExist(filePath string) bool {
 func ensureConfigDir() string {
 	configPath, err := HomeDirPath(".config/pinecone")
 	if err != nil {
-		exit.Error(err)
+		exit.Error().Err(err).Msg("Error getting home directory path")
 	}
 
 	if !doesFileExist(configPath) {
 		err = os.MkdirAll(configPath, 0755)
 		if err != nil {
-			exit.Error(err)
+			exit.Error().Err(err).Msg("Error creating config directory")
 		}
 	}
 
@@ -46,7 +46,7 @@ func ensureConfigDir() string {
 func ConfigDirPath() string {
 	configPath, err := HomeDirPath(".config/pinecone")
 	if err != nil {
-		exit.Error(err)
+		exit.Error().Err(err).Msg("Error getting home directory path")
 	}
 
 	return configPath

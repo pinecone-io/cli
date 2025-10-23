@@ -35,10 +35,11 @@ func NewDescribeCmd() *cobra.Command {
 			if err != nil {
 				if strings.Contains(err.Error(), "not found") {
 					msg.FailMsg("The index %s does not exist\n", style.Emphasis(options.name))
+					exit.Error().Err(err).Msgf("The index %s does not exist", style.Emphasis(options.name))
 				} else {
 					msg.FailMsg("Failed to describe index %s: %s\n", style.Emphasis(options.name), err)
+					exit.Error().Err(err).Msgf("Failed to describe index %s", style.Emphasis(options.name))
 				}
-				exit.Error(err)
 			}
 
 			if options.json {

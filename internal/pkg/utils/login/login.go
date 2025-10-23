@@ -45,42 +45,40 @@ type Options struct{}
 func Run(ctx context.Context, io IO, opts Options) {
 	err := GetAndSetAccessToken(nil)
 	if err != nil {
-		log.Error().Err(err).Msg("Error fetching authentication token")
-		exit.Error(pcio.Errorf("error acquiring access token while logging in: %w", err))
+		msg.FailMsg("Error acquiring access token while logging in: %s", err)
+		exit.Error().Err(err).Msg("Error acquiring access token while logging in")
 	}
 
 	// Parse token claims to get orgId
 	token, err := oauth.Token(ctx)
 	if err != nil {
-		log.Error().Err(err).Msg("Error retrieving oauth token")
 		msg.FailMsg("Error retrieving oauth token: %s", err)
-		exit.Error(pcio.Errorf("error retrieving oauth token: %w", err))
+		exit.Error().Err(err).Msg("Error retrieving oauth token")
 	}
 	claims, err := oauth.ParseClaimsUnverified(token)
 	if err != nil {
-		log.Error().Err(err).Msg("Error parsing authentication token claims")
 		msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
-		exit.Error(pcio.Errorf("error parsing claims from access token: %w", err))
+		exit.Error().Err(err).Msg("Error parsing claims from access token")
 	}
 	msg.SuccessMsg("Logged in as " + style.Emphasis(claims.Email) + ". Defaulted to organization ID: " + style.Emphasis(claims.OrgId))
 
 	ac := sdk.NewPineconeAdminClient()
 	if err != nil {
-		log.Error().Err(err).Msg("Error creating Pinecone admin client")
-		exit.Error(pcio.Errorf("error creating Pinecone admin client: %w", err))
+		msg.FailMsg("Error creating Pinecone admin client: %s", err)
+		exit.Error().Err(err).Msg("Error creating Pinecone admin client")
 	}
 
 	// Fetch the user's organizations and projects for the default org associated with the JWT token (if it exists)
 	orgs, err := ac.Organization.List(ctx)
 	if err != nil {
-		log.Error().Err(err).Msg("Error fetching organizations")
-		exit.Error(pcio.Errorf("error fetching organizations: %w", err))
+		msg.FailMsg("Error fetching organizations: %s", err)
+		exit.Error().Err(err).Msg("Error fetching organizations")
 	}
 
 	projects, err := ac.Project.List(ctx)
 	if err != nil {
-		log.Error().Err(err).Msg("Error fetching projects")
-		exit.Error(pcio.Errorf("error fetching projects: %w", err))
+		msg.FailMsg("Error fetching projects: %s", err)
+		exit.Error().Err(err).Msg("Error fetching projects")
 	}
 
 	// target organization is whatever the JWT token's orgId is - defaults on first login currently
@@ -133,14 +131,12 @@ func GetAndSetAccessToken(orgId *string) error {
 	// PKCE verifier and challenge
 	verifier, challenge, err := a.CreateNewVerifierAndChallenge()
 	if err != nil {
-		exit.Error(pcio.Error("error creating new auth verifier and challenge"))
-		return err
+		return pcio.Errorf("error creating new auth verifier and challenge: %w", err)
 	}
 
 	authURL, err := a.GetAuthURL(ctx, csrfState, challenge, orgId)
 	if err != nil {
-		exit.Error(pcio.Errorf("error getting auth URL: %w", err))
-		return err
+		return pcio.Errorf("error getting auth URL: %w", err)
 	}
 
 	// Spin up a local server in a goroutine to handle receiving the authorization code from auth0
@@ -201,7 +197,7 @@ func GetAndSetAccessToken(orgId *string) error {
 
 	token, err := a.ExchangeAuthCode(ctx, verifier, code)
 	if err != nil {
-		exit.Error(pcio.Errorf("error exchanging auth code for access token: %w", err))
+		return pcio.Errorf("error exchanging auth code for access token: %w", err)
 	}
 
 	claims, err := oauth.ParseClaimsUnverified(token)
@@ -236,6 +232,7 @@ func GetAndSetAccessToken(orgId *string) error {
 
 func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error) {
 	codeCh := make(chan string)
+	errCh := make(chan error)
 
 	// start server to receive the auth code
 	mux := http.NewServeMux()
@@ -244,7 +241,7 @@ func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error
 		state := r.URL.Query().Get("state")
 
 		if state != csrfState {
-			exit.Error(pcio.Errorf("state mismatch on authentication"))
+			errCh <- pcio.Errorf("state mismatch on authentication")
 			return
 		}
 
@@ -252,12 +249,12 @@ func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error
 		templateData := map[string]template.HTML{"LogoSVG": template.HTML(logoSVG)}
 		if code == "" {
 			if err := renderHTML(w, errorHTML, templateData); err != nil {
-				exit.Error(pcio.Errorf("error rendering authentication response HTML: %w", err))
+				errCh <- pcio.Errorf("error rendering authentication response HTML: %w", err)
 				return
 			}
 		} else {
 			if err := renderHTML(w, successHTML, templateData); err != nil {
-				exit.Error(pcio.Errorf("error rendering authentication response HTML: %w", err))
+				errCh <- pcio.Errorf("error rendering authentication response HTML: %w", err)
 				return
 			}
 		}
@@ -272,7 +269,7 @@ func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error
 	}
 	go func() {
 		if err := serve.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			exit.Error(pcio.Errorf("error listening for auth code: %w", err))
+			errCh <- pcio.Errorf("error listening for auth code: %w", err)
 			return
 		}
 	}()
@@ -281,11 +278,13 @@ func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error
 	case code := <-codeCh:
 		_ = serve.Shutdown(ctx)
 		return code, nil
+	case err := <-errCh:
+		_ = serve.Shutdown(ctx)
+		return "", err
 	case <-ctx.Done():
 		_ = serve.Shutdown(ctx)
 		if ctx.Err() != nil {
-			exit.Error(pcio.Errorf("error waiting for authorization: %w", ctx.Err()))
-			return "", ctx.Err()
+			return "", pcio.Errorf("error waiting for authorization: %w", ctx.Err())
 		}
 	}
 
@@ -295,15 +294,12 @@ func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error
 func renderHTML(w http.ResponseWriter, htmlTemplate string, data map[string]template.HTML) error {
 	tmpl, err := template.New("auth-response").Parse(htmlTemplate)
 	if err != nil {
-		exit.Error(pcio.Errorf("error parsing auth response HTML template: %w", err))
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return err
+		return pcio.Errorf("error parsing auth response HTML template: %w", err)
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	if err := tmpl.Execute(w, data); err != nil {
-		exit.Error(pcio.Errorf("error executing auth response HTML template: %w", err))
-		return err
+		return pcio.Errorf("error executing auth response HTML template: %w", err)
 	}
 	return nil
 }

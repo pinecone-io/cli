@@ -9,7 +9,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/oauth"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/spf13/cobra"
 )
@@ -54,7 +53,7 @@ func NewSetEnvCmd() *cobra.Command {
 			if err != nil {
 				log.Error().Err(err).Msg("Error retrieving oauth token")
 				msg.FailMsg("Error retrieving oauth token: %s", err)
-				exit.Error(pcio.Errorf("error retrieving oauth token: %w", err))
+				exit.Error().Err(err).Msg("error retrieving oauth token")
 			}
 			if token != nil && (token.AccessToken != "" || token.RefreshToken != "") {
 				oauth.Logout()

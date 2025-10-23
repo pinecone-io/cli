@@ -75,14 +75,14 @@ func NewPineconeClientForProjectById(projectId string) *pinecone.Client {
 	project, err := ac.Project.Describe(ctx, projectId)
 	if err != nil {
 		msg.FailMsg("Failed to get project %s: %s", style.Emphasis(projectId), err)
-		exit.Error(err)
+		exit.Error().Err(err).Msgf("Failed to get project %s", style.Emphasis(projectId))
 	}
 
 	// Get the stored ManagedKey for the project, a new key is created if one doesn't exist
 	key, err := getCLIAPIKeyForProject(ctx, ac, project)
 	if err != nil {
 		msg.FailMsg("Failed to retrieve or create an API key for the project %s (ID: %s)", project.Name, project.Id)
-		exit.Error(pcio.Errorf("failed to retrieve or create API key for project: %w", err))
+		exit.Error().Err(err).Msgf("Failed to retrieve or create API key for project %s (ID: %s)", project.Name, project.Id)
 	}
 
 	// Header is required for allowing user token to work across data/control plane APIs
@@ -97,7 +97,7 @@ func NewPineconeClientForProjectById(projectId string) *pinecone.Client {
 	})
 	if err != nil {
 		msg.FailMsg("Failed to create Pinecone client: %s", err)
-		exit.Error(pcio.Errorf("failed to create Pinecone Client: %w", err))
+		exit.Error().Err(err).Msg("failed to create Pinecone Client")
 	}
 
 	return pc
@@ -105,7 +105,8 @@ func NewPineconeClientForProjectById(projectId string) *pinecone.Client {
 
 func NewClientForAPIKey(apiKey string) *pinecone.Client {
 	if apiKey == "" {
-		exit.Error(pcio.Errorf("API key not set. Please run %s", style.Code("pc config set-api-key")))
+		msg.FailMsg("API key not set. Please run %s", style.Code("pc auth configure --api-key"))
+		exit.Error().Err(pcio.Errorf("API key not set. Please run %s", style.Code("pc config set-api-key"))).Send()
 	}
 
 	pc, err := pinecone.NewClient(pinecone.NewClientParams{
@@ -114,7 +115,7 @@ func NewClientForAPIKey(apiKey string) *pinecone.Client {
 		Host:      getPineconeHostURL(),
 	})
 	if err != nil {
-		exit.Error(err)
+		exit.Error().Err(err).Msg("Failed to create Pinecone client")
 	}
 
 	return pc
@@ -146,7 +147,7 @@ func NewPineconeAdminClient() *pinecone.AdminClient {
 	})
 	if err != nil {
 		msg.FailMsg("Failed to create Pinecone admin client: %s", err)
-		exit.Error(err)
+		exit.Error().Err(err).Msg("Failed to create Pinecone admin client")
 	}
 
 	return ac

@@ -88,7 +88,7 @@ func runCreatePodCmd(options createPodOptions) {
 	idx, err := pc.CreatePodIndex(ctx, createRequest)
 	if err != nil {
 		msg.FailMsg("Failed to create index %s: %s\n", style.Emphasis(options.name), err)
-		exit.Error(err)
+		exit.Error().Err(err).Msg("Failed to create index")
 	}
 	if options.json {
 		json := text.IndentJSON(idx)

@@ -141,12 +141,11 @@ func runCreateIndexCmd(options createIndexOptions) {
 	// validate and derive index type from arguments
 	err := options.validate()
 	if err != nil {
-		exit.Error(err)
-		return
+		exit.Error().Err(err).Msg("Failed to validate index creation options")
 	}
 	idxType, err := options.deriveIndexType()
 	if err != nil {
-		exit.Error(err)
+		exit.Error().Err(err).Msg("Failed to derive index type")
 		return
 	}
 
@@ -178,7 +177,7 @@ func runCreateIndexCmd(options createIndexOptions) {
 		idx, err = pc.CreateServerlessIndex(ctx, &args)
 		if err != nil {
 			msg.FailMsg("Failed to create serverless index %s: %s\n", style.Emphasis(options.name), err)
-			exit.Error(err)
+			exit.Error().Err(err).Msgf("Failed to create serverless index %s", style.Emphasis(options.name))
 		}
 	case indexTypePod:
 		// create pod index
@@ -205,7 +204,7 @@ func runCreateIndexCmd(options createIndexOptions) {
 		idx, err = pc.CreatePodIndex(ctx, &args)
 		if err != nil {
 			msg.FailMsg("Failed to create pod index %s: %s\n", style.Emphasis(options.name), err)
-			exit.Error(err)
+			exit.Error().Err(err).Msgf("Failed to create pod index %s", style.Emphasis(options.name))
 		}
 	case indexTypeIntegrated:
 		// create integrated index
@@ -228,12 +227,12 @@ func runCreateIndexCmd(options createIndexOptions) {
 		idx, err = pc.CreateIndexForModel(ctx, &args)
 		if err != nil {
 			msg.FailMsg("Failed to create integrated index %s: %s\n", style.Emphasis(options.name), err)
-			exit.Error(err)
+			exit.Error().Err(err).Msgf("Failed to create integrated index %s", style.Emphasis(options.name))
 		}
 	default:
 		err := pcio.Errorf("invalid index type")
 		log.Error().Err(err).Msg("Error creating index")
-		exit.Error(err)
+		exit.Error().Err(err).Msg("Failed to create index")
 	}
 
 	renderSuccessOutput(idx, options)

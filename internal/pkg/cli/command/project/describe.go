@@ -46,7 +46,7 @@ func NewDescribeProjectCmd() *cobra.Command {
 			project, err := ac.Project.Describe(context.Background(), projId)
 			if err != nil {
 				msg.FailMsg("Failed to describe project %s: %s\n", projId, err)
-				exit.Error(err)
+				exit.Error().Err(err).Msgf("Failed to describe project %s", style.Emphasis(projId))
 			}
 
 			if options.json {
