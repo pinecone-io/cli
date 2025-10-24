@@ -177,6 +177,7 @@ func (e *TokenError) Format(s fmt.State, verb rune) {
 	}
 }
 
+// Error payload as defined in RFC6749: https://datatracker.ietf.org/doc/html/rfc6749#section-5.2
 type oauthErrPayload struct {
 	Error            string `json:"error"`
 	ErrorDescription string `json:"error_description"`
@@ -195,7 +196,6 @@ func NewTokenErrorFromResponse(op TokenOperation, resp *http.Response) *TokenErr
 
 	body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20)) // 1MB cap
 	raw := string(body)
-	fmt.Printf("raw: %s\n", raw)
 	if len(raw) > 2048 {
 		raw = raw[:2048] + "...(truncated)"
 	}
