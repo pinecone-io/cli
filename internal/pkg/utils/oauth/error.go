@@ -28,7 +28,6 @@ const (
 	TokenErrInvalidRequest
 	TokenErrInvalidClient
 	TokenErrSessionExpired
-	TokenErrInvalidGrant
 	TokenErrUnauthorizedClient
 	TokenErrUnsupportedGrantType
 	TokenErrInvalidScope
@@ -44,8 +43,6 @@ func (k TokenErrorKind) String() string {
 		return "invalid_client"
 	case TokenErrSessionExpired:
 		return "session_expired"
-	case TokenErrInvalidGrant:
-		return "invalid_grant"
 	case TokenErrUnauthorizedClient:
 		return "unauthorized_client"
 	case TokenErrUnsupportedGrantType:
@@ -58,6 +55,34 @@ func (k TokenErrorKind) String() string {
 		return "auth_server_issue"
 	default:
 		return "unknown"
+	}
+}
+
+func classifyTokenErrorKind(err *TokenError) TokenErrorKind {
+	switch err.ErrorCode {
+	case ErrInvalidRequest:
+		return TokenErrInvalidRequest
+	case ErrInvalidClient:
+		return TokenErrInvalidClient
+	case ErrInvalidGrant:
+		return TokenErrSessionExpired
+	case ErrUnauthorizedClient:
+		return TokenErrUnauthorizedClient
+	case ErrUnsupportedGrantType:
+		return TokenErrUnsupportedGrantType
+	case ErrInvalidScope:
+		return TokenErrInvalidScope
+	default:
+		// Unknown oauth error code, fall back to HTTP semantics
+		if err.HTTPStatus == 429 {
+			return TokenErrRateLimited
+		} else if err.HTTPStatus >= 500 {
+			return TokenErrAuthServerIssue
+		} else if err.HTTPStatus == 400 {
+			return TokenErrInvalidRequest
+		} else {
+			return TokenErrUnknown
+		}
 	}
 }
 
@@ -93,16 +118,22 @@ func (e *TokenError) UserMessage() string {
 		return "authentication failed"
 	}
 	switch e.Kind {
+	case TokenErrInvalidRequest:
+		return "The authentication server rejected the request. Please try again later."
+	case TokenErrInvalidClient:
+		return "The authentication server rejected the client. Please try again later."
 	case TokenErrSessionExpired:
 		return "Your session has expired. Run `pc auth login` to sign in again."
+	case TokenErrUnauthorizedClient:
+		return "The authentication server rejected the client. Please try again later."
+	case TokenErrUnsupportedGrantType:
+		return "The authentication server does not support the grant type. Please try again later."
+	case TokenErrInvalidScope:
+		return "The authentication server rejected the scope. Please try again later."
 	case TokenErrRateLimited:
 		return "Too many requests. Please wait a moment and try again."
 	case TokenErrAuthServerIssue:
 		return "An error occurred with the authentication server. Please try again later."
-	case TokenErrInvalidClient:
-		return "The authentication server rejected the client. Please try again later."
-	case TokenErrInvalidRequest:
-		return "The authentication server rejected the request. Please try again later."
 	case TokenErrUnknown:
 		return "An unknown error occurred. Please try again later."
 	default:
@@ -164,6 +195,7 @@ func NewTokenErrorFromResponse(op TokenOperation, resp *http.Response) *TokenErr
 
 	body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20)) // 1MB cap
 	raw := string(body)
+	fmt.Printf("raw: %s\n", raw)
 	if len(raw) > 2048 {
 		raw = raw[:2048] + "...(truncated)"
 	}
@@ -181,32 +213,4 @@ func NewTokenErrorFromResponse(op TokenOperation, resp *http.Response) *TokenErr
 	}
 	e.Kind = classifyTokenErrorKind(e)
 	return e
-}
-
-func classifyTokenErrorKind(err *TokenError) TokenErrorKind {
-	switch err.ErrorCode {
-	case ErrInvalidGrant:
-		return TokenErrSessionExpired
-	case ErrInvalidClient:
-		return TokenErrInvalidClient
-	case ErrInvalidRequest:
-		return TokenErrInvalidRequest
-	case ErrUnauthorizedClient:
-		return TokenErrUnauthorizedClient
-	case ErrUnsupportedGrantType:
-		return TokenErrUnsupportedGrantType
-	case ErrInvalidScope:
-		return TokenErrInvalidScope
-	default:
-		// Unknown oauth error code, fall back to HTTP semantics
-		if err.HTTPStatus == 429 {
-			return TokenErrRateLimited
-		} else if err.HTTPStatus >= 500 {
-			return TokenErrAuthServerIssue
-		} else if err.HTTPStatus == 400 {
-			return TokenErrInvalidRequest
-		} else {
-			return TokenErrUnknown
-		}
-	}
 }
