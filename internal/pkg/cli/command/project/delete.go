@@ -55,7 +55,7 @@ func NewDeleteProjectCmd() *cobra.Command {
 			if err != nil {
 				msg.FailMsg("Failed to retrieve project information: %s\n", err)
 				msg.HintMsg("To see a list of projects in the organization, run %s", style.Code("pc project list"))
-				exit.Error(err)
+				exit.Error().Err(err).Msgf("Failed to retrieve project information")
 			}
 
 			verifyNoIndexes(projToDelete.Id, projToDelete.Name)
@@ -68,7 +68,7 @@ func NewDeleteProjectCmd() *cobra.Command {
 			err = ac.Project.Delete(ctx, projToDelete.Id)
 			if err != nil {
 				msg.FailMsg("Failed to delete project %s: %s\n", style.Emphasis(projToDelete.Name), err)
-				exit.Error(err)
+				exit.Error().Err(err).Msgf("Failed to delete project %s", style.Emphasis(projToDelete.Name))
 			}
 
 			// Clear target project if the deleted project is the target project
@@ -125,12 +125,12 @@ func verifyNoIndexes(projectId string, projectName string) {
 	idxs, err := pc.ListIndexes(ctx)
 	if err != nil {
 		msg.FailMsg("Failed to list indexes: %s\n", err)
-		exit.Error(err)
+		exit.Error().Err(err).Msgf("Failed to list indexes")
 	}
 	if len(idxs) > 0 {
 		msg.FailMsg("Project %s contains indexes. Delete the indexes before deleting the project.", style.Emphasis(projectName))
 		msg.HintMsg("To see indexes in this project, run %s", pcio.Sprintf(style.Code("pc target -p \"%s\" && pc index list"), projectName))
-		exit.Error(pcio.Errorf("project contains indexes"))
+		exit.Error().Msgf("Project %s contains indexes. Delete the indexes before deleting the project.", style.Emphasis(projectName))
 	}
 }
 
@@ -142,11 +142,11 @@ func verifyNoCollections(projectId string, projectName string) {
 	collections, err := pc.ListCollections(ctx)
 	if err != nil {
 		msg.FailMsg("Failed to list collections: %s\n", err)
-		exit.Error(err)
+		exit.Error().Err(err).Msgf("Failed to list collections")
 	}
 	if len(collections) > 0 {
 		msg.FailMsg("Project %s contains collections. Delete the collections before deleting the project.", style.Emphasis(projectName))
 		msg.HintMsg("To see collections in this project, run %s", pcio.Sprintf(style.Code("pc target -p \"%s\" && pc collection list"), projectName))
-		exit.Error(pcio.Errorf("project contains collections"))
+		exit.Error().Msgf("Project %s contains collections. Delete the collections before deleting the project.", style.Emphasis(projectName))
 	}
 }

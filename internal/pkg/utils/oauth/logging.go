@@ -6,7 +6,6 @@ import (
 	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"golang.org/x/oauth2"
 )
 
@@ -53,7 +52,7 @@ func ParseClaimsUnverified(token *oauth2.Token) (*MyCustomClaims, error) {
 	_, _, err := p.ParseUnverified(token.AccessToken, &claims)
 	if err != nil {
 		log.Debug().Err(err).Msg("Error parsing claims from access token")
-		exit.Error(pcio.Errorf("error parsing claims from token: %s", err))
+		exit.Error().Err(err).Msg("Error parsing claims from token")
 	}
 	return &claims, err
 }

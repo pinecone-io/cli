@@ -107,16 +107,16 @@ func Run(ctx context.Context, io IO, opts configureCmdOptions) {
 		if opts.readSecretFromStdin {
 			secretBytes, err := ioReadAll(io.In)
 			if err != nil {
-				log.Error().Err(err).Msg("Error reading client secret from stdin")
-				exit.Error(pcio.Errorf("error reading client secret from stdin: %w", err))
+				msg.FailMsg("Error reading client secret from stdin: %+v", err)
+				exit.Error().Err(err).Msg("Error reading client secret from stdin")
 			}
 			clientSecret = string(secretBytes)
 		} else if opts.promptIfMissing && isTerminal(os.Stdin) {
 			pcio.Fprint(io.Out, "Client Secret: ")
 			secretBytes, err := term.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
-				log.Error().Err(err).Msg("Error reading client secret from terminal")
-				exit.Error(pcio.Errorf("error reading client secret from terminal: %w", err))
+				msg.FailMsg("Error reading client secret from terminal: %+v", err)
+				exit.Error().Err(err).Msg("Error reading client secret from terminal")
 			}
 			clientSecret = string(secretBytes)
 		}
@@ -124,11 +124,8 @@ func Run(ctx context.Context, io IO, opts configureCmdOptions) {
 
 	// If client_id is provided without a client_secret, error
 	if clientID != "" && clientSecret == "" {
-		log.Error().Msg("Error configuring authentication credentials")
-		if !opts.json {
-			msg.FailMsg("Client secret is required (use %s or %s to provide it)", style.Emphasis("--client-secret"), style.Emphasis("--client-secret-stdin"))
-		}
-		exit.Error(pcio.Errorf("client secret is required"))
+		msg.FailMsg("Client secret is required (use %s or %s to provide it)", style.Emphasis("--client-secret"), style.Emphasis("--client-secret-stdin"))
+		exit.Error().Msgf("error configuring authentication credentials Client secret is required (use %s or %s to provide it)", style.Emphasis("--client-secret"), style.Emphasis("--client-secret-stdin"))
 		return
 	}
 
@@ -147,12 +144,12 @@ func Run(ctx context.Context, io IO, opts configureCmdOptions) {
 		// There should only be one organization listed for a service account
 		orgs, err := ac.Organization.List(ctx)
 		if err != nil {
-			log.Error().Err(err).Msg("Error listing service account organizations")
-			exit.Error(pcio.Errorf("Error listing service account organizations: %w", err))
+			msg.FailMsg("Error listing service account organizations: %+v", err)
+			exit.Error().Err(err).Msg("Error listing service account organizations")
 		}
 
 		if len(orgs) == 0 {
-			log.Error().Msg("No organizations found for service account")
+			msg.FailMsg("No organizations found for service account")
 			exit.ErrorMsg("No organizations found for service account")
 		}
 
@@ -169,8 +166,8 @@ func Run(ctx context.Context, io IO, opts configureCmdOptions) {
 		// List projects, and allow the user to pick one, or match the project-id if provided through the command
 		projects, err := ac.Project.List(ctx)
 		if err != nil {
-			log.Error().Err(err).Msg("Error listing projects for service account")
-			exit.Error(pcio.Errorf("Error listing projects for service account: %w", err))
+			msg.FailMsg("Error listing projects for service account")
+			exit.Error().Err(err).Msg("Error listing projects for service account")
 		}
 
 		var targetProject *pinecone.Project

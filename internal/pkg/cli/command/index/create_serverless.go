@@ -93,7 +93,7 @@ func runCreateServerlessCmd(options createServerlessOptions) {
 	idx, err := pc.CreateServerlessIndex(ctx, createRequest)
 	if err != nil {
 		msg.FailMsg("Failed to create serverless index %s: %s\n", style.Emphasis(options.name), err)
-		exit.Error(err)
+		exit.Error().Err(err).Msg("Failed to create serverless index")
 	}
 	if options.json {
 		json := text.IndentJSON(idx)

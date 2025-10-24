@@ -29,7 +29,7 @@ func (c ConfigProperty[T]) Set(value T) {
 	c.ViperStore.Set(c.KeyName, value)
 	err := c.ViperStore.WriteConfig()
 	if err != nil {
-		exit.Error(err)
+		exit.Error().Err(err).Msg("Error writing config file")
 	}
 }
 
@@ -52,7 +52,7 @@ func (c MarshaledProperty[T]) Init() {
 	log.Trace().Str("key", c.KeyName).Msg("Setting default value for property")
 	bytes, err := json.Marshal(c.DefaultValue)
 	if err != nil {
-		exit.Error(err)
+		exit.Error().Err(err).Msgf("Error marshalling value for property %s", c.KeyName)
 	}
 	c.ViperStore.SetDefault(c.KeyName, string(bytes))
 }
@@ -61,12 +61,12 @@ func (c MarshaledProperty[T]) Set(value T) {
 	log.Trace().Str("key", c.KeyName).Msg("Setting value for property")
 	bytes, err := json.Marshal(value)
 	if err != nil {
-		exit.Error(err)
+		exit.Error().Err(err).Msgf("Error marshalling value for property %s", c.KeyName)
 	}
 	c.ViperStore.Set(c.KeyName, string(bytes))
 	err = c.ViperStore.WriteConfig()
 	if err != nil {
-		exit.Error(err)
+		exit.Error().Err(err).Msgf("Error writing config file")
 	}
 }
 
@@ -87,7 +87,7 @@ func (c MarshaledProperty[T]) Get() T {
 	var value T
 	err := json.Unmarshal([]byte(str), &value)
 	if err != nil {
-		exit.Error(err)
+		exit.Error().Err(err).Msgf("Error unmarshalling value for property %s", c.KeyName)
 	}
 	return value
 }

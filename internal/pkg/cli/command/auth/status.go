@@ -8,7 +8,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
-	"github.com/pinecone-io/cli/internal/pkg/utils/log"
+	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/oauth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
@@ -31,8 +31,8 @@ func NewCmdAuthStatus() *cobra.Command {
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := runAuthStatus(cmd, options); err != nil {
-				log.Error().Err(err).Msg("Error retrieving authentication status")
-				exit.Error(pcio.Errorf("error retrieving authentication status: %w", err))
+				msg.FailMsg("Error retrieving authentication status: %s", err)
+				exit.Error().Err(err).Msg("Error retrieving authentication status")
 			}
 		},
 	}

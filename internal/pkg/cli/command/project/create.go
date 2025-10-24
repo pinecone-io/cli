@@ -65,7 +65,7 @@ func NewCreateProjectCmd() *cobra.Command {
 			proj, err := ac.Project.Create(context.Background(), createParams)
 			if err != nil {
 				msg.FailMsg("Failed to create project %s: %s\n", style.Emphasis(options.name), err)
-				exit.Error(err)
+				exit.Error().Err(err).Msgf("Failed to create project %s", style.Emphasis(options.name))
 			}
 
 			if options.json {
