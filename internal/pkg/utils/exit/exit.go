@@ -7,6 +7,31 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// ExitHandler interface for dependency injection / testing
+type ExitHandler interface {
+	Exit(code int)
+}
+
+// defaultExitHandler is the default implementation of the ExitHandler interface
+// This is mocked and replaced in unit tests with setExitHandler and resetExitHandler
+type defaultExitHandler struct{}
+
+func (h *defaultExitHandler) Exit(code int) {
+	os.Exit(code)
+}
+
+var exitHandler ExitHandler = &defaultExitHandler{}
+
+func setExitHandler(handler ExitHandler) {
+	exitHandler = handler
+}
+
+func resetExitHandler() {
+	exitHandler = &defaultExitHandler{}
+}
+
+// exitEvent is a wrapper around zerolog.Event that adds a code and exits the program
+// when Msg, Msgf, or Send is called
 type exitEvent struct {
 	*zerolog.Event
 	code int
@@ -15,19 +40,19 @@ type exitEvent struct {
 // Logs the message and exits with the exitEvent.code
 func (e *exitEvent) Msg(msg string) {
 	e.Event.Msg(msg)
-	os.Exit(e.code)
+	exitHandler.Exit(e.code)
 }
 
 // Logs the formatted message and exits with the exitEvent.code
 func (e *exitEvent) Msgf(f string, v ...any) {
 	e.Event.Msgf(f, v...)
-	os.Exit(e.code)
+	exitHandler.Exit(e.code)
 }
 
 // Equivalent to calling Msg("") then exiting with the exitEvent.code
 func (e *exitEvent) Send() {
 	e.Event.Send()
-	os.Exit(e.code)
+	exitHandler.Exit(e.code)
 }
 
 // Returns a new exitEvent/zerolog.Event with error level and code 1
