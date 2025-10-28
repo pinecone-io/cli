@@ -40,7 +40,7 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 			org, err := ac.Organization.Describe(cmd.Context(), options.organizationID)
 			if err != nil {
 				msg.FailMsg("Failed to describe organization %s: %s\n", options.organizationID, err)
-				exit.Error(err)
+				exit.Error().Err(err).Msgf("Failed to describe organization %s", style.Emphasis(options.organizationID))
 			}
 
 			if !options.skipConfirmation {
@@ -50,7 +50,7 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 			err = ac.Organization.Delete(cmd.Context(), options.organizationID)
 			if err != nil {
 				msg.FailMsg("Failed to delete organization %s: %s\n", options.organizationID, err)
-				exit.Error(err)
+				exit.Error().Err(err).Msgf("Failed to delete organization %s", style.Emphasis(options.organizationID))
 			}
 
 			// Clear target project if the deleted project is the target project

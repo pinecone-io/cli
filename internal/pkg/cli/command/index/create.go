@@ -148,7 +148,7 @@ func runCreateIndexCmd(options createIndexOptions) {
 	idx, err := runCreateIndexWithService(ctx, pc, options)
 	if err != nil {
 		msg.FailMsg("Failed to create index: %s\n", err)
-		exit.Error(err)
+		exit.Error().Err(err).Msg("Failed to create index")
 	}
 
 	renderSuccessOutput(idx, options)

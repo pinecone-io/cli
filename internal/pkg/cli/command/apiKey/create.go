@@ -5,6 +5,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
+	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
@@ -64,14 +65,14 @@ func NewCreateApiKeyCmd() *cobra.Command {
 				projId, err = state.GetTargetProjectId()
 				if err != nil {
 					msg.FailMsg("No target project set, and no project ID provided. Use %s to set the target project. Use %s to create the key in a specific project.", style.Code("pc target -o <org> -p <project>"), style.Code("pc api-key create -i <project-id> -n <name>"))
-					exit.ErrorMsg("No project ID provided, and no target project set")
+					exit.Error().Err(err).Msg("No project ID provided, and no target project set")
 				}
 			}
 
 			targetOrgId, err := state.GetTargetOrgId()
 			if err != nil {
 				msg.FailMsg("Failed to get target organization ID: %s", err)
-				exit.Error(err)
+				exit.Error().Err(err).Msg("Failed to get target organization ID")
 			}
 
 			// Only set non-empty values
@@ -89,7 +90,7 @@ func NewCreateApiKeyCmd() *cobra.Command {
 			keyWithSecret, err := ac.APIKey.Create(cmd.Context(), projId, createParams)
 			if err != nil {
 				msg.FailMsg("Failed to create API key %s in project %s: %s", options.name, projId, err)
-				exit.Error(err)
+				exit.Error().Err(err).Msgf("Failed to create API key %s in project %s", options.name, projId)
 			}
 
 			if options.json {
@@ -108,6 +109,7 @@ func NewCreateApiKeyCmd() *cobra.Command {
 					err := ac.APIKey.Delete(cmd.Context(), managedKey.Id)
 					if err != nil {
 						msg.FailMsg("Failed to delete previously managed API key: %s, %+v", style.Emphasis(managedKey.Id), err)
+						log.Error().Err(err).Msg("Failed to delete previously managed API key")
 					}
 					msg.SuccessMsg("Deleted previously managed API key: %s", style.Emphasis(managedKey.Id))
 				}

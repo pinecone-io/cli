@@ -34,7 +34,7 @@ func NewDescribeCollectionCmd() *cobra.Command {
 			collection, err := pc.DescribeCollection(ctx, options.name)
 			if err != nil {
 				msg.FailMsg("Failed to describe collection %s: %s\n", options.name, err)
-				exit.Error(err)
+				exit.Error().Err(err).Msg("Failed to describe collection")
 			}
 
 			if options.json {

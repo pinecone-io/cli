@@ -3,6 +3,7 @@ package oauth
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/url"
 	"strings"
@@ -90,6 +91,10 @@ func (t *TokenManager) Token(ctx context.Context) (*oauth2.Token, error) {
 	}
 	newToken, err := refreshTokenWithOrg(ctx, t.cfg, &latestToken, claims.OrgId)
 	if err != nil {
+		var te *TokenError
+		if errors.As(err, &te) {
+			return nil, te
+		}
 		return nil, err
 	}
 
@@ -158,7 +163,9 @@ func refreshTokenWithOrg(ctx context.Context, cfg *oauth2.Config, currToken *oau
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, pcio.Errorf("failed to refresh user token: %s", resp.Status)
+		// Create a new TokenError from the response
+		// This error bubbles up to the caller where a friendly error message is displayed
+		return nil, NewTokenErrorFromResponse(OpRefresh, resp)
 	}
 
 	// Inline struct aligning to what auth0 returns over the wire
