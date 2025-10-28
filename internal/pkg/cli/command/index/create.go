@@ -17,6 +17,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Abstracts the Pinecone Go SDK for testing purposes
+type CreateIndexService interface {
+	CreateServerlessIndex(ctx context.Context, req *pinecone.CreateServerlessIndexRequest) (*pinecone.Index, error)
+	CreatePodIndex(ctx context.Context, req *pinecone.CreatePodIndexRequest) (*pinecone.Index, error)
+	CreateIndexForModel(ctx context.Context, req *pinecone.CreateIndexForModelRequest) (*pinecone.Index, error)
+}
+
 type indexType string
 
 const (
@@ -138,15 +145,25 @@ func runCreateIndexCmd(options createIndexOptions) {
 	ctx := context.Background()
 	pc := sdk.NewPineconeClient()
 
+	idx, err := runCreateIndexWithService(ctx, pc, options)
+	if err != nil {
+		msg.FailMsg("Failed to create index: %s\n", err)
+		exit.Error().Err(err).Msg("Failed to create index")
+	}
+
+	renderSuccessOutput(idx, options)
+}
+
+// This function plus the CreateIndexService interface allows for testing
+func runCreateIndexWithService(ctx context.Context, service CreateIndexService, options createIndexOptions) (*pinecone.Index, error) {
 	// validate and derive index type from arguments
 	err := options.validate()
 	if err != nil {
-		exit.Error().Err(err).Msg("Failed to validate index creation options")
+		return nil, err
 	}
 	idxType, err := options.deriveIndexType()
 	if err != nil {
-		exit.Error().Err(err).Msg("Failed to derive index type")
-		return
+		return nil, err
 	}
 
 	// index tags
@@ -174,10 +191,11 @@ func runCreateIndexCmd(options createIndexOptions) {
 			SourceCollection:   pointerOrNil(options.sourceCollection),
 		}
 
-		idx, err = pc.CreateServerlessIndex(ctx, &args)
+		idx, err = service.CreateServerlessIndex(ctx, &args)
 		if err != nil {
-			msg.FailMsg("Failed to create serverless index %s: %s\n", style.Emphasis(options.name), err)
-			exit.Error().Err(err).Msgf("Failed to create serverless index %s", style.Emphasis(options.name))
+			wrapped := pcio.Errorf("Failed to create serverless index %s: %w", style.Emphasis(options.name), err)
+			msg.FailMsg("%v", wrapped)
+			return nil, wrapped
 		}
 	case indexTypePod:
 		// create pod index
@@ -201,10 +219,11 @@ func runCreateIndexCmd(options createIndexOptions) {
 			MetadataConfig:     metadataConfig,
 		}
 
-		idx, err = pc.CreatePodIndex(ctx, &args)
+		idx, err = service.CreatePodIndex(ctx, &args)
 		if err != nil {
-			msg.FailMsg("Failed to create pod index %s: %s\n", style.Emphasis(options.name), err)
-			exit.Error().Err(err).Msgf("Failed to create pod index %s", style.Emphasis(options.name))
+			wrapped := pcio.Errorf("Failed to create pod index %s: %w", style.Emphasis(options.name), err)
+			msg.FailMsg("%v", wrapped)
+			return nil, wrapped
 		}
 	case indexTypeIntegrated:
 		// create integrated index
@@ -222,20 +241,21 @@ func runCreateIndexCmd(options createIndexOptions) {
 				ReadParameters:  &readParams,
 				WriteParameters: &writeParams,
 			},
+			Tags: indexTags,
 		}
 
-		idx, err = pc.CreateIndexForModel(ctx, &args)
+		idx, err = service.CreateIndexForModel(ctx, &args)
 		if err != nil {
-			msg.FailMsg("Failed to create integrated index %s: %s\n", style.Emphasis(options.name), err)
-			exit.Error().Err(err).Msgf("Failed to create integrated index %s", style.Emphasis(options.name))
+			wrapped := pcio.Errorf("Failed to create integrated index %s: %w", style.Emphasis(options.name), err)
+			msg.FailMsg("%v", wrapped)
+			return nil, wrapped
 		}
 	default:
-		err := pcio.Errorf("invalid index type")
-		log.Error().Err(err).Msg("Error creating index")
-		exit.Error().Err(err).Msg("Failed to create index")
+		err := pcio.Errorf("Error creating index: invalid index type")
+		return nil, err
 	}
 
-	renderSuccessOutput(idx, options)
+	return idx, nil
 }
 
 func renderSuccessOutput(idx *pinecone.Index, options createIndexOptions) {
