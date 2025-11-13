@@ -1,5 +1,8 @@
 name: E2E Integration Tests
 
+permissions:
+  contents: read
+
 on:
   workflow_call:
     secrets:
