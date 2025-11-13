@@ -30,6 +30,7 @@ jobs:
       PINECONE_CLIENT_ID: ${{ secrets.PINECONE_CLIENT_ID }}
       PINECONE_CLIENT_SECRET: ${{ secrets.PINECONE_CLIENT_SECRET }}
       PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+      PC_E2E_PROJECT_ID: ${{ secrets.PC_E2E_PROJECT_ID }}
 
   goreleaser-build:
     runs-on: ubuntu-latest
