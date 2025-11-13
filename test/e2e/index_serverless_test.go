@@ -4,7 +4,6 @@ package e2e
 
 import (
 	"context"
-	"strings"
 	"testing"
 	"time"
 
@@ -30,23 +29,22 @@ func runIndexServerlessLifecycle(t *testing.T) {
 	name := helpers.RandomName("e2e-srvless")
 
 	// Create serverless index
-	created, err := cli.IndexCreateServerless(ctx, helpers.IndexCreateServerlessOptions{
-		Name:      name,
-		Cloud:     helpers.Cloud(),
-		Region:    helpers.Region(),
-		Dimension: helpers.Dimension(),
-	})
+	args := []string{
+		"index", "create",
+		"--name", name,
+		"--cloud", helpers.Cloud(),
+		"--region", helpers.Region(),
+		"--dimension", strconvI(helpers.Dimension()),
+		"--metric", "cosine",
+	}
+	var idx pinecone.Index
+	_, err := cli.RunJSONCtx(ctx, &idx, args...)
 	if err != nil {
 		t.Fatalf("index create failed: %v", err)
 	}
-	if created.Name != name {
-		t.Fatalf("created index name mismatch: expected %s got %s", name, created.Name)
+	if idx.Name != name {
+		t.Fatalf("created index name mismatch: expected %s got %s", name, idx.Name)
 	}
-
-	// Ensure cleanup
-	t.Cleanup(func() {
-		_ = cli.IndexDelete(ctx, name)
-	})
 
 	// Wait for readiness
 	if err := helpers.WaitForIndexReady(cli, name, 5*time.Minute); err != nil {
@@ -54,7 +52,8 @@ func runIndexServerlessLifecycle(t *testing.T) {
 	}
 
 	// Describe
-	desc, err := cli.IndexDescribe(ctx, name)
+	var desc pinecone.Index
+	_, err = cli.RunJSONCtx(ctx, &desc, "index", "describe", "--name", name)
 	if err != nil {
 		t.Fatalf("index describe failed: %v", err)
 	}
@@ -63,20 +62,54 @@ func runIndexServerlessLifecycle(t *testing.T) {
 	}
 
 	// List and assert presence (len > 0 and name contained)
-	list, stdout, err := helpers.MustRunJSON[[]pinecone.Index](cli, ctx, "index", "list")
+	var list []pinecone.Index
+	_, err = cli.RunJSONCtx(ctx, &list, "index", "list")
 	if err != nil {
 		t.Fatalf("index list failed: %v", err)
 	}
 	if len(list) == 0 {
 		t.Fatalf("expected at least one index in list")
 	}
-	if !strings.Contains(stdout, "\"name\": \""+name+"\"") {
+
+	newIdxListed := false
+	for _, idx := range list {
+		if idx.Name == name {
+			newIdxListed = true
+		}
+	}
+	if !newIdxListed {
 		t.Fatalf("created index not found in list output")
 	}
 
-	// Delete explicitly (also registered in cleanup)
-	err = cli.IndexDelete(ctx, name)
-	if err != nil {
-		t.Fatalf("index delete failed: %v", err)
+	// Delete / Ensure cleanup
+	t.Cleanup(func() {
+		_, _, err = cli.RunCtx(ctx, "index", "delete", "--name", name)
+		if err != nil {
+			t.Fatalf("index delete failed: %v", err)
+		}
+	})
+}
+
+// local helper (duplicated here to avoid importing strconv in tests)
+func strconvI(n int) string {
+	const digits = "0123456789"
+	if n == 0 {
+		return "0"
 	}
+	neg := n < 0
+	if neg {
+		n = -n
+	}
+	var buf [20]byte
+	i := len(buf)
+	for n > 0 {
+		i--
+		buf[i] = digits[n%10]
+		n /= 10
+	}
+	if neg {
+		i--
+		buf[i] = '-'
+	}
+	return string(buf[i:])
 }

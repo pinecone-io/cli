@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/pinecone-io/cli/test/e2e/helpers"
+	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
 
 func TestAPIKeyLifecycle(t *testing.T) {
@@ -24,25 +25,30 @@ func TestAPIKeyLifecycle(t *testing.T) {
 	ctx := context.Background()
 
 	// Create
-	created, err := cli.APIKeyCreate(ctx, projID, name)
+	var create pinecone.APIKeyWithSecret
+	_, err := cli.RunJSONCtx(ctx, &create, "api-key", "create", "--id", projID, "--name", name)
 	if err != nil {
 		t.Fatalf("api-key create failed: %v", err)
 	}
-	if created.Key.Id == "" || created.Value == "" {
-		t.Fatalf("expected created key with secret, got: %+v", created)
+	if create.Key.Id == "" || create.Value == "" {
+		t.Fatalf("expected created key with secret, got: %+v", create)
 	}
 
 	// Describe
-	desc, err := cli.APIKeyDescribe(ctx, created.Key.Id)
+	var desc pinecone.APIKey
+	_, err = cli.RunJSONCtx(ctx, &desc, "api-key", "describe", "--id", create.Key.Id)
 	if err != nil {
 		t.Fatalf("api-key describe failed: %v", err)
 	}
-	if desc.Id != created.Key.Id {
-		t.Fatalf("describe id mismatch: expected %s got %s", created.Key.Id, desc.Id)
+	if desc.Id != create.Key.Id {
+		t.Fatalf("describe id mismatch: expected %s got %s", create.Key.Id, desc.Id)
 	}
 
 	// Delete / Ensure cleanup
 	t.Cleanup(func() {
-		_ = cli.APIKeyDelete(ctx, created.Key.Id)
+		_, _, err := cli.RunCtx(ctx, "api-key", "delete", "--id", desc.Id, "--skip-confirmation")
+		if err != nil {
+			t.Fatalf("api-key delete failed: %v", err)
+		}
 	})
 }

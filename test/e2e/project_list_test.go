@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/pinecone-io/cli/test/e2e/helpers"
+	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
 
 func TestProjectList(t *testing.T) {
@@ -17,7 +18,8 @@ func TestProjectList(t *testing.T) {
 	cli := helpers.NewCLI(t)
 
 	ctx := context.Background()
-	projects, err := cli.ProjectList(ctx)
+	var projects []pinecone.Project
+	_, err := cli.RunJSONCtx(ctx, &projects, "project", "list")
 	if err != nil {
 		t.Fatalf("project list failed: %v", err)
 	}

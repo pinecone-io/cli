@@ -6,6 +6,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/test/e2e/helpers"
 )
 
@@ -24,13 +25,14 @@ func TestTargetSetAndShow(t *testing.T) {
 
 	// Set target
 	ctx := context.Background()
-	err := cli.TargetSetByIDs(ctx, orgID, projID)
+	_, _, err := cli.RunCtx(ctx, "target", "--org-id", orgID, "--project-id", projID)
 	if err != nil {
 		t.Fatalf("target set failed: %v", err)
 	}
 
 	// Show target and verify
-	tc, err := cli.TargetShow(ctx)
+	var tc state.TargetContext
+	_, err = cli.RunJSONCtx(ctx, &tc, "target", "--show")
 	if err != nil {
 		t.Fatalf("target --show failed: %v", err)
 	}

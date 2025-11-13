@@ -16,10 +16,13 @@ import (
 )
 
 // CLI is a wrapper around the CLI binary and environment variables.
-// It provides methods for running CLI commands and parsing output.
+// It provides methods for running CLI commands and parsing various kinds of output in tests.
 type CLI struct {
-	Bin     string
+	// Bin is the path to the CLI binary which will be used to run commands.
+	Bin string
+	// BaseEnv are the environment variables that will be used to run commands.
 	BaseEnv []string
+	// T is the testing.T instance that will be used to log messages.
 	T       *testing.T
 	Timeout time.Duration
 	Debug   bool
@@ -31,22 +34,26 @@ type CLI struct {
 // 2) (Optional) PC_E2E_USE_PATH=1 to use 'pc' from local PATH
 // 3) Otherwise fail (TestMain or caller should provide PC_BIN)
 func NewCLI(t *testing.T) *CLI {
-	// If PC_BIN is set, validate it's usable, otherwise check if PC_E2E_USE_PATH is set
+	// If PC_BIN is set, validate it's usable.
+	// Otherwise, check if PC_E2E_USE_PATH is set and check for 'pc' in the PATH.
 	bin := os.Getenv("PC_BIN")
 	if bin != "" {
 		if _, err := os.Stat(bin); err != nil {
 			t.Fatalf("PC_BIN is not usable: %s: %v", bin, err)
 		}
 	} else if os.Getenv("PC_E2E_USE_PATH") == "1" {
-		if p, err := exec.LookPath("pc"); err == nil {
-			bin = p
+		p, err := exec.LookPath("pc")
+		if err != nil {
+			t.Fatalf("PC_E2E_USE_PATH=1 is set, but 'pc' not found in PATH: %v", err)
 		}
+		bin = p
 	}
 
 	if bin == "" {
 		t.Fatalf("pc binary not found. Set PC_BIN or PC_E2E_USE_PATH=1")
 	}
 
+	// Copy all environment variables into baseEnv, overriding PC_E2E_HOME if set.
 	baseEnv := os.Environ()
 	if os.Getenv("PC_E2E_HOME") != "" {
 		baseEnv = appendOrReplaceEnv(baseEnv, "PC_E2E_HOME", os.Getenv("PC_E2E_HOME"))
@@ -123,15 +130,15 @@ func (c *CLI) RunJSONCtx(ctx context.Context, out any, args ...string) (string, 
 }
 
 // MustRunJSON executes and decodes JSON into the provided generic type.
-func MustRunJSON[T any](c *CLI, ctx context.Context, args ...string) (T, string, error) {
-	var zero T
-	var v T
-	stdout, err := c.RunJSONCtx(ctx, &v, args...)
-	if err != nil {
-		return zero, stdout, err
-	}
-	return v, stdout, nil
-}
+// func MustRunJSON[T any](c *CLI, ctx context.Context, args ...string) (T, string, error) {
+// 	var zero T
+// 	var v T
+// 	stdout, err := c.RunJSONCtx(ctx, &v, args...)
+// 	if err != nil {
+// 		return zero, stdout, err
+// 	}
+// 	return v, stdout, nil
+// }
 
 func hasJSONFlag(args []string) bool {
 	for _, a := range args {
