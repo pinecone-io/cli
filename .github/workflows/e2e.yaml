@@ -29,9 +29,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: Build CLI
-        run: go build -o ./dist/pc ./cmd/pc
       - name: Run E2E tests
         run: |
-          PC_E2E=1 PC_BIN=./dist/pc go test ./test/e2e -tags=e2e -v
+          go test ./test/e2e -tags=e2e -v
         shell: bash
