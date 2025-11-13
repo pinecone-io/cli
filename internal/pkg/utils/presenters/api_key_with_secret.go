@@ -5,7 +5,7 @@ import (
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
-	"github.com/pinecone-io/go-pinecone/v4/pinecone"
+	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
 
 func PrintDescribeAPIKeyWithSecretTable(apiKey *pinecone.APIKeyWithSecret) {

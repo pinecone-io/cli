@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pinecone-io/go-pinecone/v4/pinecone"
+	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 	"github.com/stretchr/testify/assert"
 )
 
