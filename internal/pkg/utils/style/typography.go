@@ -1,8 +1,6 @@
 package style
 
 import (
-	"fmt"
-
 	"github.com/fatih/color"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
@@ -43,8 +41,8 @@ func InfoMsg(s string) string {
 	return applyStyle("[INFO] ", color.FgHiWhite) + s
 }
 
-func FailMsg(s string, a ...any) string {
-	return applyStyle("[ERROR] ", color.FgRed) + fmt.Sprintf(s, a...)
+func FailMsg(s string) string {
+	return applyStyle("[ERROR] ", color.FgRed) + s
 }
 
 func Code(s string) string {

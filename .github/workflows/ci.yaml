@@ -4,12 +4,15 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
 
 jobs:
-  tests:
+  unit-tests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,6 +23,14 @@ jobs:
         uses: actions/setup-go@v5
       - name: Run tests
         run: go test -v ./...
+
+  e2e-tests:
+    uses: ./.github/workflows/e2e.yaml
+    secrets:
+      PINECONE_CLIENT_ID: ${{ secrets.PINECONE_CLIENT_ID }}
+      PINECONE_CLIENT_SECRET: ${{ secrets.PINECONE_CLIENT_SECRET }}
+      PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+      PC_E2E_PROJECT_ID: ${{ secrets.PC_E2E_PROJECT_ID }}
 
   goreleaser-build:
     runs-on: ubuntu-latest
@@ -34,7 +45,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: '~> v2'
+          version: "~> v2"
           args: build --snapshot --clean
       - uses: actions/upload-artifact@v4
         with:

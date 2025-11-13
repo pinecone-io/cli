@@ -24,9 +24,14 @@ ensure-goreleaser:
         exit 127; \
     fi
 
-# Run all tests for the CLI
-test *ARGS: ensure-go
+# Run all unit tests for the CLI
+test-unit *ARGS: ensure-go
     go test -v ./... {{ARGS}}
+
+# Run E2E tests (builds a local binary and executes tests with tags=e2e)
+test-e2e: ensure-go
+    go build -o ./dist/pc ./cmd/pc
+    PC_E2E=1 go test ./test/e2e -tags=e2e -v
 
 # Generate man pages for the CLI, output in ./man
 gen-manpages *ARGS: ensure-go
