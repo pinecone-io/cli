@@ -1,0 +1,34 @@
+name: E2E Integration Tests
+
+on:
+  workflow_call:
+    secrets:
+      PINECONE_CLIENT_ID:
+        required: true
+      PINECONE_CLIENT_SECRET:
+        required: true
+      PINECONE_API_KEY:
+        required: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      PINECONE_CLIENT_ID: ${{ secrets.PINECONE_CLIENT_ID }}
+      PINECONE_CLIENT_SECRET: ${{ secrets.PINECONE_CLIENT_SECRET }}
+      PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+      PC_E2E: "1"
+      PC_E2E_DEBUG: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build CLI
+        run: go build -o ./dist/pc ./cmd/pc
+      - name: Run E2E tests
+        run: |
+          PC_E2E=1 PC_BIN=./dist/pc go test ./test/e2e -tags=e2e -v
+        shell: bash

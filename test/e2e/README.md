@@ -19,7 +19,7 @@ Environment variables:
 
 - PC_E2E=1 to enable tests
 - PC_E2E_DEBUG=1 to log commands and outputs
-- PC_E2E_ENV=production|staging (default: production)
+- PINECONE_ENVIRONMENT=production|staging (default: production)
 - Service account flow:
   - PINECONE_CLIENT_ID
   - PINECONE_CLIENT_SECRET
