@@ -22,7 +22,7 @@ func NewWhoAmICmd() *cobra.Command {
 			token, err := oauth.Token(cmd.Context())
 			if err != nil {
 				msg.FailMsg("Error retrieving oauth token: %s", err)
-				exit.Error().Err(err).Msg("Error retrieving oauth token")
+				exit.Error(err, "Error retrieving oauth token")
 				return
 			}
 			if token == nil || token.AccessToken == "" {
@@ -33,7 +33,7 @@ func NewWhoAmICmd() *cobra.Command {
 			claims, err := oauth.ParseClaimsUnverified(token)
 			if err != nil {
 				msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
-				exit.Error().Err(err).Msg("An auth token was fetched but an error occurred while parsing the token's claims")
+				exit.Error(err, "An auth token was fetched but an error occurred while parsing the token's claims")
 				return
 			}
 			msg.InfoMsg("Logged in as " + style.Emphasis(claims.Email))

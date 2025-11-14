@@ -32,7 +32,7 @@ func NewCmdAuthStatus() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := runAuthStatus(cmd, options); err != nil {
 				msg.FailMsg("Error retrieving authentication status: %s", err)
-				exit.Error().Err(err).Msg("Error retrieving authentication status")
+				exit.Error(err, "Error retrieving authentication status")
 			}
 		},
 	}

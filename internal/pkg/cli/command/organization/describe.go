@@ -44,7 +44,7 @@ func NewDescribeOrganizationCmd() *cobra.Command {
 			org, err := ac.Organization.Describe(cmd.Context(), orgId)
 			if err != nil {
 				msg.FailMsg("Failed to describe organization %s: %s\n", orgId, err)
-				exit.Error().Err(err).Msgf("Failed to describe organization %s", style.Emphasis(orgId))
+				exit.Errorf(err, "Failed to describe organization %s", style.Emphasis(orgId))
 			}
 
 			if options.json {

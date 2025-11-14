@@ -65,14 +65,14 @@ func NewCreateApiKeyCmd() *cobra.Command {
 				projId, err = state.GetTargetProjectId()
 				if err != nil {
 					msg.FailMsg("No target project set, and no project ID provided. Use %s to set the target project. Use %s to create the key in a specific project.", style.Code("pc target -o <org> -p <project>"), style.Code("pc api-key create -i <project-id> -n <name>"))
-					exit.Error().Err(err).Msg("No project ID provided, and no target project set")
+					exit.Error(err, "No project ID provided, and no target project set")
 				}
 			}
 
 			targetOrgId, err := state.GetTargetOrgId()
 			if err != nil {
 				msg.FailMsg("Failed to get target organization ID: %s", err)
-				exit.Error().Err(err).Msg("Failed to get target organization ID")
+				exit.Error(err, "Failed to get target organization ID")
 			}
 
 			// Only set non-empty values
@@ -90,7 +90,7 @@ func NewCreateApiKeyCmd() *cobra.Command {
 			keyWithSecret, err := ac.APIKey.Create(cmd.Context(), projId, createParams)
 			if err != nil {
 				msg.FailMsg("Failed to create API key %s in project %s: %s", options.name, projId, err)
-				exit.Error().Err(err).Msgf("Failed to create API key %s in project %s", options.name, projId)
+				exit.Errorf(err, "Failed to create API key %s in project %s", options.name, projId)
 			}
 
 			if options.json {

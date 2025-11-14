@@ -53,7 +53,7 @@ func NewListKeysCmd() *cobra.Command {
 			keysResponse, err := ac.APIKey.List(cmd.Context(), projId)
 			if err != nil {
 				msg.FailMsg("Failed to list API keys: %s", err)
-				exit.Error().Err(err).Msg("Failed to list API keys")
+				exit.Error(err, "Failed to list API keys")
 			}
 
 			// Sort keys alphabetically by name

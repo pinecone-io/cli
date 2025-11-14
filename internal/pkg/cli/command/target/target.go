@@ -81,7 +81,7 @@ func NewTargetCmd() *cobra.Command {
 
 			if err := validateTargetOptions(options); err != nil {
 				msg.FailMsg("Invalid target options: %s", err)
-				exit.Error().Err(err).Msg("Invalid target options")
+				exit.Error(err, "Invalid target options")
 				return
 			}
 
@@ -114,13 +114,13 @@ func NewTargetCmd() *cobra.Command {
 			token, err := oauth.Token(cmd.Context())
 			if err != nil {
 				msg.FailMsg("Error retrieving oauth token: %s", err)
-				exit.Error().Err(err).Msg("Error retrieving oauth token")
+				exit.Error(err, "Error retrieving oauth token")
 			}
 
 			claims, err := oauth.ParseClaimsUnverified(token)
 			if err != nil {
 				msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
-				exit.Error().Err(err).Msg("Error parsing claims from access token")
+				exit.Error(err, "Error parsing claims from access token")
 			}
 			currentTokenOrgId := claims.OrgId
 
@@ -136,7 +136,7 @@ func NewTargetCmd() *cobra.Command {
 			// Fetch the user's organizations
 			orgs, err := ac.Organization.List(cmd.Context())
 			if err != nil {
-				exit.Error().Err(err).Msg("Error fetching organizations")
+				exit.Error(err, "Error fetching organizations")
 			}
 
 			// Interactive targeting - no options passed
@@ -149,7 +149,7 @@ func NewTargetCmd() *cobra.Command {
 				targetOrg := postLoginInteractiveTargetOrg(orgs)
 				if targetOrg == nil {
 					msg.FailMsg("Failed to target an organization")
-					exit.Error().Msg("Failed to target an organization")
+					exit.ErrorMsg("Failed to target an organization")
 				} else {
 					pcio.Println()
 					pcio.Printf(style.SuccessMsg("Target org set to %s.\n"), style.Emphasis(targetOrg.Name))
@@ -160,7 +160,7 @@ func NewTargetCmd() *cobra.Command {
 						err = login.GetAndSetAccessToken(&targetOrg.Id)
 						if err != nil {
 							msg.FailMsg("Failed to get access token: %s", err)
-							exit.Error().Err(err).Msg("Error getting access token")
+							exit.Error(err, "Error getting access token")
 						}
 					}
 				}
@@ -170,14 +170,14 @@ func NewTargetCmd() *cobra.Command {
 				projects, err := ac.Project.List(cmd.Context())
 				if err != nil {
 					msg.FailMsg("Failed to fetch projects: %s", err)
-					exit.Error().Err(err).Msg("error fetching projects")
+					exit.Error(err, "error fetching projects")
 				}
 
 				// Ask the user to choose a target project
 				targetProject := postLoginInteractiveTargetProject(projects)
 				if targetProject == nil {
 					msg.FailMsg("Failed to target a project")
-					exit.Error().Msg("failed to target a project")
+					exit.ErrorMsg("failed to target a project")
 				} else {
 					pcio.Printf(style.SuccessMsg("Target project set %s.\n"), style.Emphasis(targetProject.Name))
 					return
@@ -193,7 +193,7 @@ func NewTargetCmd() *cobra.Command {
 				org, err = getOrgForTarget(orgs, options.org, options.orgID)
 				if err != nil {
 					msg.FailMsg("Failed to get organization: %s", err)
-					exit.Error().Err(err).Msg("Failed to get organization")
+					exit.Error(err, "Failed to get organization")
 				}
 				if !options.json {
 					msg.SuccessMsg("Target org updated to %s", style.Emphasis(org.Name))
@@ -206,7 +206,7 @@ func NewTargetCmd() *cobra.Command {
 					err = login.GetAndSetAccessToken(&org.Id)
 					if err != nil {
 						msg.FailMsg("Failed to get access token: %s", err)
-						exit.Error().Err(err).Msg("Error getting access token")
+						exit.Error(err, "Error getting access token")
 					}
 				}
 
@@ -235,14 +235,14 @@ func NewTargetCmd() *cobra.Command {
 				projects, err := ac.Project.List(cmd.Context())
 				if err != nil {
 					msg.FailMsg("Error fetching projects: %s", err)
-					exit.Error().Err(err).Msg("Error fetching projects")
+					exit.Error(err, "Error fetching projects")
 				}
 
 				// Use the provided flag to look up the project
 				project, err := getProjectForTarget(projects, options.project, options.projectID)
 				if err != nil {
 					msg.FailMsg("Failed to get project: %s", err)
-					exit.Error().Err(err).Msg("Failed to get project")
+					exit.Error(err, "Failed to get project")
 				}
 				if !options.json {
 					msg.SuccessMsg("Target project updated to %s", style.Emphasis(project.Name))

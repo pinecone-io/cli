@@ -63,7 +63,7 @@ func NewUpdateProjectCmd() *cobra.Command {
 			project, err := ac.Project.Update(context.Background(), projId, updateParams)
 			if err != nil {
 				msg.FailMsg("Failed to update project %s: %s\n", projId, err)
-				exit.Error().Err(err).Msgf("Failed to update project %s", style.Emphasis(projId))
+				exit.Errorf(err, "Failed to update project %s", style.Emphasis(projId))
 			}
 
 			if options.json {

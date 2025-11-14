@@ -38,7 +38,7 @@ func NewListCmd() *cobra.Command {
 			idxs, err := pc.ListIndexes(ctx)
 			if err != nil {
 				msg.FailMsg("Failed to list indexes: %s\n", err)
-				exit.Error().Err(err).Msg("Failed to list indexes")
+				exit.Error(err, "Failed to list indexes")
 			}
 
 			// Sort results alphabetically by name

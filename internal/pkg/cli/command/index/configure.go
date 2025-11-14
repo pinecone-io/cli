@@ -59,7 +59,7 @@ func runConfigureIndexCmd(options configureIndexOptions) {
 	})
 	if err != nil {
 		msg.FailMsg("Failed to configure index %s: %+v\n", style.Emphasis(options.name), err)
-		exit.Error().Err(err).Msg("Failed to configure index")
+		exit.Error(err, "Failed to configure index")
 	}
 	if options.json {
 		json := text.IndentJSON(idx)

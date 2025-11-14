@@ -53,7 +53,7 @@ func NewSetEnvCmd() *cobra.Command {
 			if err != nil {
 				log.Error().Err(err).Msg("Error retrieving oauth token")
 				msg.FailMsg("Error retrieving oauth token: %s", err)
-				exit.Error().Err(err).Msg("error retrieving oauth token")
+				exit.Error(err, "error retrieving oauth token")
 			}
 			if token != nil && (token.AccessToken != "" || token.RefreshToken != "") {
 				oauth.Logout()
