@@ -39,6 +39,7 @@ func NewIndexCmd() *cobra.Command {
 	cmd.AddCommand(NewCreatePodCmd())
 	cmd.AddCommand(NewConfigureIndexCmd())
 	cmd.AddCommand(NewDeleteCmd())
+	cmd.AddCommand(NewUpsertCmd())
 
 	return cmd
 }
