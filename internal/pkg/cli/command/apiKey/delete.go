@@ -54,7 +54,7 @@ func NewDeleteKeyCmd() *cobra.Command {
 			keyToDelete, err := ac.APIKey.Describe(cmd.Context(), options.apiKeyId)
 			if err != nil {
 				msg.FailMsg("Failed to describe existing API key: %s", err)
-				exit.Error().Err(err).Msg("Failed to describe existing API key")
+				exit.Error(err, "Failed to describe existing API key")
 			}
 
 			if !options.skipConfirmation {
@@ -64,7 +64,7 @@ func NewDeleteKeyCmd() *cobra.Command {
 			err = ac.APIKey.Delete(cmd.Context(), keyToDelete.Id)
 			if err != nil {
 				msg.FailMsg("Failed to delete API key %s: %s", style.Emphasis(keyToDelete.Name), err)
-				exit.Error().Err(err).Msgf("Failed to delete API key %s", keyToDelete.Name)
+				exit.Errorf(err, "Failed to delete API key %s", keyToDelete.Name)
 			}
 			msg.SuccessMsg("API key %s deleted", style.Emphasis(keyToDelete.Name))
 
@@ -97,7 +97,7 @@ func confirmDeleteApiKey(apiKeyName string) {
 	input, err := reader.ReadString('\n')
 	if err != nil {
 		msg.FailMsg("Error reading input: %+v", err)
-		exit.Error().Err(err).Msg("Error reading input")
+		exit.Error(err, "Error reading input")
 	}
 
 	// Trim any whitespace from the input and convert to lowercase

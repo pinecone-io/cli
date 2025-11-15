@@ -57,13 +57,13 @@ func (c ConfigFile) LoadConfig() {
 	log.Debug().Str("file_name", c.FileName).Str("file_format", c.FileFormat).Msg("Loading config file")
 	err := c.ViperStore.ReadInConfig() // Find and read the config file
 	if err != nil {                    // Handle errors reading the config file
-		exit.Error().Err(err).Msg("Error loading config file")
+		exit.Error(err, "Error loading config file")
 	}
 }
 
 func (c ConfigFile) Save() {
 	err := c.ViperStore.WriteConfig()
 	if err != nil {
-		exit.Error().Err(err).Msg("Error saving config file")
+		exit.Error(err, "Error saving config file")
 	}
 }

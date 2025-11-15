@@ -52,7 +52,7 @@ func NewUpdateOrganizationCmd() *cobra.Command {
 			org, err := ac.Organization.Update(cmd.Context(), orgId, updateParams)
 			if err != nil {
 				msg.FailMsg("Failed to update organization %s: %s\n", orgId, err)
-				exit.Error().Err(err).Msgf("Failed to update organization %s", style.Emphasis(orgId))
+				exit.Errorf(err, "Failed to update organization %s", style.Emphasis(orgId))
 			}
 
 			if options.json {

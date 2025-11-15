@@ -41,12 +41,12 @@ func init() {
 	ConfigViper.SetEnvPrefix("pinecone")
 	err := ConfigViper.BindEnv(Environment.KeyName)
 	if err != nil {
-		exit.Error().Err(err).Msg("Error binding environment to environment variable in config file")
+		exit.Error(err, "Error binding environment to environment variable in config file")
 	}
 
 	err = validateEnvironment(Environment.Get())
 	if err != nil {
-		exit.Error().Err(err).Msg("Error validating environment")
+		exit.Error(err, "Error validating environment")
 	}
 }
 

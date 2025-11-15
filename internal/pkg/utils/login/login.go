@@ -46,39 +46,39 @@ func Run(ctx context.Context, io IO, opts Options) {
 	err := GetAndSetAccessToken(nil)
 	if err != nil {
 		msg.FailMsg("Error acquiring access token while logging in: %s", err)
-		exit.Error().Err(err).Msg("Error acquiring access token while logging in")
+		exit.Error(err, "Error acquiring access token while logging in")
 	}
 
 	// Parse token claims to get orgId
 	token, err := oauth.Token(ctx)
 	if err != nil {
 		msg.FailMsg("Error retrieving oauth token: %s", err)
-		exit.Error().Err(err).Msg("Error retrieving oauth token")
+		exit.Error(err, "Error retrieving oauth token")
 	}
 	claims, err := oauth.ParseClaimsUnverified(token)
 	if err != nil {
 		msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
-		exit.Error().Err(err).Msg("Error parsing claims from access token")
+		exit.Error(err, "Error parsing claims from access token")
 	}
 	msg.SuccessMsg("Logged in as " + style.Emphasis(claims.Email) + ". Defaulted to organization ID: " + style.Emphasis(claims.OrgId))
 
 	ac := sdk.NewPineconeAdminClient()
 	if err != nil {
 		msg.FailMsg("Error creating Pinecone admin client: %s", err)
-		exit.Error().Err(err).Msg("Error creating Pinecone admin client")
+		exit.Error(err, "Error creating Pinecone admin client")
 	}
 
 	// Fetch the user's organizations and projects for the default org associated with the JWT token (if it exists)
 	orgs, err := ac.Organization.List(ctx)
 	if err != nil {
 		msg.FailMsg("Error fetching organizations: %s", err)
-		exit.Error().Err(err).Msg("Error fetching organizations")
+		exit.Error(err, "Error fetching organizations")
 	}
 
 	projects, err := ac.Project.List(ctx)
 	if err != nil {
 		msg.FailMsg("Error fetching projects: %s", err)
-		exit.Error().Err(err).Msg("Error fetching projects")
+		exit.Error(err, "Error fetching projects")
 	}
 
 	// target organization is whatever the JWT token's orgId is - defaults on first login currently

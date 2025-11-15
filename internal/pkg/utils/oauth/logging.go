@@ -52,7 +52,7 @@ func ParseClaimsUnverified(token *oauth2.Token) (*MyCustomClaims, error) {
 	_, _, err := p.ParseUnverified(token.AccessToken, &claims)
 	if err != nil {
 		log.Debug().Err(err).Msg("Error parsing claims from access token")
-		exit.Error().Err(err).Msg("Error parsing claims from token")
+		exit.Error(err, "Error parsing claims from token")
 	}
 	return &claims, err
 }

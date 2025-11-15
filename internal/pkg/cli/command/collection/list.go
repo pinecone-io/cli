@@ -39,7 +39,7 @@ func NewListCollectionsCmd() *cobra.Command {
 			collections, err := pc.ListCollections(ctx)
 			if err != nil {
 				msg.FailMsg("Failed to list collections: %s\n", err)
-				exit.Error().Err(err).Msg("Failed to list collections")
+				exit.Error(err, "Failed to list collections")
 			}
 
 			// Sort results alphabetically by name

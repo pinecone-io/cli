@@ -108,7 +108,7 @@ func Run(ctx context.Context, io IO, opts configureCmdOptions) {
 			secretBytes, err := ioReadAll(io.In)
 			if err != nil {
 				msg.FailMsg("Error reading client secret from stdin: %+v", err)
-				exit.Error().Err(err).Msg("Error reading client secret from stdin")
+				exit.Error(err, "Error reading client secret from stdin")
 			}
 			clientSecret = string(secretBytes)
 		} else if opts.promptIfMissing && isTerminal(os.Stdin) {
@@ -116,7 +116,7 @@ func Run(ctx context.Context, io IO, opts configureCmdOptions) {
 			secretBytes, err := term.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
 				msg.FailMsg("Error reading client secret from terminal: %+v", err)
-				exit.Error().Err(err).Msg("Error reading client secret from terminal")
+				exit.Error(err, "Error reading client secret from terminal")
 			}
 			clientSecret = string(secretBytes)
 		}
@@ -125,7 +125,7 @@ func Run(ctx context.Context, io IO, opts configureCmdOptions) {
 	// If client_id is provided without a client_secret, error
 	if clientID != "" && clientSecret == "" {
 		msg.FailMsg("Client secret is required (use %s or %s to provide it)", style.Emphasis("--client-secret"), style.Emphasis("--client-secret-stdin"))
-		exit.Error().Msgf("error configuring authentication credentials Client secret is required (use %s or %s to provide it)", style.Emphasis("--client-secret"), style.Emphasis("--client-secret-stdin"))
+		exit.ErrorMsgf("error configuring authentication credentials Client secret is required (use %s or %s to provide it)", style.Emphasis("--client-secret"), style.Emphasis("--client-secret-stdin"))
 		return
 	}
 
@@ -145,7 +145,7 @@ func Run(ctx context.Context, io IO, opts configureCmdOptions) {
 		orgs, err := ac.Organization.List(ctx)
 		if err != nil {
 			msg.FailMsg("Error listing service account organizations: %+v", err)
-			exit.Error().Err(err).Msg("Error listing service account organizations")
+			exit.Error(err, "Error listing service account organizations")
 		}
 
 		if len(orgs) == 0 {
@@ -167,7 +167,7 @@ func Run(ctx context.Context, io IO, opts configureCmdOptions) {
 		projects, err := ac.Project.List(ctx)
 		if err != nil {
 			msg.FailMsg("Error listing projects for service account")
-			exit.Error().Err(err).Msg("Error listing projects for service account")
+			exit.Error(err, "Error listing projects for service account")
 		}
 
 		var targetProject *pinecone.Project
