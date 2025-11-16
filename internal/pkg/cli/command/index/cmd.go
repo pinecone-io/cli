@@ -40,6 +40,7 @@ func NewIndexCmd() *cobra.Command {
 	cmd.AddCommand(NewConfigureIndexCmd())
 	cmd.AddCommand(NewDeleteCmd())
 	cmd.AddCommand(NewUpsertCmd())
+	cmd.AddCommand(NewFetchCmd())
 
 	return cmd
 }
