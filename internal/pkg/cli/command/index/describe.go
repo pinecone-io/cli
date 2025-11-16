@@ -29,7 +29,8 @@ func NewDescribeCmd() *cobra.Command {
 			pc index describe --name "index-name"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			pc := sdk.NewPineconeClient()
+			ctx := cmd.Context()
+			pc := sdk.NewPineconeClient(ctx)
 
 			idx, err := pc.DescribeIndex(cmd.Context(), options.name)
 			if err != nil {

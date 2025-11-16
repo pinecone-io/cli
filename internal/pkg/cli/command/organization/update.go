@@ -31,7 +31,8 @@ func NewUpdateOrganizationCmd() *cobra.Command {
 		`),
 		GroupID: help.GROUP_ORGANIZATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			ac := sdk.NewPineconeAdminClient()
+			ctx := cmd.Context()
+			ac := sdk.NewPineconeAdminClient(ctx)
 
 			orgId := options.organizationID
 			var err error

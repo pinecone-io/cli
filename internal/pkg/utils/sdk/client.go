@@ -24,7 +24,7 @@ const (
 	CLISourceTag  = "pinecone-cli"
 )
 
-func NewPineconeClient() *pinecone.Client {
+func NewPineconeClient(ctx context.Context) *pinecone.Client {
 	targetOrgId := state.TargetOrg.Get().Id
 	targetProjectId := state.TargetProj.Get().Id
 	log.Debug().
@@ -32,7 +32,6 @@ func NewPineconeClient() *pinecone.Client {
 		Str("targetProjectId", targetProjectId).
 		Msg("Loading target context")
 
-	ctx := context.Background()
 	oauth2Token, err := oauth.Token(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Error retrieving oauth token")
@@ -65,12 +64,11 @@ func NewPineconeClient() *pinecone.Client {
 		exit.ErrorMsg("No target project set")
 	}
 
-	return NewPineconeClientForProjectById(targetProjectId)
+	return NewPineconeClientForProjectById(ctx, targetProjectId)
 }
 
-func NewPineconeClientForProjectById(projectId string) *pinecone.Client {
-	ac := NewPineconeAdminClient()
-	ctx := context.Background()
+func NewPineconeClientForProjectById(ctx context.Context, projectId string) *pinecone.Client {
+	ac := NewPineconeAdminClient(ctx)
 
 	project, err := ac.Project.Describe(ctx, projectId)
 	if err != nil {
@@ -121,8 +119,7 @@ func NewClientForAPIKey(apiKey string) *pinecone.Client {
 	return pc
 }
 
-func NewPineconeAdminClient() *pinecone.AdminClient {
-	ctx := context.Background()
+func NewPineconeAdminClient(ctx context.Context) *pinecone.AdminClient {
 	oauth2Token, err := oauth.Token(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Error retrieving oauth token")
@@ -151,6 +148,22 @@ func NewPineconeAdminClient() *pinecone.AdminClient {
 	}
 
 	return ac
+}
+
+func NewIndexConnection(ctx context.Context, pc *pinecone.Client, indexName string, namespace string) (*pinecone.IndexConnection, error) {
+	index, err := pc.DescribeIndex(ctx, indexName)
+	if err != nil {
+		return nil, pcio.Errorf("failed to describe index: %w", err)
+	}
+
+	ic, err := pc.Index(pinecone.NewIndexConnParams{
+		Host:      index.Host,
+		Namespace: namespace,
+	})
+	if err != nil {
+		return nil, pcio.Errorf("failed to create index connection: %w", err)
+	}
+	return ic, nil
 }
 
 func getCLIAPIKeyForProject(ctx context.Context, ac *pinecone.AdminClient, project *pinecone.Project) (string, error) {

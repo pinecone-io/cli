@@ -62,7 +62,7 @@ func Run(ctx context.Context, io IO, opts Options) {
 	}
 	msg.SuccessMsg("Logged in as " + style.Emphasis(claims.Email) + ". Defaulted to organization ID: " + style.Emphasis(claims.OrgId))
 
-	ac := sdk.NewPineconeAdminClient()
+	ac := sdk.NewPineconeAdminClient(ctx)
 	if err != nil {
 		msg.FailMsg("Error creating Pinecone admin client: %s", err)
 		exit.Error(err, "Error creating Pinecone admin client")

@@ -57,7 +57,8 @@ func NewCreateApiKeyCmd() *cobra.Command {
 			pc api-key create --id "project-id" --name "key-name"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			ac := sdk.NewPineconeAdminClient()
+			ctx := cmd.Context()
+			ac := sdk.NewPineconeAdminClient(ctx)
 
 			projId := options.projectId
 			var err error

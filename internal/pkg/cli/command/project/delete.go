@@ -38,8 +38,8 @@ func NewDeleteProjectCmd() *cobra.Command {
 		`),
 		GroupID: help.GROUP_PROJECTS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			ac := sdk.NewPineconeAdminClient()
-			ctx := context.Background()
+			ctx := cmd.Context()
+			ac := sdk.NewPineconeAdminClient(ctx)
 
 			projId := options.projectId
 			var err error
@@ -58,8 +58,8 @@ func NewDeleteProjectCmd() *cobra.Command {
 				exit.Error(err, "Failed to retrieve project information")
 			}
 
-			verifyNoIndexes(projToDelete.Id, projToDelete.Name)
-			verifyNoCollections(projToDelete.Id, projToDelete.Name)
+			verifyNoIndexes(ctx, projToDelete.Id, projToDelete.Name)
+			verifyNoCollections(ctx, projToDelete.Id, projToDelete.Name)
 
 			if !options.skipConfirmation {
 				confirmDelete(projToDelete.Name)
@@ -117,10 +117,9 @@ func confirmDelete(projectName string) {
 	}
 }
 
-func verifyNoIndexes(projectId string, projectName string) {
+func verifyNoIndexes(ctx context.Context, projectId string, projectName string) {
 	// Check if project contains indexes
-	pc := sdk.NewPineconeClientForProjectById(projectId)
-	ctx := context.Background()
+	pc := sdk.NewPineconeClientForProjectById(ctx, projectId)
 
 	idxs, err := pc.ListIndexes(ctx)
 	if err != nil {
@@ -134,10 +133,9 @@ func verifyNoIndexes(projectId string, projectName string) {
 	}
 }
 
-func verifyNoCollections(projectId string, projectName string) {
+func verifyNoCollections(ctx context.Context, projectId string, projectName string) {
 	// Check if project contains collections
-	pc := sdk.NewPineconeClientForProjectById(projectId)
-	ctx := context.Background()
+	pc := sdk.NewPineconeClientForProjectById(ctx, projectId)
 
 	collections, err := pc.ListCollections(ctx)
 	if err != nil {

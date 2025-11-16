@@ -31,7 +31,8 @@ func NewDescribeProjectCmd() *cobra.Command {
 			pc project describe --id "project-id"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			ac := sdk.NewPineconeAdminClient()
+			ctx := cmd.Context()
+			ac := sdk.NewPineconeAdminClient(ctx)
 
 			projId := options.projectID
 			var err error

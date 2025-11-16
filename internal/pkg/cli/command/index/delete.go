@@ -1,7 +1,6 @@
 package index
 
 import (
-	"context"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -26,8 +25,8 @@ func NewDeleteCmd() *cobra.Command {
 			pc index delete --name "index-name"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			ctx := context.Background()
-			pc := sdk.NewPineconeClient()
+			ctx := cmd.Context()
+			pc := sdk.NewPineconeClient(ctx)
 
 			err := pc.DeleteIndex(ctx, options.name)
 			if err != nil {

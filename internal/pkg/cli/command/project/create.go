@@ -49,7 +49,8 @@ func NewCreateProjectCmd() *cobra.Command {
 			pc project create --name "demo-project" --max-pods 10 --force-encryption
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			ac := sdk.NewPineconeAdminClient()
+			ctx := cmd.Context()
+			ac := sdk.NewPineconeAdminClient(ctx)
 
 			createParams := &pinecone.CreateProjectParams{}
 			if options.name != "" {

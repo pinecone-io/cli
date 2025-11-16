@@ -31,7 +31,8 @@ func NewListOrganizationsCmd() *cobra.Command {
 		`),
 		GroupID: help.GROUP_ORGANIZATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			ac := sdk.NewPineconeAdminClient()
+			ctx := cmd.Context()
+			ac := sdk.NewPineconeAdminClient(ctx)
 
 			orgs, err := ac.Organization.List(cmd.Context())
 			if err != nil {

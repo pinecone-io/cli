@@ -39,7 +39,7 @@ func NewCreatePodCmd() *cobra.Command {
 			pc index create-pod --name "my-index" --dimension 1536 --metric "cosine" --environment "us-east-1-aws" --pod-type "p1.x1" --shards 2 --replicas 2
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			runCreatePodCmd(options)
+			runCreatePodCmd(cmd.Context(), options)
 		},
 	}
 
@@ -65,9 +65,8 @@ func NewCreatePodCmd() *cobra.Command {
 	return cmd
 }
 
-func runCreatePodCmd(options createPodOptions) {
-	ctx := context.Background()
-	pc := sdk.NewPineconeClient()
+func runCreatePodCmd(ctx context.Context, options createPodOptions) {
+	pc := sdk.NewPineconeClient(ctx)
 
 	// Deprecation warning
 	pcio.Fprintf(os.Stderr, "⚠️  Warning: The '%s' command is deprecated. Please use '%s' instead.", style.Code("index create-pod"), style.Code("index create"))

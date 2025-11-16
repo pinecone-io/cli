@@ -1,8 +1,6 @@
 package collection
 
 import (
-	"context"
-
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -32,8 +30,8 @@ func NewCreateCollectionCmd() *cobra.Command {
 			pc collection create --name "collection-name" --source "index-source-name"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			pc := sdk.NewPineconeClient()
-			ctx := context.Background()
+			ctx := cmd.Context()
+			pc := sdk.NewPineconeClient(ctx)
 
 			req := &pinecone.CreateCollectionRequest{
 				Name:   options.name,

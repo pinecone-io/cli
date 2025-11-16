@@ -33,7 +33,7 @@ func NewConfigureIndexCmd() *cobra.Command {
 			pc index configure --name "index-name" --deletion-protection "enabled"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			runConfigureIndexCmd(options)
+			runConfigureIndexCmd(cmd.Context(), options)
 		},
 	}
 
@@ -48,9 +48,8 @@ func NewConfigureIndexCmd() *cobra.Command {
 	return cmd
 }
 
-func runConfigureIndexCmd(options configureIndexOptions) {
-	ctx := context.Background()
-	pc := sdk.NewPineconeClient()
+func runConfigureIndexCmd(ctx context.Context, options configureIndexOptions) {
+	pc := sdk.NewPineconeClient(ctx)
 
 	idx, err := pc.ConfigureIndex(ctx, options.name, pinecone.ConfigureIndexParams{
 		PodType:            options.podType,

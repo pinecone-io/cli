@@ -1,7 +1,6 @@
 package collection
 
 import (
-	"context"
 	"os"
 	"sort"
 	"strconv"
@@ -33,8 +32,8 @@ func NewListCollectionsCmd() *cobra.Command {
 			pc collection list
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			pc := sdk.NewPineconeClient()
-			ctx := context.Background()
+			ctx := cmd.Context()
+			pc := sdk.NewPineconeClient(ctx)
 
 			collections, err := pc.ListCollections(ctx)
 			if err != nil {

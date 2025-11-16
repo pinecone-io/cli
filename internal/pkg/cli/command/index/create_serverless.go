@@ -36,7 +36,7 @@ func NewCreateServerlessCmd() *cobra.Command {
 			pc index create-serverless --name "my-index" --dimension 1536 --metric "cosine" --cloud "aws" --region "us-east-1"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			runCreateServerlessCmd(options)
+			runCreateServerlessCmd(cmd.Context(), options)
 		},
 	}
 
@@ -58,9 +58,8 @@ func NewCreateServerlessCmd() *cobra.Command {
 	return cmd
 }
 
-func runCreateServerlessCmd(options createServerlessOptions) {
-	ctx := context.Background()
-	pc := sdk.NewPineconeClient()
+func runCreateServerlessCmd(ctx context.Context, options createServerlessOptions) {
+	pc := sdk.NewPineconeClient(ctx)
 
 	// Deprecation warning
 	pcio.Fprintf(os.Stderr, "⚠️  Warning: The '%s' command is deprecated. Please use '%s' instead.", style.Code("index create-serverless"), style.Code("index create"))

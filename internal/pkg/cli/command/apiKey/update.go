@@ -30,7 +30,8 @@ func NewUpdateAPIKeyCmd() *cobra.Command {
 		`),
 		GroupID: help.GROUP_API_KEYS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			ac := sdk.NewPineconeAdminClient()
+			ctx := cmd.Context()
+			ac := sdk.NewPineconeAdminClient(ctx)
 
 			// Only set non-empty values
 			updateParams := &pinecone.UpdateAPIKeyParams{}

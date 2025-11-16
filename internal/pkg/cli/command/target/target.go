@@ -71,6 +71,7 @@ func NewTargetCmd() *cobra.Command {
 		Example: targetExample,
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
+			ctx := cmd.Context()
 			log.Debug().
 				Str("org", options.org).
 				Str("project", options.project).
@@ -131,7 +132,7 @@ func NewTargetCmd() *cobra.Command {
 				exit.ErrorMsg("You must be logged in or have service account credentials configured to set a target context")
 			}
 
-			ac := sdk.NewPineconeAdminClient()
+			ac := sdk.NewPineconeAdminClient(ctx)
 
 			// Fetch the user's organizations
 			orgs, err := ac.Organization.List(cmd.Context())
@@ -165,7 +166,7 @@ func NewTargetCmd() *cobra.Command {
 					}
 				}
 
-				ac := sdk.NewPineconeAdminClient()
+				ac := sdk.NewPineconeAdminClient(ctx)
 				// Fetch the user's projects
 				projects, err := ac.Project.List(cmd.Context())
 				if err != nil {
@@ -229,7 +230,7 @@ func NewTargetCmd() *cobra.Command {
 			if options.project != "" || options.projectID != "" {
 				// We need to reinstantiate the admin client to ensure any auth changes that have happened above
 				// are properly reflected
-				ac := sdk.NewPineconeAdminClient()
+				ac := sdk.NewPineconeAdminClient(ctx)
 
 				// Fetch the user's projects
 				projects, err := ac.Project.List(cmd.Context())
