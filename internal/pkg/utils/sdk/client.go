@@ -153,6 +153,22 @@ func NewPineconeAdminClient() *pinecone.AdminClient {
 	return ac
 }
 
+func NewIndexConnection(ctx context.Context, pc *pinecone.Client, indexName string, namespace string) (*pinecone.IndexConnection, error) {
+	index, err := pc.DescribeIndex(ctx, indexName)
+	if err != nil {
+		return nil, pcio.Errorf("failed to describe index: %w", err)
+	}
+
+	ic, err := pc.Index(pinecone.NewIndexConnParams{
+		Host:      index.Host,
+		Namespace: namespace,
+	})
+	if err != nil {
+		return nil, pcio.Errorf("failed to create index connection: %w", err)
+	}
+	return ic, nil
+}
+
 func getCLIAPIKeyForProject(ctx context.Context, ac *pinecone.AdminClient, project *pinecone.Project) (string, error) {
 	projectAPIKeysMap := secrets.ManagedAPIKeys.Get()
 	var managedKey secrets.ManagedKey
