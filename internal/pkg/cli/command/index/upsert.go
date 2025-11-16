@@ -83,9 +83,15 @@ func runUpsertCmd(cmd *cobra.Command, options upsertCmdOptions) {
 	if options.namespace != "" {
 		ns = options.namespace
 	}
-	// Default if no namespace provided
 	if ns == "" {
 		ns = "__default__"
+	}
+	// Get IndexConnection
+	pc := sdk.NewPineconeClient()
+	ic, err := sdk.NewIndexConnection(cmd.Context(), pc, options.name, ns)
+	if err != nil {
+		msg.FailMsg("Failed to create index connection: %s", err)
+		exit.Error(err, "Failed to create index connection")
 	}
 
 	if len(payload.Vectors) == 0 {
@@ -117,25 +123,6 @@ func runUpsertCmd(cmd *cobra.Command, options upsertCmdOptions) {
 		vector.Metadata = metadata
 		mapped = append(mapped, &vector)
 	}
-
-	// Get Pinecone client
-	pc := sdk.NewPineconeClient()
-	// TODO - Refactor this into an all-in-one function in sdk package
-	// Get index and establish IndexConnection
-	index, err := pc.DescribeIndex(cmd.Context(), options.name)
-	if err != nil {
-		msg.FailMsg("Failed to describe index %s: %s", style.Emphasis(options.name), err)
-		exit.Error(err, "Failed to describe index")
-	}
-
-	ic, err := pc.Index(pinecone.NewIndexConnParams{
-		Host: index.Host,
-	})
-	if err != nil {
-		msg.FailMsg("Failed to create index connection: %s", err)
-		exit.Error(err, "Failed to create index connection")
-	}
-	// TODO - Isolate all of this ^^^^^^^^^^^^^^^^
 
 	batchSize := 1000
 	batches := make([][]*pinecone.Vector, 0, (len(mapped)+batchSize-1)/batchSize)

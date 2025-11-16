@@ -9,9 +9,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
-	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
-	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 	"github.com/spf13/cobra"
 )
 
@@ -48,20 +46,6 @@ func NewFetchCmd() *cobra.Command {
 func runFetchCmd(ctx context.Context, options fetchCmdOptions) {
 	pc := sdk.NewPineconeClient()
 
-	index, err := pc.DescribeIndex(ctx, options.name)
-	if err != nil {
-		msg.FailMsg("Failed to describe index %s: %s", style.Emphasis(options.name), err)
-		exit.Error(err, "Failed to describe index")
-	}
-
-	ic, err := pc.Index(pinecone.NewIndexConnParams{
-		Host: index.Host,
-	})
-	if err != nil {
-		msg.FailMsg("Failed to create index connection: %s", err)
-		exit.Error(err, "Failed to create index connection")
-	}
-
 	// Default namespace
 	ns := options.namespace
 	if options.namespace != "" {
@@ -70,8 +54,11 @@ func runFetchCmd(ctx context.Context, options fetchCmdOptions) {
 	if ns == "" {
 		ns = "__default__"
 	}
-	if ns != ic.Namespace() {
-		ic = ic.WithNamespace(ns)
+
+	ic, err := sdk.NewIndexConnection(ctx, pc, options.name, ns)
+	if err != nil {
+		msg.FailMsg("Failed to create index connection: %s", err)
+		exit.Error(err, "Failed to create index connection")
 	}
 
 	vectors, err := ic.FetchVectors(ctx, options.ids)
