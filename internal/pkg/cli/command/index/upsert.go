@@ -69,13 +69,13 @@ func runUpsertCmd(cmd *cobra.Command, options upsertCmdOptions) {
 	raw, err := os.ReadFile(filePath)
 	if err != nil {
 		msg.FailMsg("Failed to read file %s: %s", style.Emphasis(filePath), err)
-		exit.Error().Err(err).Msgf("Failed to read file %s", filePath)
+		exit.Errorf(err, "Failed to read file %s", filePath)
 	}
 
 	var payload upsertFile
 	if err := json.Unmarshal(raw, &payload); err != nil {
 		msg.FailMsg("Failed to parse JSON from %s: %s", style.Emphasis(filePath), err)
-		exit.Error().Err(err).Msg("Failed to parse JSON for upsert")
+		exit.Error(err, "Failed to parse JSON for upsert")
 	}
 
 	// Default namespace
@@ -90,7 +90,7 @@ func runUpsertCmd(cmd *cobra.Command, options upsertCmdOptions) {
 
 	if len(payload.Vectors) == 0 {
 		msg.FailMsg("No vectors found in %s", style.Emphasis(filePath))
-		exit.Error().Msg("No vectors provided for upsert")
+		exit.ErrorMsg("No vectors provided for upsert")
 	}
 
 	// Map to SDK types
@@ -100,7 +100,7 @@ func runUpsertCmd(cmd *cobra.Command, options upsertCmdOptions) {
 		metadata, err := pinecone.NewMetadata(v.Metadata)
 		if err != nil {
 			msg.FailMsg("Failed to parse metadata: %s", err)
-			exit.Error().Err(err).Msg("Failed to parse metadata")
+			exit.Error(err, "Failed to parse metadata")
 		}
 
 		var vector pinecone.Vector
@@ -125,7 +125,7 @@ func runUpsertCmd(cmd *cobra.Command, options upsertCmdOptions) {
 	index, err := pc.DescribeIndex(cmd.Context(), options.name)
 	if err != nil {
 		msg.FailMsg("Failed to describe index %s: %s", style.Emphasis(options.name), err)
-		exit.Error().Err(err).Msg("Failed to describe index")
+		exit.Error(err, "Failed to describe index")
 	}
 
 	ic, err := pc.Index(pinecone.NewIndexConnParams{
@@ -133,7 +133,7 @@ func runUpsertCmd(cmd *cobra.Command, options upsertCmdOptions) {
 	})
 	if err != nil {
 		msg.FailMsg("Failed to create index connection: %s", err)
-		exit.Error().Err(err).Msg("Failed to create index connection")
+		exit.Error(err, "Failed to create index connection")
 	}
 	// TODO - Isolate all of this ^^^^^^^^^^^^^^^^
 
@@ -151,7 +151,7 @@ func runUpsertCmd(cmd *cobra.Command, options upsertCmdOptions) {
 		resp, err := ic.UpsertVectors(cmd.Context(), batch)
 		if err != nil {
 			msg.FailMsg("Failed to upsert %d vectors in batch %d: %s", len(batch), i+1, err)
-			exit.Error().Err(err).Msgf("Failed to upsert %d vectors in batch %d", len(batch), i+1)
+			exit.Errorf(err, "Failed to upsert %d vectors in batch %d", len(batch), i+1)
 		} else {
 			if options.json {
 				json := text.IndentJSON(resp)
