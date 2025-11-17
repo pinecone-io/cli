@@ -28,7 +28,8 @@ func NewDescribeAPIKeyCmd() *cobra.Command {
 		`),
 		GroupID: help.GROUP_API_KEYS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			ac := sdk.NewPineconeAdminClient()
+			ctx := cmd.Context()
+			ac := sdk.NewPineconeAdminClient(ctx)
 
 			apiKey, err := ac.APIKey.Describe(cmd.Context(), options.apiKeyID)
 			if err != nil {

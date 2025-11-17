@@ -38,7 +38,8 @@ func NewListKeysCmd() *cobra.Command {
 		`),
 		GroupID: help.GROUP_API_KEYS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			ac := sdk.NewPineconeAdminClient()
+			ctx := cmd.Context()
+			ac := sdk.NewPineconeAdminClient(ctx)
 
 			var err error
 			projId := options.projectID

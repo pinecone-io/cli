@@ -1,8 +1,6 @@
 package collection
 
 import (
-	"context"
-
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -25,8 +23,8 @@ func NewDeleteCollectionCmd() *cobra.Command {
 			pc collection delete --name "collection-name"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			ctx := context.Background()
-			pc := sdk.NewPineconeClient()
+			ctx := cmd.Context()
+			pc := sdk.NewPineconeClient(ctx)
 
 			err := pc.DeleteCollection(ctx, options.name)
 			if err != nil {

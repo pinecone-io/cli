@@ -1,7 +1,6 @@
 package index
 
 import (
-	"context"
 	"os"
 	"sort"
 	"strings"
@@ -32,8 +31,8 @@ func NewListCmd() *cobra.Command {
 			pc index list
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			pc := sdk.NewPineconeClient()
-			ctx := context.Background()
+			ctx := cmd.Context()
+			pc := sdk.NewPineconeClient(ctx)
 
 			idxs, err := pc.ListIndexes(ctx)
 			if err != nil {

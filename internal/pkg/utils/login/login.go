@@ -43,7 +43,7 @@ type IO struct {
 type Options struct{}
 
 func Run(ctx context.Context, io IO, opts Options) {
-	err := GetAndSetAccessToken(nil)
+	err := GetAndSetAccessToken(ctx, nil)
 	if err != nil {
 		msg.FailMsg("Error acquiring access token while logging in: %s", err)
 		exit.Error(err, "Error acquiring access token while logging in")
@@ -62,7 +62,7 @@ func Run(ctx context.Context, io IO, opts Options) {
 	}
 	msg.SuccessMsg("Logged in as " + style.Emphasis(claims.Email) + ". Defaulted to organization ID: " + style.Emphasis(claims.OrgId))
 
-	ac := sdk.NewPineconeAdminClient()
+	ac := sdk.NewPineconeAdminClient(ctx)
 	if err != nil {
 		msg.FailMsg("Error creating Pinecone admin client: %s", err)
 		exit.Error(err, "Error creating Pinecone admin client")
@@ -121,8 +121,7 @@ func Run(ctx context.Context, io IO, opts Options) {
 
 // Takes an optional orgId, and attempts to acquire an access token scoped to the orgId if provided.
 // If a token is successfully acquired it's set in the secrets store, and the user is considered logged in with state.AuthUserToken.
-func GetAndSetAccessToken(orgId *string) error {
-	ctx := context.Background()
+func GetAndSetAccessToken(ctx context.Context, orgId *string) error {
 	a := oauth.Auth{}
 
 	// CSRF state

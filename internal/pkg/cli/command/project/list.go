@@ -1,7 +1,6 @@
 package project
 
 import (
-	"context"
 	"os"
 	"strconv"
 	"strings"
@@ -33,8 +32,8 @@ func NewListProjectsCmd() *cobra.Command {
 			pc project list
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			ac := sdk.NewPineconeAdminClient()
-			ctx := context.Background()
+			ctx := cmd.Context()
+			ac := sdk.NewPineconeAdminClient(ctx)
 
 			projects, err := ac.Project.List(ctx)
 			if err != nil {

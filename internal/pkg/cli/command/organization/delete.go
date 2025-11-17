@@ -34,7 +34,8 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 		`),
 		GroupID: help.GROUP_ORGANIZATIONS.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			ac := sdk.NewPineconeAdminClient()
+			ctx := cmd.Context()
+			ac := sdk.NewPineconeAdminClient(ctx)
 
 			// get the organization first
 			org, err := ac.Organization.Describe(cmd.Context(), options.organizationID)

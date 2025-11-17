@@ -1,8 +1,6 @@
 package project
 
 import (
-	"context"
-
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -31,7 +29,8 @@ func NewDescribeProjectCmd() *cobra.Command {
 			pc project describe --id "project-id"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			ac := sdk.NewPineconeAdminClient()
+			ctx := cmd.Context()
+			ac := sdk.NewPineconeAdminClient(ctx)
 
 			projId := options.projectID
 			var err error
@@ -43,7 +42,7 @@ func NewDescribeProjectCmd() *cobra.Command {
 				}
 			}
 
-			project, err := ac.Project.Describe(context.Background(), projId)
+			project, err := ac.Project.Describe(ctx, projId)
 			if err != nil {
 				msg.FailMsg("Failed to describe project %s: %s\n", projId, err)
 				exit.Errorf(err, "Failed to describe project %s", style.Emphasis(projId))

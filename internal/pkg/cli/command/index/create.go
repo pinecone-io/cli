@@ -99,7 +99,7 @@ func NewCreateIndexCmd() *cobra.Command {
 		Long:    createIndexHelp,
 		Example: createIndexExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			runCreateIndexCmd(options)
+			runCreateIndexCmd(cmd.Context(), options)
 		},
 	}
 
@@ -141,9 +141,8 @@ func NewCreateIndexCmd() *cobra.Command {
 	return cmd
 }
 
-func runCreateIndexCmd(options createIndexOptions) {
-	ctx := context.Background()
-	pc := sdk.NewPineconeClient()
+func runCreateIndexCmd(ctx context.Context, options createIndexOptions) {
+	pc := sdk.NewPineconeClient(ctx)
 
 	idx, err := runCreateIndexWithService(ctx, pc, options)
 	if err != nil {

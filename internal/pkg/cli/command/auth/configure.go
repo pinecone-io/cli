@@ -139,7 +139,7 @@ func Run(ctx context.Context, io IO, opts configureCmdOptions) {
 
 		// Use Admin API to fetch organization and project information for the service account
 		// so that we can set the target context, or allow the user to set it like they do through the login or target flow
-		ac := sdk.NewPineconeAdminClient()
+		ac := sdk.NewPineconeAdminClient(ctx)
 
 		// There should only be one organization listed for a service account
 		orgs, err := ac.Organization.List(ctx)

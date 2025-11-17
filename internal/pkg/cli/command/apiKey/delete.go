@@ -46,7 +46,8 @@ func NewDeleteKeyCmd() *cobra.Command {
 			pc api-key delete --id "api-key-id" 
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			ac := sdk.NewPineconeAdminClient()
+			ctx := cmd.Context()
+			ac := sdk.NewPineconeAdminClient(ctx)
 
 			// Verify key exists before trying to delete it.
 			// This lets us give a more helpful error message than just

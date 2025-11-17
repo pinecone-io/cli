@@ -1,8 +1,6 @@
 package project
 
 import (
-	"context"
-
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -49,7 +47,8 @@ func NewCreateProjectCmd() *cobra.Command {
 			pc project create --name "demo-project" --max-pods 10 --force-encryption
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			ac := sdk.NewPineconeAdminClient()
+			ctx := cmd.Context()
+			ac := sdk.NewPineconeAdminClient(ctx)
 
 			createParams := &pinecone.CreateProjectParams{}
 			if options.name != "" {
@@ -62,7 +61,7 @@ func NewCreateProjectCmd() *cobra.Command {
 				createParams.ForceEncryptionWithCmek = &options.forceEncryptionWithCMEK
 			}
 
-			proj, err := ac.Project.Create(context.Background(), createParams)
+			proj, err := ac.Project.Create(ctx, createParams)
 			if err != nil {
 				msg.FailMsg("Failed to create project %s: %s\n", style.Emphasis(options.name), err)
 				exit.Errorf(err, "Failed to create project %s", style.Emphasis(options.name))

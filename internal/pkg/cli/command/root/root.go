@@ -1,7 +1,11 @@
 package root
 
 import (
+	"context"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/apiKey"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/auth"
@@ -20,14 +24,23 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var rootCmd *cobra.Command
+var (
+	rootCmd        *cobra.Command
+	globalOptions  GlobalOptions
+	cancelRootFunc context.CancelFunc
+)
 
 type GlobalOptions struct {
-	quiet bool
+	quiet   bool
+	timeout time.Duration
 }
 
 func Execute() {
-	err := rootCmd.Execute()
+	//Base context: cancel on SIGINT / SIGTERM
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+
+	err := rootCmd.ExecuteContext(ctx)
 	if err != nil {
 		os.Exit(1)
 	}
@@ -62,12 +75,30 @@ var (
 )
 
 func init() {
-	globalOptions := GlobalOptions{}
+	// Default timeout for context.Context cancellation
+	// This is applied to individual operations within subcommands through cmd.Context()
+	defaultTimeout := 60 * time.Second
+	globalOptions = GlobalOptions{}
+
 	rootCmd = &cobra.Command{
 		Use:   "pc",
 		Short: "Manage your Pinecone vector database infrastructure from the command line",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			pcio.SetQuiet(globalOptions.quiet)
+
+			// Apply timeout to the command context
+			if globalOptions.timeout > 0 {
+				ctx, cancel := context.WithTimeout(cmd.Context(), globalOptions.timeout)
+				cancelRootFunc = cancel
+				cmd.SetContext(ctx)
+			}
+		},
+		PersistentPostRun: func(cmd *cobra.Command, args []string) {
+			// Cancel the root context when the command completes
+			if cancelRootFunc != nil {
+				cancelRootFunc()
+				cancelRootFunc = nil
+			}
 		},
 		Example: help.Examples(`
 		    pc login
@@ -77,6 +108,7 @@ func init() {
 		Long: rootHelp,
 	}
 
+	// Help template and rendering
 	rootCmd.SetHelpTemplate(help.HelpTemplate)
 	help.EnableHelpRendering(rootCmd)
 
@@ -111,4 +143,5 @@ func init() {
 
 	// Global flags
 	rootCmd.PersistentFlags().BoolVarP(&globalOptions.quiet, "quiet", "q", false, "suppress output")
+	rootCmd.PersistentFlags().DurationVar(&globalOptions.timeout, "timeout", defaultTimeout, "timeout for commands, defaults to 60s (0 to disable)")
 }

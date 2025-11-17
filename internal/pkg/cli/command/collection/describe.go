@@ -1,8 +1,6 @@
 package collection
 
 import (
-	"context"
-
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -28,8 +26,8 @@ func NewDescribeCollectionCmd() *cobra.Command {
 			pc collection describe --name "collection-name"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			ctx := context.Background()
-			pc := sdk.NewPineconeClient()
+			ctx := cmd.Context()
+			pc := sdk.NewPineconeClient(ctx)
 
 			collection, err := pc.DescribeCollection(ctx, options.name)
 			if err != nil {

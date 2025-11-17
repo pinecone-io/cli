@@ -80,7 +80,7 @@ func NewPruneLocalKeysCmd() *cobra.Command {
 }
 
 func runPruneLocalKeys(ctx context.Context, options pruneLocalKeysCmdOptions) {
-	ac := sdk.NewPineconeAdminClient()
+	ac := sdk.NewPineconeAdminClient(ctx)
 	managedKeys := secrets.GetManagedProjectKeys()
 
 	// Filter to projectId if provided
