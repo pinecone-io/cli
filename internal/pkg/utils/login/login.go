@@ -43,7 +43,7 @@ type IO struct {
 type Options struct{}
 
 func Run(ctx context.Context, io IO, opts Options) {
-	err := GetAndSetAccessToken(nil)
+	err := GetAndSetAccessToken(ctx, nil)
 	if err != nil {
 		msg.FailMsg("Error acquiring access token while logging in: %s", err)
 		exit.Error(err, "Error acquiring access token while logging in")
