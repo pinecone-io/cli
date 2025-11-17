@@ -86,6 +86,7 @@ func init() {
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			pcio.SetQuiet(globalOptions.quiet)
 
+			// Apply timeout to the command context
 			if globalOptions.timeout > 0 {
 				ctx, cancel := context.WithTimeout(cmd.Context(), globalOptions.timeout)
 				cancelRootFunc = cancel
@@ -93,6 +94,7 @@ func init() {
 			}
 		},
 		PersistentPostRun: func(cmd *cobra.Command, args []string) {
+			// Cancel the root context when the command completes
 			if cancelRootFunc != nil {
 				cancelRootFunc()
 				cancelRootFunc = nil

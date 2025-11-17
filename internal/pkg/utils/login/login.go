@@ -121,8 +121,7 @@ func Run(ctx context.Context, io IO, opts Options) {
 
 // Takes an optional orgId, and attempts to acquire an access token scoped to the orgId if provided.
 // If a token is successfully acquired it's set in the secrets store, and the user is considered logged in with state.AuthUserToken.
-func GetAndSetAccessToken(orgId *string) error {
-	ctx := context.Background()
+func GetAndSetAccessToken(ctx context.Context, orgId *string) error {
 	a := oauth.Auth{}
 
 	// CSRF state

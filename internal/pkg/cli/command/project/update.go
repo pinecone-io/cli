@@ -1,8 +1,6 @@
 package project
 
 import (
-	"context"
-
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -61,7 +59,7 @@ func NewUpdateProjectCmd() *cobra.Command {
 				updateParams.MaxPods = &options.maxPods
 			}
 
-			project, err := ac.Project.Update(context.Background(), projId, updateParams)
+			project, err := ac.Project.Update(ctx, projId, updateParams)
 			if err != nil {
 				msg.FailMsg("Failed to update project %s: %s\n", projId, err)
 				exit.Errorf(err, "Failed to update project %s", style.Emphasis(projId))

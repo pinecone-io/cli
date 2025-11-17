@@ -158,7 +158,7 @@ func NewTargetCmd() *cobra.Command {
 					// If the org chosen differs from the current orgId in the token, we need to login again
 					if currentTokenOrgId != "" && currentTokenOrgId != targetOrg.Id {
 						oauth.Logout()
-						err = login.GetAndSetAccessToken(&targetOrg.Id)
+						err = login.GetAndSetAccessToken(ctx, &targetOrg.Id)
 						if err != nil {
 							msg.FailMsg("Failed to get access token: %s", err)
 							exit.Error(err, "Error getting access token")
@@ -204,7 +204,7 @@ func NewTargetCmd() *cobra.Command {
 				// If the org chosen differs from the current orgId in the token, we need to login again
 				if currentTokenOrgId != org.Id {
 					oauth.Logout()
-					err = login.GetAndSetAccessToken(&org.Id)
+					err = login.GetAndSetAccessToken(ctx, &org.Id)
 					if err != nil {
 						msg.FailMsg("Failed to get access token: %s", err)
 						exit.Error(err, "Error getting access token")

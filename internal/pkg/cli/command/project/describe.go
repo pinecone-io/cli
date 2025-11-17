@@ -1,8 +1,6 @@
 package project
 
 import (
-	"context"
-
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -44,7 +42,7 @@ func NewDescribeProjectCmd() *cobra.Command {
 				}
 			}
 
-			project, err := ac.Project.Describe(context.Background(), projId)
+			project, err := ac.Project.Describe(ctx, projId)
 			if err != nil {
 				msg.FailMsg("Failed to describe project %s: %s\n", projId, err)
 				exit.Errorf(err, "Failed to describe project %s", style.Emphasis(projId))

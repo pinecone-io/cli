@@ -1,8 +1,6 @@
 package project
 
 import (
-	"context"
-
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -63,7 +61,7 @@ func NewCreateProjectCmd() *cobra.Command {
 				createParams.ForceEncryptionWithCmek = &options.forceEncryptionWithCMEK
 			}
 
-			proj, err := ac.Project.Create(context.Background(), createParams)
+			proj, err := ac.Project.Create(ctx, createParams)
 			if err != nil {
 				msg.FailMsg("Failed to create project %s: %s\n", style.Emphasis(options.name), err)
 				exit.Errorf(err, "Failed to create project %s", style.Emphasis(options.name))
