@@ -1,6 +1,7 @@
 package index
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 
@@ -50,7 +51,7 @@ func NewUpsertCmd() *cobra.Command {
 			pc index upsert --name my-index --namespace my-namespace ./vectors.json
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			runUpsertCmd(cmd, options)
+			runUpsertCmd(cmd.Context(), options)
 		},
 	}
 
@@ -64,7 +65,7 @@ func NewUpsertCmd() *cobra.Command {
 	return cmd
 }
 
-func runUpsertCmd(cmd *cobra.Command, options upsertCmdOptions) {
+func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 	filePath := options.file
 	raw, err := os.ReadFile(filePath)
 	if err != nil {
@@ -87,8 +88,8 @@ func runUpsertCmd(cmd *cobra.Command, options upsertCmdOptions) {
 		ns = "__default__"
 	}
 	// Get IndexConnection
-	pc := sdk.NewPineconeClient()
-	ic, err := sdk.NewIndexConnection(cmd.Context(), pc, options.name, ns)
+	pc := sdk.NewPineconeClient(ctx)
+	ic, err := sdk.NewIndexConnection(ctx, pc, options.name, ns)
 	if err != nil {
 		msg.FailMsg("Failed to create index connection: %s", err)
 		exit.Error(err, "Failed to create index connection")
@@ -135,7 +136,7 @@ func runUpsertCmd(cmd *cobra.Command, options upsertCmdOptions) {
 	}
 
 	for i, batch := range batches {
-		resp, err := ic.UpsertVectors(cmd.Context(), batch)
+		resp, err := ic.UpsertVectors(ctx, batch)
 		if err != nil {
 			msg.FailMsg("Failed to upsert %d vectors in batch %d: %s", len(batch), i+1, err)
 			exit.Errorf(err, "Failed to upsert %d vectors in batch %d", len(batch), i+1)

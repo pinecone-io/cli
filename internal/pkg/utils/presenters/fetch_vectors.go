@@ -8,15 +8,45 @@ import (
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
 
-func PrintFetchVectorsTable(resp *pinecone.FetchVectorsResponse) {
+type FetchVectorsResults struct {
+	Vectors    map[string]*pinecone.Vector `json:"vectors,omitempty"`
+	Namespace  string                      `json:"namespace"`
+	Usage      *pinecone.Usage             `json:"usage,omitempty"`
+	Pagination *pinecone.Pagination        `json:"pagination,omitempty"`
+}
+
+func NewFetchVectorsResultsFromFetch(resp *pinecone.FetchVectorsResponse) *FetchVectorsResults {
+	if resp == nil {
+		return &FetchVectorsResults{}
+	}
+	return &FetchVectorsResults{
+		Vectors:   resp.Vectors,
+		Namespace: resp.Namespace,
+		Usage:     resp.Usage,
+	}
+}
+
+func NewFetchVectorsResultsFromFetchByMetadata(resp *pinecone.FetchVectorsByMetadataResponse) *FetchVectorsResults {
+	if resp == nil {
+		return &FetchVectorsResults{}
+	}
+	return &FetchVectorsResults{
+		Vectors:    resp.Vectors,
+		Namespace:  resp.Namespace,
+		Usage:      resp.Usage,
+		Pagination: resp.Pagination,
+	}
+}
+
+func PrintFetchVectorsTable(results *FetchVectorsResults) {
 	writer := NewTabWriter()
 
 	// Header Block
-	if resp.Namespace != "" {
-		pcio.Fprintf(writer, "Namespace: %s\n", resp.Namespace)
+	if results.Namespace != "" {
+		pcio.Fprintf(writer, "Namespace: %s\n", results.Namespace)
 	}
-	if resp.Usage != nil {
-		pcio.Fprintf(writer, "Usage: %d (read units)\n", resp.Usage.ReadUnits)
+	if results.Usage != nil {
+		pcio.Fprintf(writer, "Usage: %d (read units)\n", results.Usage.ReadUnits)
 	}
 
 	// Table Header
@@ -24,7 +54,7 @@ func PrintFetchVectorsTable(resp *pinecone.FetchVectorsResponse) {
 	pcio.Fprintln(writer, strings.Join(columns, "\t"))
 
 	// Rows
-	for id, vector := range resp.Vectors {
+	for id, vector := range results.Vectors {
 		dim := 0
 		if vector.Values != nil {
 			dim = len(*vector.Values)
