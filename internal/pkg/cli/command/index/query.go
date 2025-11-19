@@ -54,8 +54,8 @@ func NewQueryCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&options.includeMetadata, "include-metadata", false, "include metadata in the query results")
 	cmd.Flags().StringVarP(&options.id, "id", "i", "", "ID of the vector to query against")
 	cmd.Flags().Float32SliceVarP(&options.vector, "vector", "v", []float32{}, "vector values to query against")
-	cmd.Flags().Int32SliceVarP(&options.sparseIndices, "sparse-indices", "i", []int32{}, "sparse indices to query against")
-	cmd.Flags().Float32SliceVarP(&options.sparseValues, "sparse-values", "v", []float32{}, "sparse values to query against")
+	cmd.Flags().Int32SliceVar(&options.sparseIndices, "sparse-indices", []int32{}, "sparse indices to query against")
+	cmd.Flags().Float32SliceVar(&options.sparseValues, "sparse-values", []float32{}, "sparse values to query against")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	_ = cmd.MarkFlagRequired("name")
