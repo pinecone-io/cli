@@ -85,6 +85,7 @@ func runFetchCmd(ctx context.Context, options fetchCmdOptions) {
 		exit.Error(err, "Failed to create index connection")
 	}
 
+	// Fetch vectors by ID
 	if len(options.ids) > 0 {
 		vectors, err := ic.FetchVectors(ctx, options.ids)
 		if err != nil {
@@ -93,6 +94,7 @@ func runFetchCmd(ctx context.Context, options fetchCmdOptions) {
 		printFetchVectorsResults(presenters.NewFetchVectorsResultsFromFetch(vectors), options)
 	}
 
+	// Fetch vectors by metadata filter
 	if options.filter != "" || options.filterFile != "" {
 		if options.filterFile != "" {
 			raw, err := os.ReadFile(options.filterFile)
