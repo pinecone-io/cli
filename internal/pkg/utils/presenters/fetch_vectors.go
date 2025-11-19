@@ -67,7 +67,7 @@ func PrintFetchVectorsTable(results *FetchVectorsResults) {
 		if vector.Metadata != nil {
 			metadata = text.InlineJSON(vector.Metadata)
 		}
-		preview := previewSlice(vector.Values, 3)
+		preview := previewSliceFloat32(vector.Values, 3)
 		row := []string{id, pcio.Sprintf("%d", dim), preview, pcio.Sprintf("%d", sparseDim), metadata}
 		pcio.Fprintln(writer, strings.Join(row, "\t"))
 	}
@@ -75,7 +75,7 @@ func PrintFetchVectorsTable(results *FetchVectorsResults) {
 	writer.Flush()
 }
 
-func previewSlice(values *[]float32, limit int) string {
+func previewSliceFloat32(values *[]float32, limit int) string {
 	if values == nil || len(*values) == 0 {
 		return "<none>"
 	}
