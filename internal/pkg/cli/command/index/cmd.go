@@ -43,6 +43,9 @@ func NewIndexCmd() *cobra.Command {
 	cmd.AddCommand(NewFetchCmd())
 	cmd.AddCommand(NewQueryCmd())
 	cmd.AddCommand(NewListVectorsCmd())
+	cmd.AddCommand(NewDeleteVectorsCmd())
+	cmd.AddCommand(NewUpdateCmd())
+	cmd.AddCommand(NewDescribeIndexStatsCmd())
 
 	return cmd
 }
