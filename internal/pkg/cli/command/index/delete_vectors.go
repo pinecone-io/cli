@@ -38,7 +38,7 @@ func NewDeleteVectorsCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the index to delete vectors from")
-	cmd.Flags().StringVar(&options.namespace, "namespace", "", "namespace to delete vectors from")
+	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to delete vectors from")
 	cmd.Flags().StringSliceVar(&options.ids, "ids", []string{}, "IDs of the vectors to delete")
 	cmd.Flags().Var(&options.filter, "filter", "filter to delete the vectors with")
 	cmd.Flags().BoolVar(&options.deleteAll, "all-vectors", false, "delete all vectors from the namespace")
@@ -54,9 +54,6 @@ func runDeleteVectorsCmd(ctx context.Context, options deleteVectorsCmdOptions) {
 
 	// Default namespace
 	ns := options.namespace
-	if options.namespace != "" {
-		ns = options.namespace
-	}
 	if ns == "" {
 		ns = "__default__"
 	}

@@ -57,7 +57,7 @@ func NewUpsertCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of index to upsert into")
-	cmd.Flags().StringVar(&options.namespace, "namespace", "", "namespace to upsert into")
+	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to upsert into")
 	cmd.Flags().StringVarP(&options.file, "file", "f", "", "file to upsert from")
 	cmd.Flags().IntVarP(&options.batchSize, "batch-size", "b", 1000, "size of batches to upsert (default: 1000)")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
@@ -82,13 +82,11 @@ func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 	}
 
 	// Default namespace
-	ns := payload.Namespace
-	if options.namespace != "" {
-		ns = options.namespace
-	}
+	ns := options.namespace
 	if ns == "" {
 		ns = "__default__"
 	}
+
 	// Get IndexConnection
 	pc := sdk.NewPineconeClient(ctx)
 	ic, err := sdk.NewIndexConnection(ctx, pc, options.name, ns)

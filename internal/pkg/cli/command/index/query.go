@@ -43,7 +43,7 @@ func NewQueryCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the index to query")
-	cmd.Flags().StringVar(&options.namespace, "namespace", "", "index namespace to query")
+	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "index namespace to query")
 	cmd.Flags().Uint32VarP(&options.topK, "top-k", "k", 10, "maximum number of results to return")
 	cmd.Flags().VarP(&options.filter, "filter", "f", "metadata filter to apply to the query")
 	cmd.Flags().BoolVar(&options.includeValues, "include-values", false, "include vector values in the query results")
@@ -65,9 +65,6 @@ func runQueryCmd(ctx context.Context, options queryCmdOptions) {
 
 	// Default namespace
 	ns := options.namespace
-	if options.namespace != "" {
-		ns = options.namespace
-	}
 	if ns == "" {
 		ns = "__default__"
 	}

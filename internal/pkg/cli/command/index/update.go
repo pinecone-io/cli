@@ -41,7 +41,7 @@ func NewUpdateCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the index to update")
-	cmd.Flags().StringVar(&options.namespace, "namespace", "", "namespace to update the vector in")
+	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to update the vector in")
 	cmd.Flags().StringVar(&options.id, "id", "", "ID of the vector to update")
 	cmd.Flags().Float32SliceVar(&options.values, "values", []float32{}, "values to update the vector with")
 	cmd.Flags().Int32SliceVar(&options.sparseIndices, "sparse-indices", []int32{}, "sparse indices to update the vector with")
@@ -61,9 +61,6 @@ func runUpdateCmd(ctx context.Context, options updateCmdOptions) {
 
 	// Default namespace
 	ns := options.namespace
-	if options.namespace != "" {
-		ns = options.namespace
-	}
 	if ns == "" {
 		ns = "__default__"
 	}

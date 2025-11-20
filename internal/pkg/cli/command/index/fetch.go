@@ -43,7 +43,7 @@ func NewFetchCmd() *cobra.Command {
 	cmd.Flags().StringSliceVarP(&options.ids, "ids", "i", []string{}, "IDs of vectors to fetch")
 	cmd.Flags().VarP(&options.filter, "filter", "f", "metadata filter to apply to the fetch")
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the index to fetch from")
-	cmd.Flags().StringVar(&options.namespace, "namespace", "", "namespace to fetch from")
+	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to fetch from")
 	cmd.Flags().Uint32VarP(&options.limit, "limit", "l", 0, "maximum number of vectors to fetch")
 	cmd.Flags().StringVarP(&options.paginationToken, "pagination-token", "p", "", "pagination token to continue a previous listing operation")
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
@@ -59,9 +59,6 @@ func runFetchCmd(ctx context.Context, options fetchCmdOptions) {
 
 	// Default namespace
 	ns := options.namespace
-	if options.namespace != "" {
-		ns = options.namespace
-	}
 	if ns == "" {
 		ns = "__default__"
 	}

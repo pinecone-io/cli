@@ -155,4 +155,5 @@ func (m *Int32List) String() string {
 	b, _ := json.Marshal(m)
 	return string(b)
 }
+
 func (*Int32List) Type() string { return "int32 json-array|csv-list" }
