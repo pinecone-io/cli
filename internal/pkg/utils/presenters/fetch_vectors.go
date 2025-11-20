@@ -1,6 +1,7 @@
 package presenters
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
@@ -63,10 +64,33 @@ func PrintFetchVectorsTable(results *FetchVectorsResults) {
 		if vector.SparseValues != nil {
 			sparseDim = len(vector.SparseValues.Values)
 		}
-		metadata := ""
+		metadata := "<none>"
 		if vector.Metadata != nil {
-			metadata = text.InlineJSON(vector.Metadata)
+			m := vector.Metadata.AsMap()
+			if len(m) > 0 {
+				keys := make([]string, 0, len(m))
+				for k := range m {
+					keys = append(keys, k)
+				}
+				sort.Strings(keys)
+				show := keys
+				if len(show) > 3 {
+					show = show[:3]
+				}
+				limited := make(map[string]any, len(show))
+				for _, k := range show {
+					limited[k] = m[k]
+				}
+
+				s := text.InlineJSON(limited) // compact one-line JSON
+				if len(keys) > 3 {
+					// put ellipsis inside the braces: {"a":1,"b":2,"c":3, ...}
+					s = strings.TrimRight(s, "}") + ", ...}"
+				}
+				metadata = s
+			}
 		}
+
 		preview := previewSliceFloat32(vector.Values, 3)
 		row := []string{id, pcio.Sprintf("%d", dim), preview, pcio.Sprintf("%d", sparseDim), metadata}
 		pcio.Fprintln(writer, strings.Join(row, "\t"))
@@ -80,8 +104,14 @@ func previewSliceFloat32(values *[]float32, limit int) string {
 		return "<none>"
 	}
 	vals := *values
+	truncated := false
 	if len(vals) > limit {
 		vals = vals[:limit]
+		truncated = true
 	}
-	return text.InlineJSON(vals) + "..."
+	text := text.InlineJSON(vals)
+	if truncated && strings.HasSuffix(text, "]") {
+		text = text[:len(text)-1] + ", ...]"
+	}
+	return text
 }

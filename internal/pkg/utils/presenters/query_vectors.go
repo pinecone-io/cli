@@ -1,6 +1,7 @@
 package presenters
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
@@ -75,11 +76,33 @@ func PrintQueryVectorsTable(resp *pinecone.QueryVectorsResponse) {
 			row = append(row, iPreview, vPreview)
 		}
 		if hasMetadata {
-			meta := "<none>"
+			metadata := "<none>"
 			if match.Vector.Metadata != nil {
-				meta = text.InlineJSON(match.Vector.Metadata)
+				m := match.Vector.Metadata.AsMap()
+				if len(m) > 0 {
+					keys := make([]string, 0, len(m))
+					for k := range m {
+						keys = append(keys, k)
+					}
+					sort.Strings(keys)
+					show := keys
+					if len(show) > 3 {
+						show = show[:3]
+					}
+					limited := make(map[string]any, len(show))
+					for _, k := range show {
+						limited[k] = m[k]
+					}
+
+					s := text.InlineJSON(limited) // compact one-line JSON
+					if len(keys) > 3 {
+						// put ellipsis inside the braces: {"a":1,"b":2,"c":3, ...}
+						s = strings.TrimRight(s, "}") + ", ...}"
+					}
+					metadata = s
+				}
 			}
-			row = append(row, meta)
+			row = append(row, metadata)
 		}
 
 		pcio.Fprintln(writer, strings.Join(row, "\t"))
@@ -93,8 +116,16 @@ func previewSliceUint32(values []uint32, limit int) string {
 		return "<none>"
 	}
 	vals := values
+	truncated := false
 	if len(vals) > limit {
 		vals = vals[:limit]
+		truncated = true
 	}
-	return text.InlineJSON(vals) + "..."
+
+	text := text.InlineJSON(vals)
+	if truncated && strings.HasSuffix(text, "]") {
+		text = text[:len(text)-1] + ", ...]"
+	}
+
+	return text
 }
