@@ -144,7 +144,7 @@ func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 				json := text.IndentJSON(resp)
 				pcio.Println(json)
 			} else {
-				msg.SuccessMsg("Upserted %d vectors into namespace %s in %d batches", len(batch), ns, i+1)
+				msg.SuccessMsg("Upserted %d vectors into namespace %s (batch %d of %d)", len(batch), ns, i+1, len(batches))
 			}
 		}
 	}
