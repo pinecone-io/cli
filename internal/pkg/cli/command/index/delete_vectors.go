@@ -2,27 +2,23 @@ package index
 
 import (
 	"context"
-	"encoding/json"
-	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/flags"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
-	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 	"github.com/spf13/cobra"
 )
 
 type deleteVectorsCmdOptions struct {
-	name       string
-	namespace  string
-	ids        []string
-	filter     flags.JSONObject
-	filterFile string
-	deleteAll  bool
-	json       bool
+	name      string
+	namespace string
+	ids       []string
+	filter    flags.JSONObject
+	deleteAll bool
+	json      bool
 }
 
 func NewDeleteVectorsCmd() *cobra.Command {
@@ -45,7 +41,6 @@ func NewDeleteVectorsCmd() *cobra.Command {
 	cmd.Flags().StringVar(&options.namespace, "namespace", "", "namespace to delete vectors from")
 	cmd.Flags().StringSliceVar(&options.ids, "ids", []string{}, "IDs of the vectors to delete")
 	cmd.Flags().Var(&options.filter, "filter", "filter to delete the vectors with")
-	cmd.Flags().StringVar(&options.filterFile, "filter-file", "", "file containing filter to delete the vectors with")
 	cmd.Flags().BoolVar(&options.deleteAll, "all-vectors", false, "delete all vectors from the namespace")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
@@ -99,23 +94,8 @@ func runDeleteVectorsCmd(ctx context.Context, options deleteVectorsCmdOptions) {
 	}
 
 	// Delete vectors by filter
-	if options.filter != nil || options.filterFile != "" {
-		var filterMap map[string]any
-		if options.filterFile != "" {
-			raw, err := os.ReadFile(options.filterFile)
-			if err != nil {
-				msg.FailMsg("Failed to read filter file %s: %s", style.Emphasis(options.filterFile), err)
-				exit.Errorf(err, "Failed to read filter file %s", options.filterFile)
-			}
-			if err := json.Unmarshal(raw, &filterMap); err != nil {
-				msg.FailMsg("Failed to parse filter: %s", err)
-				exit.Errorf(err, "Failed to parse filter")
-			}
-		} else {
-			filterMap = options.filter
-		}
-
-		filter, err := pinecone.NewMetadataFilter(filterMap)
+	if options.filter != nil {
+		filter, err := pinecone.NewMetadataFilter(options.filter)
 		if err != nil {
 			msg.FailMsg("Failed to create filter: %s", err)
 			exit.Errorf(err, "Failed to create filter")

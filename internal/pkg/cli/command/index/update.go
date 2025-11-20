@@ -2,8 +2,6 @@ package index
 
 import (
 	"context"
-	"encoding/json"
-	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/flags"
@@ -12,7 +10,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
-	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 	"github.com/spf13/cobra"
@@ -27,7 +24,6 @@ type updateCmdOptions struct {
 	sparseValues  []float32
 	metadata      flags.JSONObject
 	filter        flags.JSONObject
-	filterFile    string
 	dryRun        bool
 	json          bool
 }
@@ -52,7 +48,6 @@ func NewUpdateCmd() *cobra.Command {
 	cmd.Flags().Float32SliceVar(&options.sparseValues, "sparse-values", []float32{}, "sparse values to update the vector with")
 	cmd.Flags().Var(&options.metadata, "metadata", "metadata to update the vector with")
 	cmd.Flags().Var(&options.filter, "filter", "filter to update the vectors with")
-	cmd.Flags().StringVar(&options.filterFile, "filter-file", "", "file containing filter to update the vectors with")
 	cmd.Flags().BoolVar(&options.dryRun, "dry-run", false, "do not update the vectors, just return the number of vectors that would be updated")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
@@ -74,7 +69,7 @@ func runUpdateCmd(ctx context.Context, options updateCmdOptions) {
 	}
 
 	// Validate update by ID or metadata filter
-	if options.id == "" && options.filter == nil && options.filterFile == "" {
+	if options.id == "" && options.filter == nil {
 		msg.FailMsg("Either --id or --filter must be provided")
 		exit.ErrorMsg("Either --id or --filter must be provided")
 	}
@@ -85,7 +80,7 @@ func runUpdateCmd(ctx context.Context, options updateCmdOptions) {
 		exit.Error(err, "Failed to create index connection")
 	}
 
-	if options.id != "" && (options.filter != nil || options.filterFile != "") {
+	if options.id != "" && options.filter != nil {
 		msg.FailMsg("ID and filter cannot be used together")
 		exit.ErrorMsg("ID and filter cannot be used together")
 	}
@@ -129,25 +124,8 @@ func runUpdateCmd(ctx context.Context, options updateCmdOptions) {
 	}
 
 	// Update vectors by metadata filter
-	if options.filter != nil || options.filterFile != "" {
-		var filterMap map[string]any
-
-		// Build metadata filter if provided
-		if options.filterFile != "" {
-			raw, err := os.ReadFile(options.filterFile)
-			if err != nil {
-				msg.FailMsg("Failed to read filter file %s: %s", style.Emphasis(options.filterFile), err)
-				exit.Errorf(err, "Failed to read filter file %s", options.filterFile)
-			}
-			if err := json.Unmarshal(raw, &filterMap); err != nil {
-				msg.FailMsg("Failed to parse filter: %s", err)
-				exit.Errorf(err, "Failed to parse filter")
-			}
-		} else { // Otherwise use the filter passed in as a JSON string
-			filterMap = options.filter
-		}
-
-		filter, err := pinecone.NewMetadataFilter(filterMap)
+	if options.filter != nil {
+		filter, err := pinecone.NewMetadataFilter(options.filter)
 		if err != nil {
 			msg.FailMsg("Failed to create filter: %s", err)
 			exit.Errorf(err, "Failed to create filter")

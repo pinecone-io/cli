@@ -21,6 +21,7 @@ type upsertCmdOptions struct {
 	file      string
 	name      string
 	namespace string
+	batchSize int
 	json      bool
 }
 
@@ -58,6 +59,7 @@ func NewUpsertCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of index to upsert into")
 	cmd.Flags().StringVar(&options.namespace, "namespace", "", "namespace to upsert into")
 	cmd.Flags().StringVarP(&options.file, "file", "f", "", "file to upsert from")
+	cmd.Flags().IntVarP(&options.batchSize, "batch-size", "b", 1000, "size of batches to upsert (default: 1000)")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 	_ = cmd.MarkFlagRequired("name")
 	_ = cmd.MarkFlagRequired("file")
@@ -125,10 +127,9 @@ func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 		mapped = append(mapped, &vector)
 	}
 
-	batchSize := 1000
-	batches := make([][]*pinecone.Vector, 0, (len(mapped)+batchSize-1)/batchSize)
-	for i := 0; i < len(mapped); i += batchSize {
-		end := i + batchSize
+	batches := make([][]*pinecone.Vector, 0, (len(mapped)+options.batchSize-1)/options.batchSize)
+	for i := 0; i < len(mapped); i += options.batchSize {
+		end := i + options.batchSize
 		if end > len(mapped) {
 			end = len(mapped)
 		}

@@ -19,39 +19,73 @@ func PrintQueryVectorsTable(resp *pinecone.QueryVectorsResponse) {
 		pcio.Fprintf(writer, "Usage: %d (read units)\n", resp.Usage.ReadUnits)
 	}
 
+	// Detect which columns to show
+	hasDense := false
+	hasSparse := false
+	hasMetadata := false
+	for _, m := range resp.Matches {
+		if m == nil || m.Vector == nil {
+			continue
+		}
+		if m.Vector.Values != nil && len(*m.Vector.Values) > 0 {
+			hasDense = true
+		}
+		if m.Vector.SparseValues != nil &&
+			(len(m.Vector.SparseValues.Indices) > 0 || len(m.Vector.SparseValues.Values) > 0) {
+			hasSparse = true
+		}
+		if m.Vector.Metadata != nil {
+			hasMetadata = true
+		}
+	}
+
 	// Table Header
-	columns := []string{"ID", "SCORE", "VALUES", "SPARSE INDICES", "SPARSE VALUES", "METADATA"}
-	pcio.Fprintln(writer, strings.Join(columns, "\t"))
+	cols := []string{"ID", "SCORE"}
+	if hasDense {
+		cols = append(cols, "VALUES")
+	}
+	if hasSparse {
+		cols = append(cols, "SPARSE INDICES", "SPARSE VALUES")
+	}
+	if hasMetadata {
+		cols = append(cols, "METADATA")
+	}
+	pcio.Fprintln(writer, strings.Join(cols, "\t"))
 
 	// Rows
 	for _, match := range resp.Matches {
 		if match == nil || match.Vector == nil {
 			continue
 		}
+		row := []string{match.Vector.Id, pcio.Sprintf("%f", match.Score)}
 
-		valuesPreview := "<none>"
-		if match.Vector.Values != nil {
-			valuesPreview = previewSliceFloat32(match.Vector.Values, 3)
+		if hasDense {
+			values := "<none>"
+			if match.Vector.Values != nil {
+				values = previewSliceFloat32(match.Vector.Values, 3)
+			}
+			row = append(row, values)
+		}
+		if hasSparse {
+			iPreview, vPreview := "<none>", "<none>"
+			if match.Vector.SparseValues != nil {
+				iPreview = previewSliceUint32(match.Vector.SparseValues.Indices, 3)
+				vPreview = previewSliceFloat32(&match.Vector.SparseValues.Values, 3)
+			}
+			row = append(row, iPreview, vPreview)
+		}
+		if hasMetadata {
+			meta := "<none>"
+			if match.Vector.Metadata != nil {
+				meta = text.InlineJSON(match.Vector.Metadata)
+			}
+			row = append(row, meta)
 		}
 
-		sparseIndicesPreview := "<none>"
-		if match.Vector.SparseValues != nil {
-			sparseIndicesPreview = previewSliceUint32(match.Vector.SparseValues.Indices, 3)
-		}
-
-		sparseValuesPreview := "<none>"
-		if match.Vector.SparseValues != nil {
-			sparseValuesPreview = previewSliceFloat32(&match.Vector.SparseValues.Values, 3)
-		}
-
-		metadataPreview := "<none>"
-		if match.Vector.Metadata != nil {
-			metadataPreview = text.InlineJSON(match.Vector.Metadata)
-		}
-
-		row := []string{match.Vector.Id, pcio.Sprintf("%f", match.Score), valuesPreview, sparseIndicesPreview, sparseValuesPreview, metadataPreview}
 		pcio.Fprintln(writer, strings.Join(row, "\t"))
 	}
+
+	writer.Flush()
 }
 
 func previewSliceUint32(values []uint32, limit int) string {
