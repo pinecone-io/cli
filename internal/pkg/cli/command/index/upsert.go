@@ -3,8 +3,10 @@ package index
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"os"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/bodyutil"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -17,29 +19,17 @@ import (
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
 
+type upsertBody struct {
+	Vectors []pinecone.Vector `json:"vectors"`
+}
+
 type upsertCmdOptions struct {
 	file      string
-	name      string
+	body      string
+	indexName string
 	namespace string
 	batchSize int
 	json      bool
-}
-
-type upsertFile struct {
-	Vectors   []upsertVector `json:"vectors"`
-	Namespace string         `json:"namespace"`
-}
-
-type upsertVector struct {
-	ID           string         `json:"id"`
-	Values       []float32      `json:"values"`
-	SparseValues *sparseValues  `json:"sparse_values,omitempty"`
-	Metadata     map[string]any `json:"metadata,omitempty"`
-}
-
-type sparseValues struct {
-	Indices []uint32  `json:"indices"`
-	Values  []float32 `json:"values"`
 }
 
 func NewUpsertCmd() *cobra.Command {
@@ -49,54 +39,80 @@ func NewUpsertCmd() *cobra.Command {
 		Use:   "upsert [file]",
 		Short: "Upsert vectors into an index from a JSON file",
 		Example: help.Examples(`
-			pc index upsert --name my-index --namespace my-namespace ./vectors.json
+			pc index upsert --index-name my-index --namespace my-namespace ./vectors.json
+			pc index upsert --index-name my-index --namespace my-namespace --file - < ./vectors.json
+			pc index upsert --index-name my-index --body @./payload.json
+			cat payload.json | pc index upsert --index-name my-index --body @-
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runUpsertCmd(cmd.Context(), options)
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of index to upsert into")
+	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of index to upsert into")
 	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to upsert into")
-	cmd.Flags().StringVarP(&options.file, "file", "f", "", "file to upsert from")
+	cmd.Flags().StringVarP(&options.file, "file", "f", "", "file to upsert from (use - for stdin; only one argument may use stdin)")
+	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON (inline, @path.json, or @- for stdin; only one argument may use stdin)")
 	cmd.Flags().IntVarP(&options.batchSize, "batch-size", "b", 1000, "size of batches to upsert (default: 1000)")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
-	_ = cmd.MarkFlagRequired("name")
-	_ = cmd.MarkFlagRequired("file")
+	_ = cmd.MarkFlagRequired("index-name")
+	cmd.MarkFlagsMutuallyExclusive("file", "body")
 
 	return cmd
 }
 
 func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
-	filePath := options.file
-	raw, err := os.ReadFile(filePath)
-	if err != nil {
-		msg.FailMsg("Failed to read file %s: %s", style.Emphasis(filePath), err)
-		exit.Errorf(err, "Failed to read file %s", filePath)
-	}
+	var payload upsertBody
+	var src string
+	var err error
 
-	var payload upsertFile
-	if err := json.Unmarshal(raw, &payload); err != nil {
-		msg.FailMsg("Failed to parse JSON from %s: %s", style.Emphasis(filePath), err)
-		exit.Error(err, "Failed to parse JSON for upsert")
-	}
-
-	// Default namespace
-	ns := options.namespace
-	if ns == "" {
-		ns = "__default__"
+	// Prefer --body if provided
+	if options.body != "" {
+		p, s, derr := bodyutil.DecodeBodyArgs[upsertBody](options.body)
+		if derr != nil {
+			msg.FailMsg("Failed to parse upsert body (%s): %s", style.Emphasis(s), derr)
+			exit.Error(derr, "Failed to parse upsert body")
+		}
+		payload = *p
+		src = s
+	} else {
+		// Fallback to --file (required when --body not provided)
+		if options.file == "" {
+			msg.FailMsg("Either --file or --body must be provided")
+			exit.ErrorMsg("Either --file or --body must be provided")
+		}
+		filePath := options.file
+		src = filePath
+		// Support streaming from stdin with "-"
+		var r io.ReadCloser
+		if filePath == "-" {
+			r = io.NopCloser(os.Stdin)
+			src = "stdin"
+		} else {
+			f, oerr := os.Open(filePath)
+			if oerr != nil {
+				msg.FailMsg("Failed to read file %s: %s", style.Emphasis(filePath), oerr)
+				exit.Errorf(oerr, "Failed to read file %s", filePath)
+			}
+			r = f
+		}
+		defer r.Close()
+		if derr := json.NewDecoder(r).Decode(&payload); derr != nil {
+			msg.FailMsg("Failed to parse JSON from %s: %s", style.Emphasis(src), derr)
+			exit.Error(derr, "Failed to parse JSON for upsert")
+		}
 	}
 
 	// Get IndexConnection
 	pc := sdk.NewPineconeClient(ctx)
-	ic, err := sdk.NewIndexConnection(ctx, pc, options.name, ns)
+	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, options.namespace)
 	if err != nil {
 		msg.FailMsg("Failed to create index connection: %s", err)
 		exit.Error(err, "Failed to create index connection")
 	}
 
 	if len(payload.Vectors) == 0 {
-		msg.FailMsg("No vectors found in %s", style.Emphasis(filePath))
+		msg.FailMsg("No vectors found in %s", style.Emphasis(src))
 		exit.ErrorMsg("No vectors provided for upsert")
 	}
 
@@ -104,24 +120,22 @@ func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 	mapped := make([]*pinecone.Vector, 0, len(payload.Vectors))
 	for _, v := range payload.Vectors {
 		values := v.Values
-		metadata, err := pinecone.NewMetadata(v.Metadata)
-		if err != nil {
-			msg.FailMsg("Failed to parse metadata: %s", err)
-			exit.Error(err, "Failed to parse metadata")
-		}
 
 		var vector pinecone.Vector
-		vector.Id = v.ID
-		if v.Values != nil {
-			vector.Values = &values
+		vector.Id = v.Id
+		vector.Metadata = v.Metadata
+
+		if values != nil {
+			vector.Values = values
 		}
+
 		if v.SparseValues != nil {
 			vector.SparseValues = &pinecone.SparseValues{
 				Indices: v.SparseValues.Indices,
 				Values:  v.SparseValues.Values,
 			}
 		}
-		vector.Metadata = metadata
+
 		mapped = append(mapped, &vector)
 	}
 
@@ -144,7 +158,7 @@ func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 				json := text.IndentJSON(resp)
 				pcio.Println(json)
 			} else {
-				msg.SuccessMsg("Upserted %d vectors into namespace %s (batch %d of %d)", len(batch), ns, i+1, len(batches))
+				msg.SuccessMsg("Upserted %d vectors into namespace %s (batch %d of %d)", len(batch), options.namespace, i+1, len(batches))
 			}
 		}
 	}

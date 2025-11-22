@@ -3,6 +3,7 @@ package index
 import (
 	"context"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/bodyutil"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/flags"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -15,13 +16,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type fetchBody struct {
+	Ids             []string       `json:"ids"`
+	Filter          map[string]any `json:"filter"`
+	Limit           *uint32        `json:"limit"`
+	PaginationToken *string        `json:"pagination_token"`
+}
+
 type fetchCmdOptions struct {
-	name            string
+	indexName       string
 	namespace       string
-	ids             []string
+	ids             flags.StringList
 	filter          flags.JSONObject
 	limit           uint32
 	paginationToken string
+	body            string
 	json            bool
 }
 
@@ -31,25 +40,31 @@ func NewFetchCmd() *cobra.Command {
 		Use:   "fetch",
 		Short: "Fetch vectors by ID or metadata filter from an index",
 		Example: help.Examples(`
-			pc index fetch --name my-index --ids 123,456,789
-			pc index fetch --name my-index --filter '{"key": "value"}'
-			pc index fetch --name my-index --filter @./filter.json
+			pc index fetch --index-name my-index --ids '["123","456","789"]'
+			pc index fetch --index-name my-index --ids @./ids.json
+
+			pc index fetch --index-name my-index --filter '{"key": "value"}'
+			pc index fetch --index-name my-index --filter @./filter.json
+
+			pc index fetch --index-name my-index --body @./fetch.json
+			cat fetch.json | pc index fetch --index-name my-index --body @-
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runFetchCmd(cmd.Context(), options)
 		},
 	}
 
-	cmd.Flags().StringSliceVarP(&options.ids, "ids", "i", []string{}, "IDs of vectors to fetch")
-	cmd.Flags().VarP(&options.filter, "filter", "f", "metadata filter to apply to the fetch")
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the index to fetch from")
+	cmd.Flags().VarP(&options.ids, "ids", "i", "IDs of vectors to fetch (inline JSON array, @path.json, or @- for stdin)")
+	cmd.Flags().VarP(&options.filter, "filter", "f", "metadata filter to apply to the fetch (inline JSON, @path.json, or @- for stdin)")
+	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of the index to fetch from")
 	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to fetch from")
 	cmd.Flags().Uint32VarP(&options.limit, "limit", "l", 0, "maximum number of vectors to fetch")
 	cmd.Flags().StringVarP(&options.paginationToken, "pagination-token", "p", "", "pagination token to continue a previous listing operation")
+	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON (inline, @path.json, or @- for stdin; only one argument may use stdin)")
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 
 	cmd.MarkFlagsMutuallyExclusive("ids", "filter")
-	_ = cmd.MarkFlagRequired("name")
+	_ = cmd.MarkFlagRequired("index-name")
 
 	return cmd
 }
@@ -57,10 +72,24 @@ func NewFetchCmd() *cobra.Command {
 func runFetchCmd(ctx context.Context, options fetchCmdOptions) {
 	pc := sdk.NewPineconeClient(ctx)
 
-	// Default namespace
-	ns := options.namespace
-	if ns == "" {
-		ns = "__default__"
+	// Apply body overlay if provided
+	if options.body != "" {
+		if b, _, err := bodyutil.DecodeBodyArgs[fetchBody](options.body); err != nil {
+			exit.Error(err, "Failed to parse fetch body")
+		} else if b != nil {
+			if len(options.ids) == 0 && len(b.Ids) > 0 {
+				options.ids = b.Ids
+			}
+			if options.filter == nil && b.Filter != nil {
+				options.filter = b.Filter
+			}
+			if b.Limit != nil {
+				options.limit = *b.Limit
+			}
+			if b.PaginationToken != nil {
+				options.paginationToken = *b.PaginationToken
+			}
+		}
 	}
 
 	if len(options.ids) > 0 && (options.limit > 0 || options.paginationToken != "") {
@@ -68,7 +97,7 @@ func runFetchCmd(ctx context.Context, options fetchCmdOptions) {
 		exit.ErrorMsg("ids and limit/pagination-token cannot be used together")
 	}
 
-	ic, err := sdk.NewIndexConnection(ctx, pc, options.name, ns)
+	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, options.namespace)
 	if err != nil {
 		msg.FailMsg("Failed to create index connection: %s", err)
 		exit.Error(err, "Failed to create index connection")
@@ -76,7 +105,7 @@ func runFetchCmd(ctx context.Context, options fetchCmdOptions) {
 
 	// Fetch vectors by ID
 	if len(options.ids) > 0 {
-		vectors, err := ic.FetchVectors(ctx, options.ids)
+		vectors, err := ic.FetchVectors(ctx, []string(options.ids))
 		if err != nil {
 			exit.Error(err, "Failed to fetch vectors")
 		}

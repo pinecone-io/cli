@@ -3,6 +3,7 @@ package index
 import (
 	"context"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/bodyutil"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/flags"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -15,17 +16,28 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type queryBody struct {
+	Id              string                 `json:"id"`
+	Vector          []float32              `json:"vector"`
+	SparseValues    *pinecone.SparseValues `json:"sparse_values"`
+	Filter          map[string]any         `json:"filter"`
+	TopK            *uint32                `json:"top_k"`
+	IncludeValues   *bool                  `json:"include_values"`
+	IncludeMetadata *bool                  `json:"include_metadata"`
+}
+
 type queryCmdOptions struct {
 	id              string
 	vector          flags.Float32List
-	sparseIndices   flags.Int32List
+	sparseIndices   flags.UInt32List
 	sparseValues    flags.Float32List
-	name            string
+	indexName       string
 	namespace       string
 	topK            uint32
 	filter          flags.JSONObject
 	includeValues   bool
 	includeMetadata bool
+	body            string
 	json            bool
 }
 
@@ -35,26 +47,38 @@ func NewQueryCmd() *cobra.Command {
 		Use:   "query",
 		Short: "Query an index by vector values",
 		Example: help.Examples(`
+			pc index query --index-name my-index --id doc-123 --top-k 10 --include-metadata
 		
+			pc index query --index-name my-index --vector '[0.1, 0.2, 0.3]' --top-k 25
+			pc index query --index-name my-index --vector @./vector.json --top-k 25 --include-metadata
+			jq -c '.embedding' doc.json | pc index query --index-name my-index --vector @- --top-k 20
+		
+			pc index query --index-name my-index --sparse-indices @./indices.json --sparse-values @./values.json --top-k 15
+		
+			pc index query --index-name my-index --vector @./vector.json --filter '{"genre":"sci-fi"}' --include-metadata
+		
+			pc index query --index-name my-index --body @./query.json
+			cat query.json | pc index query --index-name my-index --body @-
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runQueryCmd(cmd.Context(), options)
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the index to query")
+	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of the index to query")
 	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "index namespace to query")
 	cmd.Flags().Uint32VarP(&options.topK, "top-k", "k", 10, "maximum number of results to return")
-	cmd.Flags().VarP(&options.filter, "filter", "f", "metadata filter to apply to the query")
+	cmd.Flags().VarP(&options.filter, "filter", "f", "metadata filter to apply to the query (inline JSON, @path.json, or @- for stdin)")
 	cmd.Flags().BoolVar(&options.includeValues, "include-values", false, "include vector values in the query results")
 	cmd.Flags().BoolVar(&options.includeMetadata, "include-metadata", false, "include metadata in the query results")
 	cmd.Flags().StringVarP(&options.id, "id", "i", "", "ID of the vector to query against")
-	cmd.Flags().VarP(&options.vector, "vector", "v", "vector values to query against")
-	cmd.Flags().Var(&options.sparseIndices, "sparse-indices", "sparse indices to query against")
-	cmd.Flags().Var(&options.sparseValues, "sparse-values", "sparse values to query against")
+	cmd.Flags().VarP(&options.vector, "vector", "v", "vector values to query against (inline JSON array, @path.json, or @- for stdin)")
+	cmd.Flags().Var(&options.sparseIndices, "sparse-indices", "sparse indices to query against (inline JSON array, @path.json, or @- for stdin)")
+	cmd.Flags().Var(&options.sparseValues, "sparse-values", "sparse values to query against (inline JSON array, @path.json, or @- for stdin)")
+	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON (inline, @path.json, or @- for stdin; only one argument may use stdin)")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
-	_ = cmd.MarkFlagRequired("name")
+	_ = cmd.MarkFlagRequired("index-name")
 	cmd.MarkFlagsMutuallyExclusive("id", "vector", "sparse-values")
 
 	return cmd
@@ -63,14 +87,38 @@ func NewQueryCmd() *cobra.Command {
 func runQueryCmd(ctx context.Context, options queryCmdOptions) {
 	pc := sdk.NewPineconeClient(ctx)
 
-	// Default namespace
-	ns := options.namespace
-	if ns == "" {
-		ns = "__default__"
+	// Apply body overlay if provided
+	if options.body != "" {
+		if b, _, err := bodyutil.DecodeBodyArgs[queryBody](options.body); err != nil {
+			exit.Error(err, "Failed to parse query body")
+		} else if b != nil {
+			if options.id == "" && b.Id != "" {
+				options.id = b.Id
+			}
+			if len(options.vector) == 0 && len(b.Vector) > 0 {
+				options.vector = b.Vector
+			}
+			if (len(options.sparseIndices) == 0 && len(options.sparseValues) == 0) && b.SparseValues != nil {
+				options.sparseIndices = b.SparseValues.Indices
+				options.sparseValues = b.SparseValues.Values
+			}
+			if options.filter == nil && b.Filter != nil {
+				options.filter = b.Filter
+			}
+			if b.TopK != nil {
+				options.topK = *b.TopK
+			}
+			if b.IncludeValues != nil {
+				options.includeValues = *b.IncludeValues
+			}
+			if b.IncludeMetadata != nil {
+				options.includeMetadata = *b.IncludeMetadata
+			}
+		}
 	}
 
 	// Get IndexConnection
-	ic, err := sdk.NewIndexConnection(ctx, pc, options.name, ns)
+	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, options.namespace)
 	if err != nil {
 		msg.FailMsg("Failed to create index connection: %s", err)
 		exit.Error(err, "Failed to create index connection")
@@ -116,12 +164,8 @@ func runQueryCmd(ctx context.Context, options queryCmdOptions) {
 			if len(options.sparseIndices) != len(options.sparseValues) {
 				exit.Errorf(nil, "--sparse-indices and --sparse-values must be the same length")
 			}
-			sparseIndices, err := toUint32Slice(options.sparseIndices)
-			if err != nil {
-				exit.Error(err, "Failed to convert sparse indices to uint32")
-			}
 			sparse = &pinecone.SparseValues{
-				Indices: sparseIndices,
+				Indices: options.sparseIndices,
 				Values:  options.sparseValues,
 			}
 		}
@@ -147,15 +191,4 @@ func runQueryCmd(ctx context.Context, options queryCmdOptions) {
 	} else {
 		presenters.PrintQueryVectorsTable(queryResponse)
 	}
-}
-
-func toUint32Slice(in []int32) ([]uint32, error) {
-	out := make([]uint32, len(in))
-	for i, v := range in {
-		if v < 0 {
-			return nil, pcio.Errorf("sparse indices must be non-negative")
-		}
-		out[i] = uint32(v)
-	}
-	return out, nil
 }

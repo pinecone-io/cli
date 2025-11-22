@@ -15,7 +15,7 @@ import (
 )
 
 type listVectorsCmdOptions struct {
-	name            string
+	indexName       string
 	namespace       string
 	limit           uint32
 	paginationToken string
@@ -28,20 +28,20 @@ func NewListVectorsCmd() *cobra.Command {
 		Use:   "list-vectors",
 		Short: "List vectors in an index",
 		Example: help.Examples(`
-			pc index list-vectors --name my-index --namespace my-namespace
+			pc index list-vectors --index-name my-index --namespace my-namespace
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runListVectorsCmd(cmd.Context(), options)
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the index to list vectors from")
+	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of the index to list vectors from")
 	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to list vectors from")
 	cmd.Flags().Uint32VarP(&options.limit, "limit", "l", 0, "maximum number of vectors to list")
 	cmd.Flags().StringVarP(&options.paginationToken, "pagination-token", "p", "", "pagination token to continue a previous listing operation")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
-	_ = cmd.MarkFlagRequired("name")
+	_ = cmd.MarkFlagRequired("index-name")
 
 	return cmd
 }
@@ -49,14 +49,8 @@ func NewListVectorsCmd() *cobra.Command {
 func runListVectorsCmd(ctx context.Context, options listVectorsCmdOptions) {
 	pc := sdk.NewPineconeClient(ctx)
 
-	// Default namespace
-	ns := options.namespace
-	if ns == "" {
-		ns = "__default__"
-	}
-
 	// Get IndexConnection
-	ic, err := sdk.NewIndexConnection(ctx, pc, options.name, ns)
+	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, options.namespace)
 	if err != nil {
 		msg.FailMsg("Failed to create index connection: %s", err)
 		exit.Error(err, "Failed to create index connection")

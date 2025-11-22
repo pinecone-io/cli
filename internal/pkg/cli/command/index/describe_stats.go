@@ -16,9 +16,9 @@ import (
 )
 
 type describeStatsCmdOptions struct {
-	name   string
-	filter flags.JSONObject
-	json   bool
+	indexName string
+	filter    flags.JSONObject
+	json      bool
 }
 
 func NewDescribeIndexStatsCmd() *cobra.Command {
@@ -27,17 +27,19 @@ func NewDescribeIndexStatsCmd() *cobra.Command {
 		Use:   "describe-stats",
 		Short: "Describe the stats of an index",
 		Example: help.Examples(`
-			pc index describe-stats --name "index-name"
+			pc index describe-stats --index-name "index-name"
+			pc index describe-stats --index-name "index-name" --filter '{"k":"v"}'
+			pc index describe-stats --index-name "index-name" --filter @./filter.json
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runDescribeIndexStatsCmd(cmd.Context(), options)
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of index to describe stats for")
+	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of index to describe stats for")
 	cmd.Flags().VarP(&options.filter, "filter", "f", "metadata filter to apply to the operation")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
-	_ = cmd.MarkFlagRequired("name")
+	_ = cmd.MarkFlagRequired("index-name")
 
 	return cmd
 }
@@ -45,7 +47,7 @@ func NewDescribeIndexStatsCmd() *cobra.Command {
 func runDescribeIndexStatsCmd(ctx context.Context, options describeStatsCmdOptions) {
 	pc := sdk.NewPineconeClient(ctx)
 
-	ic, err := sdk.NewIndexConnection(ctx, pc, options.name, "")
+	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, "")
 	if err != nil {
 		msg.FailMsg("Failed to create index connection: %s", err)
 		exit.Error(err, "Failed to create index connection")

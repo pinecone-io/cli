@@ -13,9 +13,9 @@ import (
 )
 
 type deleteVectorsCmdOptions struct {
-	name      string
+	indexName string
 	namespace string
-	ids       []string
+	ids       flags.StringList
 	filter    flags.JSONObject
 	deleteAll bool
 	json      bool
@@ -28,37 +28,30 @@ func NewDeleteVectorsCmd() *cobra.Command {
 		Use:   "delete-vectors",
 		Short: "Delete vectors from an index",
 		Example: help.Examples(`
-			pc index delete-vectors --name my-index --namespace my-namespace --ids my-id
-			pc index delete-vectors --namespace my-namespace --all-vectors
-			pc index delete-vectors --namespace my-namespace --filter '{"genre": "classical"}'
+			pc index delete-vectors --index-name my-index --namespace my-namespace --ids my-id
+			pc index delete-vectors --index-name my-index --namespace my-namespace --all-vectors
+			pc index delete-vectors --index-name my-index --namespace my-namespace --filter '{"genre": "classical"}'
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runDeleteVectorsCmd(cmd.Context(), options)
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of the index to delete vectors from")
+	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of the index to delete vectors from")
 	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to delete vectors from")
-	cmd.Flags().StringSliceVar(&options.ids, "ids", []string{}, "IDs of the vectors to delete")
+	cmd.Flags().Var(&options.ids, "ids", "IDs of the vectors to delete")
 	cmd.Flags().Var(&options.filter, "filter", "filter to delete the vectors with")
 	cmd.Flags().BoolVar(&options.deleteAll, "all-vectors", false, "delete all vectors from the namespace")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
-	_ = cmd.MarkFlagRequired("name")
+	_ = cmd.MarkFlagRequired("index-name")
 
 	return cmd
 }
 
 func runDeleteVectorsCmd(ctx context.Context, options deleteVectorsCmdOptions) {
 	pc := sdk.NewPineconeClient(ctx)
-
-	// Default namespace
-	ns := options.namespace
-	if ns == "" {
-		ns = "__default__"
-	}
-
-	ic, err := sdk.NewIndexConnection(ctx, pc, options.name, ns)
+	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, options.namespace)
 	if err != nil {
 		msg.FailMsg("Failed to create index connection: %s", err)
 		exit.Error(err, "Failed to create index connection")
@@ -72,7 +65,7 @@ func runDeleteVectorsCmd(ctx context.Context, options deleteVectorsCmdOptions) {
 			exit.Error(err, "Failed to delete all vectors in namespace")
 		}
 		if !options.json {
-			msg.SuccessMsg("Deleted all vectors in namespace: %s", ns)
+			msg.SuccessMsg("Deleted all vectors in namespace: %s", options.namespace)
 		}
 		return
 	}
