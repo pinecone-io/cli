@@ -11,6 +11,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
+	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 	"github.com/spf13/cobra"
@@ -89,8 +90,9 @@ func runQueryCmd(ctx context.Context, options queryCmdOptions) {
 
 	// Apply body overlay if provided
 	if options.body != "" {
-		if b, _, err := bodyutil.DecodeBodyArgs[queryBody](options.body); err != nil {
-			exit.Error(err, "Failed to parse query body")
+		if b, src, err := bodyutil.DecodeBodyArgs[queryBody](options.body); err != nil {
+			msg.FailMsg("Failed to parse query body (%s): %s", style.Emphasis(src.Label), err)
+			exit.Errorf(err, "Failed to parse query body (%s): %v", src.Label, err)
 		} else if b != nil {
 			if options.id == "" && b.Id != "" {
 				options.id = b.Id

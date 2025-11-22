@@ -2,9 +2,6 @@ package index
 
 import (
 	"context"
-	"encoding/json"
-	"io"
-	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/bodyutil"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -24,7 +21,6 @@ type upsertBody struct {
 }
 
 type upsertCmdOptions struct {
-	file      string
 	body      string
 	indexName string
 	namespace string
@@ -51,56 +47,21 @@ func NewUpsertCmd() *cobra.Command {
 
 	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of index to upsert into")
 	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to upsert into")
-	cmd.Flags().StringVarP(&options.file, "file", "f", "", "file to upsert from (use - for stdin; only one argument may use stdin)")
 	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON (inline, @path.json, or @- for stdin; only one argument may use stdin)")
 	cmd.Flags().IntVarP(&options.batchSize, "batch-size", "b", 1000, "size of batches to upsert (default: 1000)")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 	_ = cmd.MarkFlagRequired("index-name")
-	cmd.MarkFlagsMutuallyExclusive("file", "body")
+	_ = cmd.MarkFlagRequired("body")
 
 	return cmd
 }
 
 func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
-	var payload upsertBody
-	var src string
-	var err error
-
-	// Prefer --body if provided
-	if options.body != "" {
-		p, s, derr := bodyutil.DecodeBodyArgs[upsertBody](options.body)
-		if derr != nil {
-			msg.FailMsg("Failed to parse upsert body (%s): %s", style.Emphasis(s), derr)
-			exit.Error(derr, "Failed to parse upsert body")
-		}
-		payload = *p
-		src = s
-	} else {
-		// Fallback to --file (required when --body not provided)
-		if options.file == "" {
-			msg.FailMsg("Either --file or --body must be provided")
-			exit.ErrorMsg("Either --file or --body must be provided")
-		}
-		filePath := options.file
-		src = filePath
-		// Support streaming from stdin with "-"
-		var r io.ReadCloser
-		if filePath == "-" {
-			r = io.NopCloser(os.Stdin)
-			src = "stdin"
-		} else {
-			f, oerr := os.Open(filePath)
-			if oerr != nil {
-				msg.FailMsg("Failed to read file %s: %s", style.Emphasis(filePath), oerr)
-				exit.Errorf(oerr, "Failed to read file %s", filePath)
-			}
-			r = f
-		}
-		defer r.Close()
-		if derr := json.NewDecoder(r).Decode(&payload); derr != nil {
-			msg.FailMsg("Failed to parse JSON from %s: %s", style.Emphasis(src), derr)
-			exit.Error(derr, "Failed to parse JSON for upsert")
-		}
+	var payload *upsertBody
+	payload, src, err := bodyutil.DecodeBodyArgs[upsertBody](options.body)
+	if err != nil {
+		msg.FailMsg("Failed to parse upsert body (%s): %s", style.Emphasis(src.Label), err)
+		exit.Error(err, "Failed to parse upsert body")
 	}
 
 	// Get IndexConnection
@@ -112,7 +73,7 @@ func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 	}
 
 	if len(payload.Vectors) == 0 {
-		msg.FailMsg("No vectors found in %s", style.Emphasis(src))
+		msg.FailMsg("No vectors found in %s", style.Emphasis(src.Label))
 		exit.ErrorMsg("No vectors provided for upsert")
 	}
 
