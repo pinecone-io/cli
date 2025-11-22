@@ -103,6 +103,11 @@ func runFetchCmd(ctx context.Context, options fetchCmdOptions) {
 		exit.Error(err, "Failed to create index connection")
 	}
 
+	if options.ids == nil && options.filter == nil {
+		msg.FailMsg("Either --ids or --filter must be provided")
+		exit.ErrorMsg("Either --ids or --filter must be provided")
+	}
+
 	// Fetch vectors by ID
 	if len(options.ids) > 0 {
 		vectors, err := ic.FetchVectors(ctx, []string(options.ids))

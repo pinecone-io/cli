@@ -13,12 +13,12 @@ import (
 )
 
 type deleteVectorsCmdOptions struct {
-	indexName string
-	namespace string
-	ids       flags.StringList
-	filter    flags.JSONObject
-	deleteAll bool
-	json      bool
+	indexName        string
+	namespace        string
+	ids              flags.StringList
+	filter           flags.JSONObject
+	deleteAllVectors bool
+	json             bool
 }
 
 func NewDeleteVectorsCmd() *cobra.Command {
@@ -41,7 +41,7 @@ func NewDeleteVectorsCmd() *cobra.Command {
 	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to delete vectors from")
 	cmd.Flags().Var(&options.ids, "ids", "IDs of the vectors to delete")
 	cmd.Flags().Var(&options.filter, "filter", "filter to delete the vectors with")
-	cmd.Flags().BoolVar(&options.deleteAll, "all-vectors", false, "delete all vectors from the namespace")
+	cmd.Flags().BoolVar(&options.deleteAllVectors, "all-vectors", false, "delete all vectors from the namespace")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	_ = cmd.MarkFlagRequired("index-name")
@@ -57,8 +57,13 @@ func runDeleteVectorsCmd(ctx context.Context, options deleteVectorsCmdOptions) {
 		exit.Error(err, "Failed to create index connection")
 	}
 
+	if options.ids == nil && options.filter == nil && !options.deleteAllVectors {
+		msg.FailMsg("Either --ids, --filter, or --all-vectors must be provided")
+		exit.ErrorMsg("Either --ids, --filter, or --all-vectors must be provided")
+	}
+
 	// Delete all vectors in namespace
-	if options.deleteAll {
+	if options.deleteAllVectors {
 		err = ic.DeleteAllVectorsInNamespace(ctx)
 		if err != nil {
 			msg.FailMsg("Failed to delete all vectors in namespace: %s", err)

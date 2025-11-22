@@ -117,6 +117,11 @@ func runQueryCmd(ctx context.Context, options queryCmdOptions) {
 		}
 	}
 
+	if options.id == "" && options.vector == nil && options.sparseIndices == nil && options.sparseValues == nil && options.filter == nil {
+		msg.FailMsg("Either --id, --vector, --sparse-indices & --sparse-values, or --filter must be provided")
+		exit.ErrorMsg("Either --id, --vector, --sparse-indices & --sparse-values, or --filter must be provided")
+	}
+
 	// Get IndexConnection
 	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, options.namespace)
 	if err != nil {

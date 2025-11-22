@@ -71,6 +71,7 @@ func NewUpdateCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	_ = cmd.MarkFlagRequired("index-name")
+	cmd.MarkFlagsMutuallyExclusive("id", "filter")
 
 	return cmd
 }
@@ -115,11 +116,6 @@ func runUpdateCmd(ctx context.Context, options updateCmdOptions) {
 	if err != nil {
 		msg.FailMsg("Failed to create index connection: %s", err)
 		exit.Error(err, "Failed to create index connection")
-	}
-
-	if options.id != "" && options.filter != nil {
-		msg.FailMsg("ID and filter cannot be used together")
-		exit.ErrorMsg("ID and filter cannot be used together")
 	}
 
 	// Update vector by ID
