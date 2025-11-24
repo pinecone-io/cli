@@ -1,9 +1,12 @@
 package vector
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"io"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/bodyutil"
+	"github.com/pinecone-io/cli/internal/pkg/utils/argio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -38,7 +41,10 @@ func NewUpsertCmd() *cobra.Command {
 			pc index vector upsert --index-name my-index --namespace my-namespace ./vectors.json
 			pc index vector upsert --index-name my-index --namespace my-namespace --file - < ./vectors.json
 			pc index vector upsert --index-name my-index --body @./payload.json
+			pc index vector upsert --index-name my-index --namespace my-namespace @./vectors.jsonl
 			cat payload.json | pc index vector upsert --index-name my-index --body @-
+			
+			Body may be a JSON object with "vectors": [...] or JSONL of Vector objects.
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runUpsertCmd(cmd.Context(), options)
@@ -47,8 +53,8 @@ func NewUpsertCmd() *cobra.Command {
 
 	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of index to upsert into")
 	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to upsert into")
-	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON (inline, @path.json, or @- for stdin; only one argument may use stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
-	cmd.Flags().IntVarP(&options.batchSize, "batch-size", "b", 1000, "size of batches to upsert (default: 1000)")
+	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON or JSONL (inline, @path.json[l], or @- for stdin; only one argument may use stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
+	cmd.Flags().IntVarP(&options.batchSize, "batch-size", "b", 500, "size of batches to upsert (default: 500)")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 	_ = cmd.MarkFlagRequired("index-name")
 	_ = cmd.MarkFlagRequired("body")
@@ -57,8 +63,13 @@ func NewUpsertCmd() *cobra.Command {
 }
 
 func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
-	var payload *upsertBody
-	payload, src, err := bodyutil.DecodeBodyArgs[upsertBody](options.body)
+	b, src, err := argio.ReadAll(options.body, true)
+	if err != nil {
+		msg.FailMsg("Failed to read upsert body (%s): %s", style.Emphasis(src.Label), err)
+		exit.Error(err, "Failed to read upsert body")
+	}
+
+	payload, err := parseUpsertBody(b)
 	if err != nil {
 		msg.FailMsg("Failed to parse upsert body (%s): %s", style.Emphasis(src.Label), err)
 		exit.Error(err, "Failed to parse upsert body")
@@ -123,4 +134,34 @@ func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 			}
 		}
 	}
+}
+
+func parseUpsertBody(b []byte) (*upsertBody, error) {
+	var payload upsertBody
+	// First try and decode as JSON: {"vectors":[...]}
+	{
+		dec := json.NewDecoder(bytes.NewReader(b))
+		dec.DisallowUnknownFields()
+		if err := dec.Decode(&payload); err == nil && len(payload.Vectors) > 0 {
+			return &payload, nil
+		}
+	}
+
+	// Fallback: JSONL/stream of pinecone.Vector values
+	var vectors []pinecone.Vector
+	dec := json.NewDecoder(bytes.NewReader(b))
+	dec.DisallowUnknownFields()
+	for {
+		var v pinecone.Vector
+		if err := dec.Decode(&v); err == io.EOF {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+		vectors = append(vectors, v)
+	}
+	if len(vectors) == 0 {
+		return nil, io.EOF
+	}
+	return &upsertBody{Vectors: vectors}, nil
 }

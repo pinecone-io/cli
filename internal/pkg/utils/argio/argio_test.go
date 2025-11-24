@@ -1,4 +1,4 @@
-package bodyutil
+package argio
 
 import (
 	"io"
@@ -7,7 +7,7 @@ import (
 )
 
 func TestOpenArgReader_Inline(t *testing.T) {
-	rc, src, err := OpenArgReader(`{"a":1}`, true)
+	rc, src, err := OpenReader(`{"a":1}`)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -16,6 +16,19 @@ func TestOpenArgReader_Inline(t *testing.T) {
 	}
 	defer rc.Close()
 	b, _ := io.ReadAll(rc)
+	if !strings.Contains(string(b), `"a":1`) {
+		t.Fatalf("unexpected body %q", string(b))
+	}
+}
+
+func TestReadAll_Inline(t *testing.T) {
+	b, src, err := ReadAll(`{"a":1}`)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if src.Kind != SourceInline || src.Label != "inline" {
+		t.Fatalf("unexpected source: %+v", src)
+	}
 	if !strings.Contains(string(b), `"a":1`) {
 		t.Fatalf("unexpected body %q", string(b))
 	}

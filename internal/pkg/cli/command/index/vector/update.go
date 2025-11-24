@@ -3,7 +3,7 @@ package vector
 import (
 	"context"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/bodyutil"
+	"github.com/pinecone-io/cli/internal/pkg/utils/argio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/flags"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -82,7 +82,7 @@ func runUpdateCmd(ctx context.Context, options updateCmdOptions) {
 
 	// Apply body overlay if provided
 	if options.body != "" {
-		if b, src, err := bodyutil.DecodeBodyArgs[updateBody](options.body); err != nil {
+		if b, src, err := argio.DecodeBodyArgs[updateBody](options.body); err != nil {
 			msg.FailMsg("Failed to parse update body (%s): %s", style.Emphasis(src.Label), err)
 			exit.Errorf(err, "Failed to parse update body (%s): %v", src.Label, err)
 		} else if b != nil {

@@ -1,4 +1,4 @@
-package bodyutil
+package argio
 
 import (
 	"encoding/json"
@@ -24,55 +24,78 @@ type SourceInfo struct {
 	Label string    `json:"label"` // "inline", file path, "stdin"
 }
 
-// OpenArgReader returns an io.ReadCloser for inline/@file/@- with size limits applied.
-// When isBody is true, the body size limit is used, otherwise the flag size limit.
-func OpenArgReader(spec string, isBody bool) (io.ReadCloser, SourceInfo, error) {
+// OpenReader returns an io.ReadCloser for inline/@file/@- values with inputpolicy.MaxBodyJSONBytes limit applied.
+func OpenReader(value string) (io.ReadCloser, SourceInfo, error) {
 	limit := inputpolicy.MaxBodyJSONBytes
 	switch {
-	case spec == "":
+	case value == "": // empty value is inline
 		return nil, SourceInfo{Kind: SourceInline, Label: "inline"}, nil
-	case spec == "@-":
+	case value == "@-": // @- is stdin
 		r, err := stdin.ReaderOnce(limit)
 		if err != nil {
 			return nil, SourceInfo{Kind: SourceStdin, Label: "stdin"}, fmt.Errorf("stdin already consumed; only one argument may use stdin")
 		}
+
 		return r, SourceInfo{Kind: SourceStdin, Label: "stdin"}, nil
-	case len(spec) > 0 && spec[0] == '@':
-		path := spec[1:]
+	case len(value) > 0 && value[0] == '@': // @file is a file
+		path := value[1:]
 		if err := inputpolicy.ValidatePath(path); err != nil {
 			return nil, SourceInfo{Kind: SourceFile, Label: path}, err
 		}
+
 		f, err := os.Open(path)
 		if err != nil {
 			return nil, SourceInfo{Kind: SourceFile, Label: path}, err
 		}
+
 		return struct {
 			io.Reader
 			io.Closer
 		}{Reader: io.LimitReader(f, limit), Closer: f}, SourceInfo{Kind: SourceFile, Label: path}, nil
-	default:
-		return io.NopCloser(strings.NewReader(spec)), SourceInfo{Kind: SourceInline, Label: "inline"}, nil
+	default: // if no stdin and no file, it's inline
+		return io.NopCloser(strings.NewReader(value)), SourceInfo{Kind: SourceInline, Label: "inline"}, nil
 	}
 }
 
-// DecodeBodyArgs unmarshals a JSON body argument (inline/@file/@-) using a bounded reader.
-func DecodeBodyArgs[T any](spec string) (*T, SourceInfo, error) {
-	rc, src, err := OpenArgReader(spec, true)
+// ReadAll reads the entire argument from the inline/@file/@- value into memory using the same limits
+// as OpenReader. The returned bytes are bounded by inputpolicy.MaxBodyJSONBytes.
+func ReadAll(value string) ([]byte, SourceInfo, error) {
+	rc, src, err := OpenReader(value)
 	if err != nil {
 		return nil, src, err
 	}
+	if rc == nil {
+		return nil, src, fmt.Errorf("empty input from %s", src.Label)
+	}
+	defer rc.Close()
+
+	b, err := io.ReadAll(rc)
+	if err != nil {
+		return nil, src, err
+	}
+
+	return b, src, nil
+}
+
+// DecodeBodyArgs unmarshals a JSON body argument (inline/@file/@-) using a bounded reader.
+func DecodeBodyArgs[T any](value string) (*T, SourceInfo, error) {
+	rc, src, err := OpenReader(value)
+	if err != nil {
+		return nil, src, err
+	}
+
 	var closer io.Closer
 	if rc != nil {
 		closer = rc
 		defer closer.Close()
 	}
+
 	dec := json.NewDecoder(rc)
 	dec.DisallowUnknownFields()
 	var out T
 	if err := dec.Decode(&out); err != nil {
 		return nil, src, fmt.Errorf("invalid JSON from %s: %w", src.Label, err)
 	}
+
 	return &out, src, nil
 }
-
-// NOTE: we intentionally import strings and use strings.NewReader for clarity.

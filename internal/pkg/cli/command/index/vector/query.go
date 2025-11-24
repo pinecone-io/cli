@@ -3,7 +3,7 @@ package vector
 import (
 	"context"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/bodyutil"
+	"github.com/pinecone-io/cli/internal/pkg/utils/argio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/flags"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -90,7 +90,7 @@ func runQueryCmd(ctx context.Context, options queryCmdOptions) {
 
 	// Apply body overlay if provided
 	if options.body != "" {
-		if b, src, err := bodyutil.DecodeBodyArgs[queryBody](options.body); err != nil {
+		if b, src, err := argio.DecodeBodyArgs[queryBody](options.body); err != nil {
 			msg.FailMsg("Failed to parse query body (%s): %s", style.Emphasis(src.Label), err)
 			exit.Errorf(err, "Failed to parse query body (%s): %v", src.Label, err)
 		} else if b != nil {
