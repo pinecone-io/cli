@@ -1,4 +1,4 @@
-package index
+package vector
 
 import (
 	"context"
@@ -41,14 +41,14 @@ func NewFetchCmd() *cobra.Command {
 		Use:   "fetch",
 		Short: "Fetch vectors by ID or metadata filter from an index",
 		Example: help.Examples(`
-			pc index fetch --index-name my-index --ids '["123","456","789"]'
-			pc index fetch --index-name my-index --ids @./ids.json
+			pc index vector fetch --index-name my-index --ids '["123","456","789"]'
+			pc index vector fetch --index-name my-index --ids @./ids.json
 
-			pc index fetch --index-name my-index --filter '{"key": "value"}'
-			pc index fetch --index-name my-index --filter @./filter.json
+			pc index vector fetch --index-name my-index --filter '{"key": "value"}'
+			pc index vector fetch --index-name my-index --filter @./filter.json
 
-			pc index fetch --index-name my-index --body @./fetch.json
-			cat fetch.json | pc index fetch --index-name my-index --body @-
+			pc index vector fetch --index-name my-index --body @./fetch.json
+			cat fetch.json | pc index vector fetch --index-name my-index --body @-
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runFetchCmd(cmd.Context(), options)

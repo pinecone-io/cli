@@ -1,4 +1,4 @@
-package index
+package vector
 
 import (
 	"context"
@@ -25,10 +25,10 @@ type listVectorsCmdOptions struct {
 func NewListVectorsCmd() *cobra.Command {
 	options := listVectorsCmdOptions{}
 	cmd := &cobra.Command{
-		Use:   "list-vectors",
+		Use:   "list",
 		Short: "List vectors in an index",
 		Example: help.Examples(`
-			pc index list-vectors --index-name my-index --namespace my-namespace
+			pc index vector list --index-name my-index --namespace my-namespace
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runListVectorsCmd(cmd.Context(), options)

@@ -1,4 +1,4 @@
-package index
+package vector
 
 import (
 	"context"
@@ -25,12 +25,12 @@ func NewDeleteVectorsCmd() *cobra.Command {
 	options := deleteVectorsCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "delete-vectors",
+		Use:   "delete",
 		Short: "Delete vectors from an index",
 		Example: help.Examples(`
-			pc index delete-vectors --index-name my-index --namespace my-namespace --ids my-id
-			pc index delete-vectors --index-name my-index --namespace my-namespace --all-vectors
-			pc index delete-vectors --index-name my-index --namespace my-namespace --filter '{"genre": "classical"}'
+			pc index vector delete --index-name my-index --namespace my-namespace --ids my-id
+			pc index vector delete --index-name my-index --namespace my-namespace --all-vectors
+			pc index vector delete --index-name my-index --namespace my-namespace --filter '{"genre": "classical"}'
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runDeleteVectorsCmd(cmd.Context(), options)

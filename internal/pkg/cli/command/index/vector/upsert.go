@@ -1,4 +1,4 @@
-package index
+package vector
 
 import (
 	"context"
@@ -32,13 +32,13 @@ func NewUpsertCmd() *cobra.Command {
 	options := upsertCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "upsert [file]",
+		Use:   "upsert",
 		Short: "Upsert vectors into an index from a JSON file",
 		Example: help.Examples(`
-			pc index upsert --index-name my-index --namespace my-namespace ./vectors.json
-			pc index upsert --index-name my-index --namespace my-namespace --file - < ./vectors.json
-			pc index upsert --index-name my-index --body @./payload.json
-			cat payload.json | pc index upsert --index-name my-index --body @-
+			pc index vector upsert --index-name my-index --namespace my-namespace ./vectors.json
+			pc index vector upsert --index-name my-index --namespace my-namespace --file - < ./vectors.json
+			pc index vector upsert --index-name my-index --body @./payload.json
+			cat payload.json | pc index vector upsert --index-name my-index --body @-
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runUpsertCmd(cmd.Context(), options)

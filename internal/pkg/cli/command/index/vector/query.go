@@ -1,4 +1,4 @@
-package index
+package vector
 
 import (
 	"context"
@@ -48,18 +48,18 @@ func NewQueryCmd() *cobra.Command {
 		Use:   "query",
 		Short: "Query an index by vector values",
 		Example: help.Examples(`
-			pc index query --index-name my-index --id doc-123 --top-k 10 --include-metadata
+			pc index vector query --index-name my-index --id doc-123 --top-k 10 --include-metadata
 		
-			pc index query --index-name my-index --vector '[0.1, 0.2, 0.3]' --top-k 25
-			pc index query --index-name my-index --vector @./vector.json --top-k 25 --include-metadata
-			jq -c '.embedding' doc.json | pc index query --index-name my-index --vector @- --top-k 20
+			pc index vector query --index-name my-index --vector '[0.1, 0.2, 0.3]' --top-k 25
+			pc index vector query --index-name my-index --vector @./vector.json --top-k 25 --include-metadata
+			jq -c '.embedding' doc.json | pc index vector query --index-name my-index --vector @- --top-k 20
 		
-			pc index query --index-name my-index --sparse-indices @./indices.json --sparse-values @./values.json --top-k 15
+			pc index vector query --index-name my-index --sparse-indices @./indices.json --sparse-values @./values.json --top-k 15
 		
-			pc index query --index-name my-index --vector @./vector.json --filter '{"genre":"sci-fi"}' --include-metadata
+			pc index vector query --index-name my-index --vector @./vector.json --filter '{"genre":"sci-fi"}' --include-metadata
 		
-			pc index query --index-name my-index --body @./query.json
-			cat query.json | pc index query --index-name my-index --body @-
+			pc index vector query --index-name my-index --body @./query.json
+			cat query.json | pc index vector query --index-name my-index --body @-
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runQueryCmd(cmd.Context(), options)

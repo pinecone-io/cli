@@ -1,4 +1,4 @@
-package index
+package vector
 
 import (
 	"context"
@@ -47,12 +47,12 @@ func NewUpdateCmd() *cobra.Command {
 		Use:   "update",
 		Short: "Update a vector by ID, or a set of vectors by metadata filter",
 		Example: help.Examples(`
-			pc index update --index-name my-index --id doc-123 --values '[0.1, 0.2, 0.3]'
-			pc index update --index-name my-index --id doc-123 --sparse-indices @./indices.json --sparse-values @./values.json
-			pc index update --index-name my-index --id doc-123 --metadata '{"genre":"sci-fi"}'
-			pc index update --index-name my-index --filter '{"genre":"sci-fi"}' --metadata '{"genre":"fantasy"}' --dry-run
-			pc index update --index-name my-index --body @./update.json
-			cat update.json | pc index update --index-name my-index --body @-
+			pc index vector update --index-name my-index --id doc-123 --values '[0.1, 0.2, 0.3]'
+			pc index vector update --index-name my-index --id doc-123 --sparse-indices @./indices.json --sparse-values @./values.json
+			pc index vector update --index-name my-index --id doc-123 --metadata '{"genre":"sci-fi"}'
+			pc index vector update --index-name my-index --filter '{"genre":"sci-fi"}' --metadata '{"genre":"fantasy"}' --dry-run
+			pc index vector update --index-name my-index --body @./update.json
+			cat update.json | pc index vector update --index-name my-index --body @-
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runUpdateCmd(cmd.Context(), options)
