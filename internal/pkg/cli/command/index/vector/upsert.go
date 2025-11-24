@@ -63,7 +63,7 @@ func NewUpsertCmd() *cobra.Command {
 }
 
 func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
-	b, src, err := argio.ReadAll(options.body, true)
+	b, src, err := argio.ReadAll(options.body)
 	if err != nil {
 		msg.FailMsg("Failed to read upsert body (%s): %s", style.Emphasis(src.Label), err)
 		exit.Error(err, "Failed to read upsert body")
