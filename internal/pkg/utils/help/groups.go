@@ -30,4 +30,8 @@ var (
 		ID:    "vectordb",
 		Title: style.Heading("Vector Database Commands"),
 	}
+	GROUP_INDEX_DATA = &cobra.Group{
+		ID:    "index-data",
+		Title: style.Heading("Index Data Commands"),
+	}
 )

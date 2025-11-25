@@ -1,6 +1,7 @@
 package index
 
 import (
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/index/vector"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/spf13/cobra"
 )
@@ -39,6 +40,10 @@ func NewIndexCmd() *cobra.Command {
 	cmd.AddCommand(NewCreatePodCmd())
 	cmd.AddCommand(NewConfigureIndexCmd())
 	cmd.AddCommand(NewDeleteCmd())
+	cmd.AddCommand(NewDescribeIndexStatsCmd())
+
+	cmd.AddGroup(help.GROUP_INDEX_DATA)
+	cmd.AddCommand(vector.NewVectorCmd())
 
 	return cmd
 }
