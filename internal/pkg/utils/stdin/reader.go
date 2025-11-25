@@ -38,9 +38,3 @@ func ReaderOnce(limit int64) (io.ReadCloser, error) {
 	}
 	return io.NopCloser(r), nil
 }
-
-// HasPipedStdin returns true if stdin is a pipe (not a TTY).
-func HasPipedStdin() bool {
-	fi, _ := os.Stdin.Stat()
-	return fi != nil && (fi.Mode()&os.ModeCharDevice) == 0
-}

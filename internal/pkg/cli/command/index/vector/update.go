@@ -17,7 +17,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type updateBody struct {
+// UpdateBody is the JSON payload schema for --body.
+// Fields: id, values, sparse_values (https://pkg.go.dev/github.com/pinecone-io/go-pinecone/v5/pinecone#SparseValues),
+// metadata, filter, dry_run.
+type UpdateBody struct {
 	Id           string                 `json:"id"`
 	Values       []float32              `json:"values"`
 	SparseValues *pinecone.SparseValues `json:"sparse_values"`
@@ -89,7 +92,7 @@ func runUpdateCmd(ctx context.Context, options updateCmdOptions) {
 
 	// Apply body overlay if provided
 	if options.body != "" {
-		if b, src, err := argio.DecodeBodyArgs[updateBody](options.body); err != nil {
+		if b, src, err := argio.DecodeJSONArg[UpdateBody](options.body); err != nil {
 			msg.FailMsg("Failed to parse update body (%s): %s", style.Emphasis(src.Label), err)
 			exit.Errorf(err, "Failed to parse update body (%s): %v", src.Label, err)
 		} else if b != nil {

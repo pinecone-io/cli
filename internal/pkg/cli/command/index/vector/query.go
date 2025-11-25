@@ -17,7 +17,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type queryBody struct {
+// QueryBody is the JSON payload schema for --body.
+// Fields: id, vector, sparse_values (https://pkg.go.dev/github.com/pinecone-io/go-pinecone/v5/pinecone#SparseValues),
+// filter, top_k, include_values, include_metadata.
+type QueryBody struct {
 	Id              string                 `json:"id"`
 	Vector          []float32              `json:"vector"`
 	SparseValues    *pinecone.SparseValues `json:"sparse_values"`
@@ -101,7 +104,7 @@ func runQueryCmd(ctx context.Context, options queryCmdOptions) {
 
 	// Apply body overlay if provided
 	if options.body != "" {
-		if b, src, err := argio.DecodeBodyArgs[queryBody](options.body); err != nil {
+		if b, src, err := argio.DecodeJSONArg[QueryBody](options.body); err != nil {
 			msg.FailMsg("Failed to parse query body (%s): %s", style.Emphasis(src.Label), err)
 			exit.Errorf(err, "Failed to parse query body (%s): %v", src.Label, err)
 		} else if b != nil {

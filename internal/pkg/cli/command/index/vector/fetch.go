@@ -17,7 +17,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type fetchBody struct {
+// FetchBody is the JSON payload schema for --body.
+// Fields: ids, filter, limit, pagination_token.
+// When ids are provided, pagination fields are not applicable.
+type FetchBody struct {
 	Ids             []string       `json:"ids"`
 	Filter          map[string]any `json:"filter"`
 	Limit           *uint32        `json:"limit"`
@@ -82,7 +85,7 @@ func runFetchCmd(ctx context.Context, options fetchCmdOptions) {
 
 	// Apply body overlay if provided
 	if options.body != "" {
-		if b, src, err := argio.DecodeBodyArgs[fetchBody](options.body); err != nil {
+		if b, src, err := argio.DecodeJSONArg[FetchBody](options.body); err != nil {
 			msg.FailMsg("Failed to parse fetch body (%s): %s", style.Emphasis(src.Label), err)
 			exit.Errorf(err, "Failed to parse fetch body (%s): %v", src.Label, err)
 		} else if b != nil {

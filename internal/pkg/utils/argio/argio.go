@@ -57,8 +57,7 @@ func OpenReader(value string) (io.ReadCloser, SourceInfo, error) {
 	}
 }
 
-// ReadAll reads the entire argument from the inline/@file/@- value into memory using the same limits
-// as OpenReader. The returned bytes are bounded by inputpolicy.MaxBodyJSONBytes.
+// ReadAll reads the entire argument from the inline/@file/@- value into memory using a bounded reader.
 func ReadAll(value string) ([]byte, SourceInfo, error) {
 	rc, src, err := OpenReader(value)
 	if err != nil {
@@ -77,8 +76,8 @@ func ReadAll(value string) ([]byte, SourceInfo, error) {
 	return b, src, nil
 }
 
-// DecodeBodyArgs unmarshals a JSON body argument (inline/@file/@-) using a bounded reader.
-func DecodeBodyArgs[T any](value string) (*T, SourceInfo, error) {
+// DecodeJSONArg unmarshals a JSON argument from the inline/@file/@- value into a generic type using a bounded reader.
+func DecodeJSONArg[T any](value string) (*T, SourceInfo, error) {
 	rc, src, err := OpenReader(value)
 	if err != nil {
 		return nil, src, err

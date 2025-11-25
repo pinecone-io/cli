@@ -8,21 +8,24 @@ import (
 	"strings"
 )
 
+// Default maximum JSON size allowed for input.
 const (
-	DefaultMaxBodyJSONBytes int64 = 1 << 30 // 1 GiB default cap
+	DefaultMaxJSONBytes int64 = 1 << 30 // 1 GiB default cap
 )
 
 var (
 	// Limits can be overridden via env vars at process start.
-	MaxBodyJSONBytes int64 = parseSizeFromEnv("PC_CLI_MAX_JSON_BYTES", DefaultMaxBodyJSONBytes)
+	MaxBodyJSONBytes int64 = parseSizeFromEnv("PC_CLI_MAX_JSON_BYTES", DefaultMaxJSONBytes)
 )
 
+// parseSizeFromEnv parses a size from an environment variable with a default value.
+// Supports simple suffixes: k, m, g (base 1024).
 func parseSizeFromEnv(key string, def int64) int64 {
 	val := strings.TrimSpace(os.Getenv(key))
 	if val == "" {
 		return def
 	}
-	// support simple suffixes: k, m, g (base 1024)
+	// simple suffixes: k, m, g (base 1024)
 	mult := int64(1)
 	switch last := strings.ToLower(val[len(val)-1:]); last {
 	case "k":
@@ -42,8 +45,11 @@ func parseSizeFromEnv(key string, def int64) int64 {
 	return n * mult
 }
 
-// Minimal path validation: must exist, not be a directory, and be a regular file.
-// Symlinks are resolved before checking.
+// ValidatePath validates a file path:
+// - symlinks are resolved before checking
+// - must exist
+// - not a directory
+// - is a regular file
 func ValidatePath(path string) error {
 	resolved, err := filepath.EvalSymlinks(path)
 	if err != nil {
@@ -51,7 +57,7 @@ func ValidatePath(path string) error {
 	}
 	info, err := os.Stat(resolved)
 	if err != nil {
-		return fmt.Errorf("failed to stat path %s: %w", resolved, err)
+		return fmt.Errorf("failed to describe path %s: %w", resolved, err)
 	}
 	if info.IsDir() {
 		return fmt.Errorf("path %s is a directory", resolved)

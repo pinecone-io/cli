@@ -19,7 +19,11 @@ import (
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
 
-type upsertBody struct {
+// UpsertBody is the JSON payload for --body.
+// It accepts either {"vectors": [...]} with elements shaped like pinecone.Vector
+// (see https://pkg.go.dev/github.com/pinecone-io/go-pinecone/v5/pinecone#Vector),
+// or a JSONL stream of pinecone.Vector objects.
+type UpsertBody struct {
 	Vectors []pinecone.Vector `json:"vectors"`
 }
 
@@ -42,6 +46,8 @@ func NewUpsertCmd() *cobra.Command {
 			
 			The request --body may be a JSON object containing "vectors": [...] or a JSONL stream of Vector objects.
 			Control batch size with --batch-size. Bodies can be inline JSON, loaded via @file, or read from stdin with @-.
+
+			Body schema: UpsertBody (vectors shaped like pinecone.Vector: https://pkg.go.dev/github.com/pinecone-io/go-pinecone/v5/pinecone#Vector)
 		`),
 		Example: help.Examples(`
 			pc index vector upsert --index-name my-index --namespace my-namespace --body @./vectors.json
@@ -138,8 +144,8 @@ func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 	}
 }
 
-func parseUpsertBody(b []byte) (*upsertBody, error) {
-	var payload upsertBody
+func parseUpsertBody(b []byte) (*UpsertBody, error) {
+	var payload UpsertBody
 	// First try and decode as JSON: {"vectors":[...]}
 	{
 		dec := json.NewDecoder(bytes.NewReader(b))
@@ -165,5 +171,5 @@ func parseUpsertBody(b []byte) (*upsertBody, error) {
 	if len(vectors) == 0 {
 		return nil, io.EOF
 	}
-	return &upsertBody{Vectors: vectors}, nil
+	return &UpsertBody{Vectors: vectors}, nil
 }

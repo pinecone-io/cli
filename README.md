@@ -219,6 +219,15 @@ NOTE: stdin can only be used with one flag at a time.
 
 ## Data plane quickstart (end-to-end)
 
+### Body JSON schemas
+
+For commands that accept a `--body` JSON payload, the CLI uses these schemas:
+
+- UpsertBody — vectors of `pinecone.Vector` (see `https://pkg.go.dev/github.com/pinecone-io/go-pinecone/v5/pinecone#Vector`)
+- QueryBody — fields: id, vector, `sparse_values` (see `https://pkg.go.dev/github.com/pinecone-io/go-pinecone/v5/pinecone#SparseValues`), filter, top_k, include_values, include_metadata
+- FetchBody — fields: ids, filter, limit, pagination_token
+- UpdateBody — fields: id, values, `sparse_values` (see `https://pkg.go.dev/github.com/pinecone-io/go-pinecone/v5/pinecone#SparseValues`), metadata, filter, dry_run
+
 The following walkthrough creates an index, ingests vectors, and runs queries.
 
 Prepare sample vectors (JSONL)
