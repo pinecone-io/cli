@@ -40,6 +40,13 @@ func NewFetchCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fetch",
 		Short: "Fetch vectors by ID or metadata filter from an index",
+		Long: help.Long(`
+			Fetch vectors from an index either by explicit IDs or by a metadata filter with optional pagination.
+
+			When using --ids, pagination flags (--limit, --pagination-token) are not applicable.
+			JSON inputs may be inline, loaded from a file with @path, or read from stdin with @-.
+			A --body payload can supply ids, filter, limit, and pagination_token fields. Flags win if both are provided.
+		`),
 		Example: help.Examples(`
 			pc index vector fetch --index-name my-index --ids '["123","456","789"]'
 			pc index vector fetch --index-name my-index --ids @./ids.json

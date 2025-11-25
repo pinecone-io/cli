@@ -27,6 +27,12 @@ func NewDeleteVectorsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete vectors from an index",
+		Long: help.Long(`
+			Delete vectors from an index namespace by explicit IDs, a metadata filter, or delete all vectors in the namespace.
+
+			Provide exactly one of: --ids, --filter, or --all-vectors.
+			--ids and --filter flags support inline JSON, @path.json, or @- to read from stdin.
+		`),
 		Example: help.Examples(`
 			pc index vector delete --index-name my-index --namespace my-namespace --ids my-id
 			pc index vector delete --index-name my-index --namespace my-namespace --all-vectors

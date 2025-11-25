@@ -36,15 +36,17 @@ func NewUpsertCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "upsert",
-		Short: "Upsert vectors into an index from a JSON file",
-		Example: help.Examples(`
-			pc index vector upsert --index-name my-index --namespace my-namespace ./vectors.json
-			pc index vector upsert --index-name my-index --namespace my-namespace --file - < ./vectors.json
-			pc index vector upsert --index-name my-index --body @./payload.json
-			pc index vector upsert --index-name my-index --namespace my-namespace @./vectors.jsonl
-			cat payload.json | pc index vector upsert --index-name my-index --body @-
+		Short: "Upsert vectors into an index from a JSON/JSONL file",
+		Long: help.Long(`
+			Upsert vectors into an index namespace from a JSON or JSONL payload.
 			
-			Body may be a JSON object with "vectors": [...] or JSONL of Vector objects.
+			The request --body may be a JSON object containing "vectors": [...] or a JSONL stream of Vector objects.
+			Control batch size with --batch-size. Bodies can be inline JSON, loaded via @file, or read from stdin with @-.
+		`),
+		Example: help.Examples(`
+			pc index vector upsert --index-name my-index --namespace my-namespace --body @./vectors.json
+			pc index vector upsert --index-name my-index --namespace my-namespace --body @./vectors.jsonl
+			cat payload.json | pc index vector upsert --index-name my-index --namespace my-namespace --body @-
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runUpsertCmd(cmd.Context(), options)

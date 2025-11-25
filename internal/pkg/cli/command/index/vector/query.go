@@ -47,6 +47,17 @@ func NewQueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query",
 		Short: "Query an index by vector values",
+		Long: help.Long(`
+			Query vectors in an index by dense or sparse vector values, or by vector ID..
+
+			Use --top-k to control result count and --include-values/--include-metadata to enrich results.
+			An optional metadata filter can be used to filter the results.
+
+			JSON inputs may be inline, loaded from a file with @path, or read from stdin with @-.
+
+			When providing sparse values, both --sparse-indices and --sparse-values must be present.
+			A --body payload can pass id, vector, sparse_values, filter, top_k, include_values, and include_metadata.
+		`),
 		Example: help.Examples(`
 			pc index vector query --index-name my-index --id doc-123 --top-k 10 --include-metadata
 		

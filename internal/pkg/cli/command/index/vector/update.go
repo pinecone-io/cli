@@ -46,6 +46,13 @@ func NewUpdateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update a vector by ID, or a set of vectors by metadata filter",
+		Long: help.Long(`
+			Update a single vector by ID (values, sparse values, metadata) or update metadata for all vectors matching a metadata filter.
+
+			Use --dry-run with --filter updates to preview how many records would be updated.
+			JSON inputs may be inline, @file, or @- for stdin.
+			A --body payload can supply id, values, sparse_values, metadata, filter, and dry_run fields.
+		`),
 		Example: help.Examples(`
 			pc index vector update --index-name my-index --id doc-123 --values '[0.1, 0.2, 0.3]'
 			pc index vector update --index-name my-index --id doc-123 --sparse-indices @./indices.json --sparse-values @./values.json

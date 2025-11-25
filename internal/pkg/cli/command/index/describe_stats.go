@@ -26,6 +26,12 @@ func NewDescribeIndexStatsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe-stats",
 		Short: "Describe the stats of an index",
+		Long: help.Long(`
+			Return index statistics including dimension, total vector count, namespaces summary, and metadata field counts.
+			Use an optional metadata filter to restrict the scope of counts.
+
+			JSON input may be inline, loaded from a file with @path, or read from stdin with @-.
+		`),
 		Example: help.Examples(`
 			pc index describe-stats --index-name "index-name"
 			pc index describe-stats --index-name "index-name" --filter '{"k":"v"}'
