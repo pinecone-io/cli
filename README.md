@@ -97,11 +97,11 @@ There are three ways to authenticate the Pinecone CLI: through a web browser wit
 
 This table describes the Pinecone operations supported by each authentication method:
 
-| Method          | Admin API | Control plane |
-| :-------------- | :-------- | :------------ |
-| User login      | ✅        | ✅            |
-| Service account | ✅        | ✅            |
-| API key         | ❌        | ✅            |
+| Method          | Admin API | Control plane | Data plane |
+| :-------------- | :-------- | :------------ | :--------- |
+| User login      | ✅        | ✅            | ✅         |
+| Service account | ✅        | ✅            | ✅         |
+| API key         | ❌        | ✅            | ✅         |
 
 - Admin API–related commands (organization and project management, API key operations):
 
@@ -110,7 +110,12 @@ This table describes the Pinecone operations supported by each authentication me
   - `pc api-key` (`create`, `list`, `describe`, `update`, `delete`)
 
 - Control plane–related commands (index management):
-  - `pc index` (`create`, `list`, `describe`, `configure`, `delete`)
+
+  - `pc index` (`create`, `list`, `describe`, `configure`, `delete`, `describe-stats`)
+
+- Data plane-related commands (index data management):
+
+  - `pc index vector` (`upsert`, `query`, `fetch`, `list`, `update`, `delete`)
 
 ### 1. User Login (Recommended for Interactive use)
 
@@ -158,6 +163,22 @@ pc config set-api-key "YOUR_API_KEY"
 
 For more detailed information, see the [CLI authentication](https://docs.pinecone.io/reference/cli/authentication) documentation.
 
+## Data plane commands overview
+
+Work with your vector data inside an index. These commands require `--index-name` and optionally `--namespace`:
+
+- Ingest and manage records:
+  - `pc index vector upsert` — insert or update vectors from JSON/JSONL
+  - `pc index vector list` — list vectors (with pagination)
+  - `pc index vector fetch` — fetch by IDs or metadata filter
+  - `pc index vector update` — update a vector by ID or update many via metadata filter
+  - `pc index vector delete` — delete by IDs, by filter, or delete all in a namespace
+  - `pc index vector query` — nearest-neighbor search by values or vector ID
+- Index statistics:
+  - `pc index describe-stats` — show dimension, vector counts, namespace summary, and metadata field counts (optionally filtered)
+
+Tip: add `--json` to many commands to get structured output.
+
 ## Quickstart
 
 After installing the CLI, authenticate with user login or set an API key, verify your auth status, and list indexes associated with your automatically targeted project.
@@ -175,4 +196,75 @@ pc auth status
 
 # List your indexes
 pc index list
+```
+
+### JSON input formats
+
+Many flags accept JSON in three forms:
+
+- Inline JSON for smaller payloads, for example:
+  ```bash
+  pc index vector fetch --index-name my-index --namespace demo --ids '["vec-1","vec-2"]'
+  ```
+- From a file with `@path`:
+  ```bash
+  pc index vector upsert --index-name my-index --namespace demo --body @./vectors.jsonl
+  ```
+- From stdin with `@-`:
+  ```bash
+  cat vectors.jsonl | pc index vector upsert --index-name my-index --namespace demo --body @-
+  ```
+
+NOTE: stdin can only be used with one flag at a time.
+
+## Data plane quickstart (end-to-end)
+
+The following walkthrough creates an index, ingests vectors, and runs queries.
+
+Prepare sample vectors (JSONL)
+
+Create a file named `vectors.jsonl` with two lines:
+
+```json
+{"id":"vec-1","values":[0.1,0.2,0.3],"metadata":{"genre":"sci-fi","title":"Voyager"}}
+{"id":"vec-2","values":[0.3,0.1,0.2],"metadata":{"genre":"fantasy","title":"Dragon"}}
+```
+
+Alternatively, you can upsert using a JSON object with a `vectors` array:
+
+```json
+{
+  "vectors": [
+    {
+      "id": "vec-1",
+      "values": [0.1, 0.2, 0.3],
+      "metadata": { "genre": "sci-fi", "title": "Voyager" }
+    },
+    {
+      "id": "vec-2",
+      "values": [0.3, 0.1, 0.2],
+      "metadata": { "genre": "fantasy", "title": "Dragon" }
+    }
+  ]
+}
+```
+
+```bash
+# Create a serverless index
+pc index create --name my-index --dimension 3 --metric cosine --cloud aws --region us-east-1
+
+# Upsert vectors into the index via JSON or JSONL
+pc index vector upsert --index-name my-index --namespace my-namespace --body @./vectors.jsonl
+
+# List vectors
+pc index vector list --index-name my-index --namespace my-namespace
+
+# Fetch a vector by ID
+pc index vector fetch --index-name my-index --namespace my-namespace --ids '["vec-1"]'
+
+# Query by dense vector values
+pc index vector query --index-name my-index --namespace my-namespace --vector '[0.1,0.2,0.3]' --top-k 3 --include-metadata
+
+# Query by existing vector ID
+pc index vector query --index-name my-index --namespace my-namespace --id vec-1 --top-k 3
 ```
