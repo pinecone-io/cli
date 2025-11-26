@@ -41,6 +41,10 @@ func NewFetchVectorsResultsFromFetchByMetadata(resp *pinecone.FetchVectorsByMeta
 
 func PrintFetchVectorsTable(results *FetchVectorsResults) {
 	writer := NewTabWriter()
+	if results == nil {
+		PrintEmptyState(writer, "vector data")
+		return
+	}
 
 	// Header Block
 	if results.Namespace != "" {

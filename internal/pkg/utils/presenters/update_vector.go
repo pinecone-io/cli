@@ -9,6 +9,10 @@ import (
 
 func PrintUpdateVectorsByMetadataTable(resp *pinecone.UpdateVectorsByMetadataResponse) {
 	writer := NewTabWriter()
+	if resp == nil {
+		PrintEmptyState(writer, "update results")
+		return
+	}
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
 	header := strings.Join(columns, "\t") + "\n"

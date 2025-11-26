@@ -18,11 +18,16 @@ func labelUnsetIfEmpty(value string) string {
 }
 
 func PrintTargetContext(context *state.TargetContext) {
+	writer := NewTabWriter()
+	if context == nil {
+		PrintEmptyState(writer, "target context")
+		return
+	}
+
 	log.Info().
 		Str("org", string(context.Organization.Name)).
 		Str("project", string(context.Project.Name)).
 		Msg("Printing target context")
-	writer := NewTabWriter()
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
 	header := strings.Join(columns, "\t") + "\n"

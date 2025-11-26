@@ -9,6 +9,10 @@ import (
 
 func PrintDescribeIndexStatsTable(resp *pinecone.DescribeIndexStatsResponse) {
 	writer := NewTabWriter()
+	if resp == nil {
+		PrintEmptyState(writer, "index stats")
+		return
+	}
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
 	header := strings.Join(columns, "\t") + "\n"

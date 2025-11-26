@@ -10,6 +10,11 @@ import (
 
 func PrintDescribeAPIKeyWithSecretTable(apiKey *pinecone.APIKeyWithSecret) {
 	writer := NewTabWriter()
+	if apiKey == nil {
+		PrintEmptyState(writer, "API key details")
+		return
+	}
+
 	log.Debug().Str("name", apiKey.Key.Name).Msg("Printing API key description")
 
 	columns := []string{"ATTRIBUTE", "VALUE"}

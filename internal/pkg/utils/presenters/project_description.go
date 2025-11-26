@@ -11,6 +11,11 @@ import (
 
 func PrintDescribeProjectTable(proj *pinecone.Project) {
 	writer := NewTabWriter()
+	if proj == nil {
+		PrintEmptyState(writer, "project details")
+		return
+	}
+
 	log.Debug().Str("name", proj.Name).Msg("Printing project description")
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
