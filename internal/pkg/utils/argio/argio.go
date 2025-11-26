@@ -33,11 +33,11 @@ func OpenReader(value string) (io.ReadCloser, SourceInfo, error) {
 	limit := inputpolicy.MaxBodyJSONBytes
 	switch {
 	case value == "": // empty value is inline
-		return nil, SourceInfo{Kind: SourceInline, Label: "inline"}, nil
+		return io.NopCloser(strings.NewReader("")), SourceInfo{Kind: SourceInline, Label: "inline"}, nil
 	case value == "-": // stdin
 		r, err := stdin.ReaderOnce(limit)
 		if err != nil {
-			return nil, SourceInfo{Kind: SourceStdin, Label: "stdin"}, fmt.Errorf("stdin already consumed; only one argument may use stdin")
+			return nil, SourceInfo{Kind: SourceStdin, Label: "stdin"}, fmt.Errorf("stdin already consumed by another argument; only one --flag argument may use '-'")
 		}
 
 		return r, SourceInfo{Kind: SourceStdin, Label: "stdin"}, nil
