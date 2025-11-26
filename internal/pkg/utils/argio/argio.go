@@ -37,7 +37,7 @@ func OpenReader(value string) (io.ReadCloser, SourceInfo, error) {
 	case value == "-": // stdin
 		r, err := stdin.ReaderOnce(limit)
 		if err != nil {
-			return nil, SourceInfo{Kind: SourceStdin, Label: "stdin"}, fmt.Errorf("stdin already consumed by another argument; only one --flag argument may use '-'")
+			return nil, SourceInfo{Kind: SourceStdin, Label: "stdin"}, fmt.Errorf("stdin already consumed; only one argument may use '-' per command")
 		}
 
 		return r, SourceInfo{Kind: SourceStdin, Label: "stdin"}, nil
@@ -53,9 +53,6 @@ func ReadAll(value string) ([]byte, SourceInfo, error) {
 	rc, src, err := OpenReader(value)
 	if err != nil {
 		return nil, src, err
-	}
-	if rc == nil {
-		return nil, src, fmt.Errorf("empty input from %s", src.Label)
 	}
 	defer rc.Close()
 
