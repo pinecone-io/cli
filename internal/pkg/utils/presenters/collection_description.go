@@ -11,6 +11,11 @@ import (
 
 func PrintDescribeCollectionTable(coll *pinecone.Collection) {
 	writer := NewTabWriter()
+	if coll == nil {
+		PrintEmptyState(writer, "collection details")
+		return
+	}
+
 	log.Debug().Str("name", coll.Name).Msg("Printing collection description")
 
 	columns := []string{"ATTRIBUTE", "VALUE"}

@@ -9,6 +9,10 @@ import (
 
 func PrintListVectorsTable(resp *pinecone.ListVectorsResponse) {
 	writer := NewTabWriter()
+	if resp == nil {
+		PrintEmptyState(writer, "vector IDs")
+		return
+	}
 
 	// Header block
 	if resp.Namespace != "" {

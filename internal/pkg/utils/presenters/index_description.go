@@ -32,6 +32,11 @@ func ColorizeDeletionProtection(deletionProtection pinecone.DeletionProtection) 
 
 func PrintDescribeIndexTable(idx *pinecone.Index) {
 	writer := NewTabWriter()
+	if idx == nil {
+		PrintEmptyState(writer, "index details")
+		return
+	}
+
 	log.Debug().Str("name", idx.Name).Msg("Printing index description")
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
@@ -44,29 +49,57 @@ func PrintDescribeIndexTable(idx *pinecone.Index) {
 	pcio.Fprintf(writer, "Deletion Protection\t%s\n", ColorizeDeletionProtection(idx.DeletionProtection))
 	pcio.Fprintf(writer, "Vector Type\t%s\n", DisplayOrNone(idx.VectorType))
 	pcio.Fprintf(writer, "\t\n")
-	pcio.Fprintf(writer, "State\t%s\n", ColorizeState(idx.Status.State))
-	pcio.Fprintf(writer, "Ready\t%s\n", ColorizeBool(idx.Status.Ready))
+	stateVal := "<none>"
+	readyVal := "<none>"
+	if idx.Status != nil {
+		stateVal = ColorizeState(idx.Status.State)
+		readyVal = ColorizeBool(idx.Status.Ready)
+	}
+	pcio.Fprintf(writer, "State\t%s\n", stateVal)
+	pcio.Fprintf(writer, "Ready\t%s\n", readyVal)
 	pcio.Fprintf(writer, "Host\t%s\n", style.Emphasis(idx.Host))
 	pcio.Fprintf(writer, "Private Host\t%s\n", DisplayOrNone(idx.PrivateHost))
 	pcio.Fprintf(writer, "\t\n")
 
-	var specType string
-	if idx.Spec.Serverless == nil {
-		specType = "pod"
-		pcio.Fprintf(writer, "Spec\t%s\n", specType)
-		pcio.Fprintf(writer, "Environment\t%s\n", idx.Spec.Pod.Environment)
-		pcio.Fprintf(writer, "PodType\t%s\n", idx.Spec.Pod.PodType)
-		pcio.Fprintf(writer, "Replicas\t%d\n", idx.Spec.Pod.Replicas)
-		pcio.Fprintf(writer, "ShardCount\t%d\n", idx.Spec.Pod.ShardCount)
-		pcio.Fprintf(writer, "PodCount\t%d\n", idx.Spec.Pod.PodCount)
-		pcio.Fprintf(writer, "MetadataConfig\t%s\n", text.InlineJSON(idx.Spec.Pod.MetadataConfig))
-		pcio.Fprintf(writer, "Source Collection\t%s\n", DisplayOrNone(idx.Spec.Pod.SourceCollection))
-	} else {
-		specType = "serverless"
-		pcio.Fprintf(writer, "Spec\t%s\n", specType)
-		pcio.Fprintf(writer, "Cloud\t%s\n", idx.Spec.Serverless.Cloud)
-		pcio.Fprintf(writer, "Region\t%s\n", idx.Spec.Serverless.Region)
-		pcio.Fprintf(writer, "Source Collection\t%s\n", DisplayOrNone(idx.Spec.Serverless.SourceCollection))
+	switch {
+	case idx.Spec == nil:
+		pcio.Fprintf(writer, "Spec\t%s\n", "<none>")
+	case idx.Spec.Serverless == nil:
+		pcio.Fprintf(writer, "Spec\t%s\n", "pod")
+		pod := idx.Spec.Pod
+		if pod != nil {
+			pcio.Fprintf(writer, "Environment\t%s\n", pod.Environment)
+			pcio.Fprintf(writer, "PodType\t%s\n", pod.PodType)
+			pcio.Fprintf(writer, "Replicas\t%d\n", pod.Replicas)
+			pcio.Fprintf(writer, "ShardCount\t%d\n", pod.ShardCount)
+			pcio.Fprintf(writer, "PodCount\t%d\n", pod.PodCount)
+			metadataConfig := "<none>"
+			if pod.MetadataConfig != nil {
+				metadataConfig = text.InlineJSON(pod.MetadataConfig)
+			}
+			pcio.Fprintf(writer, "MetadataConfig\t%s\n", metadataConfig)
+			pcio.Fprintf(writer, "Source Collection\t%s\n", DisplayOrNone(pod.SourceCollection))
+		} else {
+			pcio.Fprintf(writer, "Environment\t%s\n", "<none>")
+			pcio.Fprintf(writer, "PodType\t%s\n", "<none>")
+			pcio.Fprintf(writer, "Replicas\t%s\n", "<none>")
+			pcio.Fprintf(writer, "ShardCount\t%s\n", "<none>")
+			pcio.Fprintf(writer, "PodCount\t%s\n", "<none>")
+			pcio.Fprintf(writer, "MetadataConfig\t%s\n", "<none>")
+			pcio.Fprintf(writer, "Source Collection\t%s\n", "<none>")
+		}
+	default:
+		pcio.Fprintf(writer, "Spec\t%s\n", "serverless")
+		serverless := idx.Spec.Serverless
+		if serverless != nil {
+			pcio.Fprintf(writer, "Cloud\t%s\n", serverless.Cloud)
+			pcio.Fprintf(writer, "Region\t%s\n", serverless.Region)
+			pcio.Fprintf(writer, "Source Collection\t%s\n", DisplayOrNone(serverless.SourceCollection))
+		} else {
+			pcio.Fprintf(writer, "Cloud\t%s\n", "<none>")
+			pcio.Fprintf(writer, "Region\t%s\n", "<none>")
+			pcio.Fprintf(writer, "Source Collection\t%s\n", "<none>")
+		}
 	}
 	pcio.Fprintf(writer, "\t\n")
 

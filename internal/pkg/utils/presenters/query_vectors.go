@@ -11,6 +11,10 @@ import (
 
 func PrintQueryVectorsTable(resp *pinecone.QueryVectorsResponse) {
 	writer := NewTabWriter()
+	if resp == nil {
+		PrintEmptyState(writer, "query results")
+		return
+	}
 
 	// Header Block
 	if resp.Namespace != "" {

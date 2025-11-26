@@ -51,7 +51,7 @@ func NewQueryCmd() *cobra.Command {
 		Use:   "query",
 		Short: "Query an index by vector values",
 		Long: help.Long(`
-			Query vectors in an index by dense or sparse vector values, or by vector ID..
+			Query vectors in an index by dense or sparse vector values, or by vector ID.
 
 			Use --top-k to control result count and --include-values/--include-metadata to enrich results.
 			An optional metadata filter can be used to filter the results.
@@ -133,9 +133,9 @@ func runQueryCmd(ctx context.Context, options queryCmdOptions) {
 		}
 	}
 
-	if options.id == "" && options.vector == nil && options.sparseIndices == nil && options.sparseValues == nil && options.filter == nil {
-		msg.FailMsg("Either --id, --vector, --sparse-indices & --sparse-values, or --filter must be provided")
-		exit.ErrorMsg("Either --id, --vector, --sparse-indices & --sparse-values, or --filter must be provided")
+	if options.id == "" && options.vector == nil && options.sparseIndices == nil && options.sparseValues == nil {
+		msg.FailMsg("Either --id, --vector, --sparse-indices & --sparse-values")
+		exit.ErrorMsg("Either --id, --vector, --sparse-indices & --sparse-values")
 	}
 
 	// Get IndexConnection

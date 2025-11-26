@@ -10,6 +10,11 @@ import (
 
 func PrintDescribeOrganizationTable(org *pinecone.Organization) {
 	writer := NewTabWriter()
+	if org == nil {
+		PrintEmptyState(writer, "organization details")
+		return
+	}
+
 	log.Debug().Str("name", org.Name).Msg("Printing organization description")
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
