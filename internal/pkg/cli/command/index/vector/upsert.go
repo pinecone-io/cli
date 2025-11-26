@@ -45,14 +45,14 @@ func NewUpsertCmd() *cobra.Command {
 			Upsert vectors into an index namespace from a JSON or JSONL payload.
 			
 			The request --body may be a JSON object containing "vectors": [...] or a JSONL stream of Vector objects.
-			Control batch size with --batch-size. Bodies can be inline JSON, loaded via @file, or read from stdin with @-.
+			Control batch size with --batch-size. Bodies can be inline JSON, loaded from ./file.json[l], or read from stdin with '-'.
 
 			Body schema: UpsertBody (vectors shaped like pinecone.Vector: https://pkg.go.dev/github.com/pinecone-io/go-pinecone/v5/pinecone#Vector)
 		`),
 		Example: help.Examples(`
-			pc index vector upsert --index-name my-index --namespace my-namespace --body @./vectors.json
-			pc index vector upsert --index-name my-index --namespace my-namespace --body @./vectors.jsonl
-			cat payload.json | pc index vector upsert --index-name my-index --namespace my-namespace --body @-
+			pc index vector upsert --index-name my-index --namespace my-namespace --body ./vectors.json
+			pc index vector upsert --index-name my-index --namespace my-namespace --body ./vectors.jsonl
+			cat payload.json | pc index vector upsert --index-name my-index --namespace my-namespace --body -
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runUpsertCmd(cmd.Context(), options)
@@ -61,7 +61,7 @@ func NewUpsertCmd() *cobra.Command {
 
 	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of index to upsert into")
 	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to upsert into")
-	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON or JSONL (inline, @path.json[l], or @- for stdin; only one argument may use stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
+	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON or JSONL (inline, ./path.json[l], or '-' for stdin; only one argument may use stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
 	cmd.Flags().IntVarP(&options.batchSize, "batch-size", "b", 500, "size of batches to upsert (default: 500)")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 	_ = cmd.MarkFlagRequired("index-name")

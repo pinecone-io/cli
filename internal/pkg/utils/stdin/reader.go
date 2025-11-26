@@ -38,3 +38,8 @@ func ReaderOnce(limit int64) (io.ReadCloser, error) {
 	}
 	return io.NopCloser(r), nil
 }
+
+// ResetForTests clears the consumed flag so tests can re-bind stdin.
+func ResetForTests() {
+	consumed.Store(false)
+}

@@ -33,7 +33,7 @@ func Test_JSONObject_Set_FileReplace(t *testing.T) {
 
 	dir := t.TempDir()
 	path := writeTemp(t, dir, "obj.json", `{"y":2}`)
-	if err := obj.Set("@" + path); err != nil {
+	if err := obj.Set(path); err != nil {
 		t.Fatalf("error setting file path in JSONObject: %v", err)
 	}
 	if len(obj) != 1 || obj["y"] != float64(2) {
@@ -73,7 +73,7 @@ func Test_Float32List_Set_FileReplace(t *testing.T) {
 
 	dir := t.TempDir()
 	path := writeTemp(t, dir, "f32.json", replacement)
-	if err := l.Set("@" + path); err != nil {
+	if err := l.Set(path); err != nil {
 		t.Fatalf("error setting file in Float32List: %v", err)
 	}
 	if l.String() != replacement {
@@ -115,7 +115,7 @@ func Test_UInt32List_Set_FileReplace(t *testing.T) {
 
 	dir := t.TempDir()
 	path := writeTemp(t, dir, "u32.json", replacement)
-	if err := l.Set("@" + path); err != nil {
+	if err := l.Set(path); err != nil {
 		t.Fatalf("error setting file in UInt32List: %v", err)
 	}
 	if l.String() != replacement {
@@ -155,7 +155,7 @@ func Test_StringList_Set_File(t *testing.T) {
 
 	dir := t.TempDir()
 	path := writeTemp(t, dir, "s.json", replacement)
-	if err := l.Set("@" + path); err != nil {
+	if err := l.Set(path); err != nil {
 		t.Fatalf("error setting file in StringList: %v", err)
 	}
 	if l.String() != replacement {
