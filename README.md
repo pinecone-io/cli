@@ -194,9 +194,16 @@ pc config set-api-key "YOUR_API_KEY"
 pc auth whoami
 pc auth status
 
+# Create a serverless index
+pc index create --name my-index --dimension 3 --metric cosine --cloud aws --region us-east-1
+
 # List your indexes
 pc index list
 ```
+
+## Working with data
+
+Once you've created an index you can use `pc index upsert` to begin storing data in Pinecone. There are a variety of ways to get your data into Pinecone through the CLI.
 
 ### JSON input formats
 
@@ -206,40 +213,27 @@ Many flags accept JSON in three forms:
   ```bash
   pc index vector fetch --index-name my-index --namespace demo --ids '["vec-1","vec-2"]'
   ```
-- From a file ending in `.json` or `.jsonl`:
+- From a file ending in `.json`, or `.jsonl` for upsert operations:
   ```bash
-  pc index vector upsert --index-name my-index --namespace demo --body ./vectors.jsonl
+  pc index vector upsert --index-name my-index --namespace demo --body ./vectors.json
   ```
 - From stdin with `-`:
   ```bash
-  cat vectors.jsonl | pc index vector upsert --index-name my-index --namespace demo --body -
+  cat vectors.json | pc index vector upsert --index-name my-index --namespace demo --body -
   ```
 
 Stdin can only be used with one flag at a time.
 
-## Data plane quickstart (end-to-end)
+### JSON schemas
 
-### Body JSON schemas
+For commands that accept a `--body` JSON payload, the CLI defines types in the `vector` package that depend on types in the go-pinecone SDK. These structs can be useful for shaping your data for ingestion:
 
-For commands that accept a `--body` JSON payload, the CLI uses these schemas:
+- `UpsertBody` — and array of `pinecone.Vector` objects (see `https://pkg.go.dev/github.com/pinecone-io/go-pinecone/v5/pinecone#Vector`)
+- `QueryBody` — fields: `id`, `vector`, `sparse_values` (see `https://pkg.go.dev/github.com/pinecone-io/go-pinecone/v5/pinecone#SparseValues`), `filter`, `top_k`, `include_values`, `include_metadata`
+- `FetchBody` — fields: `ids`, `filter`, `limit`, `pagination_token`
+- `UpdateBody` — fields: `id`, `values`, `sparse_values` (see `https://pkg.go.dev/github.com/pinecone-io/go-pinecone/v5/pinecone#SparseValues`), `metadata`, `filter`, `dry_run`
 
-- UpsertBody — vectors of `pinecone.Vector` (see `https://pkg.go.dev/github.com/pinecone-io/go-pinecone/v5/pinecone#Vector`)
-- QueryBody — fields: id, vector, `sparse_values` (see `https://pkg.go.dev/github.com/pinecone-io/go-pinecone/v5/pinecone#SparseValues`), filter, top_k, include_values, include_metadata
-- FetchBody — fields: ids, filter, limit, pagination_token
-- UpdateBody — fields: id, values, `sparse_values` (see `https://pkg.go.dev/github.com/pinecone-io/go-pinecone/v5/pinecone#SparseValues`), metadata, filter, dry_run
-
-The following walkthrough creates an index, ingests vectors, and runs queries.
-
-Prepare sample vectors (JSONL)
-
-Create a file named `vectors.jsonl` with two lines:
-
-```json
-{"id":"vec-1","values":[0.1,0.2,0.3],"metadata":{"genre":"sci-fi","title":"Voyager"}}
-{"id":"vec-2","values":[0.3,0.1,0.2],"metadata":{"genre":"fantasy","title":"Dragon"}}
-```
-
-Alternatively, you can upsert using a JSON object with a `vectors` array:
+Create a file named `vectors.json` with an array of vectors with a dimension matching you index:
 
 ```json
 {
@@ -258,10 +252,14 @@ Alternatively, you can upsert using a JSON object with a `vectors` array:
 }
 ```
 
-```bash
-# Create a serverless index
-pc index create --name my-index --dimension 3 --metric cosine --cloud aws --region us-east-1
+Alternatively, you can upsert using a JSONL file where each line is a vector object:
 
+```json
+{"id":"vec-1","values":[0.1,0.2,0.3],"metadata":{"genre":"sci-fi","title":"Voyager"}}
+{"id":"vec-2","values":[0.3,0.1,0.2],"metadata":{"genre":"fantasy","title":"Dragon"}}
+```
+
+```bash
 # Upsert vectors into the index via JSON or JSONL
 pc index vector upsert --index-name my-index --namespace my-namespace --body ./vectors.jsonl
 
