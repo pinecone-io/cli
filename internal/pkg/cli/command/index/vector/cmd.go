@@ -24,11 +24,11 @@ func NewVectorCmd() *cobra.Command {
 		Short:   "Work with data in an index",
 		Long:    vectorHelp,
 		Example: help.Examples(`
-			pc index vector upsert --index-name my-index --body @./vectors.json
+			pc index vector upsert --index-name my-index --body ./vectors.json
 			pc index vector list --index-name my-index --namespace my-namespace
 			pc index vector fetch --index-name my-index --ids '["123","456"]'
 			pc index vector update --index-name my-index --id doc-123 --metadata '{"genre":"sci-fi"}'
-			pc index vector query --index-name my-index --vector @./vector.json --top-k 10
+			pc index vector query --index-name my-index --vector ./vector.json --top-k 10
 			pc index vector delete --index-name my-index --ids doc-123
 		`),
 		GroupID: help.GROUP_INDEX_DATA.ID,

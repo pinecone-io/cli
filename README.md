@@ -206,16 +206,16 @@ Many flags accept JSON in three forms:
   ```bash
   pc index vector fetch --index-name my-index --namespace demo --ids '["vec-1","vec-2"]'
   ```
-- From a file with `@path`:
+- From a file ending in `.json` or `.jsonl`:
   ```bash
-  pc index vector upsert --index-name my-index --namespace demo --body @./vectors.jsonl
+  pc index vector upsert --index-name my-index --namespace demo --body ./vectors.jsonl
   ```
-- From stdin with `@-`:
+- From stdin with `-`:
   ```bash
-  cat vectors.jsonl | pc index vector upsert --index-name my-index --namespace demo --body @-
+  cat vectors.jsonl | pc index vector upsert --index-name my-index --namespace demo --body -
   ```
 
-NOTE: stdin can only be used with one flag at a time.
+Stdin can only be used with one flag at a time.
 
 ## Data plane quickstart (end-to-end)
 
@@ -263,7 +263,7 @@ Alternatively, you can upsert using a JSON object with a `vectors` array:
 pc index create --name my-index --dimension 3 --metric cosine --cloud aws --region us-east-1
 
 # Upsert vectors into the index via JSON or JSONL
-pc index vector upsert --index-name my-index --namespace my-namespace --body @./vectors.jsonl
+pc index vector upsert --index-name my-index --namespace my-namespace --body ./vectors.jsonl
 
 # List vectors
 pc index vector list --index-name my-index --namespace my-namespace

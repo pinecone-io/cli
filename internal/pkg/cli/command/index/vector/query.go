@@ -56,7 +56,7 @@ func NewQueryCmd() *cobra.Command {
 			Use --top-k to control result count and --include-values/--include-metadata to enrich results.
 			An optional metadata filter can be used to filter the results.
 
-			JSON inputs may be inline, loaded from a file with @path, or read from stdin with @-.
+			JSON inputs may be inline, loaded from ./file.json[l], or read from stdin with '-'.
 
 			When providing sparse values, both --sparse-indices and --sparse-values must be present.
 			A --body payload can pass id, vector, sparse_values, filter, top_k, include_values, and include_metadata.
@@ -65,15 +65,15 @@ func NewQueryCmd() *cobra.Command {
 			pc index vector query --index-name my-index --id doc-123 --top-k 10 --include-metadata
 		
 			pc index vector query --index-name my-index --vector '[0.1, 0.2, 0.3]' --top-k 25
-			pc index vector query --index-name my-index --vector @./vector.json --top-k 25 --include-metadata
-			jq -c '.embedding' doc.json | pc index vector query --index-name my-index --vector @- --top-k 20
+			pc index vector query --index-name my-index --vector ./vector.json --top-k 25 --include-metadata
+			jq -c '.embedding' doc.json | pc index vector query --index-name my-index --vector - --top-k 20
 		
-			pc index vector query --index-name my-index --sparse-indices @./indices.json --sparse-values @./values.json --top-k 15
+			pc index vector query --index-name my-index --sparse-indices ./indices.json --sparse-values ./values.json --top-k 15
 		
-			pc index vector query --index-name my-index --vector @./vector.json --filter '{"genre":"sci-fi"}' --include-metadata
+			pc index vector query --index-name my-index --vector ./vector.json --filter '{"genre":{"$eq":"sci-fi"}}' --include-metadata
 		
-			pc index vector query --index-name my-index --body @./query.json
-			cat query.json | pc index vector query --index-name my-index --body @-
+			pc index vector query --index-name my-index --body ./query.json
+			cat query.json | pc index vector query --index-name my-index --body -
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runQueryCmd(cmd.Context(), options)
@@ -83,14 +83,14 @@ func NewQueryCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of the index to query")
 	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "index namespace to query")
 	cmd.Flags().Uint32VarP(&options.topK, "top-k", "k", 10, "maximum number of results to return")
-	cmd.Flags().VarP(&options.filter, "filter", "f", "metadata filter to apply to the query (inline JSON, @path.json, or @- for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
+	cmd.Flags().VarP(&options.filter, "filter", "f", "metadata filter to apply to the query (inline JSON, ./path.json, or '-' for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
 	cmd.Flags().BoolVar(&options.includeValues, "include-values", false, "include vector values in the query results")
 	cmd.Flags().BoolVar(&options.includeMetadata, "include-metadata", false, "include metadata in the query results")
 	cmd.Flags().StringVarP(&options.id, "id", "i", "", "ID of the vector to query against")
-	cmd.Flags().VarP(&options.vector, "vector", "v", "vector values to query against (inline JSON array, @path.json, or @- for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
-	cmd.Flags().Var(&options.sparseIndices, "sparse-indices", "sparse indices to query against (inline JSON array, @path.json, or @- for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
-	cmd.Flags().Var(&options.sparseValues, "sparse-values", "sparse values to query against (inline JSON array, @path.json, or @- for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
-	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON (inline, @path.json, or @- for stdin; only one argument may use stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
+	cmd.Flags().VarP(&options.vector, "vector", "v", "vector values to query against (inline JSON array, ./path.json, or '-' for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
+	cmd.Flags().Var(&options.sparseIndices, "sparse-indices", "sparse indices to query against (inline JSON array, ./path.json, or '-' for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
+	cmd.Flags().Var(&options.sparseValues, "sparse-values", "sparse values to query against (inline JSON array, ./path.json, or '-' for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
+	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON (inline, ./path.json, or '-' for stdin; only one argument may use stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	_ = cmd.MarkFlagRequired("index-name")

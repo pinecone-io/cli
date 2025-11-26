@@ -53,16 +53,16 @@ func NewUpdateCmd() *cobra.Command {
 			Update a single vector by ID (values, sparse values, metadata) or update metadata for all vectors matching a metadata filter.
 
 			Use --dry-run with --filter updates to preview how many records would be updated.
-			JSON inputs may be inline, @file, or @- for stdin.
+			JSON inputs may be inline, ./file.json[l], or read from stdin with '-'.
 			A --body payload can supply id, values, sparse_values, metadata, filter, and dry_run fields.
 		`),
 		Example: help.Examples(`
 			pc index vector update --index-name my-index --id doc-123 --values '[0.1, 0.2, 0.3]'
-			pc index vector update --index-name my-index --id doc-123 --sparse-indices @./indices.json --sparse-values @./values.json
+			pc index vector update --index-name my-index --id doc-123 --sparse-indices ./indices.json --sparse-values ./values.json
 			pc index vector update --index-name my-index --id doc-123 --metadata '{"genre":"sci-fi"}'
-			pc index vector update --index-name my-index --filter '{"genre":"sci-fi"}' --metadata '{"genre":"fantasy"}' --dry-run
-			pc index vector update --index-name my-index --body @./update.json
-			cat update.json | pc index vector update --index-name my-index --body @-
+			pc index vector update --index-name my-index --filter '{"genre":{"$eq":"sci-fi"}}' --metadata '{"genre":"fantasy"}' --dry-run
+			pc index vector update --index-name my-index --body ./update.json
+			cat update.json | pc index vector update --index-name my-index --body -
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runUpdateCmd(cmd.Context(), options)
@@ -72,13 +72,13 @@ func NewUpdateCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of the index to update")
 	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to update the vector in")
 	cmd.Flags().StringVar(&options.id, "id", "", "ID of the vector to update")
-	cmd.Flags().Var(&options.values, "values", "values to update the vector with (inline JSON array, @path.json, or @- for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
-	cmd.Flags().Var(&options.sparseIndices, "sparse-indices", "sparse indices to update the vector with (inline JSON array, @path.json, or @- for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
-	cmd.Flags().Var(&options.sparseValues, "sparse-values", "sparse values to update the vector with (inline JSON array, @path.json, or @- for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
-	cmd.Flags().Var(&options.metadata, "metadata", "metadata to update the vector with (inline JSON, @path.json, or @- for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
-	cmd.Flags().Var(&options.filter, "filter", "filter to update the vectors with (inline JSON, @path.json, or @- for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
+	cmd.Flags().Var(&options.values, "values", "values to update the vector with (inline JSON array, ./path.json, or '-' for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
+	cmd.Flags().Var(&options.sparseIndices, "sparse-indices", "sparse indices to update the vector with (inline JSON array, ./path.json, or '-' for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
+	cmd.Flags().Var(&options.sparseValues, "sparse-values", "sparse values to update the vector with (inline JSON array, ./path.json, or '-' for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
+	cmd.Flags().Var(&options.metadata, "metadata", "metadata to update the vector with (inline JSON, ./path.json, or '-' for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
+	cmd.Flags().Var(&options.filter, "filter", "filter to update the vectors with (inline JSON, ./path.json, or '-' for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
 	cmd.Flags().BoolVar(&options.dryRun, "dry-run", false, "do not update the vectors, just return the number of vectors that would be updated")
-	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON (inline, @path.json, or @- for stdin; only one argument may use stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
+	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON (inline, ./path.json, or '-' for stdin; only one argument may use stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
 	_ = cmd.MarkFlagRequired("index-name")

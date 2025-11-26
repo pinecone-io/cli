@@ -47,31 +47,31 @@ func NewFetchCmd() *cobra.Command {
 			Fetch vectors from an index either by explicit IDs or by a metadata filter with optional pagination.
 
 			When using --ids, pagination flags (--limit, --pagination-token) are not applicable.
-			JSON inputs may be inline, loaded from a file with @path, or read from stdin with @-.
+			JSON inputs may be inline, loaded from ./file.json[l], or read from stdin with '-'.
 			A --body payload can supply ids, filter, limit, and pagination_token fields. Flags win if both are provided.
 		`),
 		Example: help.Examples(`
 			pc index vector fetch --index-name my-index --ids '["123","456","789"]'
-			pc index vector fetch --index-name my-index --ids @./ids.json
+			pc index vector fetch --index-name my-index --ids ./ids.json
 
-			pc index vector fetch --index-name my-index --filter '{"key": "value"}'
-			pc index vector fetch --index-name my-index --filter @./filter.json
+			pc index vector fetch --index-name my-index --filter '{"genre":{"$eq":"rock"}}'
+			pc index vector fetch --index-name my-index --filter ./filter.json
 
-			pc index vector fetch --index-name my-index --body @./fetch.json
-			cat fetch.json | pc index vector fetch --index-name my-index --body @-
+			pc index vector fetch --index-name my-index --body ./fetch.json
+			cat fetch.json | pc index vector fetch --index-name my-index --body -
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runFetchCmd(cmd.Context(), options)
 		},
 	}
 
-	cmd.Flags().VarP(&options.ids, "ids", "i", "IDs of vectors to fetch (inline JSON array, @path.json, or @- for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
-	cmd.Flags().VarP(&options.filter, "filter", "f", "metadata filter to apply to the fetch (inline JSON, @path.json, or @- for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
+	cmd.Flags().VarP(&options.ids, "ids", "i", "IDs of vectors to fetch (inline JSON array, ./path.json, or '-' for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
+	cmd.Flags().VarP(&options.filter, "filter", "f", "metadata filter to apply to the fetch (inline JSON, ./path.json, or '-' for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
 	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of the index to fetch from")
 	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to fetch from")
 	cmd.Flags().Uint32VarP(&options.limit, "limit", "l", 0, "maximum number of vectors to fetch")
 	cmd.Flags().StringVarP(&options.paginationToken, "pagination-token", "p", "", "pagination token to continue a previous listing operation")
-	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON (inline, @path.json, or @- for stdin; only one argument may use stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
+	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON (inline, ./path.json, or '-' for stdin; only one argument may use stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 
 	cmd.MarkFlagsMutuallyExclusive("ids", "filter")
