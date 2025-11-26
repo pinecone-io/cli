@@ -15,17 +15,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type describeStatsCmdOptions struct {
+type describeIndexStatsCmdOptions struct {
 	indexName string
 	filter    flags.JSONObject
 	json      bool
 }
 
 func NewDescribeIndexStatsCmd() *cobra.Command {
-	options := describeStatsCmdOptions{}
+	options := describeIndexStatsCmdOptions{}
 	cmd := &cobra.Command{
-		Use:   "describe-stats",
-		Short: "Describe the stats of an index",
+		Use:   "stats",
+		Short: "Describe index statistics",
 		Long: help.Long(`
 			Return index statistics including dimension, total vector count, namespaces summary, and metadata field counts.
 			Use an optional metadata filter to restrict the scope of counts.
@@ -33,9 +33,9 @@ func NewDescribeIndexStatsCmd() *cobra.Command {
 			JSON input may be inline, loaded from ./file.json, or read from stdin with '-'.
 		`),
 		Example: help.Examples(`
-			pc index describe-stats --index-name "index-name"
-			pc index describe-stats --index-name "index-name" --filter '{"genre":{"$eq":"rock"}}'
-			pc index describe-stats --index-name "index-name" --filter ./filter.json
+			pc index stats --index-name "index-name"
+			pc index stats --index-name "index-name" --filter '{"genre":{"$eq":"rock"}}'
+			pc index stats --index-name "index-name" --filter ./filter.json
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runDescribeIndexStatsCmd(cmd.Context(), options)
@@ -43,14 +43,14 @@ func NewDescribeIndexStatsCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of index to describe stats for")
-	cmd.Flags().VarP(&options.filter, "filter", "f", "metadata filter to apply to the operation (inline JSON, ./path.json, or '-' for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
+	cmd.Flags().VarP(&options.filter, "filter", "f", "metadata filter to apply to the operation (inline JSON, ./path.json, or '-' for stdin)")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 	_ = cmd.MarkFlagRequired("index-name")
 
 	return cmd
 }
 
-func runDescribeIndexStatsCmd(ctx context.Context, options describeStatsCmdOptions) {
+func runDescribeIndexStatsCmd(ctx context.Context, options describeIndexStatsCmdOptions) {
 	pc := sdk.NewPineconeClient(ctx)
 
 	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, "")

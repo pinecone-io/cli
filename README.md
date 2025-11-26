@@ -111,7 +111,7 @@ This table describes the Pinecone operations supported by each authentication me
 
 - Control plane–related commands (index management):
 
-  - `pc index` (`create`, `list`, `describe`, `configure`, `delete`, `describe-stats`)
+  - `pc index` (`create`, `list`, `describe`, `configure`, `delete`, `stats`)
 
 - Data plane-related commands (index data management):
 
@@ -175,7 +175,7 @@ Work with your vector data inside an index. These commands require `--index-name
   - `pc index vector delete` — delete by IDs, by filter, or delete all in a namespace
   - `pc index vector query` — nearest-neighbor search by values or vector ID
 - Index statistics:
-  - `pc index describe-stats` — show dimension, vector counts, namespace summary, and metadata field counts (optionally filtered)
+  - `pc index stats` — show dimension, vector counts, namespace summary, and metadata field counts (optionally filtered)
 
 Tip: add `--json` to many commands to get structured output.
 
