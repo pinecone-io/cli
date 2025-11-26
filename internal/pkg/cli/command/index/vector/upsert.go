@@ -61,7 +61,7 @@ func NewUpsertCmd() *cobra.Command {
 
 	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of index to upsert into")
 	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to upsert into")
-	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON or JSONL (inline, ./path.json[l], or '-' for stdin; only one argument may use stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
+	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON or JSONL (inline, ./path.json[l], or '-' for stdin; only one argument may use stdin)")
 	cmd.Flags().IntVarP(&options.batchSize, "batch-size", "b", 500, "size of batches to upsert (default: 500)")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 	_ = cmd.MarkFlagRequired("index-name")

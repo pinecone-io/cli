@@ -46,7 +46,7 @@ func NewDeleteVectorsCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of the index to delete vectors from")
 	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to delete vectors from")
 	cmd.Flags().Var(&options.ids, "ids", "IDs of the vectors to delete")
-	cmd.Flags().Var(&options.filter, "filter", "filter to delete the vectors with (inline JSON, ./path.json, or '-' for stdin; max size: see PC_CLI_MAX_JSON_BYTES)")
+	cmd.Flags().Var(&options.filter, "filter", "filter to delete the vectors with (inline JSON, ./path.json, or '-' for stdin)")
 	cmd.Flags().BoolVar(&options.deleteAllVectors, "all-vectors", false, "delete all vectors from the namespace")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 
