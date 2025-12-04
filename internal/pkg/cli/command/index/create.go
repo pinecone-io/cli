@@ -22,6 +22,7 @@ type CreateIndexService interface {
 	CreateServerlessIndex(ctx context.Context, req *pinecone.CreateServerlessIndexRequest) (*pinecone.Index, error)
 	CreatePodIndex(ctx context.Context, req *pinecone.CreatePodIndexRequest) (*pinecone.Index, error)
 	CreateIndexForModel(ctx context.Context, req *pinecone.CreateIndexForModelRequest) (*pinecone.Index, error)
+	CreateBYOCIndex(ctx context.Context, req *pinecone.CreateBYOCIndexRequest) (*pinecone.Index, error)
 }
 
 type indexType string
@@ -29,6 +30,7 @@ type indexType string
 const (
 	indexTypeServerless indexType = "serverless"
 	indexTypeIntegrated indexType = "integrated"
+	indexTypeBYOC       indexType = "byoc"
 	indexTypePod        indexType = "pod"
 )
 
@@ -39,12 +41,14 @@ type createIndexOptions struct {
 	// serverless only
 	vectorType string
 
-	// serverless & integrated
-	cloud  string
-	region string
+	// integrated only
+	model           string
+	fieldMap        map[string]string
+	readParameters  map[string]string
+	writeParameters map[string]string
 
-	// serverless & pods
-	sourceCollection string
+	// BYOC only
+	byocEnvironment string
 
 	// pods only
 	environment    string
@@ -53,11 +57,18 @@ type createIndexOptions struct {
 	replicas       int32
 	metadataConfig []string
 
-	// integrated only
-	model           string
-	fieldMap        map[string]string
-	readParameters  map[string]string
-	writeParameters map[string]string
+	// serverless & integrated
+	cloud        string
+	region       string
+	readNodeType string
+	readShards   int32
+	readReplicas int32
+
+	// serverless & pods
+	sourceCollection string
+
+	// serverless & integrated & BYOC
+	metadataSchema []string
 
 	// optional for all index types
 	dimension          int32
@@ -86,7 +97,7 @@ var (
 		pc index create --name "my-index" --dimension 1536 --metric "cosine" --environment "us-east-1-aws" --pod-type "p1.x1" --shards 2 --replicas 2
 
 		# create an integrated index
-		pc index create --name "my-index" --dimension 1536 --metric "cosine" --cloud "aws" --region "us-east-1" --model "multilingual-e5-large" --field_map "text=chunk_text"
+		pc index create --name "my-index" --dimension 1536 --metric "cosine" --cloud "aws" --region "us-east-1" --model "multilingual-e5-large" --field-map "text=chunk_text"
 	`)
 )
 
@@ -108,32 +119,41 @@ func NewCreateIndexCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("name")
 
 	// Serverless & Pods
-	cmd.Flags().StringVar(&options.sourceCollection, "source_collection", "", "When creating an index from a collection")
+	cmd.Flags().StringVar(&options.sourceCollection, "source-collection", "", "When creating an index from a collection")
+
+	// Serverless, BYOC, and Integrated
+	cmd.Flags().StringSliceVar(&options.metadataSchema, "schema", []string{}, "Schema for the behavior of Pinecone's internal metadata index. By default, all metadata is indexed; when schema is present, only the fields provided will be indexed")
+
+	// BYOC
+	cmd.Flags().StringVar(&options.byocEnvironment, "byoc-environment", "", "BYOC environment to use for the index")
 
 	// Serverless & Integrated
 	cmd.Flags().StringVarP(&options.cloud, "cloud", "c", "", "Cloud provider where you would like to deploy your index")
 	cmd.Flags().StringVarP(&options.region, "region", "r", "", "Cloud region where you would like to deploy your index")
+	cmd.Flags().StringVar(&options.readNodeType, "read-node-type", "", "The type of machines to use. Available options: b1 and t1. t1 includes increased processing power and memory")
+	cmd.Flags().Int32Var(&options.readShards, "read-shards", 1, "The number of shards to use. Shards determine the storage capacity of an index, with each shard providing 250 GB of storage")
+	cmd.Flags().Int32Var(&options.readReplicas, "read-replicas", 1, "The number of replicas to use. Replicas duplicate the compute resources and data of an index, allowing higher query throughput and availability")
 
 	// Serverless flags
-	cmd.Flags().StringVarP(&options.vectorType, "vector_type", "v", "", "Vector type to use. One of: dense, sparse")
+	cmd.Flags().StringVarP(&options.vectorType, "vector-type", "v", "", "Vector type to use. One of: dense, sparse")
 
 	// Pod flags
 	cmd.Flags().StringVar(&options.environment, "environment", "", "Environment of the index to create")
-	cmd.Flags().StringVar(&options.podType, "pod_type", "", "Type of pod to use")
+	cmd.Flags().StringVar(&options.podType, "pod-type", "", "Type of pod to use")
 	cmd.Flags().Int32Var(&options.shards, "shards", 1, "Shards of the index to create")
 	cmd.Flags().Int32Var(&options.replicas, "replicas", 1, "Replicas of the index to create")
-	cmd.Flags().StringSliceVar(&options.metadataConfig, "metadata_config", []string{}, "Metadata configuration to limit the fields that are indexed for search")
+	cmd.Flags().StringSliceVar(&options.metadataConfig, "metadata-config", []string{}, "Metadata configuration to limit the fields that are indexed for search")
 
 	// Integrated flags
 	cmd.Flags().StringVar(&options.model, "model", "", "The name of the embedding model to use for the index")
-	cmd.Flags().StringToStringVar(&options.fieldMap, "field_map", map[string]string{}, "Identifies the name of the text field from your document model that will be embedded")
-	cmd.Flags().StringToStringVar(&options.readParameters, "read_parameters", map[string]string{}, "The read parameters for the embedding model")
-	cmd.Flags().StringToStringVar(&options.writeParameters, "write_parameters", map[string]string{}, "The write parameters for the embedding model")
+	cmd.Flags().StringToStringVar(&options.fieldMap, "field-map", map[string]string{}, "Identifies the name of the text field from your document model that will be embedded")
+	cmd.Flags().StringToStringVar(&options.readParameters, "read-parameters", map[string]string{}, "The read parameters for the embedding model")
+	cmd.Flags().StringToStringVar(&options.writeParameters, "write-parameters", map[string]string{}, "The write parameters for the embedding model")
 
-	// Optional flags
+	// Optional flags - all index types
 	cmd.Flags().Int32VarP(&options.dimension, "dimension", "d", 0, "Dimension of the index to create")
 	cmd.Flags().StringVarP(&options.metric, "metric", "m", "cosine", "Metric to use. One of: cosine, euclidean, dotproduct")
-	cmd.Flags().StringVar(&options.deletionProtection, "deletion_protection", "", "Whether to enable deletion protection for the index. One of: enabled, disabled")
+	cmd.Flags().StringVar(&options.deletionProtection, "deletion-protection", "", "Whether to enable deletion protection for the index. One of: enabled, disabled")
 	cmd.Flags().StringToStringVar(&options.tags, "tags", map[string]string{}, "Custom user tags to add to an index")
 
 	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
@@ -188,6 +208,8 @@ func runCreateIndexWithService(ctx context.Context, service CreateIndexService, 
 			VectorType:         pointerOrNil(options.vectorType),
 			Tags:               indexTags,
 			SourceCollection:   pointerOrNil(options.sourceCollection),
+			ReadCapacity:       constructReadCapacity(options.readNodeType, options.readShards, options.readReplicas),
+			Schema:             buildMetadataSchema(options.metadataSchema),
 		}
 
 		idx, err = service.CreateServerlessIndex(ctx, &args)
@@ -240,12 +262,32 @@ func runCreateIndexWithService(ctx context.Context, service CreateIndexService, 
 				ReadParameters:  &readParams,
 				WriteParameters: &writeParams,
 			},
-			Tags: indexTags,
+			Tags:         indexTags,
+			ReadCapacity: constructReadCapacity(options.readNodeType, options.readShards, options.readReplicas),
+			Schema:       buildMetadataSchema(options.metadataSchema),
 		}
 
 		idx, err = service.CreateIndexForModel(ctx, &args)
 		if err != nil {
 			wrapped := pcio.Errorf("Failed to create integrated index %s: %w", style.Emphasis(options.name), err)
+			msg.FailMsg("%v", wrapped)
+			return nil, wrapped
+		}
+	case indexTypeBYOC:
+		// create BYOC index
+		args := pinecone.CreateBYOCIndexRequest{
+			Name:               options.name,
+			Environment:        options.byocEnvironment,
+			Metric:             pointerOrNil(pinecone.IndexMetric(options.metric)),
+			DeletionProtection: pointerOrNil(pinecone.DeletionProtection(options.deletionProtection)),
+			Dimension:          options.dimension,
+			Tags:               indexTags,
+			Schema:             buildMetadataSchema(options.metadataSchema),
+		}
+
+		idx, err = service.CreateBYOCIndex(ctx, &args)
+		if err != nil {
+			wrapped := pcio.Errorf("Failed to create BYOC index %s: %w", style.Emphasis(options.name), err)
 			msg.FailMsg("%v", wrapped)
 			return nil, wrapped
 		}
@@ -297,10 +339,49 @@ func (c *createIndexOptions) deriveIndexType() (indexType, error) {
 			return indexTypeServerless, nil
 		}
 	}
+	if c.byocEnvironment != "" {
+		return indexTypeBYOC, nil
+	}
 	if c.environment != "" {
 		return indexTypePod, nil
 	}
 	return "", pcio.Error("invalid index type. Please provide either environment, or cloud and region")
+}
+
+// Only "Dedicated" is supported currently. "OnDemand" is the default, so if a user has provided
+// explicit nodeType, shards, and replicas, we use those values for "Dedicated"
+func constructReadCapacity(nodeType string, shards, replicas int32) *pinecone.ReadCapacityParams {
+	return &pinecone.ReadCapacityParams{
+		Dedicated: &pinecone.ReadCapacityDedicatedConfig{
+			NodeType: nodeType,
+			Scaling: &pinecone.ReadCapacityScaling{
+				Manual: &pinecone.ReadCapacityManualScaling{
+					Shards:   shards,
+					Replicas: replicas,
+				},
+			},
+		},
+	}
+}
+
+// Currently, passing a MetadataSchema field with "filterable: false" is not supported.
+// We allow users to pass a slice of metadata fields, and then construct the MetadataSchema object from that.
+func buildMetadataSchema(schema []string) *pinecone.MetadataSchema {
+	if len(schema) == 0 {
+		return nil
+	}
+
+	metadataSchema := &pinecone.MetadataSchema{
+		Fields: make(map[string]pinecone.MetadataSchemaField, len(schema)),
+	}
+
+	for _, field := range schema {
+		metadataSchema.Fields[field] = pinecone.MetadataSchemaField{
+			Filterable: true,
+		}
+	}
+
+	return metadataSchema
 }
 
 func pointerOrNil[T comparable](value T) *T {

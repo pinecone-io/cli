@@ -41,9 +41,9 @@ func NewConfigureIndexCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of index to configure")
 
 	// Optional flags
-	cmd.Flags().StringVarP(&options.podType, "pod_type", "t", "", "type of pod to use, can only upgrade when configuring")
+	cmd.Flags().StringVarP(&options.podType, "pod-type", "t", "", "type of pod to use, can only upgrade when configuring")
 	cmd.Flags().Int32VarP(&options.replicas, "replicas", "r", 0, "replicas of the index to configure")
-	cmd.Flags().StringVarP(&options.deletionProtection, "deletion_protection", "p", "", "enable or disable deletion protection for the index")
+	cmd.Flags().StringVarP(&options.deletionProtection, "deletion-protection", "p", "", "enable or disable deletion protection for the index")
 
 	return cmd
 }
