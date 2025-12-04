@@ -198,6 +198,11 @@ func runCreateIndexWithService(ctx context.Context, service CreateIndexService, 
 	switch idxType {
 	case indexTypeServerless:
 		// create serverless index
+		readCapacity, err := constructReadCapacity(options.readNodeType, options.readShards, options.readReplicas)
+		if err != nil {
+			return nil, err
+		}
+
 		args := pinecone.CreateServerlessIndexRequest{
 			Name:               options.name,
 			Cloud:              pinecone.Cloud(options.cloud),
@@ -208,7 +213,7 @@ func runCreateIndexWithService(ctx context.Context, service CreateIndexService, 
 			VectorType:         pointerOrNil(options.vectorType),
 			Tags:               indexTags,
 			SourceCollection:   pointerOrNil(options.sourceCollection),
-			ReadCapacity:       constructReadCapacity(options.readNodeType, options.readShards, options.readReplicas),
+			ReadCapacity:       readCapacity,
 			Schema:             buildMetadataSchema(options.metadataSchema),
 		}
 
@@ -226,6 +231,7 @@ func runCreateIndexWithService(ctx context.Context, service CreateIndexService, 
 				Indexed: &options.metadataConfig,
 			}
 		}
+
 		args := pinecone.CreatePodIndexRequest{
 			Name:               options.name,
 			Dimension:          options.dimension,
@@ -251,6 +257,11 @@ func runCreateIndexWithService(ctx context.Context, service CreateIndexService, 
 		readParams := toInterfaceMap(options.readParameters)
 		writeParams := toInterfaceMap(options.writeParameters)
 
+		readCapacity, err := constructReadCapacity(options.readNodeType, options.readShards, options.readReplicas)
+		if err != nil {
+			return nil, err
+		}
+
 		args := pinecone.CreateIndexForModelRequest{
 			Name:               options.name,
 			Cloud:              pinecone.Cloud(options.cloud),
@@ -263,7 +274,7 @@ func runCreateIndexWithService(ctx context.Context, service CreateIndexService, 
 				WriteParameters: &writeParams,
 			},
 			Tags:         indexTags,
-			ReadCapacity: constructReadCapacity(options.readNodeType, options.readShards, options.readReplicas),
+			ReadCapacity: readCapacity,
 			Schema:       buildMetadataSchema(options.metadataSchema),
 		}
 
@@ -350,7 +361,12 @@ func (c *createIndexOptions) deriveIndexType() (indexType, error) {
 
 // Only "Dedicated" is supported currently. "OnDemand" is the default, so if a user has provided
 // explicit nodeType, shards, and replicas, we use those values for "Dedicated"
-func constructReadCapacity(nodeType string, shards, replicas int32) *pinecone.ReadCapacityParams {
+func constructReadCapacity(nodeType string, shards, replicas int32) (*pinecone.ReadCapacityParams, error) {
+
+	if nodeType == "" && replicas == 0 {
+		return nil, pcio.Errorf("read-node-type and read-replicas must be provided to configure read capacity")
+	}
+
 	return &pinecone.ReadCapacityParams{
 		Dedicated: &pinecone.ReadCapacityDedicatedConfig{
 			NodeType: nodeType,
@@ -361,7 +377,7 @@ func constructReadCapacity(nodeType string, shards, replicas int32) *pinecone.Re
 				},
 			},
 		},
-	}
+	}, nil
 }
 
 // Currently, passing a MetadataSchema field with "filterable: false" is not supported.
