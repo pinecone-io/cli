@@ -16,11 +16,29 @@ import (
 )
 
 type configureIndexOptions struct {
-	name               string
-	podType            string
-	replicas           int32
+	// required for index lookup
+	name string
+
+	// pods
+	podType  string
+	replicas int32
+
+	// integrated
+	model           string
+	fieldMap        map[string]string
+	readParameters  map[string]string
+	writeParameters map[string]string
+
+	// serverless & integrated
+	readNodeType string
+	readShards   int32
+	readReplicas int32
+
+	// optional for all index types
 	deletionProtection string
-	json               bool
+	tags               map[string]string
+
+	json bool
 }
 
 func NewConfigureIndexCmd() *cobra.Command {
@@ -40,10 +58,24 @@ func NewConfigureIndexCmd() *cobra.Command {
 	// Required flags
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of index to configure")
 
-	// Optional flags
+	// pods
 	cmd.Flags().StringVarP(&options.podType, "pod-type", "t", "", "type of pod to use, can only upgrade when configuring")
 	cmd.Flags().Int32VarP(&options.replicas, "replicas", "r", 0, "replicas of the index to configure")
+
+	// integrated
+	cmd.Flags().StringVar(&options.model, "model", "", "The name of the embedding model to use for the index")
+	cmd.Flags().StringToStringVar(&options.fieldMap, "field-map", map[string]string{}, "Identifies the name of the text field from your document model that will be embedded")
+	cmd.Flags().StringToStringVar(&options.readParameters, "read-parameters", map[string]string{}, "The read parameters for the embedding model")
+	cmd.Flags().StringToStringVar(&options.writeParameters, "write-parameters", map[string]string{}, "The write parameters for the embedding model")
+
+	// serverless & integrated
+	cmd.Flags().StringVar(&options.readNodeType, "read-node-type", "", "The type of machines to use. Available options: b1 and t1. t1 includes increased processing power and memory")
+	cmd.Flags().Int32Var(&options.readShards, "read-shards", 0, "The number of shards to use. Shards determine the storage capacity of an index, with each shard providing 250 GB of storage")
+	cmd.Flags().Int32Var(&options.readReplicas, "read-replicas", 0, "The number of replicas to use. Replicas duplicate the compute resources and data of an index, allowing higher query throughput and availability")
+
+	// optional for all index types
 	cmd.Flags().StringVarP(&options.deletionProtection, "deletion-protection", "p", "", "enable or disable deletion protection for the index")
+	cmd.Flags().StringToStringVar(&options.tags, "tags", map[string]string{}, "Custom user tags to add to an index")
 
 	return cmd
 }
@@ -51,10 +83,48 @@ func NewConfigureIndexCmd() *cobra.Command {
 func runConfigureIndexCmd(ctx context.Context, options configureIndexOptions) {
 	pc := sdk.NewPineconeClient(ctx)
 
+	readCapacity, err := constructReadCapacity(options.readNodeType, options.readShards, options.readReplicas)
+	if err != nil {
+		msg.FailMsg("Failed to configure index %s: %+v\n", style.Emphasis(options.name), err)
+		exit.Error(err, "Failed to configure index")
+	}
+
+	// index tags
+	var indexTags pinecone.IndexTags
+	if len(options.tags) > 0 {
+		indexTags = pinecone.IndexTags(options.tags)
+	}
+
+	// embed configuration
+	var embed *pinecone.ConfigureIndexEmbed
+	if options.model != "" || len(options.fieldMap) > 0 || len(options.readParameters) > 0 || len(options.writeParameters) > 0 {
+		fieldMap := toInterfaceMap(options.fieldMap)
+		readParameters := toInterfaceMap(options.readParameters)
+		writeParameters := toInterfaceMap(options.writeParameters)
+
+		embed = &pinecone.ConfigureIndexEmbed{}
+
+		if options.model != "" {
+			embed.Model = &options.model
+		}
+		if fieldMap != nil {
+			embed.FieldMap = &fieldMap
+		}
+		if readParameters != nil {
+			embed.ReadParameters = &readParameters
+		}
+		if writeParameters != nil {
+			embed.WriteParameters = &writeParameters
+		}
+	}
+
 	idx, err := pc.ConfigureIndex(ctx, options.name, pinecone.ConfigureIndexParams{
 		PodType:            options.podType,
 		Replicas:           options.replicas,
 		DeletionProtection: pinecone.DeletionProtection(options.deletionProtection),
+		ReadCapacity:       readCapacity,
+		Tags:               indexTags,
+		Embed:              embed,
 	})
 	if err != nil {
 		msg.FailMsg("Failed to configure index %s: %+v\n", style.Emphasis(options.name), err)

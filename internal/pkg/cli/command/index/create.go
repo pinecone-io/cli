@@ -131,8 +131,8 @@ func NewCreateIndexCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&options.cloud, "cloud", "c", "", "Cloud provider where you would like to deploy your index")
 	cmd.Flags().StringVarP(&options.region, "region", "r", "", "Cloud region where you would like to deploy your index")
 	cmd.Flags().StringVar(&options.readNodeType, "read-node-type", "", "The type of machines to use. Available options: b1 and t1. t1 includes increased processing power and memory")
-	cmd.Flags().Int32Var(&options.readShards, "read-shards", 1, "The number of shards to use. Shards determine the storage capacity of an index, with each shard providing 250 GB of storage")
-	cmd.Flags().Int32Var(&options.readReplicas, "read-replicas", 1, "The number of replicas to use. Replicas duplicate the compute resources and data of an index, allowing higher query throughput and availability")
+	cmd.Flags().Int32Var(&options.readShards, "read-shards", 0, "The number of shards to use. Shards determine the storage capacity of an index, with each shard providing 250 GB of storage")
+	cmd.Flags().Int32Var(&options.readReplicas, "read-replicas", 0, "The number of replicas to use. Replicas duplicate the compute resources and data of an index, allowing higher query throughput and availability")
 
 	// Serverless flags
 	cmd.Flags().StringVarP(&options.vectorType, "vector-type", "v", "", "Vector type to use. One of: dense, sparse")
