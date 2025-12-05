@@ -13,6 +13,7 @@ type mockIndexService struct {
 	lastServerless *pinecone.CreateServerlessIndexRequest
 	lastPod        *pinecone.CreatePodIndexRequest
 	lastIntegrated *pinecone.CreateIndexForModelRequest
+	lastBYOC       *pinecone.CreateBYOCIndexRequest
 	result         *pinecone.Index
 	err            error
 }
@@ -29,6 +30,11 @@ func (m *mockIndexService) CreatePodIndex(ctx context.Context, req *pinecone.Cre
 
 func (m *mockIndexService) CreateIndexForModel(ctx context.Context, req *pinecone.CreateIndexForModelRequest) (*pinecone.Index, error) {
 	m.lastIntegrated = req
+	return m.result, m.err
+}
+
+func (m *mockIndexService) CreateBYOCIndex(ctx context.Context, req *pinecone.CreateBYOCIndexRequest) (*pinecone.Index, error) {
+	m.lastBYOC = req
 	return m.result, m.err
 }
 
