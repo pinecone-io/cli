@@ -51,7 +51,7 @@ func NewConfigureIndexCmd() *cobra.Command {
 			pc index configure --name "index-name" --deletion-protection "enabled"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			runConfigureIndexCmd(cmd.Context(), options)
+			runConfigureIndexCmd(cmd.Context(), cmd, options)
 		},
 	}
 
@@ -80,14 +80,8 @@ func NewConfigureIndexCmd() *cobra.Command {
 	return cmd
 }
 
-func runConfigureIndexCmd(ctx context.Context, options configureIndexOptions) {
+func runConfigureIndexCmd(ctx context.Context, cmd *cobra.Command, options configureIndexOptions) {
 	pc := sdk.NewPineconeClient(ctx)
-
-	readCapacity, err := constructReadCapacity(options.readNodeType, options.readShards, options.readReplicas)
-	if err != nil {
-		msg.FailMsg("Failed to configure index %s: %+v\n", style.Emphasis(options.name), err)
-		exit.Error(err, "Failed to configure index")
-	}
 
 	// index tags
 	var indexTags pinecone.IndexTags
@@ -116,6 +110,25 @@ func runConfigureIndexCmd(ctx context.Context, options configureIndexOptions) {
 		if writeParameters != nil {
 			embed.WriteParameters = &writeParameters
 		}
+	}
+
+	// read capacity configuration
+	var nodeType *string
+	var shards *int32
+	var replicas *int32
+	if cmd.Flags().Changed("read-node-type") {
+		nodeType = &options.readNodeType
+	}
+	if cmd.Flags().Changed("read-shards") {
+		shards = &options.readShards
+	}
+	if cmd.Flags().Changed("read-replicas") {
+		replicas = &options.readReplicas
+	}
+	readCapacity, err := constructReadCapacity(nodeType, shards, replicas)
+	if err != nil {
+		msg.FailMsg("Failed to configure index %s: %+v\n", style.Emphasis(options.name), err)
+		exit.Error(err, "Failed to configure index")
 	}
 
 	idx, err := pc.ConfigureIndex(ctx, options.name, pinecone.ConfigureIndexParams{

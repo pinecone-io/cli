@@ -110,7 +110,7 @@ func NewCreateIndexCmd() *cobra.Command {
 		Long:    createIndexHelp,
 		Example: createIndexExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			runCreateIndexCmd(cmd.Context(), options)
+			runCreateIndexCmd(cmd.Context(), cmd, options)
 		},
 	}
 
@@ -161,10 +161,10 @@ func NewCreateIndexCmd() *cobra.Command {
 	return cmd
 }
 
-func runCreateIndexCmd(ctx context.Context, options createIndexOptions) {
+func runCreateIndexCmd(ctx context.Context, cmd *cobra.Command, options createIndexOptions) {
 	pc := sdk.NewPineconeClient(ctx)
 
-	idx, err := runCreateIndexWithService(ctx, pc, options)
+	idx, err := runCreateIndexWithService(ctx, cmd, pc, options)
 	if err != nil {
 		msg.FailMsg("Failed to create index: %s\n", err)
 		exit.Error(err, "Failed to create index")
@@ -174,7 +174,7 @@ func runCreateIndexCmd(ctx context.Context, options createIndexOptions) {
 }
 
 // This function plus the CreateIndexService interface allows for testing
-func runCreateIndexWithService(ctx context.Context, service CreateIndexService, options createIndexOptions) (*pinecone.Index, error) {
+func runCreateIndexWithService(ctx context.Context, cmd *cobra.Command, service CreateIndexService, options createIndexOptions) (*pinecone.Index, error) {
 	// validate and derive index type from arguments
 	err := options.validate()
 	if err != nil {
@@ -198,7 +198,21 @@ func runCreateIndexWithService(ctx context.Context, service CreateIndexService, 
 	switch idxType {
 	case indexTypeServerless:
 		// create serverless index
-		readCapacity, err := constructReadCapacity(options.readNodeType, options.readShards, options.readReplicas)
+
+		// read capacity configuration
+		var nodeType *string
+		var shards *int32
+		var replicas *int32
+		if cmd.Flags().Changed("read-node-type") {
+			nodeType = &options.readNodeType
+		}
+		if cmd.Flags().Changed("read-shards") {
+			shards = &options.readShards
+		}
+		if cmd.Flags().Changed("read-replicas") {
+			replicas = &options.readReplicas
+		}
+		readCapacity, err := constructReadCapacity(nodeType, shards, replicas)
 		if err != nil {
 			return nil, err
 		}
@@ -257,7 +271,20 @@ func runCreateIndexWithService(ctx context.Context, service CreateIndexService, 
 		readParams := toInterfaceMap(options.readParameters)
 		writeParams := toInterfaceMap(options.writeParameters)
 
-		readCapacity, err := constructReadCapacity(options.readNodeType, options.readShards, options.readReplicas)
+		// read capacity configuration
+		var nodeType *string
+		var shards *int32
+		var replicas *int32
+		if cmd.Flags().Changed("read-node-type") {
+			nodeType = &options.readNodeType
+		}
+		if cmd.Flags().Changed("read-shards") {
+			shards = &options.readShards
+		}
+		if cmd.Flags().Changed("read-replicas") {
+			replicas = &options.readReplicas
+		}
+		readCapacity, err := constructReadCapacity(nodeType, shards, replicas)
 		if err != nil {
 			return nil, err
 		}
@@ -291,7 +318,7 @@ func runCreateIndexWithService(ctx context.Context, service CreateIndexService, 
 			Environment:        options.byocEnvironment,
 			Metric:             pointerOrNil(pinecone.IndexMetric(options.metric)),
 			DeletionProtection: pointerOrNil(pinecone.DeletionProtection(options.deletionProtection)),
-			Dimension:          options.dimension,
+			Dimension:          pointerOrNil(options.dimension),
 			Tags:               indexTags,
 			Schema:             buildMetadataSchema(options.metadataSchema),
 		}
@@ -361,12 +388,7 @@ func (c *createIndexOptions) deriveIndexType() (indexType, error) {
 
 // Only "Dedicated" is supported currently. "OnDemand" is the default, so if a user has provided
 // explicit nodeType, shards, and replicas, we use those values for "Dedicated"
-func constructReadCapacity(nodeType string, shards, replicas int32) (*pinecone.ReadCapacityParams, error) {
-
-	if nodeType == "" && replicas == 0 {
-		return nil, pcio.Errorf("read-node-type and read-replicas must be provided to configure read capacity")
-	}
-
+func constructReadCapacity(nodeType *string, shards, replicas *int32) (*pinecone.ReadCapacityParams, error) {
 	return &pinecone.ReadCapacityParams{
 		Dedicated: &pinecone.ReadCapacityDedicatedConfig{
 			NodeType: nodeType,

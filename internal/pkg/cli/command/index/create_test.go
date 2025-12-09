@@ -39,6 +39,7 @@ func (m *mockIndexService) CreateBYOCIndex(ctx context.Context, req *pinecone.Cr
 }
 
 func Test_runCreateIndexWithService_Serverless_Args(t *testing.T) {
+	cmd := NewCreateIndexCmd()
 	svc := &mockIndexService{result: &pinecone.Index{Name: "my-index"}}
 	options := createIndexOptions{
 		name:               "my-index",
@@ -52,7 +53,7 @@ func Test_runCreateIndexWithService_Serverless_Args(t *testing.T) {
 		sourceCollection:   "my-collection",
 	}
 
-	_, err := runCreateIndexWithService(context.Background(), svc, options)
+	_, err := runCreateIndexWithService(context.Background(), cmd, svc, options)
 	assert.NoError(t, err)
 	assert.Nil(t, svc.lastPod)
 	assert.Nil(t, svc.lastIntegrated)
@@ -69,6 +70,7 @@ func Test_runCreateIndexWithService_Serverless_Args(t *testing.T) {
 }
 
 func Test_runCreateIndexWithService_Pod_Args(t *testing.T) {
+	cmd := NewCreateIndexCmd()
 	svc := &mockIndexService{result: &pinecone.Index{Name: "my-index"}}
 	options := createIndexOptions{
 		name:               "my-index",
@@ -84,7 +86,7 @@ func Test_runCreateIndexWithService_Pod_Args(t *testing.T) {
 		metadataConfig:     []string{"field1", "field2"},
 	}
 
-	_, err := runCreateIndexWithService(context.Background(), svc, options)
+	_, err := runCreateIndexWithService(context.Background(), cmd, svc, options)
 	assert.NoError(t, err)
 	assert.Nil(t, svc.lastServerless)
 	assert.Nil(t, svc.lastIntegrated)
@@ -103,6 +105,7 @@ func Test_runCreateIndexWithService_Pod_Args(t *testing.T) {
 }
 
 func Test_runCreateIndexWithService_Integrated_Args(t *testing.T) {
+	cmd := NewCreateIndexCmd()
 	svc := &mockIndexService{result: &pinecone.Index{Name: "my-index"}}
 	options := createIndexOptions{
 		name:               "my-index",
@@ -116,7 +119,7 @@ func Test_runCreateIndexWithService_Integrated_Args(t *testing.T) {
 		tags:               map[string]string{"tag1": "value1", "tag2": "value2"},
 	}
 
-	_, err := runCreateIndexWithService(context.Background(), svc, options)
+	_, err := runCreateIndexWithService(context.Background(), cmd, svc, options)
 	assert.NoError(t, err)
 	assert.Nil(t, svc.lastServerless)
 	assert.Nil(t, svc.lastPod)
