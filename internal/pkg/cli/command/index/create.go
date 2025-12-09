@@ -389,6 +389,11 @@ func (c *createIndexOptions) deriveIndexType() (indexType, error) {
 // Only "Dedicated" is supported currently. "OnDemand" is the default, so if a user has provided
 // explicit nodeType, shards, and replicas, we use those values for "Dedicated"
 func constructReadCapacity(nodeType *string, shards, replicas *int32) (*pinecone.ReadCapacityParams, error) {
+	// If no flags are provided, pinecone.ReadCapacityParams should be nil
+	if nodeType == nil && shards == nil && replicas == nil {
+		return nil, nil
+	}
+
 	return &pinecone.ReadCapacityParams{
 		Dedicated: &pinecone.ReadCapacityDedicatedConfig{
 			NodeType: nodeType,
