@@ -2,6 +2,7 @@ package index
 
 import (
 	"context"
+	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/docslinks"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -60,6 +61,7 @@ type createIndexOptions struct {
 	// serverless & integrated
 	cloud        string
 	region       string
+	readMode     string
 	readNodeType string
 	readShards   int32
 	readReplicas int32
@@ -130,6 +132,7 @@ func NewCreateIndexCmd() *cobra.Command {
 	// Serverless & Integrated
 	cmd.Flags().StringVarP(&options.cloud, "cloud", "c", "", "Cloud provider where you would like to deploy your index")
 	cmd.Flags().StringVarP(&options.region, "region", "r", "", "Cloud region where you would like to deploy your index")
+	cmd.Flags().StringVar(&options.readMode, "read-mode", "", "The read capacity mode to use. One of: ondemand, dedicated. Defaults to ondemand. If configuring dedicated, you must also provide read-node-type, read-shards, and read-replicas")
 	cmd.Flags().StringVar(&options.readNodeType, "read-node-type", "", "The type of machines to use. Available options: b1 and t1. t1 includes increased processing power and memory")
 	cmd.Flags().Int32Var(&options.readShards, "read-shards", 0, "The number of shards to use. Shards determine the storage capacity of an index, with each shard providing 250 GB of storage")
 	cmd.Flags().Int32Var(&options.readReplicas, "read-replicas", 0, "The number of replicas to use. Replicas duplicate the compute resources and data of an index, allowing higher query throughput and availability")
@@ -192,30 +195,31 @@ func runCreateIndexWithService(ctx context.Context, cmd *cobra.Command, service 
 		indexTags = &tags
 	}
 
+	// read capacity configuration
+	var mode *string
+	var nodeType *string
+	var shards *int32
+	var replicas *int32
+	if cmd.Flags().Changed("read-node-type") {
+		nodeType = &options.readNodeType
+	}
+	if cmd.Flags().Changed("read-shards") {
+		shards = &options.readShards
+	}
+	if cmd.Flags().Changed("read-replicas") {
+		replicas = &options.readReplicas
+	}
+	readCapacity, err := constructReadCapacity(mode, nodeType, shards, replicas)
+	if err != nil {
+		return nil, err
+	}
+
 	// created index
 	var idx *pinecone.Index
 
 	switch idxType {
 	case indexTypeServerless:
 		// create serverless index
-
-		// read capacity configuration
-		var nodeType *string
-		var shards *int32
-		var replicas *int32
-		if cmd.Flags().Changed("read-node-type") {
-			nodeType = &options.readNodeType
-		}
-		if cmd.Flags().Changed("read-shards") {
-			shards = &options.readShards
-		}
-		if cmd.Flags().Changed("read-replicas") {
-			replicas = &options.readReplicas
-		}
-		readCapacity, err := constructReadCapacity(nodeType, shards, replicas)
-		if err != nil {
-			return nil, err
-		}
 
 		args := pinecone.CreateServerlessIndexRequest{
 			Name:               options.name,
@@ -271,20 +275,7 @@ func runCreateIndexWithService(ctx context.Context, cmd *cobra.Command, service 
 		readParams := toInterfaceMap(options.readParameters)
 		writeParams := toInterfaceMap(options.writeParameters)
 
-		// read capacity configuration
-		var nodeType *string
-		var shards *int32
-		var replicas *int32
-		if cmd.Flags().Changed("read-node-type") {
-			nodeType = &options.readNodeType
-		}
-		if cmd.Flags().Changed("read-shards") {
-			shards = &options.readShards
-		}
-		if cmd.Flags().Changed("read-replicas") {
-			replicas = &options.readReplicas
-		}
-		readCapacity, err := constructReadCapacity(nodeType, shards, replicas)
+		readCapacity, err := constructReadCapacity(mode, nodeType, shards, replicas)
 		if err != nil {
 			return nil, err
 		}
@@ -388,10 +379,17 @@ func (c *createIndexOptions) deriveIndexType() (indexType, error) {
 
 // Only "Dedicated" is supported currently. "OnDemand" is the default, so if a user has provided
 // explicit nodeType, shards, and replicas, we use those values for "Dedicated"
-func constructReadCapacity(nodeType *string, shards, replicas *int32) (*pinecone.ReadCapacityParams, error) {
-	// If no flags are provided, pinecone.ReadCapacityParams should be nil
+func constructReadCapacity(mode *string, nodeType *string, shards, replicas *int32) (*pinecone.ReadCapacityParams, error) {
+	// If no arguments are provided, pinecone.ReadCapacityParams should be nil
 	if nodeType == nil && shards == nil && replicas == nil {
 		return nil, nil
+	}
+
+	// OnDemand mode requested for updating an index
+	if mode != nil && strings.ToLower(*mode) == "ondemand" {
+		return &pinecone.ReadCapacityParams{
+			OnDemand: &pinecone.ReadCapacityOnDemandConfig{},
+		}, nil
 	}
 
 	return &pinecone.ReadCapacityParams{
