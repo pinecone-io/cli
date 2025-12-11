@@ -135,7 +135,7 @@ func Test_runCreateIndexWithService_Integrated_Args(t *testing.T) {
 	assert.Equal(t, pinecone.IndexTags(options.tags), *svc.lastIntegrated.Tags)
 }
 
-func TestCreateIndexOptions_DeriveIndexType(t *testing.T) {
+func Test_createIndexOptions_deriveIndexType(t *testing.T) {
 	tests := []struct {
 		name        string
 		options     createIndexOptions
@@ -230,7 +230,7 @@ func TestCreateIndexOptions_DeriveIndexType(t *testing.T) {
 	}
 }
 
-func TestCreateIndexOptions_Validate(t *testing.T) {
+func Test_createIndexOptions_validate(t *testing.T) {
 	tests := []struct {
 		name        string
 		options     createIndexOptions
@@ -298,4 +298,64 @@ func TestCreateIndexOptions_Validate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_constructReadCapacity(t *testing.T) {
+	t.Run("nil arguments returns nil", func(t *testing.T) {
+		got, err := constructReadCapacity(nil, nil, nil, nil)
+		assert.NoError(t, err)
+		assert.Nil(t, got)
+	})
+
+	t.Run("on demand mode", func(t *testing.T) {
+		mode := "OnDemand"
+		zero := int32(0)
+
+		// A zero shard value is used to bypass the nil short-circuit and
+		// exercise the OnDemand branch.
+		got, err := constructReadCapacity(&mode, nil, &zero, nil)
+		assert.NoError(t, err)
+		if assert.NotNil(t, got) {
+			assert.NotNil(t, got.OnDemand)
+			assert.Nil(t, got.Dedicated)
+		}
+	})
+
+	t.Run("dedicated manual scaling", func(t *testing.T) {
+		nodeType := "p1.x1"
+		shards := int32(3)
+		replicas := int32(2)
+
+		got, err := constructReadCapacity(nil, &nodeType, &shards, &replicas)
+		assert.NoError(t, err)
+
+		if assert.NotNil(t, got) && assert.NotNil(t, got.Dedicated) {
+			assert.Equal(t, nodeType, *got.Dedicated.NodeType)
+			if assert.NotNil(t, got.Dedicated.Scaling) && assert.NotNil(t, got.Dedicated.Scaling.Manual) {
+				assert.Equal(t, shards, *got.Dedicated.Scaling.Manual.Shards)
+				assert.Equal(t, replicas, *got.Dedicated.Scaling.Manual.Replicas)
+			}
+			assert.Nil(t, got.OnDemand)
+		}
+	})
+}
+
+func Test_buildMetadataSchema(t *testing.T) {
+	t.Run("empty schema returns nil", func(t *testing.T) {
+		assert.Nil(t, buildMetadataSchema([]string{}))
+	})
+
+	t.Run("creates filterable fields", func(t *testing.T) {
+		fields := []string{"field1", "field2"}
+
+		schema := buildMetadataSchema(fields)
+		if assert.NotNil(t, schema) {
+			assert.Len(t, schema.Fields, len(fields))
+			for _, field := range fields {
+				metadataField, ok := schema.Fields[field]
+				assert.True(t, ok)
+				assert.True(t, metadataField.Filterable)
+			}
+		}
+	})
 }
