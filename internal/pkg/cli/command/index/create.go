@@ -404,9 +404,7 @@ func buildReadCapacityFromFlags(cmd *cobra.Command, mode, nodeType string, shard
 				OnDemand: &pinecone.ReadCapacityOnDemandConfig{},
 			}, nil
 		case "dedicated":
-			if !(nodeSet && shardsSet && replSet) {
-				return nil, pcio.Errorf("read-node-type, read-shards, and read-replicas are required for dedicated mode")
-			}
+			// continue
 		default:
 			return nil, pcio.Errorf("invalid read-mode")
 		}
@@ -416,6 +414,7 @@ func buildReadCapacityFromFlags(cmd *cobra.Command, mode, nodeType string, shard
 		}
 	}
 
+	// dedicated mode if ondemand mode was not requested
 	return &pinecone.ReadCapacityParams{
 		Dedicated: &pinecone.ReadCapacityDedicatedConfig{
 			NodeType: nodeTypePtr,

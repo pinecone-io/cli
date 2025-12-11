@@ -326,9 +326,9 @@ func Test_buildReadCapacityFromFlags(t *testing.T) {
 	t.Run("ondemand rejects dedicated fields", func(t *testing.T) {
 		cmd := newCmd()
 		_ = cmd.Flags().Set("read-mode", "ondemand")
-		_ = cmd.Flags().Set("read-replicas", "2")
+		_ = cmd.Flags().Set("read-shards", "3")
 
-		rc, err := buildReadCapacityFromFlags(cmd, "ondemand", "", 0, 2)
+		rc, err := buildReadCapacityFromFlags(cmd, "ondemand", "", 3, 0)
 		assert.Error(t, err)
 		assert.Nil(t, rc)
 	})
@@ -349,17 +349,23 @@ func Test_buildReadCapacityFromFlags(t *testing.T) {
 		}
 	})
 
-	t.Run("dedicated explicit mode missing fields errors", func(t *testing.T) {
+	t.Run("dedicated explicit mode allows partial fields", func(t *testing.T) {
 		cmd := newCmd()
 		_ = cmd.Flags().Set("read-mode", "dedicated")
 		_ = cmd.Flags().Set("read-node-type", "p1.x1")
+		// shards/replicas not set
 
 		rc, err := buildReadCapacityFromFlags(cmd, "dedicated", "p1.x1", 0, 0)
-		assert.Error(t, err)
-		assert.Nil(t, rc)
+		assert.NoError(t, err)
+		if assert.NotNil(t, rc) && assert.NotNil(t, rc.Dedicated) {
+			assert.Equal(t, "p1.x1", *rc.Dedicated.NodeType)
+			// shards/replicas pointers should be nil since flags weren’t set
+			assert.Nil(t, rc.Dedicated.Scaling.Manual.Shards)
+			assert.Nil(t, rc.Dedicated.Scaling.Manual.Replicas)
+		}
 	})
 
-	t.Run("dedicated inferred when mode omitted but fields set", func(t *testing.T) {
+	t.Run("dedicated inferred when mode omitted", func(t *testing.T) {
 		cmd := newCmd()
 		_ = cmd.Flags().Set("read-node-type", "p1.x1")
 		_ = cmd.Flags().Set("read-shards", "3")
@@ -374,18 +380,7 @@ func Test_buildReadCapacityFromFlags(t *testing.T) {
 		}
 	})
 
-	t.Run("invalid mode errors", func(t *testing.T) {
-		cmd := newCmd()
-		_ = cmd.Flags().Set("read-mode", "invalid")
-
-		rc, err := buildReadCapacityFromFlags(cmd, "invalid", "", 0, 0)
-		assert.Error(t, err)
-		assert.Nil(t, rc)
-	})
-
-	// Optional: enforce behavior for partial dedicated fields when mode omitted.
-	// If you decide it should error, assert.Error here instead.
-	t.Run("mode omitted with partial dedicated fields (current behavior)", func(t *testing.T) {
+	t.Run("mode omitted with partial dedicated fields succeeds", func(t *testing.T) {
 		cmd := newCmd()
 		_ = cmd.Flags().Set("read-shards", "3")
 
@@ -396,6 +391,15 @@ func Test_buildReadCapacityFromFlags(t *testing.T) {
 			assert.Equal(t, int32(3), *rc.Dedicated.Scaling.Manual.Shards)
 			assert.Nil(t, rc.Dedicated.Scaling.Manual.Replicas)
 		}
+	})
+
+	t.Run("invalid mode errors", func(t *testing.T) {
+		cmd := newCmd()
+		_ = cmd.Flags().Set("read-mode", "invalid")
+
+		rc, err := buildReadCapacityFromFlags(cmd, "invalid", "", 0, 0)
+		assert.Error(t, err)
+		assert.Nil(t, rc)
 	})
 }
 
