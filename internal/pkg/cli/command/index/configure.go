@@ -115,23 +115,7 @@ func runConfigureIndexCmd(ctx context.Context, cmd *cobra.Command, options confi
 	}
 
 	// read capacity configuration
-	var mode *string
-	var nodeType *string
-	var shards *int32
-	var replicas *int32
-	if cmd.Flags().Changed("read-mode") {
-		mode = &options.readMode
-	}
-	if cmd.Flags().Changed("read-node-type") {
-		nodeType = &options.readNodeType
-	}
-	if cmd.Flags().Changed("read-shards") {
-		shards = &options.readShards
-	}
-	if cmd.Flags().Changed("read-replicas") {
-		replicas = &options.readReplicas
-	}
-	readCapacity, err := constructReadCapacity(mode, nodeType, shards, replicas)
+	readCapacity, err := buildReadCapacityFromFlags(cmd, options.readMode, options.readNodeType, options.readShards, options.readReplicas)
 	if err != nil {
 		msg.FailMsg("Failed to configure index %s: %+v\n", style.Emphasis(options.name), err)
 		exit.Error(err, "Failed to configure index")

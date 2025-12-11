@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -300,42 +301,100 @@ func Test_createIndexOptions_validate(t *testing.T) {
 	}
 }
 
-func Test_constructReadCapacity(t *testing.T) {
-	t.Run("nil arguments returns nil", func(t *testing.T) {
-		got, err := constructReadCapacity(nil, nil, nil, nil)
+func Test_buildReadCapacityFromFlags(t *testing.T) {
+	newCmd := func() *cobra.Command { return NewCreateIndexCmd() }
+
+	t.Run("no flags set returns nil", func(t *testing.T) {
+		cmd := newCmd()
+		rc, err := buildReadCapacityFromFlags(cmd, "", "", 0, 0)
 		assert.NoError(t, err)
-		assert.Nil(t, got)
+		assert.Nil(t, rc)
 	})
 
-	t.Run("on demand mode", func(t *testing.T) {
-		mode := "OnDemand"
-		zero := int32(0)
+	t.Run("ondemand mode", func(t *testing.T) {
+		cmd := newCmd()
+		_ = cmd.Flags().Set("read-mode", "ondemand")
 
-		// A zero shard value is used to bypass the nil short-circuit and
-		// exercise the OnDemand branch.
-		got, err := constructReadCapacity(&mode, nil, &zero, nil)
+		rc, err := buildReadCapacityFromFlags(cmd, "ondemand", "", 0, 0)
 		assert.NoError(t, err)
-		if assert.NotNil(t, got) {
-			assert.NotNil(t, got.OnDemand)
-			assert.Nil(t, got.Dedicated)
+		if assert.NotNil(t, rc) {
+			assert.NotNil(t, rc.OnDemand)
+			assert.Nil(t, rc.Dedicated)
 		}
 	})
 
-	t.Run("dedicated manual scaling", func(t *testing.T) {
-		nodeType := "p1.x1"
-		shards := int32(3)
-		replicas := int32(2)
+	t.Run("ondemand rejects dedicated fields", func(t *testing.T) {
+		cmd := newCmd()
+		_ = cmd.Flags().Set("read-mode", "ondemand")
+		_ = cmd.Flags().Set("read-replicas", "2")
 
-		got, err := constructReadCapacity(nil, &nodeType, &shards, &replicas)
+		rc, err := buildReadCapacityFromFlags(cmd, "ondemand", "", 0, 2)
+		assert.Error(t, err)
+		assert.Nil(t, rc)
+	})
+
+	t.Run("dedicated explicit mode with all fields", func(t *testing.T) {
+		cmd := newCmd()
+		_ = cmd.Flags().Set("read-mode", "dedicated")
+		_ = cmd.Flags().Set("read-node-type", "p1.x1")
+		_ = cmd.Flags().Set("read-shards", "3")
+		_ = cmd.Flags().Set("read-replicas", "2")
+
+		rc, err := buildReadCapacityFromFlags(cmd, "dedicated", "p1.x1", 3, 2)
 		assert.NoError(t, err)
+		if assert.NotNil(t, rc) && assert.NotNil(t, rc.Dedicated) {
+			assert.Equal(t, "p1.x1", *rc.Dedicated.NodeType)
+			assert.Equal(t, int32(3), *rc.Dedicated.Scaling.Manual.Shards)
+			assert.Equal(t, int32(2), *rc.Dedicated.Scaling.Manual.Replicas)
+		}
+	})
 
-		if assert.NotNil(t, got) && assert.NotNil(t, got.Dedicated) {
-			assert.Equal(t, nodeType, *got.Dedicated.NodeType)
-			if assert.NotNil(t, got.Dedicated.Scaling) && assert.NotNil(t, got.Dedicated.Scaling.Manual) {
-				assert.Equal(t, shards, *got.Dedicated.Scaling.Manual.Shards)
-				assert.Equal(t, replicas, *got.Dedicated.Scaling.Manual.Replicas)
-			}
-			assert.Nil(t, got.OnDemand)
+	t.Run("dedicated explicit mode missing fields errors", func(t *testing.T) {
+		cmd := newCmd()
+		_ = cmd.Flags().Set("read-mode", "dedicated")
+		_ = cmd.Flags().Set("read-node-type", "p1.x1")
+
+		rc, err := buildReadCapacityFromFlags(cmd, "dedicated", "p1.x1", 0, 0)
+		assert.Error(t, err)
+		assert.Nil(t, rc)
+	})
+
+	t.Run("dedicated inferred when mode omitted but fields set", func(t *testing.T) {
+		cmd := newCmd()
+		_ = cmd.Flags().Set("read-node-type", "p1.x1")
+		_ = cmd.Flags().Set("read-shards", "3")
+		_ = cmd.Flags().Set("read-replicas", "2")
+
+		rc, err := buildReadCapacityFromFlags(cmd, "", "p1.x1", 3, 2)
+		assert.NoError(t, err)
+		if assert.NotNil(t, rc) && assert.NotNil(t, rc.Dedicated) {
+			assert.Equal(t, "p1.x1", *rc.Dedicated.NodeType)
+			assert.Equal(t, int32(3), *rc.Dedicated.Scaling.Manual.Shards)
+			assert.Equal(t, int32(2), *rc.Dedicated.Scaling.Manual.Replicas)
+		}
+	})
+
+	t.Run("invalid mode errors", func(t *testing.T) {
+		cmd := newCmd()
+		_ = cmd.Flags().Set("read-mode", "invalid")
+
+		rc, err := buildReadCapacityFromFlags(cmd, "invalid", "", 0, 0)
+		assert.Error(t, err)
+		assert.Nil(t, rc)
+	})
+
+	// Optional: enforce behavior for partial dedicated fields when mode omitted.
+	// If you decide it should error, assert.Error here instead.
+	t.Run("mode omitted with partial dedicated fields (current behavior)", func(t *testing.T) {
+		cmd := newCmd()
+		_ = cmd.Flags().Set("read-shards", "3")
+
+		rc, err := buildReadCapacityFromFlags(cmd, "", "", 3, 0)
+		assert.NoError(t, err)
+		if assert.NotNil(t, rc) && assert.NotNil(t, rc.Dedicated) {
+			assert.Nil(t, rc.Dedicated.NodeType)
+			assert.Equal(t, int32(3), *rc.Dedicated.Scaling.Manual.Shards)
+			assert.Nil(t, rc.Dedicated.Scaling.Manual.Replicas)
 		}
 	})
 }

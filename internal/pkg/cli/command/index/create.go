@@ -196,20 +196,7 @@ func runCreateIndexWithService(ctx context.Context, cmd *cobra.Command, service 
 	}
 
 	// read capacity configuration
-	var mode *string
-	var nodeType *string
-	var shards *int32
-	var replicas *int32
-	if cmd.Flags().Changed("read-node-type") {
-		nodeType = &options.readNodeType
-	}
-	if cmd.Flags().Changed("read-shards") {
-		shards = &options.readShards
-	}
-	if cmd.Flags().Changed("read-replicas") {
-		replicas = &options.readReplicas
-	}
-	readCapacity, err := constructReadCapacity(mode, nodeType, shards, replicas)
+	readCapacity, err := buildReadCapacityFromFlags(cmd, options.readMode, options.readNodeType, options.readShards, options.readReplicas)
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +262,7 @@ func runCreateIndexWithService(ctx context.Context, cmd *cobra.Command, service 
 		readParams := toInterfaceMap(options.readParameters)
 		writeParams := toInterfaceMap(options.writeParameters)
 
-		readCapacity, err := constructReadCapacity(mode, nodeType, shards, replicas)
+		readCapacity, err := buildReadCapacityFromFlags(cmd, options.readMode, options.readNodeType, options.readShards, options.readReplicas)
 		if err != nil {
 			return nil, err
 		}
@@ -377,28 +364,65 @@ func (c *createIndexOptions) deriveIndexType() (indexType, error) {
 	return "", pcio.Error("invalid index type. Please provide either environment, or cloud and region")
 }
 
-// Only "Dedicated" is supported currently. "OnDemand" is the default, so if a user has provided
-// explicit nodeType, shards, and replicas, we use those values for "Dedicated"
-func constructReadCapacity(mode *string, nodeType *string, shards, replicas *int32) (*pinecone.ReadCapacityParams, error) {
+// Builds the ReadCapacityParams object based on the provided arguments
+// "OnDemand" is the default with no explicit configuration. "Dedicated" requires nodeType, shards, and replicas
+// for creating an index, or migrating to a dedicated index.
+func buildReadCapacityFromFlags(cmd *cobra.Command, mode, nodeType string, shards, replicas int32) (*pinecone.ReadCapacityParams, error) {
+	// only read flags that have been set by the user
+	modeSet := cmd.Flags().Changed("read-mode")
+	nodeSet := cmd.Flags().Changed("read-node-type")
+	shardsSet := cmd.Flags().Changed("read-shards")
+	replSet := cmd.Flags().Changed("read-replicas")
+
+	var nodeTypePtr *string
+	var shardsPtr *int32
+	var replicasPtr *int32
+	if nodeSet {
+		nodeTypePtr = &nodeType
+	}
+	if shardsSet {
+		shardsPtr = &shards
+	}
+	if replSet {
+		replicasPtr = &replicas
+	}
+
 	// If no arguments are provided, pinecone.ReadCapacityParams should be nil
-	if nodeType == nil && shards == nil && replicas == nil {
+	if !modeSet && !nodeSet && !shardsSet && !replSet {
 		return nil, nil
 	}
 
-	// OnDemand mode requested for updating an index
-	if mode != nil && strings.ToLower(*mode) == "ondemand" {
-		return &pinecone.ReadCapacityParams{
-			OnDemand: &pinecone.ReadCapacityOnDemandConfig{},
-		}, nil
+	normMode := strings.ToLower(mode)
+	// read-mode specifically requested
+	if modeSet {
+		switch normMode {
+		case "ondemand":
+			if nodeSet || shardsSet || replSet {
+				return nil, pcio.Errorf("read-node-type, read-shards, and read-replicas are not supported with read-mode=ondemand")
+			}
+			return &pinecone.ReadCapacityParams{
+				OnDemand: &pinecone.ReadCapacityOnDemandConfig{},
+			}, nil
+		case "dedicated":
+			if !(nodeSet && shardsSet && replSet) {
+				return nil, pcio.Errorf("read-node-type, read-shards, and read-replicas are required for dedicated mode")
+			}
+		default:
+			return nil, pcio.Errorf("invalid read-mode")
+		}
+	} else { // read-mode not provided, return nil if no specific configuration values are passed
+		if !nodeSet && !shardsSet && !replSet {
+			return nil, nil
+		}
 	}
 
 	return &pinecone.ReadCapacityParams{
 		Dedicated: &pinecone.ReadCapacityDedicatedConfig{
-			NodeType: nodeType,
+			NodeType: nodeTypePtr,
 			Scaling: &pinecone.ReadCapacityScaling{
 				Manual: &pinecone.ReadCapacityManualScaling{
-					Shards:   shards,
-					Replicas: replicas,
+					Shards:   shardsPtr,
+					Replicas: replicasPtr,
 				},
 			},
 		},
