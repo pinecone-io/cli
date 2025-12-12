@@ -133,6 +133,7 @@ func runConfigureIndexCmd(ctx context.Context, cmd *cobra.Command, options confi
 		msg.FailMsg("Failed to configure index %s: %+v\n", style.Emphasis(options.name), err)
 		exit.Error(err, "Failed to configure index")
 	}
+
 	if options.json {
 		json := text.IndentJSON(idx)
 		pcio.Println(json)
