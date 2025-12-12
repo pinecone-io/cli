@@ -54,6 +54,10 @@ func TestPrintDescribeIndexTable(t *testing.T) {
 						},
 					},
 				},
+				Tags: pointerToTags(pinecone.IndexTags{
+					"env":  "dev",
+					"team": "search",
+				}),
 			},
 			expected: `
 ATTRIBUTE	VALUE
@@ -74,6 +78,8 @@ Region	us-east-1
 Source Collection	<none>
 Schema	{"fields":{"genre":{"filterable":true}}}
 Read Capacity	{"on_demand":{"status":{"state":"Ready"}}}
+
+Tags	{"env":"dev","team":"search"}
 `,
 		},
 		{
@@ -97,6 +103,10 @@ Read Capacity	{"on_demand":{"status":{"state":"Ready"}}}
 						SourceCollection: &sourceCollection,
 					},
 				},
+				Tags: pointerToTags(pinecone.IndexTags{
+					"env":  "dev",
+					"team": "search",
+				}),
 			},
 			expected: `
 ATTRIBUTE	VALUE
@@ -119,16 +129,33 @@ ShardCount	1
 PodCount	2
 MetadataConfig	{"indexed":["genre"]}
 Source Collection	sc-1
+
+Tags	{"env":"dev","team":"search"}
 `,
 		},
 		{
-			name: "spec missing with embed and tags",
+			name: "integrated serverless spec with embed",
 			index: &pinecone.Index{
 				Name:       "embed-index",
 				Metric:     pinecone.Cosine,
 				VectorType: "dense",
 				Host:       "embed-host",
-				Spec:       nil,
+				Spec: &pinecone.IndexSpec{
+					Serverless: &pinecone.ServerlessSpec{
+						Cloud:  pinecone.Aws,
+						Region: "us-east-1",
+						Schema: &pinecone.MetadataSchema{
+							Fields: map[string]pinecone.MetadataSchemaField{
+								"genre": {Filterable: true},
+							},
+						},
+						ReadCapacity: &pinecone.ReadCapacity{
+							OnDemand: &pinecone.ReadCapacityOnDemand{
+								Status: pinecone.ReadCapacityStatus{State: "Ready"},
+							},
+						},
+					},
+				},
 				Embed: &pinecone.IndexEmbed{
 					Model: "text-embedding-3-small",
 					FieldMap: pointerToMap(map[string]interface{}{
@@ -159,12 +186,63 @@ Ready	<none>
 Host	embed-host
 Private Host	<none>
 
-Spec	<none>
+Spec	serverless
+Cloud	aws
+Region	us-east-1
+Source Collection	<none>
+Schema	{"fields":{"genre":{"filterable":true}}}
+Read Capacity	{"on_demand":{"status":{"state":"Ready"}}}
 
 Model	text-embedding-3-small
 Field Map	{"title":"text"}
 Read Parameters	{"top_k":5}
 Write Parameters	{"namespace":"news"}
+
+Tags	{"env":"dev","team":"search"}
+`,
+		},
+		{
+			name: "BYOC spec with metadata schema",
+			index: &pinecone.Index{
+				Name:               "pod-index",
+				Metric:             pinecone.Dotproduct,
+				VectorType:         "sparse",
+				Dimension:          &podDim,
+				DeletionProtection: pinecone.DeletionProtectionDisabled,
+				Host:               "api.pinecone.io",
+				PrivateHost:        &sourceCollection,
+				Spec: &pinecone.IndexSpec{
+					BYOC: &pinecone.BYOCSpec{
+						Environment: "gcp-starter",
+						Schema: &pinecone.MetadataSchema{
+							Fields: map[string]pinecone.MetadataSchemaField{
+								"genre": {Filterable: true},
+							},
+						},
+					},
+				},
+				Tags: pointerToTags(pinecone.IndexTags{
+					"env":  "dev",
+					"team": "search",
+				}),
+			},
+			expected: `
+ATTRIBUTE	VALUE
+Name	pod-index
+Dimension	4
+Metric	dotproduct
+Deletion Protection	disabled
+Vector Type	sparse
+
+State	<none>
+Ready	<none>
+Host	api.pinecone.io
+Private Host	sc-1
+
+Spec	byoc
+Environment	gcp-starter
+Schema	{"fields":{"genre":{"filterable":true}}}
+
 Tags	{"env":"dev","team":"search"}
 `,
 		},
@@ -185,11 +263,14 @@ Tags	{"env":"dev","team":"search"}
 	}
 }
 
+// regexes for capturing ANSI and tab characters
 var (
 	ansiRegexp = regexp.MustCompile(`\x1b\[[0-9;]*m`)
 	gapRegexp  = regexp.MustCompile(`\s{2,}`)
 )
 
+// normalizeOutput strips ANSI coloring and normalizes to a single tab between columns
+// primarily makes asserting on output easier and fixtures more maintainable
 func normalizeOutput(output string) string {
 	clean := stripANSI(output)
 	lines := strings.Split(strings.TrimRight(clean, "\n"), "\n")

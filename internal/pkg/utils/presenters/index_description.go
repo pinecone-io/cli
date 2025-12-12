@@ -49,6 +49,7 @@ func PrintDescribeIndexTable(idx *pinecone.Index) {
 	pcio.Fprintf(writer, "Deletion Protection\t%s\n", ColorizeDeletionProtection(idx.DeletionProtection))
 	pcio.Fprintf(writer, "Vector Type\t%s\n", DisplayOrNone(idx.VectorType))
 	pcio.Fprintf(writer, "\t\n")
+
 	stateVal := "<none>"
 	readyVal := "<none>"
 	if idx.Status != nil {
@@ -129,6 +130,7 @@ func PrintDescribeIndexTable(idx *pinecone.Index) {
 		pcio.Fprintf(writer, "Field Map\t%s\n", text.InlineJSON(idx.Embed.FieldMap))
 		pcio.Fprintf(writer, "Read Parameters\t%s\n", text.InlineJSON(idx.Embed.ReadParameters))
 		pcio.Fprintf(writer, "Write Parameters\t%s\n", text.InlineJSON(idx.Embed.WriteParameters))
+		pcio.Fprintf(writer, "\t\n")
 	}
 
 	if idx.Tags != nil {

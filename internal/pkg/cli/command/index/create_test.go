@@ -380,7 +380,7 @@ func Test_buildReadCapacityFromFlags(t *testing.T) {
 		}
 	})
 
-	t.Run("mode omitted with partial dedicated fields succeeds", func(t *testing.T) {
+	t.Run("mode omitted with partial dedicated fields", func(t *testing.T) {
 		cmd := newCmd()
 		_ = cmd.Flags().Set("read-shards", "3")
 
