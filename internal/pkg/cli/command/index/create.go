@@ -207,7 +207,6 @@ func runCreateIndexWithService(ctx context.Context, cmd *cobra.Command, service 
 	switch idxType {
 	case indexTypeServerless:
 		// create serverless index
-
 		args := pinecone.CreateServerlessIndexRequest{
 			Name:               options.name,
 			Cloud:              pinecone.Cloud(options.cloud),
@@ -225,7 +224,6 @@ func runCreateIndexWithService(ctx context.Context, cmd *cobra.Command, service 
 		idx, err = service.CreateServerlessIndex(ctx, &args)
 		if err != nil {
 			wrapped := pcio.Errorf("Failed to create serverless index %s: %w", style.Emphasis(options.name), err)
-			msg.FailMsg("%v", wrapped)
 			return nil, wrapped
 		}
 	case indexTypePod:
@@ -254,7 +252,6 @@ func runCreateIndexWithService(ctx context.Context, cmd *cobra.Command, service 
 		idx, err = service.CreatePodIndex(ctx, &args)
 		if err != nil {
 			wrapped := pcio.Errorf("Failed to create pod index %s: %w", style.Emphasis(options.name), err)
-			msg.FailMsg("%v", wrapped)
 			return nil, wrapped
 		}
 	case indexTypeIntegrated:
@@ -286,7 +283,6 @@ func runCreateIndexWithService(ctx context.Context, cmd *cobra.Command, service 
 		idx, err = service.CreateIndexForModel(ctx, &args)
 		if err != nil {
 			wrapped := pcio.Errorf("Failed to create integrated index %s: %w", style.Emphasis(options.name), err)
-			msg.FailMsg("%v", wrapped)
 			return nil, wrapped
 		}
 	case indexTypeBYOC:
@@ -304,7 +300,6 @@ func runCreateIndexWithService(ctx context.Context, cmd *cobra.Command, service 
 		idx, err = service.CreateBYOCIndex(ctx, &args)
 		if err != nil {
 			wrapped := pcio.Errorf("Failed to create BYOC index %s: %w", style.Emphasis(options.name), err)
-			msg.FailMsg("%v", wrapped)
 			return nil, wrapped
 		}
 	default:
