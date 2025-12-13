@@ -96,7 +96,10 @@ func printTable(idxs []*pinecone.Index, wide bool) {
 		}
 		pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
 	}
-	pcio.Fprint(writer, "\nUse --wide to show host/embed/tags, or --json for full details.\n")
+
+	if !wide {
+		pcio.Fprint(writer, "\nUse --wide to show host/embed/tags, or --json for full details.\n")
+	}
 	writer.Flush()
 }
 

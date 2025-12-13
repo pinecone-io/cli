@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
+	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -26,7 +27,18 @@ func NewSetApiKeyCmd() *cobra.Command {
 		    pc config set-api-key "api-key-value"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
+
+			if len(args) == 0 {
+				msg.FailMsg("Please provide an API key value.")
+				exit.ErrorMsg("No value provided for API key")
+			}
+
 			newApiKey := args[0]
+			if newApiKey == "" {
+				msg.FailMsg("Please provide an API key value.")
+				exit.ErrorMsg("No value provided for API key")
+			}
+
 			secrets.DefaultAPIKey.Set(newApiKey)
 			msg.SuccessMsg("Config property %s updated.", style.Emphasis("api_key"))
 			msg.InfoMsg("To clear the default API key, run %s.", style.Code("pc auth clear --api-key"))
