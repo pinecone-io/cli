@@ -44,11 +44,12 @@ func PrintDescribeIndexTable(idx *pinecone.Index) {
 	pcio.Fprint(writer, header)
 
 	pcio.Fprintf(writer, "Name\t%s\n", idx.Name)
-	pcio.Fprintf(writer, "Dimension\t%v\n", DisplayOrNone(idx.Dimension))
+	pcio.Fprintf(writer, "Dimension\t%s\n", DisplayOrNone(idx.Dimension))
 	pcio.Fprintf(writer, "Metric\t%s\n", string(idx.Metric))
 	pcio.Fprintf(writer, "Deletion Protection\t%s\n", ColorizeDeletionProtection(idx.DeletionProtection))
 	pcio.Fprintf(writer, "Vector Type\t%s\n", DisplayOrNone(idx.VectorType))
 	pcio.Fprintf(writer, "\t\n")
+
 	stateVal := "<none>"
 	readyVal := "<none>"
 	if idx.Status != nil {
@@ -62,9 +63,40 @@ func PrintDescribeIndexTable(idx *pinecone.Index) {
 	pcio.Fprintf(writer, "\t\n")
 
 	switch {
-	case idx.Spec == nil:
+	case idx.Spec == nil: // nil spec
 		pcio.Fprintf(writer, "Spec\t%s\n", "<none>")
-	case idx.Spec.Serverless == nil:
+	case idx.Spec.Serverless != nil: // serverless spec
+		pcio.Fprintf(writer, "Spec\t%s\n", "serverless")
+		serverless := idx.Spec.Serverless
+		if serverless != nil {
+			pcio.Fprintf(writer, "Cloud\t%s\n", serverless.Cloud)
+			pcio.Fprintf(writer, "Region\t%s\n", serverless.Region)
+			pcio.Fprintf(writer, "Source Collection\t%s\n", DisplayOrNone(serverless.SourceCollection))
+			schemaVal := "<none>"
+			if serverless.Schema != nil {
+				schemaVal = text.InlineJSON(serverless.Schema)
+			}
+			pcio.Fprintf(writer, "Schema\t%s\n", schemaVal)
+			readCapacityVal := "<none>"
+			if serverless.ReadCapacity != nil {
+				readCapacityVal = text.InlineJSON(serverless.ReadCapacity)
+			}
+			pcio.Fprintf(writer, "Read Capacity\t%s\n", readCapacityVal)
+		} else {
+			pcio.Fprintf(writer, "Cloud\t%s\n", "<none>")
+			pcio.Fprintf(writer, "Region\t%s\n", "<none>")
+			pcio.Fprintf(writer, "Source Collection\t%s\n", "<none>")
+		}
+	case idx.Spec.BYOC != nil: // BYOC spec
+		pcio.Fprintf(writer, "Spec\t%s\n", "byoc")
+		byoc := idx.Spec.BYOC
+		pcio.Fprintf(writer, "Environment\t%s\n", byoc.Environment)
+		schemaVal := "<none>"
+		if byoc.Schema != nil {
+			schemaVal = text.InlineJSON(byoc.Schema)
+		}
+		pcio.Fprintf(writer, "Schema\t%s\n", schemaVal)
+	case idx.Spec.Pod != nil: // pod spec
 		pcio.Fprintf(writer, "Spec\t%s\n", "pod")
 		pod := idx.Spec.Pod
 		if pod != nil {
@@ -88,18 +120,8 @@ func PrintDescribeIndexTable(idx *pinecone.Index) {
 			pcio.Fprintf(writer, "MetadataConfig\t%s\n", "<none>")
 			pcio.Fprintf(writer, "Source Collection\t%s\n", "<none>")
 		}
-	default:
-		pcio.Fprintf(writer, "Spec\t%s\n", "serverless")
-		serverless := idx.Spec.Serverless
-		if serverless != nil {
-			pcio.Fprintf(writer, "Cloud\t%s\n", serverless.Cloud)
-			pcio.Fprintf(writer, "Region\t%s\n", serverless.Region)
-			pcio.Fprintf(writer, "Source Collection\t%s\n", DisplayOrNone(serverless.SourceCollection))
-		} else {
-			pcio.Fprintf(writer, "Cloud\t%s\n", "<none>")
-			pcio.Fprintf(writer, "Region\t%s\n", "<none>")
-			pcio.Fprintf(writer, "Source Collection\t%s\n", "<none>")
-		}
+	default: // unknown spec
+		pcio.Fprintf(writer, "Spec\t%s\n", "unknown")
 	}
 	pcio.Fprintf(writer, "\t\n")
 
@@ -108,6 +130,7 @@ func PrintDescribeIndexTable(idx *pinecone.Index) {
 		pcio.Fprintf(writer, "Field Map\t%s\n", text.InlineJSON(idx.Embed.FieldMap))
 		pcio.Fprintf(writer, "Read Parameters\t%s\n", text.InlineJSON(idx.Embed.ReadParameters))
 		pcio.Fprintf(writer, "Write Parameters\t%s\n", text.InlineJSON(idx.Embed.WriteParameters))
+		pcio.Fprintf(writer, "\t\n")
 	}
 
 	if idx.Tags != nil {

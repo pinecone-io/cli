@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,6 +14,7 @@ type mockIndexService struct {
 	lastServerless *pinecone.CreateServerlessIndexRequest
 	lastPod        *pinecone.CreatePodIndexRequest
 	lastIntegrated *pinecone.CreateIndexForModelRequest
+	lastBYOC       *pinecone.CreateBYOCIndexRequest
 	result         *pinecone.Index
 	err            error
 }
@@ -32,7 +34,13 @@ func (m *mockIndexService) CreateIndexForModel(ctx context.Context, req *pinecon
 	return m.result, m.err
 }
 
+func (m *mockIndexService) CreateBYOCIndex(ctx context.Context, req *pinecone.CreateBYOCIndexRequest) (*pinecone.Index, error) {
+	m.lastBYOC = req
+	return m.result, m.err
+}
+
 func Test_runCreateIndexWithService_Serverless_Args(t *testing.T) {
+	cmd := NewCreateIndexCmd()
 	svc := &mockIndexService{result: &pinecone.Index{Name: "my-index"}}
 	options := createIndexOptions{
 		name:               "my-index",
@@ -46,7 +54,7 @@ func Test_runCreateIndexWithService_Serverless_Args(t *testing.T) {
 		sourceCollection:   "my-collection",
 	}
 
-	_, err := runCreateIndexWithService(context.Background(), svc, options)
+	_, err := runCreateIndexWithService(context.Background(), cmd, svc, options)
 	assert.NoError(t, err)
 	assert.Nil(t, svc.lastPod)
 	assert.Nil(t, svc.lastIntegrated)
@@ -63,6 +71,7 @@ func Test_runCreateIndexWithService_Serverless_Args(t *testing.T) {
 }
 
 func Test_runCreateIndexWithService_Pod_Args(t *testing.T) {
+	cmd := NewCreateIndexCmd()
 	svc := &mockIndexService{result: &pinecone.Index{Name: "my-index"}}
 	options := createIndexOptions{
 		name:               "my-index",
@@ -78,7 +87,7 @@ func Test_runCreateIndexWithService_Pod_Args(t *testing.T) {
 		metadataConfig:     []string{"field1", "field2"},
 	}
 
-	_, err := runCreateIndexWithService(context.Background(), svc, options)
+	_, err := runCreateIndexWithService(context.Background(), cmd, svc, options)
 	assert.NoError(t, err)
 	assert.Nil(t, svc.lastServerless)
 	assert.Nil(t, svc.lastIntegrated)
@@ -97,6 +106,7 @@ func Test_runCreateIndexWithService_Pod_Args(t *testing.T) {
 }
 
 func Test_runCreateIndexWithService_Integrated_Args(t *testing.T) {
+	cmd := NewCreateIndexCmd()
 	svc := &mockIndexService{result: &pinecone.Index{Name: "my-index"}}
 	options := createIndexOptions{
 		name:               "my-index",
@@ -110,7 +120,7 @@ func Test_runCreateIndexWithService_Integrated_Args(t *testing.T) {
 		tags:               map[string]string{"tag1": "value1", "tag2": "value2"},
 	}
 
-	_, err := runCreateIndexWithService(context.Background(), svc, options)
+	_, err := runCreateIndexWithService(context.Background(), cmd, svc, options)
 	assert.NoError(t, err)
 	assert.Nil(t, svc.lastServerless)
 	assert.Nil(t, svc.lastPod)
@@ -126,7 +136,7 @@ func Test_runCreateIndexWithService_Integrated_Args(t *testing.T) {
 	assert.Equal(t, pinecone.IndexTags(options.tags), *svc.lastIntegrated.Tags)
 }
 
-func TestCreateIndexOptions_DeriveIndexType(t *testing.T) {
+func Test_createIndexOptions_deriveIndexType(t *testing.T) {
 	tests := []struct {
 		name        string
 		options     createIndexOptions
@@ -221,7 +231,7 @@ func TestCreateIndexOptions_DeriveIndexType(t *testing.T) {
 	}
 }
 
-func TestCreateIndexOptions_Validate(t *testing.T) {
+func Test_createIndexOptions_validate(t *testing.T) {
 	tests := []struct {
 		name        string
 		options     createIndexOptions
@@ -289,4 +299,126 @@ func TestCreateIndexOptions_Validate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_buildReadCapacityFromFlags(t *testing.T) {
+	newCmd := func() *cobra.Command { return NewCreateIndexCmd() }
+
+	t.Run("no flags set returns nil", func(t *testing.T) {
+		cmd := newCmd()
+		rc, err := buildReadCapacityFromFlags(cmd, "", "", 0, 0)
+		assert.NoError(t, err)
+		assert.Nil(t, rc)
+	})
+
+	t.Run("ondemand mode", func(t *testing.T) {
+		cmd := newCmd()
+		_ = cmd.Flags().Set("read-mode", "ondemand")
+
+		rc, err := buildReadCapacityFromFlags(cmd, "ondemand", "", 0, 0)
+		assert.NoError(t, err)
+		if assert.NotNil(t, rc) {
+			assert.NotNil(t, rc.OnDemand)
+			assert.Nil(t, rc.Dedicated)
+		}
+	})
+
+	t.Run("ondemand rejects dedicated fields", func(t *testing.T) {
+		cmd := newCmd()
+		_ = cmd.Flags().Set("read-mode", "ondemand")
+		_ = cmd.Flags().Set("read-shards", "3")
+
+		rc, err := buildReadCapacityFromFlags(cmd, "ondemand", "", 3, 0)
+		assert.Error(t, err)
+		assert.Nil(t, rc)
+	})
+
+	t.Run("dedicated explicit mode with all fields", func(t *testing.T) {
+		cmd := newCmd()
+		_ = cmd.Flags().Set("read-mode", "dedicated")
+		_ = cmd.Flags().Set("read-node-type", "p1.x1")
+		_ = cmd.Flags().Set("read-shards", "3")
+		_ = cmd.Flags().Set("read-replicas", "2")
+
+		rc, err := buildReadCapacityFromFlags(cmd, "dedicated", "p1.x1", 3, 2)
+		assert.NoError(t, err)
+		if assert.NotNil(t, rc) && assert.NotNil(t, rc.Dedicated) {
+			assert.Equal(t, "p1.x1", *rc.Dedicated.NodeType)
+			assert.Equal(t, int32(3), *rc.Dedicated.Scaling.Manual.Shards)
+			assert.Equal(t, int32(2), *rc.Dedicated.Scaling.Manual.Replicas)
+		}
+	})
+
+	t.Run("dedicated explicit mode allows partial fields", func(t *testing.T) {
+		cmd := newCmd()
+		_ = cmd.Flags().Set("read-mode", "dedicated")
+		_ = cmd.Flags().Set("read-node-type", "p1.x1")
+		// shards/replicas not set
+
+		rc, err := buildReadCapacityFromFlags(cmd, "dedicated", "p1.x1", 0, 0)
+		assert.NoError(t, err)
+		if assert.NotNil(t, rc) && assert.NotNil(t, rc.Dedicated) {
+			assert.Equal(t, "p1.x1", *rc.Dedicated.NodeType)
+			// shards/replicas pointers should be nil since flags weren’t set
+			assert.Nil(t, rc.Dedicated.Scaling.Manual.Shards)
+			assert.Nil(t, rc.Dedicated.Scaling.Manual.Replicas)
+		}
+	})
+
+	t.Run("dedicated inferred when mode omitted", func(t *testing.T) {
+		cmd := newCmd()
+		_ = cmd.Flags().Set("read-node-type", "p1.x1")
+		_ = cmd.Flags().Set("read-shards", "3")
+		_ = cmd.Flags().Set("read-replicas", "2")
+
+		rc, err := buildReadCapacityFromFlags(cmd, "", "p1.x1", 3, 2)
+		assert.NoError(t, err)
+		if assert.NotNil(t, rc) && assert.NotNil(t, rc.Dedicated) {
+			assert.Equal(t, "p1.x1", *rc.Dedicated.NodeType)
+			assert.Equal(t, int32(3), *rc.Dedicated.Scaling.Manual.Shards)
+			assert.Equal(t, int32(2), *rc.Dedicated.Scaling.Manual.Replicas)
+		}
+	})
+
+	t.Run("mode omitted with partial dedicated fields", func(t *testing.T) {
+		cmd := newCmd()
+		_ = cmd.Flags().Set("read-shards", "3")
+
+		rc, err := buildReadCapacityFromFlags(cmd, "", "", 3, 0)
+		assert.NoError(t, err)
+		if assert.NotNil(t, rc) && assert.NotNil(t, rc.Dedicated) {
+			assert.Nil(t, rc.Dedicated.NodeType)
+			assert.Equal(t, int32(3), *rc.Dedicated.Scaling.Manual.Shards)
+			assert.Nil(t, rc.Dedicated.Scaling.Manual.Replicas)
+		}
+	})
+
+	t.Run("invalid mode errors", func(t *testing.T) {
+		cmd := newCmd()
+		_ = cmd.Flags().Set("read-mode", "invalid")
+
+		rc, err := buildReadCapacityFromFlags(cmd, "invalid", "", 0, 0)
+		assert.Error(t, err)
+		assert.Nil(t, rc)
+	})
+}
+
+func Test_buildMetadataSchema(t *testing.T) {
+	t.Run("empty schema returns nil", func(t *testing.T) {
+		assert.Nil(t, buildMetadataSchema([]string{}))
+	})
+
+	t.Run("creates filterable fields", func(t *testing.T) {
+		fields := []string{"field1", "field2"}
+
+		schema := buildMetadataSchema(fields)
+		if assert.NotNil(t, schema) {
+			assert.Len(t, schema.Fields, len(fields))
+			for _, field := range fields {
+				metadataField, ok := schema.Fields[field]
+				assert.True(t, ok)
+				assert.True(t, metadataField.Filterable)
+			}
+		}
+	})
 }

@@ -43,14 +43,26 @@ type IO struct {
 type Options struct{}
 
 func Run(ctx context.Context, io IO, opts Options) {
-	err := GetAndSetAccessToken(ctx, nil)
+	// Check if the user is currently logged in
+	token, err := oauth.Token(ctx)
+	if err != nil {
+		msg.FailMsg("Error retrieving oauth token: %s", err)
+		exit.Error(err, "Error retrieving oauth token")
+	}
+	if token != nil && token.AccessToken != "" {
+		msg.WarnMsg("You are already logged in. Please log out first using %s.", style.Code("pc auth logout"))
+		return
+	}
+
+	// Initiate login flow
+	err = GetAndSetAccessToken(ctx, nil)
 	if err != nil {
 		msg.FailMsg("Error acquiring access token while logging in: %s", err)
 		exit.Error(err, "Error acquiring access token while logging in")
 	}
 
 	// Parse token claims to get orgId
-	token, err := oauth.Token(ctx)
+	token, err = oauth.Token(ctx)
 	if err != nil {
 		msg.FailMsg("Error retrieving oauth token: %s", err)
 		exit.Error(err, "Error retrieving oauth token")

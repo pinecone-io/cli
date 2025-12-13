@@ -19,6 +19,7 @@ import (
 
 type listIndexCmdOptions struct {
 	json bool
+	wide bool
 }
 
 func NewListCmd() *cobra.Command {
@@ -49,37 +50,166 @@ func NewListCmd() *cobra.Command {
 				json := text.IndentJSON(idxs)
 				pcio.Println(json)
 			} else {
-				printTable(idxs)
+				printTable(idxs, options.wide)
 			}
 		},
 	}
 
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON, includes full index details")
+	cmd.Flags().BoolVarP(&options.wide, "wide", "w", false, "Show additional columns (host, embed, tags)")
 
 	return cmd
 }
 
-func printTable(idxs []*pinecone.Index) {
+// printTable prints the index list in a table format
+func printTable(idxs []*pinecone.Index, wide bool) {
 	writer := tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
 
-	columns := []string{"NAME", "STATUS", "HOST", "DIMENSION", "METRIC", "SPEC"}
+	columns := []string{"NAME", "STATUS", "SPEC", "CLOUD/REGION", "METRIC", "DIMENSION", "READ CAPACITY", "HOST"}
+	if wide {
+		columns = append(columns, "EMBED", "TAGS")
+	}
 	header := strings.Join(columns, "\t") + "\n"
 	pcio.Fprint(writer, header)
 
 	for _, idx := range idxs {
+		status := "-"
+		if idx.Status != nil {
+			status = string(idx.Status.State)
+		}
+
 		dimension := "nil"
 		if idx.Dimension != nil {
 			dimension = pcio.Sprintf("%d", *idx.Dimension)
 		}
-		if idx.Spec.Serverless == nil {
-			// Pod index
-			values := []string{idx.Name, string(idx.Status.State), idx.Host, dimension, string(idx.Metric), "pod"}
-			pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
-		} else {
-			// Serverless index
-			values := []string{idx.Name, string(idx.Status.State), idx.Host, dimension, string(idx.Metric), "serverless"}
-			pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
+
+		spec := formatSpec(idx.Spec)
+		cloudRegion := formatCloudRegion(idx.Spec)
+		readCapacity := formatReadCapacity(idx.Spec)
+		embed := formatEmbed(idx.Embed)
+		tags := formatTags(idx.Tags)
+		host := formatHost(idx.Host, wide)
+
+		values := []string{idx.Name, status, spec, cloudRegion, string(idx.Metric), dimension, readCapacity, host}
+		if wide {
+			values = append(values, embed, tags)
 		}
+		pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
+	}
+
+	if !wide {
+		pcio.Fprint(writer, "\nUse --wide to show host/embed/tags, or --json for full details.\n")
 	}
 	writer.Flush()
+}
+
+// formatSpec formats the index spec as "serverless", "byoc", or "pod"
+func formatSpec(spec *pinecone.IndexSpec) string {
+	switch {
+	case spec == nil:
+		return "-"
+	case spec.Serverless != nil:
+		return "serverless"
+	case spec.BYOC != nil:
+		return "byoc"
+	case spec.Pod != nil:
+		return "pod"
+	default:
+		return "-"
+	}
+}
+
+// formatCloudRegion formats the cloud and region as "cloud/region"
+func formatCloudRegion(spec *pinecone.IndexSpec) string {
+	if spec == nil || spec.Serverless == nil {
+		return "-"
+	}
+	cloud := string(spec.Serverless.Cloud)
+	region := spec.Serverless.Region
+	if cloud == "" && region == "" {
+		return "-"
+	}
+	if cloud == "" {
+		return region
+	}
+	if region == "" {
+		return cloud
+	}
+	return cloud + "/" + region
+}
+
+// formatReadCapacity formats the read capacity as "OnDemand" or "Dedicated"
+func formatReadCapacity(spec *pinecone.IndexSpec) string {
+	if spec == nil || spec.Serverless == nil || spec.Serverless.ReadCapacity == nil {
+		return "-"
+	}
+	rc := spec.Serverless.ReadCapacity
+	switch {
+	case rc.OnDemand != nil:
+		return "OnDemand"
+	case rc.Dedicated != nil:
+		return "Dedicated"
+	default:
+		return "-"
+	}
+}
+
+// formatEmbed formats the embed model name
+func formatEmbed(embed *pinecone.IndexEmbed) string {
+	if embed == nil {
+		return "-"
+	}
+	if embed.Model == "" {
+		return "-"
+	}
+	return embed.Model
+}
+
+// formatTags formats the tags as a comma-separated list
+func formatTags(tags *pinecone.IndexTags) string {
+	if tags == nil {
+		return "-"
+	}
+
+	keys := make([]string, 0, len(*tags))
+	for k := range *tags {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	if len(keys) == 0 {
+		return "-"
+	}
+
+	return strings.Join(keys, ",")
+}
+
+// formatHost shortens the host when not in --wide mode
+func formatHost(host string, wide bool) string {
+	if host == "" {
+		return "-"
+	}
+	if wide {
+		return host
+	}
+	const maxLen = 30
+	return midTruncate(host, maxLen)
+}
+
+// midTruncate shortens s to maxLen by keeping the start and end and inserting "...".
+func midTruncate(s string, maxLen int) string {
+	runes := []rune(s)
+	if len(runes) <= maxLen {
+		return s
+	}
+
+	// Reserve space for ellipsis.
+	keep := maxLen - 3
+	if keep <= 0 {
+		return "..."
+	}
+	front := keep / 2
+	back := keep - front
+
+	return string(runes[:front]) + "..." + string(runes[len(runes)-back:])
 }
