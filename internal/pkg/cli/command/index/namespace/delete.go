@@ -19,10 +19,18 @@ func NewDeleteNamespaceCmd() *cobra.Command {
 	options := deleteNamespaceCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:     "delete",
-		Short:   "Delete a namespace from an index by name",
-		Long:    help.Long(``),
-		Example: help.Examples(``),
+		Use:   "delete",
+		Short: "Delete a namespace from an index by name",
+		Long: help.Long(`
+			Delete a namespace from an index.
+
+			Provide the index name and namespace name. 
+			WARNING: Deleting a namespace removes its data and cannot be undone.
+		`),
+		Example: help.Examples(`
+			# delete a namespace from an index
+			pc index namespace delete --index-name "my-index" --name "tenant-a"
+		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runDeleteNamespaceCmd(cmd.Context(), options)
 		},

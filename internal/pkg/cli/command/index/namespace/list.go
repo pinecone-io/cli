@@ -27,10 +27,25 @@ func NewListNamespaceCmd() *cobra.Command {
 	options := listNamespaceCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:     "list",
-		Short:   "List namespaces from an index",
-		Long:    help.Long(``),
-		Example: help.Examples(``),
+		Use:   "list",
+		Short: "List namespaces from an index",
+		Long: help.Long(`
+			List namespaces within an index.
+
+			Provide the index name and optionally filter by prefix or paginate with a token and limit. 
+			
+			Use --json to see the full response including pagination details.
+		`),
+		Example: help.Examples(`
+			# list namespaces for an index
+			pc index namespace list --index-name "my-index"
+
+			# list namespaces with a prefix filter and limit
+			pc index namespace list --index-name "my-index" --prefix "tenant-" --limit 10
+
+			# continue listing with a pagination token and output JSON
+			pc index namespace list --index-name "my-index" --pagination-token "token" --json
+		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runListNamespaceCmd(cmd.Context(), options)
 		},
@@ -96,7 +111,7 @@ func printTable(resp *pinecone.ListNamespacesResponse) {
 	// Response info
 	pcio.Fprintf(writer, "Total Count: %d\n", resp.TotalCount)
 	pgToken := "<none>"
-	if resp.Pagination != nil {
+	if resp.Pagination != nil && resp.Pagination.Next != "" {
 		pgToken = resp.Pagination.Next
 	}
 	pcio.Fprintf(writer, "Next Pagination Token: %s\n", pgToken)

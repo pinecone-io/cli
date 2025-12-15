@@ -25,10 +25,20 @@ func NewCreateNamespaceCmd() *cobra.Command {
 	options := createNamespaceCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:     "create",
-		Short:   "Create a new namespace in an index",
-		Long:    help.Long(``),
-		Example: help.Examples(``),
+		Use:   "create",
+		Short: "Create a new namespace in an index",
+		Long: help.Long(`
+			Create a namespace inside an existing index.
+
+			Provide the index name and namespace name. Optionally supply a metadata schema to control which metadata fields are indexed.
+		`),
+		Example: help.Examples(`
+			# create a namespace in an index
+			pc index namespace create --index-name "my-index" --name "tenant-a"
+
+			# create a namespace with metadata schema and JSON output
+			pc index namespace create --index-name "my-index" --name "tenant-b" --schema "category:keyword" --json
+		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runCreateNamespaceCmd(cmd.Context(), options)
 		},

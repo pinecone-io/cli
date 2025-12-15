@@ -23,10 +23,18 @@ func NewDescribeNamespaceCmd() *cobra.Command {
 	options := describeNamespaceCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:     "describe",
-		Short:   "Describe a namespace from an index by name",
-		Long:    help.Long(``),
-		Example: help.Examples(``),
+		Use:   "describe",
+		Short: "Describe a namespace from an index by name",
+		Long: help.Long(`
+			Describe a namespace by name, including record counts and schema configmration.
+		`),
+		Example: help.Examples(`
+			# describe a namespace
+			pc index namespace describe --index-name "my-index" --name "tenant-a"
+
+			# describe a namespace and return JSON
+			pc index namespace describe --index-name "my-index" --name "tenant-a" --json
+		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			runDescribeNamespaceCmd(cmd.Context(), options)
 		},
@@ -34,6 +42,7 @@ func NewDescribeNamespaceCmd() *cobra.Command {
 
 	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of the index to describe the namespace from")
 	cmd.Flags().StringVar(&options.name, "name", "", "name of the namespace to describe")
+	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 	_ = cmd.MarkFlagRequired("index-name")
 	_ = cmd.MarkFlagRequired("name")
 
