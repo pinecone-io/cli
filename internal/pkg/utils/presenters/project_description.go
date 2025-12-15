@@ -28,7 +28,7 @@ func PrintDescribeProjectTable(proj *pinecone.Project) {
 	pcio.Fprintf(writer, "Created At\t%s\n", proj.CreatedAt.String())
 	pcio.Fprintf(writer, "Force Encryption\t%s\n", strconv.FormatBool(proj.ForceEncryptionWithCmek))
 	pcio.Fprintf(writer, "Max Pods\t%d\n", proj.MaxPods)
-	pcio.Fprintf(writer, "\t\n")
+	pcio.Fprintf(writer, "\n")
 
 	writer.Flush()
 }

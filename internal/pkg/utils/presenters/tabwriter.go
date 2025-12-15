@@ -8,7 +8,7 @@ import (
 )
 
 func NewTabWriter() *tabwriter.Writer {
-	return tabwriter.NewWriter(os.Stdout, 12, 1, 4, ' ', 0)
+	return tabwriter.NewWriter(os.Stdout, 12, 1, 3, ' ', 0)
 }
 
 // PrintEmptyState prints a consistent placeholder for nil presenter inputs.

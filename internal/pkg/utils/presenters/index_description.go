@@ -48,7 +48,7 @@ func PrintDescribeIndexTable(idx *pinecone.Index) {
 	pcio.Fprintf(writer, "Metric\t%s\n", string(idx.Metric))
 	pcio.Fprintf(writer, "Deletion Protection\t%s\n", ColorizeDeletionProtection(idx.DeletionProtection))
 	pcio.Fprintf(writer, "Vector Type\t%s\n", DisplayOrNone(idx.VectorType))
-	pcio.Fprintf(writer, "\t\n")
+	pcio.Fprintf(writer, "\n")
 
 	stateVal := "<none>"
 	readyVal := "<none>"
@@ -60,7 +60,7 @@ func PrintDescribeIndexTable(idx *pinecone.Index) {
 	pcio.Fprintf(writer, "Ready\t%s\n", readyVal)
 	pcio.Fprintf(writer, "Host\t%s\n", style.Emphasis(idx.Host))
 	pcio.Fprintf(writer, "Private Host\t%s\n", DisplayOrNone(idx.PrivateHost))
-	pcio.Fprintf(writer, "\t\n")
+	pcio.Fprintf(writer, "\n")
 
 	switch {
 	case idx.Spec == nil: // nil spec
@@ -123,14 +123,14 @@ func PrintDescribeIndexTable(idx *pinecone.Index) {
 	default: // unknown spec
 		pcio.Fprintf(writer, "Spec\t%s\n", "unknown")
 	}
-	pcio.Fprintf(writer, "\t\n")
+	pcio.Fprintf(writer, "\n")
 
 	if idx.Embed != nil {
 		pcio.Fprintf(writer, "Model\t%s\n", idx.Embed.Model)
 		pcio.Fprintf(writer, "Field Map\t%s\n", text.InlineJSON(idx.Embed.FieldMap))
 		pcio.Fprintf(writer, "Read Parameters\t%s\n", text.InlineJSON(idx.Embed.ReadParameters))
 		pcio.Fprintf(writer, "Write Parameters\t%s\n", text.InlineJSON(idx.Embed.WriteParameters))
-		pcio.Fprintf(writer, "\t\n")
+		pcio.Fprintf(writer, "\n")
 	}
 
 	if idx.Tags != nil {

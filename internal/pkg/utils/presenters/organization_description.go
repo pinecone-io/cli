@@ -27,7 +27,7 @@ func PrintDescribeOrganizationTable(org *pinecone.Organization) {
 	pcio.Fprintf(writer, "Payment Status\t%s\n", org.PaymentStatus)
 	pcio.Fprintf(writer, "Plan\t%s\n", org.Plan)
 	pcio.Fprintf(writer, "Support Tier\t%s\n", org.SupportTier)
-	pcio.Fprintf(writer, "\t\n")
+	pcio.Fprintf(writer, "\n")
 
 	writer.Flush()
 

@@ -1,15 +1,14 @@
 package index
 
 import (
-	"os"
 	"sort"
 	"strings"
-	"text/tabwriter"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -63,7 +62,7 @@ func NewListCmd() *cobra.Command {
 
 // printTable prints the index list in a table format
 func printTable(idxs []*pinecone.Index, wide bool) {
-	writer := tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
+	writer := presenters.NewTabWriter()
 
 	columns := []string{"NAME", "STATUS", "SPEC", "CLOUD/REGION", "METRIC", "DIMENSION", "READ CAPACITY", "HOST"}
 	if wide {

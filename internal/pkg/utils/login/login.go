@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	_ "embed"
 	"encoding/base64"
+	"errors"
 	"html/template"
 	"io"
 	"net/http"
@@ -45,11 +46,15 @@ type Options struct{}
 func Run(ctx context.Context, io IO, opts Options) {
 	// Check if the user is currently logged in
 	token, err := oauth.Token(ctx)
-	if err != nil {
+
+	var te *oauth.TokenError
+	expired := errors.As(err, &te) && te.Kind == oauth.TokenErrSessionExpired
+	if err != nil && !expired {
 		msg.FailMsg("Error retrieving oauth token: %s", err)
 		exit.Error(err, "Error retrieving oauth token")
 	}
-	if token != nil && token.AccessToken != "" {
+
+	if !expired && token != nil && token.AccessToken != "" {
 		msg.WarnMsg("You are already logged in. Please log out first using %s.", style.Code("pc auth logout"))
 		return
 	}

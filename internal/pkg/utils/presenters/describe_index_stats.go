@@ -30,7 +30,7 @@ func PrintDescribeIndexStatsTable(resp *pinecone.DescribeIndexStatsResponse) {
 	if len(resp.Namespaces) == 0 {
 		pcio.Fprintf(writer, "Namespaces\t<none>\n")
 	} else {
-		pcio.Fprintf(writer, "Namespaces\t\n")
+		pcio.Fprintf(writer, "Namespaces\n")
 		pcio.Fprintf(writer, "\tNAME\tVECTOR COUNT\n")
 
 		names := make([]string, 0, len(resp.Namespaces))
