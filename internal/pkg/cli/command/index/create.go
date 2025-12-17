@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Abstracts the Pinecone Go SDK for testing purposes
+// Abstracts the Pinecone Go SDK for unit testing (runCreateIndex)
 type CreateIndexService interface {
 	CreateServerlessIndex(ctx context.Context, req *pinecone.CreateServerlessIndexRequest) (*pinecone.Index, error)
 	CreatePodIndex(ctx context.Context, req *pinecone.CreatePodIndexRequest) (*pinecone.Index, error)
@@ -112,7 +112,16 @@ func NewCreateIndexCmd() *cobra.Command {
 		Long:    createIndexHelp,
 		Example: createIndexExample,
 		Run: func(cmd *cobra.Command, args []string) {
-			runCreateIndexCmd(cmd.Context(), cmd, options)
+			ctx := cmd.Context()
+			pc := sdk.NewPineconeClient(ctx)
+
+			idx, err := runCreateIndexCmd(ctx, cmd, pc, options)
+			if err != nil {
+				msg.FailMsg("Failed to create index: %s\n", err)
+				exit.Error(err, "Failed to create index")
+			}
+
+			renderSuccessOutput(idx, options)
 		},
 	}
 
@@ -164,20 +173,7 @@ func NewCreateIndexCmd() *cobra.Command {
 	return cmd
 }
 
-func runCreateIndexCmd(ctx context.Context, cmd *cobra.Command, options createIndexOptions) {
-	pc := sdk.NewPineconeClient(ctx)
-
-	idx, err := runCreateIndexWithService(ctx, cmd, pc, options)
-	if err != nil {
-		msg.FailMsg("Failed to create index: %s\n", err)
-		exit.Error(err, "Failed to create index")
-	}
-
-	renderSuccessOutput(idx, options)
-}
-
-// This function plus the CreateIndexService interface allows for testing
-func runCreateIndexWithService(ctx context.Context, cmd *cobra.Command, service CreateIndexService, options createIndexOptions) (*pinecone.Index, error) {
+func runCreateIndexCmd(ctx context.Context, cmd *cobra.Command, service CreateIndexService, options createIndexOptions) (*pinecone.Index, error) {
 	// validate and derive index type from arguments
 	err := options.validate()
 	if err != nil {

@@ -47,7 +47,25 @@ func NewListNamespaceCmd() *cobra.Command {
 			pc index namespace list --index-name "my-index" --pagination-token "token" --json
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			runListNamespaceCmd(cmd.Context(), options)
+			ctx := cmd.Context()
+			pc := sdk.NewPineconeClient(ctx)
+
+			if strings.TrimSpace(options.indexName) == "" {
+				msg.FailMsg("Failed to list namespaces: --index-name is required")
+				exit.ErrorMsg("Failed to list namespaces: --index-name is required")
+			}
+
+			ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, "")
+			if err != nil {
+				msg.FailMsg("Failed to list namespaces: %s\n", err)
+				exit.Error(err, "Failed to list namespaces")
+			}
+
+			err = runListNamespaceCmd(ctx, ic, options)
+			if err != nil {
+				msg.FailMsg("Failed to list namespaces: %s", err)
+				exit.Error(err, "Failed to list namespaces")
+			}
 		},
 	}
 
@@ -62,12 +80,9 @@ func NewListNamespaceCmd() *cobra.Command {
 	return cmd
 }
 
-func runListNamespaceCmd(ctx context.Context, options listNamespaceCmdOptions) {
-	pc := sdk.NewPineconeClient(ctx)
-	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, "")
-	if err != nil {
-		msg.FailMsg("Failed to create index connection: %s", err)
-		exit.Error(err, "Failed to create index connection")
+func runListNamespaceCmd(ctx context.Context, ic NamespaceService, options listNamespaceCmdOptions) error {
+	if strings.TrimSpace(options.indexName) == "" {
+		return pcio.Errorf("--index-name is required")
 	}
 
 	var limit *uint32
@@ -89,8 +104,7 @@ func runListNamespaceCmd(ctx context.Context, options listNamespaceCmdOptions) {
 		Prefix:          prefix,
 	})
 	if err != nil {
-		msg.FailMsg("Failed to list namespaces: %s", err)
-		exit.Error(err, "Failed to list namespaces")
+		return err
 	}
 
 	if options.json {
@@ -99,6 +113,8 @@ func runListNamespaceCmd(ctx context.Context, options listNamespaceCmdOptions) {
 	} else {
 		printTable(resp)
 	}
+
+	return nil
 }
 
 func printTable(resp *pinecone.ListNamespacesResponse) {

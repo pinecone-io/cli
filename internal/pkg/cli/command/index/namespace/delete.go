@@ -2,10 +2,12 @@ package namespace
 
 import (
 	"context"
+	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/spf13/cobra"
 )
@@ -32,7 +34,25 @@ func NewDeleteNamespaceCmd() *cobra.Command {
 			pc index namespace delete --index-name "my-index" --name "tenant-a"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			runDeleteNamespaceCmd(cmd.Context(), options)
+			ctx := cmd.Context()
+			pc := sdk.NewPineconeClient(ctx)
+
+			if strings.TrimSpace(options.indexName) == "" {
+				msg.FailMsg("Failed to delete namespace: --index-name is required")
+				exit.ErrorMsg("Failed to delete namespace: --index-name is required")
+			}
+
+			ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, "")
+			if err != nil {
+				msg.FailMsg("Failed to delete namespace: %s", err)
+				exit.Error(err, "Failed to delete namespace")
+			}
+
+			err = runDeleteNamespaceCmd(ctx, ic, options)
+			if err != nil {
+				msg.FailMsg("Failed to delete namespace: %s", err)
+				exit.Error(err, "Failed to delete namespace")
+			}
 		},
 	}
 
@@ -44,18 +64,16 @@ func NewDeleteNamespaceCmd() *cobra.Command {
 	return cmd
 }
 
-func runDeleteNamespaceCmd(ctx context.Context, options deleteNamespaceCmdOptions) {
-	pc := sdk.NewPineconeClient(ctx)
-	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, "")
-	if err != nil {
-		msg.FailMsg("Failed to create index connection: %s", err)
-		exit.Error(err, "Failed to create index connection")
+func runDeleteNamespaceCmd(ctx context.Context, ic NamespaceService, options deleteNamespaceCmdOptions) error {
+	if strings.TrimSpace(options.name) == "" {
+		return pcio.Errorf("--name is required")
 	}
 
-	err = ic.DeleteNamespace(ctx, options.name)
+	err := ic.DeleteNamespace(ctx, options.name)
 	if err != nil {
-		msg.FailMsg("Failed to delete namespace: %s", err)
-		exit.Error(err, "Failed to delete namespace")
+		return err
 	}
 	msg.SuccessMsg("Namespace %s deleted successfully.", options.name)
+
+	return nil
 }

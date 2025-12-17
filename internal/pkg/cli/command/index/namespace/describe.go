@@ -2,6 +2,7 @@ package namespace
 
 import (
 	"context"
+	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -26,7 +27,7 @@ func NewDescribeNamespaceCmd() *cobra.Command {
 		Use:   "describe",
 		Short: "Describe a namespace from an index by name",
 		Long: help.Long(`
-			Describe a namespace by name, including record counts and schema configmration.
+			Describe a namespace by name, including record counts and schema configuration.
 		`),
 		Example: help.Examples(`
 			# describe a namespace
@@ -36,7 +37,25 @@ func NewDescribeNamespaceCmd() *cobra.Command {
 			pc index namespace describe --index-name "my-index" --name "tenant-a" --json
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			runDescribeNamespaceCmd(cmd.Context(), options)
+			ctx := cmd.Context()
+			pc := sdk.NewPineconeClient(ctx)
+
+			if strings.TrimSpace(options.indexName) == "" {
+				msg.FailMsg("Failed to describe namespace: --index-name is required")
+				exit.ErrorMsg("Failed to describe namespace: --index-name is required")
+			}
+
+			ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, "")
+			if err != nil {
+				msg.FailMsg("Failed to describe namespace: %s\n", err)
+				exit.Error(err, "Failed to describe namespace")
+			}
+
+			err = runDescribeNamespaceCmd(ctx, ic, options)
+			if err != nil {
+				msg.FailMsg("Failed to describe namespace: %s", err)
+				exit.Error(err, "Failed to describe namespace")
+			}
 		},
 	}
 
@@ -49,18 +68,14 @@ func NewDescribeNamespaceCmd() *cobra.Command {
 	return cmd
 }
 
-func runDescribeNamespaceCmd(ctx context.Context, options describeNamespaceCmdOptions) {
-	pc := sdk.NewPineconeClient(ctx)
-	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, "")
-	if err != nil {
-		msg.FailMsg("Failed to create index connection: %s", err)
-		exit.Error(err, "Failed to create index connection")
+func runDescribeNamespaceCmd(ctx context.Context, ic NamespaceService, options describeNamespaceCmdOptions) error {
+	if strings.TrimSpace(options.name) == "" {
+		return pcio.Errorf("--name is required")
 	}
 
 	ns, err := ic.DescribeNamespace(ctx, options.name)
 	if err != nil {
-		msg.FailMsg("Failed to describe namespace: %s", err)
-		exit.Error(err, "Failed to describe namespace")
+		return err
 	}
 
 	if options.json {
@@ -69,4 +84,6 @@ func runDescribeNamespaceCmd(ctx context.Context, options describeNamespaceCmdOp
 	} else {
 		presenters.PrintDescribeNamespaceTable(ns)
 	}
+
+	return nil
 }

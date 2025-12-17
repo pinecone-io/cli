@@ -2,6 +2,7 @@ package namespace
 
 import (
 	"context"
+	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -13,6 +14,13 @@ import (
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 	"github.com/spf13/cobra"
 )
+
+type NamespaceService interface {
+	CreateNamespace(ctx context.Context, req *pinecone.CreateNamespaceParams) (*pinecone.NamespaceDescription, error)
+	DescribeNamespace(ctx context.Context, name string) (*pinecone.NamespaceDescription, error)
+	ListNamespaces(ctx context.Context, params *pinecone.ListNamespacesParams) (*pinecone.ListNamespacesResponse, error)
+	DeleteNamespace(ctx context.Context, name string) error
+}
 
 type createNamespaceCmdOptions struct {
 	indexName      string
@@ -40,7 +48,25 @@ func NewCreateNamespaceCmd() *cobra.Command {
 			pc index namespace create --index-name "my-index" --name "tenant-b" --schema "category:keyword" --json
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			runCreateNamespaceCmd(cmd.Context(), options)
+			ctx := cmd.Context()
+			pc := sdk.NewPineconeClient(cmd.Context())
+
+			if strings.TrimSpace(options.indexName) == "" {
+				msg.FailMsg("Failed to create namespace: --index-name is required")
+				exit.ErrorMsg("Failed to create namespace: --index-name is required")
+			}
+
+			ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, "")
+			if err != nil {
+				msg.FailMsg("Failed to create namespace: %s\n", err)
+				exit.Error(err, "Failed to create namespace")
+			}
+
+			err = runCreateNamespaceCmd(cmd.Context(), ic, options)
+			if err != nil {
+				msg.FailMsg("Failed to create namespace: %s\n", err)
+				exit.Error(err, "Failed to create namespace")
+			}
 		},
 	}
 
@@ -54,12 +80,9 @@ func NewCreateNamespaceCmd() *cobra.Command {
 	return cmd
 }
 
-func runCreateNamespaceCmd(ctx context.Context, options createNamespaceCmdOptions) {
-	pc := sdk.NewPineconeClient(ctx)
-	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, "")
-	if err != nil {
-		msg.FailMsg("Failed to create index connection: %s", err)
-		exit.Error(err, "Failed to create index connection")
+func runCreateNamespaceCmd(ctx context.Context, ic NamespaceService, options createNamespaceCmdOptions) error {
+	if strings.TrimSpace(options.name) == "" {
+		return pcio.Errorf("--name is required")
 	}
 
 	req := &pinecone.CreateNamespaceParams{
@@ -68,8 +91,7 @@ func runCreateNamespaceCmd(ctx context.Context, options createNamespaceCmdOption
 	}
 	ns, err := ic.CreateNamespace(ctx, req)
 	if err != nil {
-		msg.FailMsg("Failed to create namespace: %s", err)
-		exit.Error(err, "Failed to create namespace")
+		return err
 	}
 
 	if options.json {
@@ -79,4 +101,6 @@ func runCreateNamespaceCmd(ctx context.Context, options createNamespaceCmdOption
 		msg.SuccessMsg("Namespace %s created successfully.", options.name)
 		presenters.PrintDescribeNamespaceTable(ns)
 	}
+
+	return nil
 }
