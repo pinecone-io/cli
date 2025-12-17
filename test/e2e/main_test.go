@@ -16,6 +16,7 @@ func TestMain(m *testing.M) {
 	// Setting $HOME to a temporary directory will isolate Viper configurations
 	tempHome, _ := os.MkdirTemp("", "pc-e2e-home-*")
 	_ = os.Setenv("PC_E2E_HOME", tempHome)
+	_ = os.Setenv("HOME", tempHome)
 
 	// If an explicit binary is not provided, and we're not using what's in the user's PATH,
 	// build the CLI binary and set PC_BIN.

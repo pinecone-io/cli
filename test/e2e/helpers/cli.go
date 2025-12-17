@@ -57,6 +57,7 @@ func NewCLI(t *testing.T) *CLI {
 	baseEnv := os.Environ()
 	if os.Getenv("PC_E2E_HOME") != "" {
 		baseEnv = appendOrReplaceEnv(baseEnv, "PC_E2E_HOME", os.Getenv("PC_E2E_HOME"))
+		baseEnv = appendOrReplaceEnv(baseEnv, "HOME", os.Getenv("PC_E2E_HOME"))
 	}
 
 	return &CLI{
