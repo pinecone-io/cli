@@ -19,7 +19,7 @@ import (
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
 
-// UpsertBody is the JSON payload for --body.
+// UpsertBody is the JSON payload for --file.
 // It accepts either {"vectors": [...]} with elements shaped like pinecone.Vector
 // (see https://pkg.go.dev/github.com/pinecone-io/go-pinecone/v5/pinecone#Vector),
 // or a JSONL stream of pinecone.Vector objects.
@@ -28,7 +28,7 @@ type UpsertBody struct {
 }
 
 type upsertCmdOptions struct {
-	body      string
+	file      string
 	indexName string
 	namespace string
 	batchSize int
@@ -44,7 +44,7 @@ func NewUpsertCmd() *cobra.Command {
 		Long: help.Long(`
 			Upsert vectors into an index namespace from a JSON or JSONL payload.
 			
-			The request --body may be a JSON object containing "vectors": [...] or a JSONL stream of Vector objects.
+			The request --file may be a JSON object containing "vectors": [...] or a JSONL stream of Vector objects.
 			Control batch size with --batch-size. Bodies can be inline JSON, loaded from ./file.json[l], or read from stdin with '-'.
 
 			Body schema: UpsertBody (vectors shaped like pinecone.Vector: https://pkg.go.dev/github.com/pinecone-io/go-pinecone/v5/pinecone#Vector)
@@ -61,20 +61,21 @@ func NewUpsertCmd() *cobra.Command {
 
 	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of index to upsert into")
 	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to upsert into")
-	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON or JSONL (inline, ./path.json[l], or '-' for stdin; only one argument may use stdin)")
+	cmd.Flags().StringVar(&options.file, "file", "", "request body JSON or JSONL (inline, ./path.json[l], or '-' for stdin; only one argument may use stdin)")
+	cmd.Flags().StringVar(&options.file, "body", "", "alias for --file")
 	cmd.Flags().IntVarP(&options.batchSize, "batch-size", "b", 500, "size of batches to upsert (default: 500)")
 	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
 	_ = cmd.MarkFlagRequired("index-name")
-	_ = cmd.MarkFlagRequired("body")
+	_ = cmd.MarkFlagRequired("file")
 
 	return cmd
 }
 
 func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
-	b, src, err := argio.ReadAll(options.body)
+	b, src, err := argio.ReadAll(options.file)
 	if err != nil {
-		msg.FailMsg("Failed to read upsert body (%s): %s", style.Emphasis(src.Label), err)
-		exit.Error(err, "Failed to read upsert body")
+		msg.FailMsg("Failed to read upsert file (%s): %s", style.Emphasis(src.Label), err)
+		exit.Error(err, "Failed to read upsert file")
 	}
 
 	payload, err := parseUpsertBody(b)
