@@ -3,34 +3,24 @@
 package e2e
 
 import (
-	"context"
-	"testing"
-
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/test/e2e/helpers"
 )
 
-func TestAuthServiceAccountConfigureAndStatus(t *testing.T) {
-	helpers.RequireE2E(t)
-	clientID, clientSecret := helpers.RequireServiceAccount(t)
+func (s *ServiceAccountSuite) TestAuthServiceAccountConfigureAndStatus() {
+	// Requires service account credentials for calling pc auth configure
+	clientID, clientSecret := helpers.RequireServiceAccount(s.T())
 
-	cli := helpers.NewCLI(t)
-
-	// Configure service account and verify org and project context are set
-	ctx := context.Background()
 	var context state.TargetContext
-	_, err := cli.RunJSONCtx(ctx, &context,
+	_, err := s.cli.RunJSONCtx(s.ctx, &context,
 		"auth", "configure",
 		"--client-id", clientID,
 		"--client-secret", clientSecret,
 		"--project-id", helpers.ProjectID(),
 		"--prompt-if-missing=false",
 	)
-	if err != nil {
-		t.Fatalf("auth configure/status failed: %v", err)
-	}
+	s.Require().NoError(err, "auth configure/status failed")
 
-	if context.Organization.Id == "" || context.Project.Id == "" {
-		t.Fatalf("expected TargetContext to have an Organization and Project after configuring service account credentials, got: %+v", context)
-	}
+	s.Require().NotEmpty(context.Organization.Id, "expected organization id after configure")
+	s.Require().NotEmpty(context.Project.Id, "expected project id after configure")
 }

@@ -3,52 +3,34 @@
 package e2e
 
 import (
-	"context"
-	"testing"
-
 	"github.com/pinecone-io/cli/test/e2e/helpers"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
 
-func TestAPIKeyLifecycle(t *testing.T) {
-	helpers.RequireE2E(t)
+func (s *ServiceAccountSuite) TestAPIKeyLifecycle() {
 	// Requires admin client to manage API keys
-	_, _ = helpers.RequireServiceAccount(t)
+	_, _ = helpers.RequireServiceAccount(s.T())
 
 	projID := helpers.ProjectID()
 	if projID == "" {
-		t.Skip("PC_E2E_PROJECT_ID not set; skipping api-key lifecycle test")
+		s.T().Skip("PC_E2E_PROJECT_ID not set; skipping api-key lifecycle test")
 	}
 
-	cli := helpers.NewCLI(t)
 	name := helpers.RandomName("e2e-key")
-	ctx := context.Background()
 
-	// Create
 	var create pinecone.APIKeyWithSecret
-	_, err := cli.RunJSONCtx(ctx, &create, "api-key", "create", "--id", projID, "--name", name)
-	if err != nil {
-		t.Fatalf("api-key create failed: %v", err)
-	}
-	if create.Key.Id == "" || create.Value == "" {
-		t.Fatalf("expected created key with secret, got: %+v", create)
-	}
+	_, err := s.cli.RunJSONCtx(s.ctx, &create, "api-key", "create", "--id", projID, "--name", name)
+	s.Require().NoError(err, "api-key create failed")
+	s.Require().NotEmpty(create.Key.Id, "expected created key id")
+	s.Require().NotEmpty(create.Value, "expected created key value")
 
-	// Describe
 	var desc pinecone.APIKey
-	_, err = cli.RunJSONCtx(ctx, &desc, "api-key", "describe", "--id", create.Key.Id)
-	if err != nil {
-		t.Fatalf("api-key describe failed: %v", err)
-	}
-	if desc.Id != create.Key.Id {
-		t.Fatalf("describe id mismatch: expected %s got %s", create.Key.Id, desc.Id)
-	}
+	_, err = s.cli.RunJSONCtx(s.ctx, &desc, "api-key", "describe", "--id", create.Key.Id)
+	s.Require().NoError(err, "api-key describe failed")
+	s.Require().Equal(create.Key.Id, desc.Id, "describe id mismatch")
 
-	// Delete / Ensure cleanup
-	t.Cleanup(func() {
-		_, _, err := cli.RunCtx(ctx, "api-key", "delete", "--id", desc.Id, "--skip-confirmation")
-		if err != nil {
-			t.Fatalf("api-key delete failed: %v", err)
-		}
+	s.T().Cleanup(func() {
+		_, _, err := s.cli.RunCtx(s.ctx, "api-key", "delete", "--id", desc.Id, "--skip-confirmation")
+		s.Require().NoError(err, "api-key delete failed")
 	})
 }
