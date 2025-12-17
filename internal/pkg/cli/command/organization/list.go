@@ -1,9 +1,7 @@
 package organization
 
 import (
-	"os"
 	"strings"
-	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 
@@ -11,6 +9,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
@@ -56,7 +55,7 @@ func NewListOrganizationsCmd() *cobra.Command {
 }
 
 func printTable(orgs []*pinecone.Organization) {
-	writer := tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
+	writer := presenters.NewTabWriter()
 
 	columns := []string{"NAME", "ID", "CREATED AT", "PAYMENT STATUS", "PLAN", "SUPPORT TIER"}
 	header := strings.Join(columns, "\t") + "\n"

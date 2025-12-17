@@ -1,9 +1,7 @@
 package auth
 
 import (
-	"os"
 	"strings"
-	"text/tabwriter"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -58,7 +56,7 @@ func NewListLocalKeysCmd() *cobra.Command {
 }
 
 func printTable(managedKeys map[string]secrets.ManagedKey, reveal bool) {
-	writer := tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
+	writer := presenters.NewTabWriter()
 
 	columns := []string{"PROJECT ID", "API KEY NAME", "API KEY ID", "API KEY VALUE", "ORIGIN", "ORGANIZATION ID"}
 	header := strings.Join(columns, "\t") + "\n"

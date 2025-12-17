@@ -9,7 +9,7 @@ import (
 
 func TestPrintEmptyState(t *testing.T) {
 	var buf bytes.Buffer
-	writer := tabwriter.NewWriter(&buf, 12, 1, 4, ' ', 0)
+	writer := tabwriter.NewWriter(&buf, 12, 1, 3, ' ', 0)
 
 	if !PrintEmptyState(writer, "test data") {
 		t.Fatalf("PrintEmptyState should always return true")

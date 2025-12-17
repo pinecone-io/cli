@@ -1,14 +1,13 @@
 package project
 
 import (
-	"os"
 	"strconv"
 	"strings"
-	"text/tabwriter"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
@@ -56,7 +55,7 @@ func NewListProjectsCmd() *cobra.Command {
 }
 
 func printTable(projects []*pinecone.Project) {
-	writer := tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
+	writer := presenters.NewTabWriter()
 
 	columns := []string{"NAME", "ID", "ORGANIZATION ID", "CREATED AT", "FORCE ENCRYPTION", "MAX PODS"}
 	header := strings.Join(columns, "\t") + "\n"

@@ -54,7 +54,7 @@ func Test_runCreateIndexWithService_Serverless_Args(t *testing.T) {
 		sourceCollection:   "my-collection",
 	}
 
-	_, err := runCreateIndexWithService(context.Background(), cmd, svc, options)
+	_, err := runCreateIndexCmd(context.Background(), cmd, svc, options)
 	assert.NoError(t, err)
 	assert.Nil(t, svc.lastPod)
 	assert.Nil(t, svc.lastIntegrated)
@@ -87,7 +87,7 @@ func Test_runCreateIndexWithService_Pod_Args(t *testing.T) {
 		metadataConfig:     []string{"field1", "field2"},
 	}
 
-	_, err := runCreateIndexWithService(context.Background(), cmd, svc, options)
+	_, err := runCreateIndexCmd(context.Background(), cmd, svc, options)
 	assert.NoError(t, err)
 	assert.Nil(t, svc.lastServerless)
 	assert.Nil(t, svc.lastIntegrated)
@@ -120,7 +120,7 @@ func Test_runCreateIndexWithService_Integrated_Args(t *testing.T) {
 		tags:               map[string]string{"tag1": "value1", "tag2": "value2"},
 	}
 
-	_, err := runCreateIndexWithService(context.Background(), cmd, svc, options)
+	_, err := runCreateIndexCmd(context.Background(), cmd, svc, options)
 	assert.NoError(t, err)
 	assert.Nil(t, svc.lastServerless)
 	assert.Nil(t, svc.lastPod)
@@ -400,25 +400,5 @@ func Test_buildReadCapacityFromFlags(t *testing.T) {
 		rc, err := buildReadCapacityFromFlags(cmd, "invalid", "", 0, 0)
 		assert.Error(t, err)
 		assert.Nil(t, rc)
-	})
-}
-
-func Test_buildMetadataSchema(t *testing.T) {
-	t.Run("empty schema returns nil", func(t *testing.T) {
-		assert.Nil(t, buildMetadataSchema([]string{}))
-	})
-
-	t.Run("creates filterable fields", func(t *testing.T) {
-		fields := []string{"field1", "field2"}
-
-		schema := buildMetadataSchema(fields)
-		if assert.NotNil(t, schema) {
-			assert.Len(t, schema.Fields, len(fields))
-			for _, field := range fields {
-				metadataField, ok := schema.Fields[field]
-				assert.True(t, ok)
-				assert.True(t, metadataField.Filterable)
-			}
-		}
 	})
 }

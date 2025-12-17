@@ -57,6 +57,7 @@ func NewCLI(t *testing.T) *CLI {
 	baseEnv := os.Environ()
 	if os.Getenv("PC_E2E_HOME") != "" {
 		baseEnv = appendOrReplaceEnv(baseEnv, "PC_E2E_HOME", os.Getenv("PC_E2E_HOME"))
+		baseEnv = appendOrReplaceEnv(baseEnv, "HOME", os.Getenv("PC_E2E_HOME"))
 	}
 
 	return &CLI{
@@ -128,17 +129,6 @@ func (c *CLI) RunJSONCtx(ctx context.Context, out any, args ...string) (string, 
 	}
 	return stdout, nil
 }
-
-// MustRunJSON executes and decodes JSON into the provided generic type.
-// func MustRunJSON[T any](c *CLI, ctx context.Context, args ...string) (T, string, error) {
-// 	var zero T
-// 	var v T
-// 	stdout, err := c.RunJSONCtx(ctx, &v, args...)
-// 	if err != nil {
-// 		return zero, stdout, err
-// 	}
-// 	return v, stdout, nil
-// }
 
 func hasJSONFlag(args []string) bool {
 	for _, a := range args {

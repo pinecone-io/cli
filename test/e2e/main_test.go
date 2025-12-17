@@ -9,10 +9,17 @@ import (
 	"testing"
 )
 
-// e2e Testing entry point. TestMain performs per-package setup. It builds the CLI binary once if PC_BIN
-// is not provided and PC_E2E_USE_PATH is not set, then sets PC_BIN for tests.
+// e2e Testing entry point. TestMain performs package-level setup before suites are run.
+// It builds the CLI binary once if PC_BIN is not provided and PC_E2E_USE_PATH is not set, then sets PC_BIN for tests.
 func TestMain(m *testing.M) {
-	// If an explicit binary is not provided, and we're not using what's in the PATH, build the CLI binary
+	// Isolate $HOME so we don't blow away local ~/.config/pinecone.
+	// Setting $HOME to a temporary directory will isolate Viper configurations
+	tempHome, _ := os.MkdirTemp("", "pc-e2e-home-*")
+	_ = os.Setenv("PC_E2E_HOME", tempHome)
+	_ = os.Setenv("HOME", tempHome)
+
+	// If an explicit binary is not provided, and we're not using what's in the user's PATH,
+	// build the CLI binary and set PC_BIN.
 	if os.Getenv("PC_BIN") == "" && os.Getenv("PC_E2E_USE_PATH") != "1" {
 		root := findRepoRoot()
 		out := filepath.Join(root, "dist", "pc-e2e")
@@ -27,7 +34,7 @@ func TestMain(m *testing.M) {
 		_ = os.Setenv("PC_BIN", out)
 	}
 
-	// Set service account credentials and target context
+	// Set service account credentials and target context if provided
 	if os.Getenv("PINECONE_CLIENT_ID") != "" && os.Getenv("PINECONE_CLIENT_SECRET") != "" {
 		args := []string{
 			os.Getenv("PC_BIN"), "auth", "configure",
@@ -45,11 +52,6 @@ func TestMain(m *testing.M) {
 			panic(err)
 		}
 	}
-
-	// Isolate $HOME so we don't blow away local ~/.config/pinecone.
-	// Setting $HOME to a temporary directory will isolate Viper configurations
-	tempHome, _ := os.MkdirTemp("", "pc-e2e-home-*")
-	_ = os.Setenv("PC_E2E_HOME", tempHome)
 
 	// Run tests
 	code := m.Run()

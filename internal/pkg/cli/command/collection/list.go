@@ -1,16 +1,15 @@
 package collection
 
 import (
-	"os"
 	"sort"
 	"strconv"
 	"strings"
-	"text/tabwriter"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -62,7 +61,7 @@ func NewListCollectionsCmd() *cobra.Command {
 }
 
 func printTable(collections []*pinecone.Collection) {
-	writer := tabwriter.NewWriter(os.Stdout, 10, 1, 3, ' ', 0)
+	writer := presenters.NewTabWriter()
 
 	columns := []string{"NAME", "DIMENSION", "SIZE", "STATUS", "VECTORS", "ENVIRONMENT"}
 	header := strings.Join(columns, "\t") + "\n"

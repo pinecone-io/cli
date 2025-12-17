@@ -15,6 +15,13 @@ PC_E2E=1 PC_BIN=./dist/pc go test ./test/e2e -tags=e2e -v
 PC_E2E=1 PC_E2E_USE_PATH=1 go test ./test/e2e -tags=e2e -v
 ```
 
+Structure:
+
+- Tests run via two testify suites:
+  - `ServiceAccountSuite` (`suite_sa_test.go`): admin + control coverage, creates its own serverless index and deletes it in teardown.
+  - `APIKeySuite` (`suite_api_test.go`): control/data coverage only, uses a fresh temp `PC_E2E_HOME` (no SA tokens), creates its own serverless index and deletes it in teardown.
+- `TestMain` sets `PC_E2E_HOME` to an isolated temp dir before any configure/build work so local user config is never touched.
+
 Environment variables:
 
 - PC_E2E=1 to enable tests
