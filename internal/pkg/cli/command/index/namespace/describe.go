@@ -61,7 +61,7 @@ func NewDescribeNamespaceCmd() *cobra.Command {
 
 	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of the index to describe the namespace from")
 	cmd.Flags().StringVar(&options.name, "name", "", "name of the namespace to describe")
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 	_ = cmd.MarkFlagRequired("index-name")
 	_ = cmd.MarkFlagRequired("name")
 

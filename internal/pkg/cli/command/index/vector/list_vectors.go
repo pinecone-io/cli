@@ -39,7 +39,7 @@ func NewListVectorsCmd() *cobra.Command {
 	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to list vectors from")
 	cmd.Flags().Uint32VarP(&options.limit, "limit", "l", 0, "maximum number of vectors to list")
 	cmd.Flags().StringVarP(&options.paginationToken, "pagination-token", "p", "", "pagination token to continue a previous listing operation")
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 
 	_ = cmd.MarkFlagRequired("index-name")
 

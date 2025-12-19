@@ -86,7 +86,7 @@ func NewConfigureCmd() *cobra.Command {
 	cmd.Flags().StringVar(&options.apiKey, "api-key", "", "Default API key override for the Pinecone CLI")
 	cmd.Flags().BoolVar(&options.readSecretFromStdin, "client-secret-stdin", false, "Read the client secret from stdin")
 	cmd.Flags().BoolVar(&options.promptIfMissing, "prompt-if-missing", false, "Prompt for missing credentials if not provided")
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 
 	return cmd
 }

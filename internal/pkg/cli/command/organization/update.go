@@ -70,7 +70,7 @@ func NewUpdateOrganizationCmd() *cobra.Command {
 	// optional flags
 	cmd.Flags().StringVarP(&options.organizationID, "id", "i", "", "The ID of the organization to update if not the target organization")
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "The new name to use for the organization")
-	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
 
 	return cmd
 }

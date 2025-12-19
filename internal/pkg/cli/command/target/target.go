@@ -277,7 +277,7 @@ func NewTargetCmd() *cobra.Command {
 	cmd.Flags().StringVar(&options.projectID, "project-id", "", "Project ID")
 	cmd.Flags().BoolVarP(&options.show, "show", "s", false, "Show the current context")
 	cmd.Flags().BoolVar(&options.clear, "clear", false, "Clear the target context")
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 
 	return cmd
 }
