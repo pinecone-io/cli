@@ -91,7 +91,7 @@ func NewQueryCmd() *cobra.Command {
 	cmd.Flags().Var(&options.sparseIndices, "sparse-indices", "sparse indices to query against (inline JSON array, ./path.json, or '-' for stdin)")
 	cmd.Flags().Var(&options.sparseValues, "sparse-values", "sparse values to query against (inline JSON array, ./path.json, or '-' for stdin)")
 	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON (inline, ./path.json, or '-' for stdin; only one argument may use stdin)")
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 
 	_ = cmd.MarkFlagRequired("index-name")
 	cmd.MarkFlagsMutuallyExclusive("id", "vector", "sparse-values")

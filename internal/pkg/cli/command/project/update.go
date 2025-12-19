@@ -81,7 +81,7 @@ func NewUpdateProjectCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "The new name for the project")
 	cmd.Flags().BoolVarP(&options.forceEncryptionWithCMEK, "force-encryption", "f", false, "Force encryption with CMEK for the project. This cannot be disabled")
 	cmd.Flags().IntVarP(&options.maxPods, "max-pods", "p", 0, "The new maximum number of pods for the project")
-	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
 
 	return cmd
 }

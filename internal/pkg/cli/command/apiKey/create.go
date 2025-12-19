@@ -137,7 +137,7 @@ func NewCreateApiKeyCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&options.projectId, "id", "i", "", "ID of the project to create the key for if not the target project")
 	cmd.Flags().BoolVar(&options.store, "store", false, "Stores the created key locally so it can be used for future CLI operations")
 	cmd.Flags().StringSliceVar(&options.roles, "roles", []string{}, "Roles to assign to the key. The default is 'ProjectEditor'")
-	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
 
 	return cmd
 }

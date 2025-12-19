@@ -49,7 +49,7 @@ func NewListProjectsCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
 
 	return cmd
 }

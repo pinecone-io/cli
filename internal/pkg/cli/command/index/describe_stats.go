@@ -44,7 +44,7 @@ func NewDescribeIndexStatsCmd() *cobra.Command {
 
 	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of index to describe stats for")
 	cmd.Flags().VarP(&options.filter, "filter", "f", "metadata filter to apply to the operation (inline JSON, ./path.json, or '-' for stdin)")
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 	_ = cmd.MarkFlagRequired("index-name")
 
 	return cmd

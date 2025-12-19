@@ -74,7 +74,7 @@ func NewPruneLocalKeysCmd() *cobra.Command {
 	cmd.Flags().StringVar(&options.projectID, "id", "", "Only prune keys for a specific project")
 	cmd.Flags().BoolVar(&options.dryRun, "dry-run", false, "Preview keys that will be deleted without applying changes")
 	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "Skip confirmation prompt")
-	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
 
 	return cmd
 }

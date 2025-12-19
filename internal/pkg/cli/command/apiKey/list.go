@@ -73,7 +73,7 @@ func NewListKeysCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&options.projectID, "id", "i", "", "ID of the project to list the keys for if not the target project")
-	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
 	return cmd
 }
 

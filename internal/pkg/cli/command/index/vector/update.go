@@ -79,7 +79,7 @@ func NewUpdateCmd() *cobra.Command {
 	cmd.Flags().Var(&options.filter, "filter", "filter to update the vectors with (inline JSON, ./path.json, or '-' for stdin)")
 	cmd.Flags().BoolVar(&options.dryRun, "dry-run", false, "do not update the vectors, just return the number of vectors that would be updated")
 	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON (inline, ./path.json, or '-' for stdin; only one argument may use stdin)")
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 
 	_ = cmd.MarkFlagRequired("index-name")
 	cmd.MarkFlagsMutuallyExclusive("id", "filter")

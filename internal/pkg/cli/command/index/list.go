@@ -54,7 +54,7 @@ func NewListCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVar(&options.json, "json", false, "Output as JSON, includes full index details")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON, includes full index details")
 	cmd.Flags().BoolVarP(&options.wide, "wide", "w", false, "Show additional columns (host, embed, tags)")
 
 	return cmd

@@ -73,7 +73,7 @@ func NewListNamespaceCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&options.paginationToken, "pagination-token", "p", "", "pagination token to continue a previous listing operation")
 	cmd.Flags().Uint32VarP(&options.limit, "limit", "l", 0, "maximum number of namespaces to list")
 	cmd.Flags().StringVar(&options.prefix, "prefix", "", "prefix to filter namespaces by")
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 
 	_ = cmd.MarkFlagRequired("index-name")
 

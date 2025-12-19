@@ -55,7 +55,7 @@ func NewListCollectionsCmd() *cobra.Command {
 	}
 
 	// Optional flags
-	cmd.Flags().BoolVar(&options.json, "json", false, "output as JSON")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 
 	return cmd
 }
