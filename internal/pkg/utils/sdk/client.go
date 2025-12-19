@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"io"
+	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
@@ -89,7 +90,7 @@ func NewPineconeClientForProjectById(ctx context.Context, projectId string) *pin
 
 	pc, err := pinecone.NewClient(pinecone.NewClientParams{
 		ApiKey:    key,
-		SourceTag: CLISourceTag,
+		SourceTag: cliSourceTag(),
 		Host:      getPineconeHostURL(),
 		Headers:   headers,
 	})
@@ -109,7 +110,7 @@ func NewClientForAPIKey(apiKey string) *pinecone.Client {
 
 	pc, err := pinecone.NewClient(pinecone.NewClientParams{
 		ApiKey:    apiKey,
-		SourceTag: CLISourceTag,
+		SourceTag: cliSourceTag(),
 		Host:      getPineconeHostURL(),
 	})
 	if err != nil {
@@ -134,7 +135,7 @@ func NewPineconeAdminClient(ctx context.Context) *pinecone.AdminClient {
 		exit.ErrorMsg("User is not logged in")
 	}
 
-	sourceTag := CLISourceTag
+	sourceTag := cliSourceTag()
 	ac, err := pinecone.NewAdminClient(pinecone.NewAdminClientParams{
 		ClientId:     clientId,
 		ClientSecret: clientSecret,
@@ -241,4 +242,14 @@ func generateCLIAPIKeyName() string {
 		return CLIAPIKeyName + "000000" // fallback if randomization errors
 	}
 	return CLIAPIKeyName + s
+}
+
+// cliSourceTag returns the CLI source tag, optionally appended with
+// a suffix from PINECONE_CLI_ATTRIBUTION_TAG environment variable
+func cliSourceTag() string {
+	suffix := os.Getenv("PINECONE_CLI_ATTRIBUTION_TAG")
+	if suffix == "" {
+		return CLISourceTag
+	}
+	return CLISourceTag + "_" + suffix
 }
