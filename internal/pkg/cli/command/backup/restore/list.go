@@ -25,10 +25,7 @@ func NewListRestoreJobsCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List restore jobs",
-		Long: help.Long(`
-			List restore jobs in the current project.
-		`),
+		Short: "List restore jobs in the current project",
 		Example: help.Examples(`
 			pc pinecone backup restore list
 			pc pinecone backup restore list --limit 5 --pagination-token token
@@ -45,9 +42,9 @@ func NewListRestoreJobsCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().IntVarP(&options.limit, "limit", "l", 0, "maximum number of restore jobs to return")
-	cmd.Flags().StringVarP(&options.paginationToken, "pagination-token", "p", "", "pagination token to continue a previous listing operation")
-	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
+	cmd.Flags().IntVarP(&options.limit, "limit", "l", 0, "Maximum number of restore jobs to return")
+	cmd.Flags().StringVarP(&options.paginationToken, "pagination-token", "p", "", "Pagination token to continue a previous listing operation")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
 
 	return cmd
 }

@@ -26,12 +26,15 @@ func NewListBackupsCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List backups",
+		Short: "List backups for the current project",
 		Long: help.Long(`
-			List backups in the project, optionally filtered by index name.
+			List backups in the current project, optionally filtered by index name.
 		`),
 		Example: help.Examples(`
+			# List backups for the current project
 			pc pinecone backup list
+
+			# List backups for a specific index
 			pc pinecone backup list --index-name my-index --limit 10
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -46,10 +49,10 @@ func NewListBackupsCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.indexName, "index-name", "i", "", "filter backups by index name")
-	cmd.Flags().IntVarP(&options.limit, "limit", "l", 0, "maximum number of backups to return")
-	cmd.Flags().StringVarP(&options.paginationToken, "pagination-token", "p", "", "pagination token to continue a previous listing operation")
-	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
+	cmd.Flags().StringVarP(&options.indexName, "index-name", "i", "", "Filter backups by index name")
+	cmd.Flags().IntVarP(&options.limit, "limit", "l", 0, "Maximum number of backups to return")
+	cmd.Flags().StringVarP(&options.paginationToken, "pagination-token", "p", "", "Pagination token to continue a previous listing operation")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
 
 	return cmd
 }

@@ -41,7 +41,7 @@ func NewDescribeBackupCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&options.backupId, "id", "i", "", "ID of the backup to describe")
-	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
 	_ = cmd.MarkFlagRequired("id")
 
 	return cmd

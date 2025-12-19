@@ -13,7 +13,7 @@ var (
 		You can create a backup of a serverless index, and you can create a new index from a backup.
 
 		Use these commands to create, describe, list, and delete backups, or to
-		create a new index from an existing backup. You can also describe and list restore jobs.
+		restore an index from a backup, or inspect restore jobs.
 
 		See: https://docs.pinecone.io/guides/manage-data/backups-overview
 	`)
@@ -25,9 +25,20 @@ func NewBackupCmd() *cobra.Command {
 		Short: "Manage serverless index backups",
 		Long:  backupHelp,
 		Example: help.Examples(`
+			# Create a backup for a serverless index
 			pc pinecone backup create --index-name my-index --name daily-backup
+
+			# List backups for a serverless index
 			pc pinecone backup list --index-name my-index
-			pc pinecone backup create-index --id backup-123 --name restored-index
+
+			# Restore an index from a backup
+			pc pinecone backup restore --id backup-123 --name restored-index
+
+			# List restore jobs
+			pc pinecone backup restore list
+
+			# Describe a restore job
+			pc pinecone backup restore describe --id rj-123
 		`),
 	}
 
