@@ -27,8 +27,8 @@ func NewListRestoreJobsCmd() *cobra.Command {
 		Use:   "list",
 		Short: "List restore jobs in the current project",
 		Example: help.Examples(`
-			pc pinecone backup restore list
-			pc pinecone backup restore list --limit 5 --pagination-token token
+			pc backup restore list
+			pc backup restore list --limit 5 --pagination-token token
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()

@@ -44,8 +44,8 @@ func NewCreateBackupCmd() *cobra.Command {
 			the backup later.
 		`),
 		Example: help.Examples(`
-			pc pinecone backup create --index-name my-index
-			pc pinecone backup create --index-name my-index --name nightly --description "Nightly backup"
+			pc backup create --index-name my-index
+			pc backup create --index-name my-index --name nightly --description "Nightly backup"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()

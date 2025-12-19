@@ -49,13 +49,13 @@ func NewRestoreJobCmd() *cobra.Command {
 		Long:  restoreJobHelp,
 		Example: help.Examples(`
 			# Restore an index from a backup
-			pc pinecone backup restore --id backup-123 --name restored-index --tags env=prod,team=search --deletion-protection enabled
+			pc backup restore --id backup-123 --name restored-index --tags env=prod,team=search --deletion-protection enabled
 
 			# List restore jobs
-			pc pinecone backup restore list
+			pc backup restore list
 
 			# Describe a restore job
-			pc pinecone backup restore describe --id rj-123
+			pc backup restore describe --id rj-123
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
@@ -119,7 +119,7 @@ func runRestoreJobCmd(ctx context.Context, svc RestoreJobService, options restor
 
 	msg.SuccessMsg("Restore job %s started for backup %s.\n", style.Emphasis(resp.RestoreJobId), style.Emphasis(options.backupId))
 	msg.InfoMsg("Created index ID: %s\n", style.Emphasis(resp.IndexId))
-	msg.InfoMsg("Use %s to monitor progress.\n", style.Code("pc pinecone backup restore describe --id "+resp.RestoreJobId))
+	msg.InfoMsg("Use %s to monitor progress.\n", style.Code("pc backup restore describe --id "+resp.RestoreJobId))
 	return nil
 }
 

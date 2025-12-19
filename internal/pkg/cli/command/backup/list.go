@@ -32,10 +32,10 @@ func NewListBackupsCmd() *cobra.Command {
 		`),
 		Example: help.Examples(`
 			# List backups for the current project
-			pc pinecone backup list
+			pc backup list
 
 			# List backups for a specific index
-			pc pinecone backup list --index-name my-index --limit 10
+			pc backup list --index-name my-index --limit 10
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()

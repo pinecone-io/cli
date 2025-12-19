@@ -26,7 +26,7 @@ func NewDescribeBackupCmd() *cobra.Command {
 		Use:   "describe",
 		Short: "Describe a backup by ID",
 		Example: help.Examples(`
-			pc pinecone backup describe --id backup-123
+			pc backup describe --id backup-123
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()

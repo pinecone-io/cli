@@ -26,7 +26,7 @@ func NewDescribeRestoreJobCmd() *cobra.Command {
 		Use:   "describe",
 		Short: "Describe a restore job by ID",
 		Example: help.Examples(`
-			pc pinecone backup restore describe --id rj-123
+			pc backup restore describe --id rj-123
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()

@@ -26,19 +26,19 @@ func NewBackupCmd() *cobra.Command {
 		Long:  backupHelp,
 		Example: help.Examples(`
 			# Create a backup for a serverless index
-			pc pinecone backup create --index-name my-index --name daily-backup
+			pc backup create --index-name my-index --name daily-backup
 
 			# List backups for a serverless index
-			pc pinecone backup list --index-name my-index
+			pc backup list --index-name my-index
 
 			# Restore an index from a backup
-			pc pinecone backup restore --id backup-123 --name restored-index
+			pc backup restore --id backup-123 --name restored-index
 
 			# List restore jobs
-			pc pinecone backup restore list
+			pc backup restore list
 
 			# Describe a restore job
-			pc pinecone backup restore describe --id rj-123
+			pc backup restore describe --id rj-123
 		`),
 	}
 

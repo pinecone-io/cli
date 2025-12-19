@@ -24,7 +24,7 @@ func NewDeleteBackupCmd() *cobra.Command {
 		Use:   "delete",
 		Short: "Delete a backup by ID",
 		Example: help.Examples(`
-			pc pinecone backup delete --id backup-123
+			pc backup delete --id backup-123
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
