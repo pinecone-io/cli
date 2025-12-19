@@ -25,14 +25,6 @@ const (
 	CLISourceTag  = "pinecone-cli"
 )
 
-func cliSourceTag() string {
-	suffix := os.Getenv("PINECONE_CLI_ATTRIBUTION_TAG")
-	if suffix == "" {
-		return CLISourceTag
-	}
-	return CLISourceTag + "_" + suffix
-}
-
 func NewPineconeClient(ctx context.Context) *pinecone.Client {
 	targetOrgId := state.TargetOrg.Get().Id
 	targetProjectId := state.TargetProj.Get().Id
@@ -250,4 +242,14 @@ func generateCLIAPIKeyName() string {
 		return CLIAPIKeyName + "000000" // fallback if randomization errors
 	}
 	return CLIAPIKeyName + s
+}
+
+// cliSourceTag returns the CLI source tag, optionally appended with
+// a suffix from PINECONE_CLI_ATTRIBUTION_TAG environment variable
+func cliSourceTag() string {
+	suffix := os.Getenv("PINECONE_CLI_ATTRIBUTION_TAG")
+	if suffix == "" {
+		return CLISourceTag
+	}
+	return CLISourceTag + "_" + suffix
 }
