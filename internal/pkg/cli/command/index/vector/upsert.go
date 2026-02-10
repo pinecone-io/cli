@@ -19,7 +19,7 @@ import (
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
 
-// UpsertBody is the JSON payload for --file.
+// UpsertBody is the JSON payload for --file / --body.
 // It accepts either {"vectors": [...]} with elements shaped like pinecone.Vector
 // (see https://pkg.go.dev/github.com/pinecone-io/go-pinecone/v5/pinecone#Vector),
 // or a JSONL stream of pinecone.Vector objects.
@@ -66,12 +66,16 @@ func NewUpsertCmd() *cobra.Command {
 	cmd.Flags().IntVarP(&options.batchSize, "batch-size", "b", 500, "size of batches to upsert (default: 500)")
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 	_ = cmd.MarkFlagRequired("index-name")
-	_ = cmd.MarkFlagRequired("file")
 
 	return cmd
 }
 
 func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
+	if options.file == "" {
+		msg.FailMsg("Either --file or --body must be provided")
+		exit.ErrorMsg("Either --file or --body must be provided")
+	}
+
 	b, src, err := argio.ReadAll(options.file)
 	if err != nil {
 		msg.FailMsg("Failed to read upsert file (%s): %s", style.Emphasis(src.Label), err)
