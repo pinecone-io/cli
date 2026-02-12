@@ -157,8 +157,14 @@ func NewIndexConnection(ctx context.Context, pc *pinecone.Client, indexName stri
 		return nil, pcio.Errorf("failed to describe index: %w", err)
 	}
 
+	// Use private_host for BYOC if it exists
+	host := index.Host
+	if index.PrivateHost != nil {
+		host = *index.PrivateHost
+	}
+
 	ic, err := pc.Index(pinecone.NewIndexConnParams{
-		Host:      index.Host,
+		Host:      host,
 		Namespace: namespace,
 	})
 	if err != nil {
