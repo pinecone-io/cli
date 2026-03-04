@@ -150,9 +150,9 @@ func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 }
 
 func parseUpsertBody(b []byte) (*UpsertBody, error) {
-	var payload UpsertBody
 	// First try and decode as JSON: {"vectors":[...]}
 	{
+		var payload UpsertBody
 		dec := json.NewDecoder(bytes.NewReader(b))
 		dec.DisallowUnknownFields()
 		if err := dec.Decode(&payload); err == nil && len(payload.Vectors) > 0 {
