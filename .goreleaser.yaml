@@ -31,7 +31,7 @@ universal_binaries:
   - replace: true
 
 archives:
-  - format: tar.gz
+  - formats: ['tar.gz']
     # this name template makes the OS and Arch compatible with the results of `uname`.
     name_template: >-
       {{ .ProjectName }}_
@@ -45,7 +45,7 @@ archives:
     # use zip for windows archives
     format_overrides:
       - goos: windows
-        format: zip
+        formats: ['zip']
 
 report_sizes: true
 
@@ -69,7 +69,7 @@ release:
     owner: pinecone-io
     name: cli
 
-brews:
+homebrew_casks:
   - name: pinecone
     homepage: "https://www.pinecone.io"
     description: "Pinecone CLI"
@@ -81,21 +81,12 @@ brews:
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
-    commit_msg_template: "Brew formula update for pinecone version {{ .Tag }}"
+    commit_msg_template: "Brew cask update for pinecone version {{ .Tag }}"
     skip_upload: auto
-    directory: Formula
-    license: "Apache-2.0"
-    test: |
-      system "#{bin}/pc --help"
-    install: |
-      bin.install "pc"
-      bin.install_symlink "pc" => "pinecone"
-
-      # Install man pages
-      man1.install Dir["man/man1/*.1"]
-
-      # Add aliases: pc*.1 -> pinecone*.1, etc
-      Dir[man1/"pc*.1"].each do |src|
-        dest = File.basename(src).sub(/\Apc\b/, "pinecone") # Replace leading "pc" with "pinecone"
-        man1.install_symlink src => dest
-      end
+    directory: Casks
+    binaries:
+      - pc
+    manpages:
+      - "man/man1/*.1"
+    custom_block: |
+      binary "pc", target: "pinecone"

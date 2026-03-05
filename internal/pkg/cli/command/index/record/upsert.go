@@ -65,16 +65,20 @@ func NewUpsertCmd() *cobra.Command {
 	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to upsert into")
 	cmd.Flags().StringVar(&options.file, "file", "", "request body JSON or JSONL (inline, ./path.json[l], or '-' for stdin; only one argument may use stdin)")
 	cmd.Flags().StringVar(&options.file, "body", "", "alias for --file")
-	cmd.Flags().IntVarP(&options.batchSize, "batch-size", "b", 500, "size of batches to upsert (default: 500)")
+	cmd.Flags().IntVarP(&options.batchSize, "batch-size", "b", 96, "records per batch (max 96)")
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 
 	_ = cmd.MarkFlagRequired("index-name")
-	_ = cmd.MarkFlagRequired("file")
 
 	return cmd
 }
 
 func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
+	if options.file == "" {
+		msg.FailMsg("Either --file or --body must be provided")
+		exit.ErrorMsg("Either --file or --body must be provided")
+	}
+
 	b, src, err := argio.ReadAll(options.file)
 	if err != nil {
 		msg.FailMsg("Failed to read upsert body (%s): %s", style.Emphasis(src.Label), err)
@@ -144,6 +148,16 @@ func parseUpsertRecordsBody(b []byte) (*UpsertRecordsBody, error) {
 		dec.DisallowUnknownFields()
 		if err := dec.Decode(&payload); err == nil && len(payload.Records) > 0 {
 			return &payload, nil
+		}
+	}
+
+	// Second try: raw JSON array of IntegratedRecord objects
+	{
+		var records []pinecone.IntegratedRecord
+		dec := json.NewDecoder(bytes.NewReader(b))
+		dec.DisallowUnknownFields()
+		if err := dec.Decode(&records); err == nil && len(records) > 0 {
+			return &UpsertRecordsBody{Records: records}, nil
 		}
 	}
 
