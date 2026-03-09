@@ -39,9 +39,9 @@ func NewUpsertCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "upsert",
-		Short: "Upsert records into an index from a JSON/JSONL payload",
+		Short: "Upsert text records into an integrated index from a JSON/JSONL payload",
 		Long: help.Long(`
-			Upsert records into an index namespace from a JSON or JSONL payload.
+			Upsert records into an integrated index namespace from a JSON or JSONL payload.
 
 			The request --body/--file may be a JSON object containing "records": [...]
 			(a list of IntegratedRecord objects), a raw JSON array of records, or a

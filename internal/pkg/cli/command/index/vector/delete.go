@@ -34,7 +34,7 @@ func NewDeleteVectorsCmd() *cobra.Command {
 			--ids and --filter flags support inline JSON, ./path.json, or '-' to read from stdin.
 		`),
 		Example: help.Examples(`
-			pc index vector delete --index-name my-index --namespace my-namespace --ids my-id
+			pc index vector delete --index-name my-index --namespace my-namespace --ids '["my-id"]'
 			pc index vector delete --index-name my-index --namespace my-namespace --all-vectors
 			pc index vector delete --index-name my-index --namespace my-namespace --filter '{"genre": "classical"}'
 		`),
