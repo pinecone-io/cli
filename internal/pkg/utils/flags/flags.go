@@ -10,6 +10,7 @@ import (
 
 type JSONObject map[string]any
 type Float32List []float32
+type Int32List []int32
 type UInt32List []uint32
 type StringList []string
 
@@ -105,6 +106,37 @@ func (m *UInt32List) String() string {
 }
 
 func (*UInt32List) Type() string { return "uint32 json-array" }
+
+func (m *Int32List) Set(value string) error {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		*m = (*m)[:0]
+		return nil
+	}
+
+	rc, _, err := argio.OpenReader(value)
+	if err != nil {
+		return err
+	}
+	defer rc.Close()
+
+	var arr []int32
+	if err := json.NewDecoder(rc).Decode(&arr); err != nil {
+		return pcio.Errorf("failed to parse JSON int32 array: %w", err)
+	}
+	*m = append((*m)[:0], arr...)
+	return nil
+}
+
+func (m *Int32List) String() string {
+	if m == nil || len(*m) == 0 {
+		return ""
+	}
+	b, _ := json.Marshal(m)
+	return string(b)
+}
+
+func (*Int32List) Type() string { return "int32 json-array" }
 
 func (m *StringList) Set(value string) error {
 	value = strings.TrimSpace(value)
