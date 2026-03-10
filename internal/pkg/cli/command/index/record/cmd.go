@@ -1,9 +1,20 @@
 package record
 
 import (
+	"context"
+
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
+	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 	"github.com/spf13/cobra"
 )
+
+// RecordService is the subset of *pinecone.IndexConnection used by the record
+// commands. It is defined here so that both upsert and search can share a
+// single mock in tests.
+type RecordService interface {
+	UpsertRecords(ctx context.Context, records []*pinecone.IntegratedRecord) error
+	SearchRecords(ctx context.Context, in *pinecone.SearchRecordsRequest) (*pinecone.SearchRecordsResponse, error)
+}
 
 func NewRecordCmd() *cobra.Command {
 	cmd := &cobra.Command{

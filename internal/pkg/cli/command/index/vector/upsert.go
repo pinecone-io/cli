@@ -96,11 +96,6 @@ func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 		exit.Error(err, "Failed to create index connection")
 	}
 
-	if len(payload.Vectors) == 0 {
-		msg.FailMsg("No vectors found in %s", style.Emphasis(src.Label))
-		exit.ErrorMsg("No vectors provided for upsert")
-	}
-
 	// Map to SDK types
 	mapped := make([]*pinecone.Vector, 0, len(payload.Vectors))
 	for _, v := range payload.Vectors {
@@ -155,7 +150,10 @@ func parseUpsertBody(b []byte) (*UpsertBody, error) {
 		var payload UpsertBody
 		dec := json.NewDecoder(bytes.NewReader(b))
 		dec.DisallowUnknownFields()
-		if err := dec.Decode(&payload); err == nil && len(payload.Vectors) > 0 {
+		if err := dec.Decode(&payload); err == nil {
+			if len(payload.Vectors) == 0 {
+				return nil, pcio.Errorf("no vectors provided")
+			}
 			return &payload, nil
 		}
 	}
@@ -165,7 +163,10 @@ func parseUpsertBody(b []byte) (*UpsertBody, error) {
 		var vectors []pinecone.Vector
 		dec := json.NewDecoder(bytes.NewReader(b))
 		dec.DisallowUnknownFields()
-		if err := dec.Decode(&vectors); err == nil && len(vectors) > 0 {
+		if err := dec.Decode(&vectors); err == nil {
+			if len(vectors) == 0 {
+				return nil, pcio.Errorf("no vectors provided")
+			}
 			return &UpsertBody{Vectors: vectors}, nil
 		}
 	}
@@ -184,7 +185,7 @@ func parseUpsertBody(b []byte) (*UpsertBody, error) {
 		vectors = append(vectors, v)
 	}
 	if len(vectors) == 0 {
-		return nil, io.EOF
+		return nil, pcio.Errorf("no vectors provided")
 	}
 	return &UpsertBody{Vectors: vectors}, nil
 }

@@ -19,6 +19,9 @@ import (
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
 
+// Ensure *pinecone.IndexConnection satisfies RecordService at compile time.
+var _ RecordService = (*pinecone.IndexConnection)(nil)
+
 // UpsertRecordsBody is the JSON payload for --body/--file.
 // It accepts either {"records": [...]} where each element is an IntegratedRecord,
 // a JSON array of IntegratedRecord objects, or a JSONL stream of IntegratedRecord objects.
@@ -57,7 +60,17 @@ func NewUpsertCmd() *cobra.Command {
 			cat records.jsonl | pc index record upsert --index-name my-index --namespace my-namespace --body -
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			runUpsertCmd(cmd.Context(), options)
+			ctx := cmd.Context()
+			pc := sdk.NewPineconeClient(ctx)
+			ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, options.namespace)
+			if err != nil {
+				msg.FailMsg("Failed to create index connection: %s", err)
+				exit.Error(err, "Failed to create index connection")
+			}
+			if err := runUpsertCmd(ctx, ic, options); err != nil {
+				msg.FailMsg("%s", err)
+				exit.Error(err, "upsert failed")
+			}
 		},
 	}
 
@@ -73,34 +86,19 @@ func NewUpsertCmd() *cobra.Command {
 	return cmd
 }
 
-func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
+func runUpsertCmd(ctx context.Context, ic RecordService, options upsertCmdOptions) error {
 	if options.file == "" {
-		msg.FailMsg("Either --file or --body must be provided")
-		exit.ErrorMsg("Either --file or --body must be provided")
+		return pcio.Errorf("either --file or --body must be provided")
 	}
 
 	b, src, err := argio.ReadAll(options.file)
 	if err != nil {
-		msg.FailMsg("Failed to read upsert body (%s): %s", style.Emphasis(src.Label), err)
-		exit.Error(err, "Failed to read upsert body")
+		return pcio.Errorf("failed to read upsert body (%s): %w", style.Emphasis(src.Label), err)
 	}
 
 	payload, err := parseUpsertRecordsBody(b)
 	if err != nil {
-		msg.FailMsg("Failed to parse upsert body (%s): %s", style.Emphasis(src.Label), err)
-		exit.Error(err, "Failed to parse upsert body")
-	}
-
-	pc := sdk.NewPineconeClient(ctx)
-	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, options.namespace)
-	if err != nil {
-		msg.FailMsg("Failed to create index connection: %s", err)
-		exit.Error(err, "Failed to create index connection")
-	}
-
-	if len(payload.Records) == 0 {
-		msg.FailMsg("No records found in %s", style.Emphasis(src.Label))
-		exit.ErrorMsg("No records provided for upsert")
+		return pcio.Errorf("failed to parse upsert body (%s): %w", style.Emphasis(src.Label), err)
 	}
 
 	records := make([]*pinecone.IntegratedRecord, 0, len(payload.Records))
@@ -122,11 +120,10 @@ func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 	}
 
 	for i, batch := range batches {
-		err := ic.UpsertRecords(ctx, batch)
-		if err != nil {
-			msg.FailMsg("Failed to upsert %d records in batch %d: %s", len(batch), i+1, err)
-			exit.Errorf(err, "Failed to upsert %d records in batch %d", len(batch), i+1)
-		} else if options.json {
+		if err := ic.UpsertRecords(ctx, batch); err != nil {
+			return pcio.Errorf("failed to upsert %d records in batch %d: %w", len(batch), i+1, err)
+		}
+		if options.json {
 			summary := map[string]any{
 				"batch":     i + 1,
 				"batches":   len(batches),
@@ -138,6 +135,8 @@ func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 			msg.SuccessMsg("Upserted %d records into namespace %s (batch %d of %d)", len(batch), options.namespace, i+1, len(batches))
 		}
 	}
+
+	return nil
 }
 
 func parseUpsertRecordsBody(b []byte) (*UpsertRecordsBody, error) {
@@ -146,7 +145,10 @@ func parseUpsertRecordsBody(b []byte) (*UpsertRecordsBody, error) {
 		var payload UpsertRecordsBody
 		dec := json.NewDecoder(bytes.NewReader(b))
 		dec.DisallowUnknownFields()
-		if err := dec.Decode(&payload); err == nil && len(payload.Records) > 0 {
+		if err := dec.Decode(&payload); err == nil {
+			if len(payload.Records) == 0 {
+				return nil, pcio.Errorf("no records provided")
+			}
 			return &payload, nil
 		}
 	}
@@ -156,7 +158,10 @@ func parseUpsertRecordsBody(b []byte) (*UpsertRecordsBody, error) {
 		var records []pinecone.IntegratedRecord
 		dec := json.NewDecoder(bytes.NewReader(b))
 		dec.DisallowUnknownFields()
-		if err := dec.Decode(&records); err == nil && len(records) > 0 {
+		if err := dec.Decode(&records); err == nil {
+			if len(records) == 0 {
+				return nil, pcio.Errorf("no records provided")
+			}
 			return &UpsertRecordsBody{Records: records}, nil
 		}
 	}
@@ -175,7 +180,7 @@ func parseUpsertRecordsBody(b []byte) (*UpsertRecordsBody, error) {
 		records = append(records, rec)
 	}
 	if len(records) == 0 {
-		return nil, io.EOF
+		return nil, pcio.Errorf("no records provided")
 	}
 	return &UpsertRecordsBody{Records: records}, nil
 }
