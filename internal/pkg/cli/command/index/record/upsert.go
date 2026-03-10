@@ -158,7 +158,7 @@ func parseUpsertRecordsBody(b []byte) (*UpsertRecordsBody, error) {
 		return &UpsertRecordsBody{Records: records}, nil
 
 	case '{':
-		return parseUpsertRecordsFromObjects(b)
+		return parseUpsertRecordsFromObjects(trimmed)
 
 	default:
 		return nil, pcio.Errorf("input must be a JSON object, array, or JSONL")

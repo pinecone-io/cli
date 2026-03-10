@@ -1,6 +1,7 @@
 package record
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 
@@ -201,35 +202,52 @@ func runSearchCmd(ctx context.Context, ic RecordService, options searchCmdOption
 	// the field is still unset. top-k is the exception — its default is non-zero,
 	// so we track whether it was explicitly passed via options.topKExplicit.
 	if options.body != "" {
-		b, src, err := argio.DecodeJSONArg[pinecone.SearchRecordsRequest](options.body)
+		rawBody, src, err := argio.ReadAll(options.body)
 		if err != nil {
+			return pcio.Errorf("failed to read search body (%s): %w", style.Emphasis(src.Label), err)
+		}
+
+		var bodyReq pinecone.SearchRecordsRequest
+		dec := json.NewDecoder(bytes.NewReader(rawBody))
+		dec.DisallowUnknownFields()
+		if err := dec.Decode(&bodyReq); err != nil {
 			return pcio.Errorf("failed to parse search body (%s): %w", style.Emphasis(src.Label), err)
 		}
-		if b != nil {
-			if !options.topKExplicit && b.Query.TopK > 0 {
-				req.Query.TopK = b.Query.TopK
-			}
-			if req.Query.Id == nil && b.Query.Id != nil {
-				req.Query.Id = b.Query.Id
-			}
-			if req.Query.Inputs == nil && b.Query.Inputs != nil {
-				req.Query.Inputs = b.Query.Inputs
-			}
-			if req.Query.Filter == nil && b.Query.Filter != nil {
-				req.Query.Filter = b.Query.Filter
-			}
-			if req.Fields == nil && b.Fields != nil {
-				req.Fields = b.Fields
-			}
-			if req.Query.Vector == nil && b.Query.Vector != nil {
-				req.Query.Vector = b.Query.Vector
-			}
-			if req.Query.MatchTerms == nil && b.Query.MatchTerms != nil {
-				req.Query.MatchTerms = b.Query.MatchTerms
-			}
-			if req.Rerank == nil && b.Rerank != nil {
-				req.Rerank = b.Rerank
-			}
+		// Use a pointer-field probe to detect whether top_k was explicitly
+		// present in the JSON body. int32's zero value is indistinguishable
+		// from an absent field after standard decoding, so we need this
+		// secondary pass to tell "top_k: 0" from a missing top_k key.
+		var topKProbe struct {
+			Query struct {
+				TopK *int32 `json:"top_k"`
+			} `json:"query"`
+		}
+		_ = json.Unmarshal(rawBody, &topKProbe)
+		bodyTopKSet := topKProbe.Query.TopK != nil
+
+		if !options.topKExplicit && bodyTopKSet {
+			req.Query.TopK = bodyReq.Query.TopK
+		}
+		if req.Query.Id == nil && bodyReq.Query.Id != nil {
+			req.Query.Id = bodyReq.Query.Id
+		}
+		if req.Query.Inputs == nil && bodyReq.Query.Inputs != nil {
+			req.Query.Inputs = bodyReq.Query.Inputs
+		}
+		if req.Query.Filter == nil && bodyReq.Query.Filter != nil {
+			req.Query.Filter = bodyReq.Query.Filter
+		}
+		if req.Fields == nil && bodyReq.Fields != nil {
+			req.Fields = bodyReq.Fields
+		}
+		if req.Query.Vector == nil && bodyReq.Query.Vector != nil {
+			req.Query.Vector = bodyReq.Query.Vector
+		}
+		if req.Query.MatchTerms == nil && bodyReq.Query.MatchTerms != nil {
+			req.Query.MatchTerms = bodyReq.Query.MatchTerms
+		}
+		if req.Rerank == nil && bodyReq.Rerank != nil {
+			req.Rerank = bodyReq.Rerank
 		}
 	}
 

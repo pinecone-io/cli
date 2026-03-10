@@ -286,6 +286,38 @@ func Test_runSearchCmd_BodyTopKAppliedWhenNotExplicit(t *testing.T) {
 	assert.Equal(t, int32(7), svc.lastSearchReq.Query.TopK)
 }
 
+func Test_runSearchCmd_BodyZeroTopKIsValidationError(t *testing.T) {
+	svc := &mockRecordService{searchResp: emptySearchResp}
+	err := runSearchCmd(context.Background(), svc, searchCmdOptions{
+		indexName:    "my-index",
+		namespace:    "__default__",
+		topK:         defaultSearchTopK, // default, not explicitly set
+		topKExplicit: false,
+		// body explicitly sets top_k to 0; should be rejected, not silently
+		// replaced with the default of 10.
+		body: `{"query":{"top_k":0,"id":"rec-1"}}`,
+	})
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "top-k must be greater than 0")
+	assert.Nil(t, svc.lastSearchReq)
+}
+
+func Test_runSearchCmd_BodyNegativeTopKIsValidationError(t *testing.T) {
+	svc := &mockRecordService{searchResp: emptySearchResp}
+	err := runSearchCmd(context.Background(), svc, searchCmdOptions{
+		indexName:    "my-index",
+		namespace:    "__default__",
+		topK:         defaultSearchTopK,
+		topKExplicit: false,
+		body:         `{"query":{"top_k":-5,"id":"rec-1"}}`,
+	})
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "top-k must be greater than 0")
+	assert.Nil(t, svc.lastSearchReq)
+}
+
 // ---------------------------------------------------------------------------
 // SDK error propagation and output
 // ---------------------------------------------------------------------------
