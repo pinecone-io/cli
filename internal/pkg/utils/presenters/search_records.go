@@ -61,7 +61,7 @@ func previewFields(fields map[string]any, limit int) string {
 
 	out := text.InlineJSON(limited)
 	if truncated && strings.HasSuffix(out, "}") {
-		out = strings.TrimRight(out, "}") + ", ...}"
+		out = strings.TrimSuffix(out, "}") + ", ...}"
 	}
 
 	return out

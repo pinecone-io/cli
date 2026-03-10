@@ -101,7 +101,7 @@ func PrintQueryVectorsTable(resp *pinecone.QueryVectorsResponse) {
 					s := text.InlineJSON(limited) // compact one-line JSON
 					if len(keys) > 3 {
 						// put ellipsis inside the braces: {"a":1,"b":2,"c":3, ...}
-						s = strings.TrimRight(s, "}") + ", ...}"
+						s = strings.TrimSuffix(s, "}") + ", ...}"
 					}
 					metadata = s
 				}
