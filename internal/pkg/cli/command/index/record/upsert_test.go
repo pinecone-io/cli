@@ -3,37 +3,11 @@ package record
 import (
 	"context"
 	"errors"
-	"os"
 	"testing"
 
-	"github.com/pinecone-io/cli/internal/pkg/cli/testutils"
-	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-// mockRecordService records UpsertRecords calls so tests can assert on them.
-type mockRecordService struct {
-	upsertErr   error
-	upsertCalls [][]*pinecone.IntegratedRecord
-}
-
-func (m *mockRecordService) UpsertRecords(_ context.Context, records []*pinecone.IntegratedRecord) error {
-	m.upsertCalls = append(m.upsertCalls, records)
-	return m.upsertErr
-}
-
-func (m *mockRecordService) SearchRecords(_ context.Context, _ *pinecone.SearchRecordsRequest) (*pinecone.SearchRecordsResponse, error) {
-	panic("SearchRecords not expected in upsert tests")
-}
-
-// Silence output for tests.
-func TestMain(m *testing.M) {
-	reset := testutils.SilenceOutput()
-	code := m.Run()
-	reset()
-	os.Exit(code)
-}
 
 // ---------------------------------------------------------------------------
 // validation tests

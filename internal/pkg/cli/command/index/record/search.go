@@ -1,6 +1,7 @@
 package record
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/argio"
@@ -24,6 +25,7 @@ type searchCmdOptions struct {
 	indexName     string
 	namespace     string
 	topK          int
+	topKExplicit  bool // true when --top-k was explicitly passed (vs. the default)
 	inputs        flags.JSONObject
 	filter        flags.JSONObject
 	rerank        flags.JSONObject
@@ -92,7 +94,18 @@ func NewSearchCmd() *cobra.Command {
 			pc index record search --index-name my-index --body ./search.json
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
-			runSearchCmd(cmd, options)
+			ctx := cmd.Context()
+			options.topKExplicit = cmd.Flags().Changed("top-k")
+			pc := sdk.NewPineconeClient(ctx)
+			ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, options.namespace)
+			if err != nil {
+				msg.FailMsg("Failed to create index connection: %s", err)
+				exit.Error(err, "Failed to create index connection")
+			}
+			if err := runSearchCmd(ctx, ic, options); err != nil {
+				msg.FailMsg("%s", err)
+				exit.Error(err, "search failed")
+			}
 		},
 	}
 
@@ -119,10 +132,7 @@ func NewSearchCmd() *cobra.Command {
 	return cmd
 }
 
-func runSearchCmd(cmd *cobra.Command, options searchCmdOptions) {
-	ctx := cmd.Context()
-	pc := sdk.NewPineconeClient(ctx)
-
+func runSearchCmd(ctx context.Context, ic RecordService, options searchCmdOptions) error {
 	// Build req from flags.
 	req := pinecone.SearchRecordsRequest{
 		Query: pinecone.SearchRecordsQuery{
@@ -149,33 +159,28 @@ func runSearchCmd(cmd *cobra.Command, options searchCmdOptions) {
 	if options.rerank != nil {
 		b, err := json.Marshal(options.rerank)
 		if err != nil {
-			msg.FailMsg("Failed to encode --rerank value: %s", err)
-			exit.Error(err, "Failed to encode --rerank value")
+			return pcio.Errorf("failed to encode --rerank value: %w", err)
 		}
 		var rerank pinecone.SearchRecordsRerank
 		if err := json.Unmarshal(b, &rerank); err != nil {
-			msg.FailMsg("Failed to parse --rerank value: %s", err)
-			exit.Error(err, "Failed to parse --rerank value")
+			return pcio.Errorf("failed to parse --rerank value: %w", err)
 		}
 		req.Rerank = &rerank
 	}
 	if options.matchTerms != nil {
 		b, err := json.Marshal(options.matchTerms)
 		if err != nil {
-			msg.FailMsg("Failed to encode --match-terms value: %s", err)
-			exit.Error(err, "Failed to encode --match-terms value")
+			return pcio.Errorf("failed to encode --match-terms value: %w", err)
 		}
 		var matchTerms pinecone.SearchMatchTerms
 		if err := json.Unmarshal(b, &matchTerms); err != nil {
-			msg.FailMsg("Failed to parse --match-terms value: %s", err)
-			exit.Error(err, "Failed to parse --match-terms value")
+			return pcio.Errorf("failed to parse --match-terms value: %w", err)
 		}
 		req.Query.MatchTerms = &matchTerms
 	}
 	if len(options.vector) > 0 || len(options.sparseIndices) > 0 {
 		if len(options.sparseIndices) != len(options.sparseValues) {
-			msg.FailMsg("--sparse-indices and --sparse-values must be the same length")
-			exit.ErrorMsg("--sparse-indices and --sparse-values must be the same length")
+			return pcio.Errorf("--sparse-indices and --sparse-values must be the same length")
 		}
 		sv := &pinecone.SearchRecordsVector{}
 		if len(options.vector) > 0 {
@@ -191,68 +196,61 @@ func runSearchCmd(cmd *cobra.Command, options searchCmdOptions) {
 		req.Query.Vector = sv
 	}
 
-	// Merge --body into req. For all fields that have a dedicated flag, the flag
-	// takes precedence; body only fills in values that weren't explicitly set.
+	// Merge --body into req. Flags take precedence: a flag's value in req is
+	// already non-nil/non-zero if the flag was set, so we only overwrite when
+	// the field is still unset. top-k is the exception — its default is non-zero,
+	// so we track whether it was explicitly passed via options.topKExplicit.
 	if options.body != "" {
 		b, src, err := argio.DecodeJSONArg[pinecone.SearchRecordsRequest](options.body)
 		if err != nil {
-			msg.FailMsg("Failed to parse search body (%s): %s", style.Emphasis(src.Label), err)
-			exit.Errorf(err, "Failed to parse search body (%s)", src.Label)
+			return pcio.Errorf("failed to parse search body (%s): %w", style.Emphasis(src.Label), err)
 		}
 		if b != nil {
-			if !cmd.Flags().Changed("top-k") && b.Query.TopK > 0 {
+			if !options.topKExplicit && b.Query.TopK > 0 {
 				req.Query.TopK = b.Query.TopK
 			}
-			if !cmd.Flags().Changed("id") && b.Query.Id != nil {
+			if req.Query.Id == nil && b.Query.Id != nil {
 				req.Query.Id = b.Query.Id
 			}
-			if !cmd.Flags().Changed("inputs") && b.Query.Inputs != nil {
+			if req.Query.Inputs == nil && b.Query.Inputs != nil {
 				req.Query.Inputs = b.Query.Inputs
 			}
-			if !cmd.Flags().Changed("filter") && b.Query.Filter != nil {
+			if req.Query.Filter == nil && b.Query.Filter != nil {
 				req.Query.Filter = b.Query.Filter
 			}
-			if !cmd.Flags().Changed("fields") && b.Fields != nil {
+			if req.Fields == nil && b.Fields != nil {
 				req.Fields = b.Fields
 			}
-			vectorFlagsSet := cmd.Flags().Changed("vector") || cmd.Flags().Changed("sparse-indices") || cmd.Flags().Changed("sparse-values")
-			if !vectorFlagsSet && b.Query.Vector != nil {
+			if req.Query.Vector == nil && b.Query.Vector != nil {
 				req.Query.Vector = b.Query.Vector
 			}
-			if !cmd.Flags().Changed("match-terms") && b.Query.MatchTerms != nil {
+			if req.Query.MatchTerms == nil && b.Query.MatchTerms != nil {
 				req.Query.MatchTerms = b.Query.MatchTerms
 			}
-			if !cmd.Flags().Changed("rerank") && b.Rerank != nil {
+			if req.Rerank == nil && b.Rerank != nil {
 				req.Rerank = b.Rerank
 			}
 		}
 	}
 
 	if req.Query.TopK <= 0 {
-		msg.FailMsg("Top-k must be greater than 0")
-		exit.ErrorMsg("Invalid top-k value")
+		return pcio.Errorf("top-k must be greater than 0")
 	}
 
 	if req.Query.Id == nil && req.Query.Inputs == nil && req.Query.Vector == nil {
-		msg.FailMsg("Provide a query via --inputs, --id, --vector, --sparse-indices/--sparse-values, or a --body")
-		exit.ErrorMsg("Missing query inputs for search")
-	}
-
-	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, options.namespace)
-	if err != nil {
-		msg.FailMsg("Failed to create index connection: %s", err)
-		exit.Error(err, "Failed to create index connection")
+		return pcio.Errorf("provide a query via --inputs, --id, --vector, --sparse-indices/--sparse-values, or a --body")
 	}
 
 	resp, err := ic.SearchRecords(ctx, &req)
 	if err != nil {
-		exit.Error(err, "Failed to search records")
+		return pcio.Errorf("failed to search records: %w", err)
 	}
 
 	if options.json {
-		json := text.IndentJSON(resp)
-		pcio.Println(json)
+		pcio.Println(text.IndentJSON(resp))
 	} else {
 		presenters.PrintSearchRecordsTable(resp)
 	}
+
+	return nil
 }
