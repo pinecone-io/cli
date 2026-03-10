@@ -50,6 +50,23 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Create pinecone*.1 symlinks for each pc*.1 man page so that
+	// `man pinecone` and `man pinecone-index` etc. work in addition to `man pc`.
+	pcPages, err := filepath.Glob(filepath.Join(*output, "pc*.1"))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: Failed to list man page files: %s\n", err)
+	} else {
+		for _, src := range pcPages {
+			base := filepath.Base(src)
+			dest := "pinecone" + base[len("pc"):]
+			destPath := filepath.Join(*output, dest)
+			os.Remove(destPath)
+			if err := os.Symlink(base, destPath); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: Failed to create symlink %s -> %s: %s\n", dest, base, err)
+			}
+		}
+	}
+
 	// List generated files for verbose
 	if *verbose {
 		files, err := filepath.Glob(filepath.Join(*output, "*.1"))

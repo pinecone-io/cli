@@ -22,7 +22,7 @@ import (
 // UpsertBody is the JSON payload for --file / --body.
 // It accepts either {"vectors": [...]} with elements shaped like pinecone.Vector
 // (see https://pkg.go.dev/github.com/pinecone-io/go-pinecone/v5/pinecone#Vector),
-// or a JSONL stream of pinecone.Vector objects.
+// a raw JSON array of pinecone.Vector objects, or a JSONL stream of pinecone.Vector objects.
 type UpsertBody struct {
 	Vectors []pinecone.Vector `json:"vectors"`
 }
@@ -44,7 +44,7 @@ func NewUpsertCmd() *cobra.Command {
 		Long: help.Long(`
 			Upsert vectors into an index namespace from a JSON or JSONL payload.
 			
-			The request --file may be a JSON object containing "vectors": [...] or a JSONL stream of Vector objects.
+			The request --file may be a JSON object containing "vectors": [...], a raw JSON array of Vector objects, or a JSONL stream of Vector objects.
 			Control batch size with --batch-size. Bodies can be inline JSON, loaded from ./file.json[l], or read from stdin with '-'.
 
 			Body schema: UpsertBody (vectors shaped like pinecone.Vector: https://pkg.go.dev/github.com/pinecone-io/go-pinecone/v5/pinecone#Vector)
@@ -96,11 +96,6 @@ func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 		exit.Error(err, "Failed to create index connection")
 	}
 
-	if len(payload.Vectors) == 0 {
-		msg.FailMsg("No vectors found in %s", style.Emphasis(src.Label))
-		exit.ErrorMsg("No vectors provided for upsert")
-	}
-
 	// Map to SDK types
 	mapped := make([]*pinecone.Vector, 0, len(payload.Vectors))
 	for _, v := range payload.Vectors {
@@ -150,13 +145,29 @@ func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 }
 
 func parseUpsertBody(b []byte) (*UpsertBody, error) {
-	var payload UpsertBody
 	// First try and decode as JSON: {"vectors":[...]}
 	{
+		var payload UpsertBody
 		dec := json.NewDecoder(bytes.NewReader(b))
 		dec.DisallowUnknownFields()
-		if err := dec.Decode(&payload); err == nil && len(payload.Vectors) > 0 {
+		if err := dec.Decode(&payload); err == nil {
+			if len(payload.Vectors) == 0 {
+				return nil, pcio.Errorf("no vectors provided")
+			}
 			return &payload, nil
+		}
+	}
+
+	// Second try: raw JSON array of Vector objects
+	{
+		var vectors []pinecone.Vector
+		dec := json.NewDecoder(bytes.NewReader(b))
+		dec.DisallowUnknownFields()
+		if err := dec.Decode(&vectors); err == nil {
+			if len(vectors) == 0 {
+				return nil, pcio.Errorf("no vectors provided")
+			}
+			return &UpsertBody{Vectors: vectors}, nil
 		}
 	}
 
@@ -174,7 +185,7 @@ func parseUpsertBody(b []byte) (*UpsertBody, error) {
 		vectors = append(vectors, v)
 	}
 	if len(vectors) == 0 {
-		return nil, io.EOF
+		return nil, pcio.Errorf("no vectors provided")
 	}
 	return &UpsertBody{Vectors: vectors}, nil
 }

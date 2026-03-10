@@ -7,7 +7,7 @@ import (
 
 var (
 	vectorHelp = help.Long(`
-		Work with vectors (records) in a Pinecone index.
+		Work with vector records in a Pinecone index.
 
 		Use these commands to upsert, fetch, list, update, delete, and query data
 		within an index. All commands require --index-name and may optionally target
@@ -20,7 +20,7 @@ var (
 func NewVectorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "vector",
-		Aliases: []string{"vectors", "record", "records"},
+		Aliases: []string{"vectors"},
 		Short:   "Work with data in an index",
 		Long:    vectorHelp,
 		Example: help.Examples(`
