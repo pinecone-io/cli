@@ -140,7 +140,36 @@ func runUpsertCmd(ctx context.Context, ic RecordService, options upsertCmdOption
 }
 
 func parseUpsertRecordsBody(b []byte) (*UpsertRecordsBody, error) {
-	// First try JSON object: {"records":[...]}
+	trimmed := bytes.TrimSpace(b)
+	if len(trimmed) == 0 {
+		return nil, pcio.Errorf("no records provided")
+	}
+
+	switch trimmed[0] {
+	case '[':
+		// Raw JSON array of IntegratedRecord objects.
+		var records []pinecone.IntegratedRecord
+		if err := json.Unmarshal(trimmed, &records); err != nil {
+			return nil, err
+		}
+		if len(records) == 0 {
+			return nil, pcio.Errorf("no records provided")
+		}
+		return &UpsertRecordsBody{Records: records}, nil
+
+	case '{':
+		return parseUpsertRecordsFromObjects(b)
+
+	default:
+		return nil, pcio.Errorf("input must be a JSON object, array, or JSONL")
+	}
+}
+
+// parseUpsertRecordsFromObjects handles inputs whose first token is '{'. It
+// tries the formats in order: strict wrapper → lenient wrapper → JSONL stream.
+func parseUpsertRecordsFromObjects(b []byte) (*UpsertRecordsBody, error) {
+	// Attempt 1: strict wrapper {"records":[...]} — catches typos in the outer
+	// struct keys via DisallowUnknownFields.
 	{
 		var payload UpsertRecordsBody
 		dec := json.NewDecoder(bytes.NewReader(b))
@@ -153,23 +182,26 @@ func parseUpsertRecordsBody(b []byte) (*UpsertRecordsBody, error) {
 		}
 	}
 
-	// Second try: raw JSON array of IntegratedRecord objects
+	// Attempt 2: lenient wrapper — tolerate extra unknown keys on the outer
+	// object. This handles {"records":[...], "extra_key": ...} which strict
+	// decoding above rejects via DisallowUnknownFields. Because IntegratedRecord
+	// is map[string]interface{}, DisallowUnknownFields has no effect on its
+	// elements, so only the outer struct needs the lenient path.
 	{
-		var records []pinecone.IntegratedRecord
+		var payload UpsertRecordsBody
 		dec := json.NewDecoder(bytes.NewReader(b))
-		dec.DisallowUnknownFields()
-		if err := dec.Decode(&records); err == nil {
-			if len(records) == 0 {
-				return nil, pcio.Errorf("no records provided")
-			}
-			return &UpsertRecordsBody{Records: records}, nil
+		if err := dec.Decode(&payload); err == nil && len(payload.Records) > 0 {
+			return &payload, nil
 		}
 	}
 
-	// Fallback: JSONL/stream of pinecone.IntegratedRecord values
+	// Attempt 3: JSONL — a stream of IntegratedRecord objects, one per line.
+	// Because IntegratedRecord is map[string]interface{}, DisallowUnknownFields
+	// is ineffective here; any JSON object is accepted. After decoding, guard
+	// against a single malformed wrapper object being silently treated as a
+	// record and sending garbled data to the API.
 	var records []pinecone.IntegratedRecord
 	dec := json.NewDecoder(bytes.NewReader(b))
-	dec.DisallowUnknownFields()
 	for {
 		var rec pinecone.IntegratedRecord
 		if err := dec.Decode(&rec); err == io.EOF {
@@ -182,5 +214,35 @@ func parseUpsertRecordsBody(b []byte) (*UpsertRecordsBody, error) {
 	if len(records) == 0 {
 		return nil, pcio.Errorf("no records provided")
 	}
+	// A single decoded object that carries a "records"-shaped key was almost
+	// certainly intended as the {"records":[...]} wrapper but has a typo or
+	// wrong value type. Reject it with an actionable error rather than upsert
+	// a garbled map entry.
+	if len(records) == 1 {
+		if err := rejectIfMalformedWrapper(records[0]); err != nil {
+			return nil, err
+		}
+	}
 	return &UpsertRecordsBody{Records: records}, nil
+}
+
+// rejectIfMalformedWrapper returns an error when a single decoded
+// IntegratedRecord looks like it was meant to be a {"records":[...]} wrapper.
+// Because IntegratedRecord is a map type, DisallowUnknownFields cannot catch
+// these mistakes in the JSONL path; we inspect the decoded map instead.
+func rejectIfMalformedWrapper(rec pinecone.IntegratedRecord) error {
+	m := map[string]interface{}(rec)
+	// A top-level "records" key whose value is an array is the clearest signal
+	// of a malformed wrapper (e.g. wrong value type, or extra unknown fields
+	// that prevented the lenient wrapper parse from matching).
+	if v, ok := m["records"]; ok {
+		if _, isSlice := v.([]interface{}); isSlice {
+			return pcio.Errorf(`found a top-level "records" array; expected wrapper format {"records":[...]}`)
+		}
+	}
+	// "record" (singular) is the most common key-name typo for the wrapper.
+	if _, ok := m["record"]; ok {
+		return pcio.Errorf(`unknown key "record": did you mean "records"? Expected format: {"records":[...]}`)
+	}
+	return nil
 }
