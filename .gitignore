@@ -34,5 +34,8 @@ secrets
 # Jetbrains IDE
 .idea/
 
+# Claude settings
+.claude/settings.local.json
+
 # Man pages
 man/

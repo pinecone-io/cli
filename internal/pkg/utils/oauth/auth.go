@@ -12,7 +12,7 @@ import (
 type Auth struct{}
 
 const (
-	SourceTag = "pinecone_cli"
+	SourceTag = "pinecone-cli"
 )
 
 func (a *Auth) GetAuthURL(ctx context.Context, csrfState string, codeChallenge string, orgId *string) (string, error) {
