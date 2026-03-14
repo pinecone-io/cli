@@ -11,6 +11,10 @@ import (
 
 type Auth struct{}
 
+const (
+	SourceTag = "pinecone_cli"
+)
+
 func (a *Auth) GetAuthURL(ctx context.Context, csrfState string, codeChallenge string, orgId *string) (string, error) {
 	conf, err := newOauth2Config()
 	if err != nil {
@@ -26,6 +30,7 @@ func (a *Auth) GetAuthURL(ctx context.Context, csrfState string, codeChallenge s
 	opts = append(opts, oauth2.SetAuthURLParam("audience", audience))
 	opts = append(opts, oauth2.SetAuthURLParam("code_challenge", codeChallenge))
 	opts = append(opts, oauth2.SetAuthURLParam("code_challenge_method", "S256"))
+	opts = append(opts, oauth2.SetAuthURLParam("sourceTag", SourceTag))
 	if orgId != nil && *orgId != "" {
 		opts = append(opts, oauth2.SetAuthURLParam("orgId", *orgId))
 	}
