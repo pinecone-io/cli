@@ -2,6 +2,7 @@ package backup
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -96,8 +97,7 @@ func runCreateBackupCmd(ctx context.Context, svc BackupService, options createBa
 	}
 
 	if options.json {
-		json := text.IndentJSON(backup)
-		pcio.Println(json)
+		fmt.Println(text.IndentJSON(backup))
 	} else {
 		msg.SuccessMsg("Backup %s created.\n", styleEmphasisId(backup))
 		presenters.PrintBackupTable(backup)

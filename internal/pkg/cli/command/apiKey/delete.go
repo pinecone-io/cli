@@ -13,12 +13,14 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
+	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 )
 
 type deleteAPIKeyOptions struct {
 	apiKeyId         string
 	skipConfirmation bool
+	json             bool
 }
 
 var (
@@ -58,7 +60,7 @@ func NewDeleteKeyCmd() *cobra.Command {
 				exit.Error(err, "Failed to describe existing API key")
 			}
 
-			if !options.skipConfirmation {
+			if !options.skipConfirmation && !options.json {
 				confirmDeleteApiKey(keyToDelete.Name)
 			}
 
@@ -67,14 +69,23 @@ func NewDeleteKeyCmd() *cobra.Command {
 				msg.FailMsg("Failed to delete API key %s: %s", style.Emphasis(keyToDelete.Name), err)
 				exit.Errorf(err, "Failed to delete API key %s", keyToDelete.Name)
 			}
-			msg.SuccessMsg("API key %s deleted", style.Emphasis(keyToDelete.Name))
 
 			// Check if the key is locally stored and clean it up if so
 			managedKey, ok := secrets.GetProjectManagedKey(keyToDelete.ProjectId)
 			if ok && managedKey.Id == keyToDelete.Id {
 				secrets.DeleteProjectManagedKey(keyToDelete.ProjectId)
-				msg.SuccessMsg("Deleted local record for key %s (project %s)", style.Emphasis(keyToDelete.Id), style.Emphasis(keyToDelete.ProjectId))
 			}
+
+			if options.json {
+				fmt.Println(text.IndentJSON(struct {
+					Deleted bool   `json:"deleted"`
+					Name    string `json:"name"`
+					Id      string `json:"id"`
+				}{Deleted: true, Name: keyToDelete.Name, Id: keyToDelete.Id}))
+				return
+			}
+
+			msg.SuccessMsg("API key %s deleted", style.Emphasis(keyToDelete.Name))
 		},
 	}
 
@@ -82,6 +93,7 @@ func NewDeleteKeyCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("id")
 
 	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "Skip deletion confirmation prompt")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output result as JSON (also skips confirmation prompt)")
 	return cmd
 }
 

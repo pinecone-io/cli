@@ -1,16 +1,25 @@
 package collection
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
+	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 )
 
 type deleteCollectionCmdOptions struct {
 	name string
+	json bool
+}
+
+type deleteCollectionService interface {
+	DeleteCollection(ctx context.Context, name string) error
 }
 
 func NewDeleteCollectionCmd() *cobra.Command {
@@ -26,19 +35,36 @@ func NewDeleteCollectionCmd() *cobra.Command {
 			ctx := cmd.Context()
 			pc := sdk.NewPineconeClient(ctx)
 
-			err := pc.DeleteCollection(ctx, options.name)
+			err := runDeleteCollectionCmd(ctx, pc, options)
 			if err != nil {
 				msg.FailMsg("Failed to delete collection %s: %s\n", style.Emphasis(options.name), err)
 				exit.Error(err, "Failed to delete collection")
 			}
-
-			msg.SuccessMsg("Collection %s deleted.\n", style.Emphasis(options.name))
 		},
 	}
 
 	// required flags
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of collection to delete")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output result as JSON")
+
 	_ = cmd.MarkFlagRequired("name")
 
 	return cmd
+}
+
+func runDeleteCollectionCmd(ctx context.Context, svc deleteCollectionService, options deleteCollectionCmdOptions) error {
+	if err := svc.DeleteCollection(ctx, options.name); err != nil {
+		return err
+	}
+
+	if options.json {
+		fmt.Println(text.IndentJSON(struct {
+			Deleted bool   `json:"deleted"`
+			Name    string `json:"name"`
+		}{Deleted: true, Name: options.name}))
+		return nil
+	}
+
+	msg.SuccessMsg("Collection %s deleted.\n", style.Emphasis(options.name))
+	return nil
 }

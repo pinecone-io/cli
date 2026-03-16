@@ -6,7 +6,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
+	"fmt"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -83,8 +83,7 @@ func runListBackupsCmd(ctx context.Context, svc BackupService, options listBacku
 	}
 
 	if options.json {
-		json := text.IndentJSON(resp)
-		pcio.Println(json)
+		fmt.Println(text.IndentJSON(resp))
 	} else {
 		presenters.PrintBackupList(resp)
 	}

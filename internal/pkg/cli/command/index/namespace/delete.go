@@ -2,19 +2,21 @@ package namespace
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
+	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 )
 
 type deleteNamespaceCmdOptions struct {
 	indexName string
 	name      string
+	json      bool
 }
 
 func NewDeleteNamespaceCmd() *cobra.Command {
@@ -60,20 +62,29 @@ func NewDeleteNamespaceCmd() *cobra.Command {
 	cmd.Flags().StringVar(&options.name, "name", "", "name of the namespace to delete")
 	_ = cmd.MarkFlagRequired("index-name")
 	_ = cmd.MarkFlagRequired("name")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output result as JSON")
 
 	return cmd
 }
 
 func runDeleteNamespaceCmd(ctx context.Context, ic NamespaceService, options deleteNamespaceCmdOptions) error {
 	if strings.TrimSpace(options.name) == "" {
-		return pcio.Errorf("--name is required")
+		return fmt.Errorf("--name is required")
 	}
 
-	err := ic.DeleteNamespace(ctx, options.name)
-	if err != nil {
+	if err := ic.DeleteNamespace(ctx, options.name); err != nil {
 		return err
 	}
-	msg.SuccessMsg("Namespace %s deleted successfully.", options.name)
 
+	if options.json {
+		fmt.Println(text.IndentJSON(struct {
+			Deleted   bool   `json:"deleted"`
+			Namespace string `json:"namespace"`
+			Index     string `json:"index"`
+		}{Deleted: true, Namespace: options.name, Index: options.indexName}))
+		return nil
+	}
+
+	msg.SuccessMsg("Namespace %s deleted successfully.", options.name)
 	return nil
 }
