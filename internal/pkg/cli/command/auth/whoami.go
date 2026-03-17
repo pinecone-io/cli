@@ -48,7 +48,7 @@ func NewWhoAmICmd() *cobra.Command {
 			if options.json {
 				fmt.Println(text.IndentJSON(struct {
 					Email string `json:"email"`
-					OrgId string `json:"org_id"`
+					OrgId string `json:"organization_id"`
 				}{Email: claims.Email, OrgId: claims.OrgId}))
 				return
 			}
