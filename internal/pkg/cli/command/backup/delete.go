@@ -2,19 +2,21 @@ package backup
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
+	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 )
 
 type deleteBackupCmdOptions struct {
 	backupId string
+	json     bool
 }
 
 func NewDeleteBackupCmd() *cobra.Command {
@@ -40,17 +42,26 @@ func NewDeleteBackupCmd() *cobra.Command {
 
 	cmd.Flags().StringVarP(&options.backupId, "id", "i", "", "ID of the backup to delete")
 	_ = cmd.MarkFlagRequired("id")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output result as JSON")
 
 	return cmd
 }
 
 func runDeleteBackupCmd(ctx context.Context, svc BackupService, options deleteBackupCmdOptions) error {
 	if strings.TrimSpace(options.backupId) == "" {
-		return pcio.Errorf("--id is required")
+		return fmt.Errorf("--id is required")
 	}
 
 	if err := svc.DeleteBackup(ctx, options.backupId); err != nil {
 		return err
+	}
+
+	if options.json {
+		fmt.Println(text.IndentJSON(struct {
+			Deleted bool   `json:"deleted"`
+			Id      string `json:"id"`
+		}{Deleted: true, Id: options.backupId}))
+		return nil
 	}
 
 	msg.SuccessMsg("Backup %s deleted.\n", style.Emphasis(options.backupId))
