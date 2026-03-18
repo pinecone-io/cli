@@ -14,6 +14,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
+	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 )
 
@@ -21,6 +22,10 @@ type deleteProjectCmdOptions struct {
 	projectId        string
 	skipConfirmation bool
 	json             bool
+}
+
+type deleteProjectService interface {
+	Delete(ctx context.Context, id string) error
 }
 
 func NewDeleteProjectCmd() *cobra.Command {
@@ -65,7 +70,7 @@ func NewDeleteProjectCmd() *cobra.Command {
 				confirmDelete(projToDelete.Name)
 			}
 
-			err = ac.Project.Delete(ctx, projToDelete.Id)
+			err = runDeleteProjectCmd(ctx, ac.Project, options, projToDelete.Name, projToDelete.Id)
 			if err != nil {
 				msg.FailMsg("Failed to delete project %s: %s\n", style.Emphasis(projToDelete.Name), err)
 				exit.Errorf(err, "Failed to delete project %s", style.Emphasis(projToDelete.Name))
@@ -78,7 +83,6 @@ func NewDeleteProjectCmd() *cobra.Command {
 					Name: "",
 				})
 			}
-			msg.SuccessMsg("Project %s deleted.\n", style.Emphasis(projToDelete.Name))
 		},
 	}
 
@@ -88,6 +92,24 @@ func NewDeleteProjectCmd() *cobra.Command {
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
 
 	return cmd
+}
+
+func runDeleteProjectCmd(ctx context.Context, svc deleteProjectService, opts deleteProjectCmdOptions, name, id string) error {
+	if err := svc.Delete(ctx, id); err != nil {
+		return err
+	}
+
+	if opts.json {
+		fmt.Println(text.IndentJSON(struct {
+			Deleted bool   `json:"deleted"`
+			Name    string `json:"name"`
+			Id      string `json:"id"`
+		}{Deleted: true, Name: name, Id: id}))
+		return nil
+	}
+
+	msg.SuccessMsg("Project %s deleted.\n", style.Emphasis(name))
+	return nil
 }
 
 func confirmDelete(projectName string) {
