@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__claude_ai_Linear__get_project",
+      "mcp__claude_ai_Linear__list_teams",
+      "mcp__claude_ai_Linear__list_issue_labels",
+      "mcp__claude_ai_Linear__create_issue_label",
+      "mcp__claude_ai_Linear__save_issue",
+      "mcp__claude_ai_Linear__list_issues",
+      "mcp__claude_ai_Linear__get_issue",
+      "mcp__claude_ai_Linear__list_issue_statuses",
+      "Bash(git checkout:*)",
+      "Bash(go build:*)",
+      "Bash(go test:*)",
+      "Bash(grep:*)",
+      "Bash(go doc:*)"
+    ]
+  }
+}

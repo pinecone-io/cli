@@ -2,6 +2,7 @@ package organization
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
+	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 )
 
@@ -20,6 +22,10 @@ type deleteOrganizationCmdOptions struct {
 	organizationID   string
 	skipConfirmation bool
 	json             bool
+}
+
+type deleteOrganizationService interface {
+	Delete(ctx context.Context, id string) error
 }
 
 func NewDeleteOrganizationCmd() *cobra.Command {
@@ -48,20 +54,19 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 				confirmDelete(org.Name, org.Id)
 			}
 
-			err = ac.Organization.Delete(cmd.Context(), options.organizationID)
+			err = runDeleteOrganizationCmd(ctx, ac.Organization, options, org.Name, org.Id)
 			if err != nil {
 				msg.FailMsg("Failed to delete organization %s: %s\n", options.organizationID, err)
 				exit.Errorf(err, "Failed to delete organization %s", style.Emphasis(options.organizationID))
 			}
 
-			// Clear target project if the deleted project is the target project
+			// Clear target org if the deleted org is the target org
 			if state.TargetOrg.Get().Id == options.organizationID {
 				state.TargetOrg.Set(state.TargetOrganization{
 					Id:   "",
 					Name: "",
 				})
 			}
-			msg.SuccessMsg("Organization %s (ID: %s) deleted.\n", style.Emphasis(org.Name), style.Emphasis(options.organizationID))
 		},
 	}
 
@@ -74,6 +79,24 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
 
 	return cmd
+}
+
+func runDeleteOrganizationCmd(ctx context.Context, svc deleteOrganizationService, opts deleteOrganizationCmdOptions, name, id string) error {
+	if err := svc.Delete(ctx, id); err != nil {
+		return err
+	}
+
+	if opts.json {
+		fmt.Println(text.IndentJSON(struct {
+			Deleted bool   `json:"deleted"`
+			Name    string `json:"name"`
+			Id      string `json:"id"`
+		}{Deleted: true, Name: name, Id: id}))
+		return nil
+	}
+
+	msg.SuccessMsg("Organization %s (ID: %s) deleted.\n", style.Emphasis(name), style.Emphasis(id))
+	return nil
 }
 
 func confirmDelete(organizationName string, organizationID string) {
