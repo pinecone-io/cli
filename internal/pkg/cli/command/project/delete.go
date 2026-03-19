@@ -117,7 +117,7 @@ func confirmDelete(projectName string) {
 	msg.WarnMsg("This action cannot be undone.")
 
 	// Prompt the user
-	fmt.Print("Do you want to continue? (y/N): ")
+	pcio.Print("Do you want to continue? (y/N): ")
 
 	// Read the user's input
 	reader := bufio.NewReader(os.Stdin)
