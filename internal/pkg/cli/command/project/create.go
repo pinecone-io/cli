@@ -69,7 +69,7 @@ func NewCreateProjectCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(proj)
-				pcio.Println(json)
+				pcio.PrintJSON(json)
 				return
 			}
 

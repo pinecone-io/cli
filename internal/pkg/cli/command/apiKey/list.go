@@ -65,7 +65,7 @@ func NewListKeysCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(sortedKeys)
-				pcio.Println(json)
+				pcio.PrintJSON(json)
 			} else {
 				printTable(sortedKeys)
 			}

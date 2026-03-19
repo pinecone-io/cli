@@ -50,7 +50,7 @@ func NewDescribeOrganizationCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(org)
-				pcio.Println(json)
+				pcio.PrintJSON(json)
 			} else {
 				presenters.PrintDescribeOrganizationTable(org)
 			}

@@ -130,7 +130,7 @@ func runUpsertCmd(ctx context.Context, ic RecordService, options upsertCmdOption
 				"records":   len(batch),
 				"namespace": options.namespace,
 			}
-			pcio.Println(text.IndentJSON(summary))
+			pcio.PrintJSON(text.IndentJSON(summary))
 		} else {
 			msg.SuccessMsg("Upserted %d records into namespace %s (batch %d of %d)", len(batch), options.namespace, i+1, len(batches))
 		}

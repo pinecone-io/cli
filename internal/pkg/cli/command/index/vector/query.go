@@ -208,7 +208,7 @@ func runQueryCmd(ctx context.Context, options queryCmdOptions) {
 
 	if options.json {
 		json := text.IndentJSON(queryResponse)
-		pcio.Println(json)
+		pcio.PrintJSON(json)
 	} else {
 		presenters.PrintQueryVectorsTable(queryResponse)
 	}

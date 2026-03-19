@@ -309,7 +309,7 @@ func runCreateIndexCmd(ctx context.Context, cmd *cobra.Command, service CreateIn
 func renderSuccessOutput(idx *pinecone.Index, options createIndexOptions) {
 	if options.json {
 		json := text.IndentJSON(idx)
-		pcio.Println(json)
+		pcio.PrintJSON(json)
 		return
 	}
 

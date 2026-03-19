@@ -3,6 +3,7 @@ package pcio
 import (
 	"fmt"
 	"io"
+	"os"
 )
 
 // The purpose of this package is to stub out the fmt package so that
@@ -13,6 +14,13 @@ var quiet bool
 
 func SetQuiet(q bool) {
 	quiet = q
+}
+
+// PrintJSON writes s to stdout regardless of quiet mode.
+// Use this instead of Println when outputting structured JSON so that
+// --quiet does not suppress machine-readable output.
+func PrintJSON(s string) {
+	fmt.Fprintln(os.Stdout, s)
 }
 
 func Println(a ...any) {

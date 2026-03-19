@@ -76,7 +76,7 @@ func runListVectorsCmd(ctx context.Context, options listVectorsCmdOptions) {
 
 	if options.json {
 		json := text.IndentJSON(resp)
-		pcio.Println(json)
+		pcio.PrintJSON(json)
 	} else {
 		presenters.PrintListVectorsTable(resp)
 	}

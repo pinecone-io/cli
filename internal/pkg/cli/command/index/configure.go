@@ -136,7 +136,7 @@ func runConfigureIndexCmd(ctx context.Context, cmd *cobra.Command, options confi
 
 	if options.json {
 		json := text.IndentJSON(idx)
-		pcio.Println(json)
+		pcio.PrintJSON(json)
 		return
 	}
 

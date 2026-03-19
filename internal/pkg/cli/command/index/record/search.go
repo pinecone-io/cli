@@ -265,7 +265,7 @@ func runSearchCmd(ctx context.Context, ic RecordService, options searchCmdOption
 	}
 
 	if options.json {
-		pcio.Println(text.IndentJSON(resp))
+		pcio.PrintJSON(text.IndentJSON(resp))
 	} else {
 		presenters.PrintSearchRecordsTable(resp)
 	}

@@ -113,7 +113,7 @@ func runRestoreJobCmd(ctx context.Context, svc RestoreJobService, options restor
 	}
 
 	if options.json {
-		pcio.Println(text.IndentJSON(resp))
+		pcio.PrintJSON(text.IndentJSON(resp))
 		return nil
 	}
 

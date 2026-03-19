@@ -42,7 +42,7 @@ func NewListProjectsCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(projects)
-				pcio.Println(json)
+				pcio.PrintJSON(json)
 			} else {
 				printTable(projects)
 			}

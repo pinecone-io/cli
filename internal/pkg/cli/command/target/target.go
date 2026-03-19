@@ -101,7 +101,7 @@ func NewTargetCmd() *cobra.Command {
 					defaultAPIKey := secrets.DefaultAPIKey.Get()
 					targetContext.DefaultAPIKey = presenters.MaskHeadTail(defaultAPIKey, 4, 4)
 					json := text.IndentJSON(targetContext)
-					pcio.Println(json)
+					pcio.PrintJSON(json)
 					return
 				}
 				log.Info().
@@ -260,7 +260,7 @@ func NewTargetCmd() *cobra.Command {
 				defaultAPIKey := secrets.DefaultAPIKey.Get()
 				targetContext.DefaultAPIKey = presenters.MaskHeadTail(defaultAPIKey, 4, 4)
 				json := text.IndentJSON(targetContext)
-				pcio.Println(json)
+				pcio.PrintJSON(json)
 				return
 			}
 
