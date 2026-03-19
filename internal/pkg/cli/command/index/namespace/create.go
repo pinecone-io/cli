@@ -96,7 +96,7 @@ func runCreateNamespaceCmd(ctx context.Context, ic NamespaceService, options cre
 
 	if options.json {
 		json := text.IndentJSON(ns)
-		pcio.Println(json)
+		pcio.PrintJSON(json)
 	} else {
 		msg.SuccessMsg("Namespace %s created successfully.", options.name)
 		presenters.PrintDescribeNamespaceTable(ns)

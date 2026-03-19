@@ -37,7 +37,7 @@ func NewDescribeCollectionCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(collection)
-				pcio.Println(json)
+				pcio.PrintJSON(json)
 			} else {
 				presenters.PrintDescribeCollectionTable(collection)
 			}

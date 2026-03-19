@@ -41,7 +41,7 @@ func NewListOrganizationsCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(orgs)
-				pcio.Println(json)
+				pcio.PrintJSON(json)
 				return
 			}
 

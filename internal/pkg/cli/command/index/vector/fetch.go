@@ -159,7 +159,7 @@ func runFetchCmd(ctx context.Context, options fetchCmdOptions) {
 func printFetchVectorsResults(results *presenters.FetchVectorsResults, options fetchCmdOptions) {
 	if options.json {
 		json := text.IndentJSON(results)
-		pcio.Println(json)
+		pcio.PrintJSON(json)
 	} else {
 		presenters.PrintFetchVectorsTable(results)
 	}

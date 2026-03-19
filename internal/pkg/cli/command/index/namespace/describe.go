@@ -80,7 +80,7 @@ func runDescribeNamespaceCmd(ctx context.Context, ic NamespaceService, options d
 
 	if options.json {
 		json := text.IndentJSON(ns)
-		pcio.Println(json)
+		pcio.PrintJSON(json)
 	} else {
 		presenters.PrintDescribeNamespaceTable(ns)
 	}

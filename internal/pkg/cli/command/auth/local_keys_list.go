@@ -42,7 +42,7 @@ func NewListLocalKeysCmd() *cobra.Command {
 			if options.json {
 				maskedMap := maskForJSON(managedKeys, options.reveal)
 				json := text.IndentJSON(maskedMap)
-				pcio.Println(json)
+				pcio.PrintJSON(json)
 			} else {
 				printTable(managedKeys, options.reveal)
 			}

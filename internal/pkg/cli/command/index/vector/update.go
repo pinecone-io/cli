@@ -197,7 +197,7 @@ func runUpdateCmd(ctx context.Context, options updateCmdOptions) {
 			presenters.PrintUpdateVectorsByMetadataTable(resp)
 		} else {
 			json := text.IndentJSON(resp)
-			pcio.Println(json)
+			pcio.PrintJSON(json)
 		}
 		return
 	}

@@ -240,7 +240,7 @@ func Run(ctx context.Context, io IO, opts configureCmdOptions) {
 		defaultAPIKey := secrets.DefaultAPIKey.Get()
 		targetContext.DefaultAPIKey = presenters.MaskHeadTail(defaultAPIKey, 4, 4)
 		json := text.IndentJSON(targetContext)
-		pcio.Println(json)
+		pcio.PrintJSON(json)
 		return
 	}
 

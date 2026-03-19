@@ -47,7 +47,7 @@ func NewListCollectionsCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(collections)
-				pcio.Println(json)
+				pcio.PrintJSON(json)
 			} else {
 				printTable(collections)
 			}

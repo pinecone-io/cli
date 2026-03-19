@@ -99,7 +99,7 @@ func runAuthStatus(cmd *cobra.Command, options authStatusCmdOptions) error {
 
 	if options.json {
 		json := text.IndentJSON(authStatus)
-		pcio.Println(json)
+		pcio.PrintJSON(json)
 		return nil
 	}
 

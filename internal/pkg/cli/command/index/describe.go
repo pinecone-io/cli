@@ -45,7 +45,7 @@ func NewDescribeCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(idx)
-				pcio.Println(json)
+				pcio.PrintJSON(json)
 			} else {
 				presenters.PrintDescribeIndexTable(idx)
 			}

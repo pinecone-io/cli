@@ -77,7 +77,7 @@ func runDescribeIndexStatsCmd(ctx context.Context, options describeIndexStatsCmd
 
 	if options.json {
 		json := text.IndentJSON(resp)
-		pcio.Println(json)
+		pcio.PrintJSON(json)
 	} else {
 		presenters.PrintDescribeIndexStatsTable(resp)
 	}

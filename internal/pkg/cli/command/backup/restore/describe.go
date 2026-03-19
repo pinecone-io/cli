@@ -58,7 +58,7 @@ func runDescribeRestoreJobCmd(ctx context.Context, svc RestoreJobService, option
 	}
 
 	if options.json {
-		pcio.Println(text.IndentJSON(resp))
+		pcio.PrintJSON(text.IndentJSON(resp))
 	} else {
 		presenters.PrintRestoreJob(resp)
 	}

@@ -15,6 +15,13 @@ func SetQuiet(q bool) {
 	quiet = q
 }
 
+// PrintJSON writes s to stdout regardless of quiet mode.
+// Use this instead of Println when outputting structured JSON so that
+// --quiet does not suppress machine-readable output.
+func PrintJSON(s string) {
+	fmt.Println(s)
+}
+
 func Println(a ...any) {
 	if !quiet {
 		fmt.Println(a...)

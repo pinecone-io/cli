@@ -58,7 +58,7 @@ func NewUpdateOrganizationCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(org)
-				pcio.Println(json)
+				pcio.PrintJSON(json)
 				return
 			}
 

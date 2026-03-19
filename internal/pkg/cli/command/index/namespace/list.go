@@ -109,7 +109,7 @@ func runListNamespaceCmd(ctx context.Context, ic NamespaceService, options listN
 
 	if options.json {
 		json := text.IndentJSON(resp)
-		pcio.Println(json)
+		pcio.PrintJSON(json)
 	} else {
 		printTable(resp)
 	}

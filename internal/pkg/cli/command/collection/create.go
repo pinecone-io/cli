@@ -45,7 +45,7 @@ func NewCreateCollectionCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(collection)
-				pcio.Println(json)
+				pcio.PrintJSON(json)
 			} else {
 				describeCommand := pcio.Sprintf("pc collection describe --name %s", collection.Name)
 				msg.SuccessMsg("Collection %s created successfully. Run %s to check status. \n\n", style.Emphasis(collection.Name), style.Code(describeCommand))
