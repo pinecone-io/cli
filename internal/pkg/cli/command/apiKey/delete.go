@@ -11,6 +11,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -103,7 +104,7 @@ func confirmDeleteApiKey(apiKeyName string) {
 	msg.WarnMsg("This action cannot be undone.")
 
 	// Prompt the user
-	fmt.Print("Do you want to continue? (y/N): ")
+	pcio.Print("Do you want to continue? (y/N): ")
 
 	// Read the user's input
 	reader := bufio.NewReader(os.Stdin)
