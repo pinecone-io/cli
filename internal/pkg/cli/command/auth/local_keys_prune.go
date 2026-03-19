@@ -12,7 +12,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -191,7 +190,7 @@ func confirmPruneKeys(plan []planItem, options pruneLocalKeysCmdOptions) (bool, 
 	msg.WarnMsg("This action cannot be undone.")
 
 	// Prompt the user
-	pcio.Print("Do you want to continue? (y/N): ")
+	fmt.Print("Do you want to continue? (y/N): ")
 
 	// Read the user's input
 	reader := bufio.NewReader(os.Stdin)
@@ -215,7 +214,7 @@ func confirmPruneKeys(plan []planItem, options pruneLocalKeysCmdOptions) (bool, 
 func printDryRunPlan(plan []planItem, options pruneLocalKeysCmdOptions) {
 	if options.json {
 		json := text.IndentJSON(plan)
-		pcio.PrintJSON(json)
+		fmt.Println(json)
 	} else {
 		for _, key := range plan {
 			if key.onServer {

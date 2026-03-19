@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/argio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/flags"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -160,28 +160,28 @@ func runSearchCmd(ctx context.Context, ic RecordService, options searchCmdOption
 	if options.rerank != nil {
 		b, err := json.Marshal(options.rerank)
 		if err != nil {
-			return pcio.Errorf("failed to encode --rerank value: %w", err)
+			return fmt.Errorf("failed to encode --rerank value: %w", err)
 		}
 		var rerank pinecone.SearchRecordsRerank
 		if err := json.Unmarshal(b, &rerank); err != nil {
-			return pcio.Errorf("failed to parse --rerank value: %w", err)
+			return fmt.Errorf("failed to parse --rerank value: %w", err)
 		}
 		req.Rerank = &rerank
 	}
 	if options.matchTerms != nil {
 		b, err := json.Marshal(options.matchTerms)
 		if err != nil {
-			return pcio.Errorf("failed to encode --match-terms value: %w", err)
+			return fmt.Errorf("failed to encode --match-terms value: %w", err)
 		}
 		var matchTerms pinecone.SearchMatchTerms
 		if err := json.Unmarshal(b, &matchTerms); err != nil {
-			return pcio.Errorf("failed to parse --match-terms value: %w", err)
+			return fmt.Errorf("failed to parse --match-terms value: %w", err)
 		}
 		req.Query.MatchTerms = &matchTerms
 	}
 	if len(options.vector) > 0 || len(options.sparseIndices) > 0 {
 		if len(options.sparseIndices) != len(options.sparseValues) {
-			return pcio.Errorf("--sparse-indices and --sparse-values must be the same length")
+			return fmt.Errorf("--sparse-indices and --sparse-values must be the same length")
 		}
 		sv := &pinecone.SearchRecordsVector{}
 		if len(options.vector) > 0 {
@@ -204,14 +204,14 @@ func runSearchCmd(ctx context.Context, ic RecordService, options searchCmdOption
 	if options.body != "" {
 		rawBody, src, err := argio.ReadAll(options.body)
 		if err != nil {
-			return pcio.Errorf("failed to read search body (%s): %w", style.Emphasis(src.Label), err)
+			return fmt.Errorf("failed to read search body (%s): %w", style.Emphasis(src.Label), err)
 		}
 
 		var bodyReq pinecone.SearchRecordsRequest
 		dec := json.NewDecoder(bytes.NewReader(rawBody))
 		dec.DisallowUnknownFields()
 		if err := dec.Decode(&bodyReq); err != nil {
-			return pcio.Errorf("failed to parse search body (%s): %w", style.Emphasis(src.Label), err)
+			return fmt.Errorf("failed to parse search body (%s): %w", style.Emphasis(src.Label), err)
 		}
 		// Use a pointer-field probe to detect whether top_k was explicitly
 		// present in the JSON body. int32's zero value is indistinguishable
@@ -252,20 +252,20 @@ func runSearchCmd(ctx context.Context, ic RecordService, options searchCmdOption
 	}
 
 	if req.Query.TopK <= 0 {
-		return pcio.Errorf("top-k must be greater than 0")
+		return fmt.Errorf("top-k must be greater than 0")
 	}
 
 	if req.Query.Id == nil && req.Query.Inputs == nil && req.Query.Vector == nil {
-		return pcio.Errorf("provide a query via --inputs, --id, --vector, --sparse-indices/--sparse-values, or a --body")
+		return fmt.Errorf("provide a query via --inputs, --id, --vector, --sparse-indices/--sparse-values, or a --body")
 	}
 
 	resp, err := ic.SearchRecords(ctx, &req)
 	if err != nil {
-		return pcio.Errorf("failed to search records: %w", err)
+		return fmt.Errorf("failed to search records: %w", err)
 	}
 
 	if options.json {
-		pcio.PrintJSON(text.IndentJSON(resp))
+		fmt.Println(text.IndentJSON(resp))
 	} else {
 		presenters.PrintSearchRecordsTable(resp)
 	}

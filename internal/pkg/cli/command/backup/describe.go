@@ -8,7 +8,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -50,7 +49,7 @@ func NewDescribeBackupCmd() *cobra.Command {
 
 func runDescribeBackupCmd(ctx context.Context, svc BackupService, options describeBackupCmdOptions) error {
 	if strings.TrimSpace(options.backupId) == "" {
-		return pcio.Errorf("--id is required")
+		return fmt.Errorf("--id is required")
 	}
 
 	resp, err := svc.DescribeBackup(ctx, options.backupId)

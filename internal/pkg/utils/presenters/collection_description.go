@@ -1,10 +1,10 @@
 package presenters
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
@@ -20,14 +20,14 @@ func PrintDescribeCollectionTable(coll *pinecone.Collection) {
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
 	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
+	fmt.Fprint(writer, header)
 
-	pcio.Fprintf(writer, "Name\t%s\n", coll.Name)
-	pcio.Fprintf(writer, "State\t%s\n", ColorizeCollectionStatus(coll.Status))
-	pcio.Fprintf(writer, "Dimension\t%d\n", coll.Dimension)
-	pcio.Fprintf(writer, "Size\t%d\n", coll.Size)
-	pcio.Fprintf(writer, "VectorCount\t%d\n", coll.VectorCount)
-	pcio.Fprintf(writer, "Environment\t%s\n", coll.Environment)
+	fmt.Fprintf(writer, "Name\t%s\n", coll.Name)
+	fmt.Fprintf(writer, "State\t%s\n", ColorizeCollectionStatus(coll.Status))
+	fmt.Fprintf(writer, "Dimension\t%d\n", coll.Dimension)
+	fmt.Fprintf(writer, "Size\t%d\n", coll.Size)
+	fmt.Fprintf(writer, "VectorCount\t%d\n", coll.VectorCount)
+	fmt.Fprintf(writer, "Environment\t%s\n", coll.Environment)
 
 	writer.Flush()
 }

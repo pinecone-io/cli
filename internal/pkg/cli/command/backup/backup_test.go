@@ -2,10 +2,7 @@ package backup
 
 import (
 	"context"
-	"os"
-	"testing"
 
-	"github.com/pinecone-io/cli/internal/pkg/cli/testutils"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
 
@@ -51,11 +48,4 @@ func (m *mockBackupService) DeleteBackup(ctx context.Context, backupId string) e
 func (m *mockBackupService) CreateIndexFromBackup(ctx context.Context, in *pinecone.CreateIndexFromBackupParams) (*pinecone.CreateIndexFromBackupResponse, error) {
 	m.lastCreateIndexFromBackupReq = in
 	return m.createIndexFromBackupResp, m.createIndexFromBackupErr
-}
-
-func TestMain(m *testing.M) {
-	reset := testutils.SilenceOutput()
-	code := m.Run()
-	reset()
-	os.Exit(code)
 }

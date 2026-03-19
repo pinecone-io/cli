@@ -2,6 +2,8 @@ package index
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/docslinks"
@@ -9,7 +11,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -219,7 +220,7 @@ func runCreateIndexCmd(ctx context.Context, cmd *cobra.Command, service CreateIn
 
 		idx, err = service.CreateServerlessIndex(ctx, &args)
 		if err != nil {
-			wrapped := pcio.Errorf("Failed to create serverless index %s: %w", style.Emphasis(options.name), err)
+			wrapped := fmt.Errorf("Failed to create serverless index %s: %w", style.Emphasis(options.name), err)
 			return nil, wrapped
 		}
 	case indexTypePod:
@@ -247,7 +248,7 @@ func runCreateIndexCmd(ctx context.Context, cmd *cobra.Command, service CreateIn
 
 		idx, err = service.CreatePodIndex(ctx, &args)
 		if err != nil {
-			wrapped := pcio.Errorf("Failed to create pod index %s: %w", style.Emphasis(options.name), err)
+			wrapped := fmt.Errorf("Failed to create pod index %s: %w", style.Emphasis(options.name), err)
 			return nil, wrapped
 		}
 	case indexTypeIntegrated:
@@ -278,7 +279,7 @@ func runCreateIndexCmd(ctx context.Context, cmd *cobra.Command, service CreateIn
 
 		idx, err = service.CreateIndexForModel(ctx, &args)
 		if err != nil {
-			wrapped := pcio.Errorf("Failed to create integrated index %s: %w", style.Emphasis(options.name), err)
+			wrapped := fmt.Errorf("Failed to create integrated index %s: %w", style.Emphasis(options.name), err)
 			return nil, wrapped
 		}
 	case indexTypeBYOC:
@@ -295,11 +296,11 @@ func runCreateIndexCmd(ctx context.Context, cmd *cobra.Command, service CreateIn
 
 		idx, err = service.CreateBYOCIndex(ctx, &args)
 		if err != nil {
-			wrapped := pcio.Errorf("Failed to create BYOC index %s: %w", style.Emphasis(options.name), err)
+			wrapped := fmt.Errorf("Failed to create BYOC index %s: %w", style.Emphasis(options.name), err)
 			return nil, wrapped
 		}
 	default:
-		err := pcio.Errorf("Error creating index: invalid index type")
+		err := fmt.Errorf("Error creating index: invalid index type")
 		return nil, err
 	}
 
@@ -309,11 +310,11 @@ func runCreateIndexCmd(ctx context.Context, cmd *cobra.Command, service CreateIn
 func renderSuccessOutput(idx *pinecone.Index, options createIndexOptions) {
 	if options.json {
 		json := text.IndentJSON(idx)
-		pcio.PrintJSON(json)
+		fmt.Println(json)
 		return
 	}
 
-	describeCommand := pcio.Sprintf("pc index describe --name %s", idx.Name)
+	describeCommand := fmt.Sprintf("pc index describe --name %s", idx.Name)
 	msg.SuccessMsg("Index %s created successfully. Run %s to check status. \n\n", style.Emphasis(idx.Name), style.Code(describeCommand))
 	presenters.PrintDescribeIndexTable(idx)
 }
@@ -322,14 +323,14 @@ func renderSuccessOutput(idx *pinecone.Index, options createIndexOptions) {
 func (c *createIndexOptions) validate() error {
 	// name required for all index types
 	if c.name == "" {
-		err := pcio.Errorf("name is required")
+		err := fmt.Errorf("name is required")
 		log.Error().Err(err).Msg("Error creating index")
 		return err
 	}
 
 	// environment and cloud/region cannot be provided together
 	if c.cloud != "" && c.region != "" && c.environment != "" {
-		err := pcio.Errorf("cloud, region, and environment cannot be provided together")
+		err := fmt.Errorf("cloud, region, and environment cannot be provided together")
 		log.Error().Err(err).Msg("Error creating index")
 		return err
 	}
@@ -352,7 +353,7 @@ func (c *createIndexOptions) deriveIndexType() (indexType, error) {
 	if c.environment != "" {
 		return indexTypePod, nil
 	}
-	return "", pcio.Error("invalid index type. Please provide either environment, or cloud and region")
+	return "", errors.New("invalid index type. Please provide either environment, or cloud and region")
 }
 
 // Builds the ReadCapacityParams object based on the provided arguments
@@ -389,7 +390,7 @@ func buildReadCapacityFromFlags(cmd *cobra.Command, mode, nodeType string, shard
 		switch normMode {
 		case "ondemand":
 			if nodeSet || shardsSet || replSet {
-				return nil, pcio.Errorf("read-node-type, read-shards, and read-replicas are not supported with read-mode=ondemand")
+				return nil, fmt.Errorf("read-node-type, read-shards, and read-replicas are not supported with read-mode=ondemand")
 			}
 			return &pinecone.ReadCapacityParams{
 				OnDemand: &pinecone.ReadCapacityOnDemandConfig{},
@@ -397,7 +398,7 @@ func buildReadCapacityFromFlags(cmd *cobra.Command, mode, nodeType string, shard
 		case "dedicated":
 			// continue
 		default:
-			return nil, pcio.Errorf("invalid read-mode")
+			return nil, fmt.Errorf("invalid read-mode")
 		}
 	} else { // read-mode not provided, return nil if no specific configuration values are passed
 		if !nodeSet && !shardsSet && !replSet {

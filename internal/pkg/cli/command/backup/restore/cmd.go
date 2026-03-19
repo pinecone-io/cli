@@ -2,12 +2,12 @@ package restore
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -85,10 +85,10 @@ func NewRestoreJobCmd() *cobra.Command {
 
 func runRestoreJobCmd(ctx context.Context, svc RestoreJobService, options restoreJobCmdOptions) error {
 	if strings.TrimSpace(options.backupId) == "" {
-		return pcio.Errorf("--id is required")
+		return fmt.Errorf("--id is required")
 	}
 	if strings.TrimSpace(options.name) == "" {
-		return pcio.Errorf("--name is required")
+		return fmt.Errorf("--name is required")
 	}
 
 	dp, err := parseDeletionProtection(options.deletionProtection)
@@ -113,7 +113,7 @@ func runRestoreJobCmd(ctx context.Context, svc RestoreJobService, options restor
 	}
 
 	if options.json {
-		pcio.PrintJSON(text.IndentJSON(resp))
+		fmt.Println(text.IndentJSON(resp))
 		return nil
 	}
 
@@ -133,6 +133,6 @@ func parseDeletionProtection(input string) (*pinecone.DeletionProtection, error)
 	case pinecone.DeletionProtectionEnabled, pinecone.DeletionProtectionDisabled:
 		return &val, nil
 	default:
-		return nil, pcio.Errorf("invalid deletion-protection value %q, must be one of: enabled, disabled", input)
+		return nil, fmt.Errorf("invalid deletion-protection value %q, must be one of: enabled, disabled", input)
 	}
 }

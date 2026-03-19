@@ -3,7 +3,6 @@ package collection
 import (
 	"context"
 	"errors"
-	"os"
 	"testing"
 
 	"github.com/pinecone-io/cli/internal/pkg/cli/testutils"
@@ -18,13 +17,6 @@ type mockDeleteCollectionService struct {
 func (m *mockDeleteCollectionService) DeleteCollection(ctx context.Context, name string) error {
 	m.lastDeleteArg = name
 	return m.deleteErr
-}
-
-func TestMain(m *testing.M) {
-	reset := testutils.SilenceOutput()
-	code := m.Run()
-	reset()
-	os.Exit(code)
 }
 
 func Test_runDeleteCollectionCmd_Succeeds(t *testing.T) {

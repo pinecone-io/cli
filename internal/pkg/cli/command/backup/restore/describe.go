@@ -2,12 +2,12 @@ package restore
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -49,7 +49,7 @@ func NewDescribeRestoreJobCmd() *cobra.Command {
 
 func runDescribeRestoreJobCmd(ctx context.Context, svc RestoreJobService, options describeRestoreJobCmdOptions) error {
 	if strings.TrimSpace(options.restoreJobId) == "" {
-		return pcio.Errorf("--id is required")
+		return fmt.Errorf("--id is required")
 	}
 
 	resp, err := svc.DescribeRestoreJob(ctx, options.restoreJobId)
@@ -58,7 +58,7 @@ func runDescribeRestoreJobCmd(ctx context.Context, svc RestoreJobService, option
 	}
 
 	if options.json {
-		pcio.PrintJSON(text.IndentJSON(resp))
+		fmt.Println(text.IndentJSON(resp))
 	} else {
 		presenters.PrintRestoreJob(resp)
 	}

@@ -1,9 +1,9 @@
 package presenters
 
 import (
+	"fmt"
 	"strings"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
 
@@ -16,29 +16,29 @@ func PrintDescribeIndexStatsTable(resp *pinecone.DescribeIndexStatsResponse) {
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
 	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
+	fmt.Fprint(writer, header)
 
 	dimension := uint32(0)
 	if resp.Dimension != nil {
 		dimension = *resp.Dimension
 	}
 
-	pcio.Fprintf(writer, "Dimension\t%d\n", dimension)
-	pcio.Fprintf(writer, "Index Fullness\t%f\n", resp.IndexFullness)
-	pcio.Fprintf(writer, "Total Vector Count\t%d\n", resp.TotalVectorCount)
+	fmt.Fprintf(writer, "Dimension\t%d\n", dimension)
+	fmt.Fprintf(writer, "Index Fullness\t%f\n", resp.IndexFullness)
+	fmt.Fprintf(writer, "Total Vector Count\t%d\n", resp.TotalVectorCount)
 
 	if len(resp.Namespaces) == 0 {
-		pcio.Fprintf(writer, "Namespaces\t<none>\n")
+		fmt.Fprintf(writer, "Namespaces\t<none>\n")
 	} else {
-		pcio.Fprintf(writer, "Namespaces\n")
-		pcio.Fprintf(writer, "\tNAME\tVECTOR COUNT\n")
+		fmt.Fprintf(writer, "Namespaces\n")
+		fmt.Fprintf(writer, "\tNAME\tVECTOR COUNT\n")
 
 		names := make([]string, 0, len(resp.Namespaces))
 		for name := range resp.Namespaces {
 			names = append(names, name)
 		}
 		for _, name := range names {
-			pcio.Fprintf(writer, "\t%s\t%d\n", name, resp.Namespaces[name].VectorCount)
+			fmt.Fprintf(writer, "\t%s\t%d\n", name, resp.Namespaces[name].VectorCount)
 		}
 	}
 

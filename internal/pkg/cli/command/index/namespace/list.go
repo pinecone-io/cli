@@ -2,12 +2,12 @@ package namespace
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -82,7 +82,7 @@ func NewListNamespaceCmd() *cobra.Command {
 
 func runListNamespaceCmd(ctx context.Context, ic NamespaceService, options listNamespaceCmdOptions) error {
 	if strings.TrimSpace(options.indexName) == "" {
-		return pcio.Errorf("--index-name is required")
+		return fmt.Errorf("--index-name is required")
 	}
 
 	var limit *uint32
@@ -109,7 +109,7 @@ func runListNamespaceCmd(ctx context.Context, ic NamespaceService, options listN
 
 	if options.json {
 		json := text.IndentJSON(resp)
-		pcio.PrintJSON(json)
+		fmt.Println(json)
 	} else {
 		printTable(resp)
 	}
@@ -125,18 +125,18 @@ func printTable(resp *pinecone.ListNamespacesResponse) {
 	}
 
 	// Response info
-	pcio.Fprintf(writer, "Total Count: %d\n", resp.TotalCount)
+	fmt.Fprintf(writer, "Total Count: %d\n", resp.TotalCount)
 	pgToken := "<none>"
 	if resp.Pagination != nil && resp.Pagination.Next != "" {
 		pgToken = resp.Pagination.Next
 	}
-	pcio.Fprintf(writer, "Next Pagination Token: %s\n", pgToken)
-	pcio.Fprintf(writer, "\n")
+	fmt.Fprintf(writer, "Next Pagination Token: %s\n", pgToken)
+	fmt.Fprintf(writer, "\n")
 
 	// Namespaces table
 	columns := []string{"NAME", "RECORD COUNT", "INDEXED FIELDS", "SCHEMA"}
 	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
+	fmt.Fprint(writer, header)
 
 	for _, ns := range resp.Namespaces {
 		schema := "<none>"
@@ -147,7 +147,7 @@ func printTable(resp *pinecone.ListNamespacesResponse) {
 		if ns.IndexedFields != nil {
 			indexedFields = text.InlineJSON(ns.IndexedFields)
 		}
-		pcio.Fprintf(writer, "%s\t%d\t%s\t%s\n", ns.Name, ns.RecordCount, indexedFields, schema)
+		fmt.Fprintf(writer, "%s\t%d\t%s\t%s\n", ns.Name, ns.RecordCount, indexedFields, schema)
 	}
 	writer.Flush()
 }

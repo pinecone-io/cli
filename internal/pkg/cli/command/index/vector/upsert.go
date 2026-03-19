@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/argio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -136,7 +136,7 @@ func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 		} else {
 			if options.json {
 				json := text.IndentJSON(resp)
-				pcio.PrintJSON(json)
+				fmt.Println(json)
 			} else {
 				msg.SuccessMsg("Upserted %d vectors into namespace %s (batch %d of %d)", len(batch), options.namespace, i+1, len(batches))
 			}
@@ -152,7 +152,7 @@ func parseUpsertBody(b []byte) (*UpsertBody, error) {
 		dec.DisallowUnknownFields()
 		if err := dec.Decode(&payload); err == nil {
 			if len(payload.Vectors) == 0 {
-				return nil, pcio.Errorf("no vectors provided")
+				return nil, fmt.Errorf("no vectors provided")
 			}
 			return &payload, nil
 		}
@@ -165,7 +165,7 @@ func parseUpsertBody(b []byte) (*UpsertBody, error) {
 		dec.DisallowUnknownFields()
 		if err := dec.Decode(&vectors); err == nil {
 			if len(vectors) == 0 {
-				return nil, pcio.Errorf("no vectors provided")
+				return nil, fmt.Errorf("no vectors provided")
 			}
 			return &UpsertBody{Vectors: vectors}, nil
 		}
@@ -185,7 +185,7 @@ func parseUpsertBody(b []byte) (*UpsertBody, error) {
 		vectors = append(vectors, v)
 	}
 	if len(vectors) == 0 {
-		return nil, pcio.Errorf("no vectors provided")
+		return nil, fmt.Errorf("no vectors provided")
 	}
 	return &UpsertBody{Vectors: vectors}, nil
 }

@@ -2,10 +2,7 @@ package namespace
 
 import (
 	"context"
-	"os"
-	"testing"
 
-	"github.com/pinecone-io/cli/internal/pkg/cli/testutils"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
 
@@ -59,11 +56,4 @@ func (m *mockNamespaceService) ListNamespaces(ctx context.Context, params *pinec
 func (m *mockNamespaceService) DeleteNamespace(ctx context.Context, name string) error {
 	m.lastDeleteArg = name
 	return m.deleteErr
-}
-
-func TestMain(m *testing.M) {
-	reset := testutils.SilenceOutput()
-	code := m.Run()
-	reset()
-	os.Exit(code)
 }

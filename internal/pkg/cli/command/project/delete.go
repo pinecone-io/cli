@@ -11,7 +11,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -117,13 +116,13 @@ func confirmDelete(projectName string) {
 	msg.WarnMsg("This action cannot be undone.")
 
 	// Prompt the user
-	pcio.Print("Do you want to continue? (y/N): ")
+	fmt.Print("Do you want to continue? (y/N): ")
 
 	// Read the user's input
 	reader := bufio.NewReader(os.Stdin)
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		pcio.Println(fmt.Errorf("Error reading input: %w", err))
+		fmt.Println(fmt.Errorf("Error reading input: %w", err))
 		return
 	}
 
@@ -150,7 +149,7 @@ func verifyNoIndexes(ctx context.Context, projectId string, projectName string) 
 	}
 	if len(idxs) > 0 {
 		msg.FailMsg("Project %s contains indexes. Delete the indexes before deleting the project.", style.Emphasis(projectName))
-		msg.HintMsg("To see indexes in this project, run %s", pcio.Sprintf(style.Code("pc target -p \"%s\" && pc index list"), projectName))
+		msg.HintMsg("To see indexes in this project, run %s", fmt.Sprintf(style.Code("pc target -p \"%s\" && pc index list"), projectName))
 		exit.ErrorMsgf("Project %s contains indexes. Delete the indexes before deleting the project.", style.Emphasis(projectName))
 	}
 }
@@ -166,7 +165,7 @@ func verifyNoCollections(ctx context.Context, projectId string, projectName stri
 	}
 	if len(collections) > 0 {
 		msg.FailMsg("Project %s contains collections. Delete the collections before deleting the project.", style.Emphasis(projectName))
-		msg.HintMsg("To see collections in this project, run %s", pcio.Sprintf(style.Code("pc target -p \"%s\" && pc collection list"), projectName))
+		msg.HintMsg("To see collections in this project, run %s", fmt.Sprintf(style.Code("pc target -p \"%s\" && pc collection list"), projectName))
 		exit.ErrorMsgf("Project %s contains collections. Delete the collections before deleting the project.", style.Emphasis(projectName))
 	}
 }

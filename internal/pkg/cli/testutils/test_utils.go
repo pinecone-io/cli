@@ -6,15 +6,7 @@ import (
 	"os"
 	"strings"
 	"testing"
-
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
-
-// Silences pcio output for tests and, and returns a function to restore it
-func SilenceOutput() func() {
-	pcio.SetQuiet(true)
-	return func() { pcio.SetQuiet(false) }
-}
 
 // CaptureStdout redirects os.Stdout to a pipe for the duration of f,
 // returning everything written to stdout as a trimmed string.

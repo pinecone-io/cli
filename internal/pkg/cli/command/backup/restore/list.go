@@ -2,11 +2,11 @@ package restore
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -69,7 +69,7 @@ func runListRestoreJobsCmd(ctx context.Context, svc RestoreJobService, options l
 	}
 
 	if options.json {
-		pcio.PrintJSON(text.IndentJSON(resp))
+		fmt.Println(text.IndentJSON(resp))
 	} else {
 		presenters.PrintRestoreJobList(resp)
 	}

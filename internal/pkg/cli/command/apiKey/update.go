@@ -1,10 +1,11 @@
 package apiKey
 
 import (
+	"fmt"
+
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -50,7 +51,7 @@ func NewUpdateAPIKeyCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(apiKey)
-				pcio.PrintJSON(json)
+				fmt.Println(json)
 				return
 			}
 

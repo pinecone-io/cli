@@ -1,10 +1,10 @@
 package presenters
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"golang.org/x/oauth2"
 )
 
@@ -17,17 +17,17 @@ func PrintAuthStatus(authStatus AuthStatus) {
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
 	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
+	fmt.Fprint(writer, header)
 
-	pcio.Fprintf(writer, "Authentication Mode\t%s\n", labelUnsetIfEmpty(authStatus.AuthMode))
-	pcio.Fprintf(writer, "Default API Key\t%s\n", labelUnsetIfEmpty(authStatus.DefaultAPIKey))
-	pcio.Fprintf(writer, "Service Account Client ID\t%s\n", labelUnsetIfEmpty(authStatus.ClientID))
-	pcio.Fprintf(writer, "Service Account Client Secret\t%s\n", labelUnsetIfEmpty(authStatus.ClientSecret))
-	pcio.Fprintf(writer, "Token Expiry\t%s\n", labelUnsetIfEmpty(authStatus.TokenExpiry))
-	pcio.Fprintf(writer, "Token Time Remaining\t%s\n", labelUnsetIfEmpty(authStatus.TokenTimeRemaining))
-	pcio.Fprintf(writer, "Token Scope\t%s\n", labelUnsetIfEmpty(authStatus.TokenScope))
-	pcio.Fprintf(writer, "Token Organization ID\t%s\n", labelUnsetIfEmpty(authStatus.TokenOrganizationID))
-	pcio.Fprintf(writer, "Environment\t%s\n", labelUnsetIfEmpty(authStatus.Environment))
+	fmt.Fprintf(writer, "Authentication Mode\t%s\n", labelUnsetIfEmpty(authStatus.AuthMode))
+	fmt.Fprintf(writer, "Default API Key\t%s\n", labelUnsetIfEmpty(authStatus.DefaultAPIKey))
+	fmt.Fprintf(writer, "Service Account Client ID\t%s\n", labelUnsetIfEmpty(authStatus.ClientID))
+	fmt.Fprintf(writer, "Service Account Client Secret\t%s\n", labelUnsetIfEmpty(authStatus.ClientSecret))
+	fmt.Fprintf(writer, "Token Expiry\t%s\n", labelUnsetIfEmpty(authStatus.TokenExpiry))
+	fmt.Fprintf(writer, "Token Time Remaining\t%s\n", labelUnsetIfEmpty(authStatus.TokenTimeRemaining))
+	fmt.Fprintf(writer, "Token Scope\t%s\n", labelUnsetIfEmpty(authStatus.TokenScope))
+	fmt.Fprintf(writer, "Token Organization ID\t%s\n", labelUnsetIfEmpty(authStatus.TokenOrganizationID))
+	fmt.Fprintf(writer, "Environment\t%s\n", labelUnsetIfEmpty(authStatus.Environment))
 
 	writer.Flush()
 }

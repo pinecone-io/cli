@@ -1,11 +1,12 @@
 package organization
 
 import (
+	"fmt"
+
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -58,7 +59,7 @@ func NewUpdateOrganizationCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(org)
-				pcio.PrintJSON(json)
+				fmt.Println(json)
 				return
 			}
 

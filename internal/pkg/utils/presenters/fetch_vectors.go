@@ -1,9 +1,9 @@
 package presenters
 
 import (
+	"fmt"
 	"strings"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
@@ -47,15 +47,15 @@ func PrintFetchVectorsTable(results *FetchVectorsResults) {
 
 	// Header Block
 	if results.Namespace != "" {
-		pcio.Fprintf(writer, "Namespace: %s\n", results.Namespace)
+		fmt.Fprintf(writer, "Namespace: %s\n", results.Namespace)
 	}
 	if results.Usage != nil {
-		pcio.Fprintf(writer, "Usage: %d (read units)\n", results.Usage.ReadUnits)
+		fmt.Fprintf(writer, "Usage: %d (read units)\n", results.Usage.ReadUnits)
 	}
 
 	// Table Header
 	columns := []string{"ID", "DIMENSION", "VALUES", "SPARSE VALUES", "METADATA"}
-	pcio.Fprintln(writer, strings.Join(columns, "\t"))
+	fmt.Fprintln(writer, strings.Join(columns, "\t"))
 
 	// Rows
 	for id, vector := range results.Vectors {
@@ -73,8 +73,8 @@ func PrintFetchVectorsTable(results *FetchVectorsResults) {
 		}
 
 		preview := previewSliceFloat32(vector.Values, 3)
-		row := []string{id, pcio.Sprintf("%d", dim), preview, pcio.Sprintf("%d", sparseDim), metadata}
-		pcio.Fprintln(writer, strings.Join(row, "\t"))
+		row := []string{id, fmt.Sprintf("%d", dim), preview, fmt.Sprintf("%d", sparseDim), metadata}
+		fmt.Fprintln(writer, strings.Join(row, "\t"))
 	}
 
 	writer.Flush()

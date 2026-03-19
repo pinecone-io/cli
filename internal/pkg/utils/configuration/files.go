@@ -9,7 +9,6 @@ import (
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/spf13/viper"
 )
 
@@ -46,7 +45,7 @@ func (c ConfigFile) Clear() {
 	log.Debug().Str("file_name", c.FileName).Msg("Clearing config file")
 	for _, property := range c.Properties {
 		log.Debug().
-			Str("property", pcio.Sprintf("%s", reflect.TypeOf(property))).
+			Str("property", fmt.Sprintf("%s", reflect.TypeOf(property))).
 			Msg("Clearing property")
 		property.Clear()
 	}

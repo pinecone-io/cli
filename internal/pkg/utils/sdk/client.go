@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"crypto/rand"
+	"fmt"
 	"io"
 	"os"
 
@@ -14,7 +15,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/oauth"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
@@ -154,7 +154,7 @@ func NewPineconeAdminClient(ctx context.Context) *pinecone.AdminClient {
 func NewIndexConnection(ctx context.Context, pc *pinecone.Client, indexName string, namespace string) (*pinecone.IndexConnection, error) {
 	index, err := pc.DescribeIndex(ctx, indexName)
 	if err != nil {
-		return nil, pcio.Errorf("failed to describe index: %w", err)
+		return nil, fmt.Errorf("failed to describe index: %w", err)
 	}
 
 	// Use private_host for BYOC if it exists
@@ -168,7 +168,7 @@ func NewIndexConnection(ctx context.Context, pc *pinecone.Client, indexName stri
 		Namespace: namespace,
 	})
 	if err != nil {
-		return nil, pcio.Errorf("failed to create index connection: %w", err)
+		return nil, fmt.Errorf("failed to create index connection: %w", err)
 	}
 	return ic, nil
 }
@@ -194,7 +194,7 @@ func getCLIAPIKeyForProject(ctx context.Context, ac *pinecone.AdminClient, proje
 	})
 	if err != nil {
 		msg.FailMsg("Failed to create a CLI managed API key for project %s: %s", style.Emphasis(project.Name), err)
-		return "", pcio.Errorf("failed to create a CLI managed API key for project: %w", err)
+		return "", fmt.Errorf("failed to create a CLI managed API key for project: %w", err)
 	}
 
 	managedKey = secrets.ManagedKey{

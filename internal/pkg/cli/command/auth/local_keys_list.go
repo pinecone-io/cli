@@ -1,11 +1,11 @@
 package auth
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -42,7 +42,7 @@ func NewListLocalKeysCmd() *cobra.Command {
 			if options.json {
 				maskedMap := maskForJSON(managedKeys, options.reveal)
 				json := text.IndentJSON(maskedMap)
-				pcio.PrintJSON(json)
+				fmt.Println(json)
 			} else {
 				printTable(managedKeys, options.reveal)
 			}
@@ -60,7 +60,7 @@ func printTable(managedKeys map[string]secrets.ManagedKey, reveal bool) {
 
 	columns := []string{"PROJECT ID", "API KEY NAME", "API KEY ID", "API KEY VALUE", "ORIGIN", "ORGANIZATION ID"}
 	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
+	fmt.Fprint(writer, header)
 
 	for projectId, managedKey := range managedKeys {
 		keyValue := managedKey.Value
@@ -68,7 +68,7 @@ func printTable(managedKeys map[string]secrets.ManagedKey, reveal bool) {
 			keyValue = presenters.MaskHeadTail(keyValue, 4, 4)
 		}
 		values := []string{projectId, managedKey.Name, managedKey.Id, keyValue, string(managedKey.Origin), managedKey.OrganizationId}
-		pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
+		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
 	}
 
 	writer.Flush()
