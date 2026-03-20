@@ -2,6 +2,7 @@ package apiKey
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -40,7 +41,7 @@ func NewDescribeAPIKeyCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(apiKey)
-				fmt.Println(json)
+				fmt.Fprint(os.Stdout, json)
 			} else {
 				presenters.PrintDescribeAPIKeyTable(apiKey)
 			}
