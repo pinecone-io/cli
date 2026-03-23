@@ -2,6 +2,7 @@ package index
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -45,7 +46,7 @@ func NewDescribeCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(idx)
-				fmt.Println(json)
+				fmt.Fprintln(os.Stdout, json)
 			} else {
 				presenters.PrintDescribeIndexTable(idx)
 			}

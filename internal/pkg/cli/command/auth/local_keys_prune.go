@@ -214,7 +214,7 @@ func confirmPruneKeys(plan []planItem, options pruneLocalKeysCmdOptions) (bool, 
 func printDryRunPlan(plan []planItem, options pruneLocalKeysCmdOptions) {
 	if options.json {
 		json := text.IndentJSON(plan)
-		fmt.Println(json)
+		fmt.Fprintln(os.Stdout, json)
 	} else {
 		for _, key := range plan {
 			if key.onServer {

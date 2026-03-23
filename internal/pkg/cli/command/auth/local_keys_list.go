@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
@@ -42,7 +43,7 @@ func NewListLocalKeysCmd() *cobra.Command {
 			if options.json {
 				maskedMap := maskForJSON(managedKeys, options.reveal)
 				json := text.IndentJSON(maskedMap)
-				fmt.Println(json)
+				fmt.Fprintln(os.Stdout, json)
 			} else {
 				printTable(managedKeys, options.reveal)
 			}

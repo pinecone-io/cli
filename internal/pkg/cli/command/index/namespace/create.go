@@ -3,6 +3,7 @@ package namespace
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -96,7 +97,7 @@ func runCreateNamespaceCmd(ctx context.Context, ic NamespaceService, options cre
 
 	if options.json {
 		json := text.IndentJSON(ns)
-		fmt.Println(json)
+		fmt.Fprintln(os.Stdout, json)
 	} else {
 		msg.SuccessMsg("Namespace %s created successfully.", options.name)
 		presenters.PrintDescribeNamespaceTable(ns)

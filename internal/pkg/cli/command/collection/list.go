@@ -2,6 +2,7 @@ package collection
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -47,7 +48,7 @@ func NewListCollectionsCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(collections)
-				fmt.Println(json)
+				fmt.Fprintln(os.Stdout, json)
 			} else {
 				printTable(collections)
 			}

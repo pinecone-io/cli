@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/docslinks"
@@ -310,7 +311,7 @@ func runCreateIndexCmd(ctx context.Context, cmd *cobra.Command, service CreateIn
 func renderSuccessOutput(idx *pinecone.Index, options createIndexOptions) {
 	if options.json {
 		json := text.IndentJSON(idx)
-		fmt.Println(json)
+		fmt.Fprintln(os.Stdout, json)
 		return
 	}
 

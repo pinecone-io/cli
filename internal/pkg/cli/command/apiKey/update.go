@@ -52,7 +52,7 @@ func NewUpdateAPIKeyCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(apiKey)
-				fmt.Fprint(os.Stdout, json)
+				fmt.Fprintln(os.Stdout, json)
 				return
 			}
 

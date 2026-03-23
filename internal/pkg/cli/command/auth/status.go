@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
@@ -99,7 +100,7 @@ func runAuthStatus(cmd *cobra.Command, options authStatusCmdOptions) error {
 
 	if options.json {
 		json := text.IndentJSON(authStatus)
-		fmt.Println(json)
+		fmt.Fprintln(os.Stdout, json)
 		return nil
 	}
 

@@ -3,6 +3,7 @@ package vector
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/argio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -208,7 +209,7 @@ func runQueryCmd(ctx context.Context, options queryCmdOptions) {
 
 	if options.json {
 		json := text.IndentJSON(queryResponse)
-		fmt.Println(json)
+		fmt.Fprintln(os.Stdout, json)
 	} else {
 		presenters.PrintQueryVectorsTable(queryResponse)
 	}

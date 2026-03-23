@@ -2,6 +2,7 @@ package organization
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -41,7 +42,7 @@ func NewListOrganizationsCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(orgs)
-				fmt.Println(json)
+				fmt.Fprintln(os.Stdout, json)
 				return
 			}
 

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/argio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -136,7 +137,7 @@ func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 		} else {
 			if options.json {
 				json := text.IndentJSON(resp)
-				fmt.Println(json)
+				fmt.Fprintln(os.Stdout, json)
 			} else {
 				msg.SuccessMsg("Upserted %d vectors into namespace %s (batch %d of %d)", len(batch), options.namespace, i+1, len(batches))
 			}

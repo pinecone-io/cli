@@ -2,6 +2,7 @@ package index
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -47,7 +48,7 @@ func NewListCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(idxs)
-				fmt.Println(json)
+				fmt.Fprintln(os.Stdout, json)
 			} else {
 				printTable(idxs, options.wide)
 			}

@@ -3,6 +3,7 @@ package namespace
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -80,7 +81,7 @@ func runDescribeNamespaceCmd(ctx context.Context, ic NamespaceService, options d
 
 	if options.json {
 		json := text.IndentJSON(ns)
-		fmt.Println(json)
+		fmt.Fprintln(os.Stdout, json)
 	} else {
 		presenters.PrintDescribeNamespaceTable(ns)
 	}

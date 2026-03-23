@@ -41,7 +41,7 @@ func NewDescribeAPIKeyCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(apiKey)
-				fmt.Fprint(os.Stdout, json)
+				fmt.Fprintln(os.Stdout, json)
 			} else {
 				presenters.PrintDescribeAPIKeyTable(apiKey)
 			}

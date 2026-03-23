@@ -2,6 +2,7 @@ package apiKey
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
@@ -97,7 +98,7 @@ func NewCreateApiKeyCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(keyWithSecret)
-				fmt.Println(json)
+				fmt.Fprintln(os.Stdout, json)
 			} else {
 				msg.SuccessMsg("API key %s created successfully.\n", style.Emphasis(keyWithSecret.Key.Name))
 				presenters.PrintDescribeAPIKeyWithSecretTable(keyWithSecret)

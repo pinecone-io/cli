@@ -2,6 +2,7 @@ package apiKey
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -65,7 +66,7 @@ func NewListKeysCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(sortedKeys)
-				fmt.Println(json)
+				fmt.Fprintln(os.Stdout, json)
 			} else {
 				printTable(sortedKeys)
 			}

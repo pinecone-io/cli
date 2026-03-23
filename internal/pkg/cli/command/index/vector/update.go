@@ -3,6 +3,7 @@ package vector
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/argio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -197,7 +198,7 @@ func runUpdateCmd(ctx context.Context, options updateCmdOptions) {
 			presenters.PrintUpdateVectorsByMetadataTable(resp)
 		} else {
 			json := text.IndentJSON(resp)
-			fmt.Println(json)
+			fmt.Fprintln(os.Stdout, json)
 		}
 		return
 	}

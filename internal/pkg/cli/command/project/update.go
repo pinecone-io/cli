@@ -2,6 +2,7 @@ package project
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -68,7 +69,7 @@ func NewUpdateProjectCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(project)
-				fmt.Println(json)
+				fmt.Fprintln(os.Stdout, json)
 				return
 			}
 

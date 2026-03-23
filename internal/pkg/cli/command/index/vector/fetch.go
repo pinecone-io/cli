@@ -3,6 +3,7 @@ package vector
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/argio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -159,7 +160,7 @@ func runFetchCmd(ctx context.Context, options fetchCmdOptions) {
 func printFetchVectorsResults(results *presenters.FetchVectorsResults, options fetchCmdOptions) {
 	if options.json {
 		json := text.IndentJSON(results)
-		fmt.Println(json)
+		fmt.Fprintln(os.Stdout, json)
 	} else {
 		presenters.PrintFetchVectorsTable(results)
 	}

@@ -2,6 +2,7 @@ package project
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -41,7 +42,7 @@ func NewListProjectsCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(projects)
-				fmt.Println(json)
+				fmt.Fprintln(os.Stdout, json)
 			} else {
 				printTable(projects)
 			}

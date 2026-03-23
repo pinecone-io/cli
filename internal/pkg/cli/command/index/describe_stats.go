@@ -3,6 +3,7 @@ package index
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/flags"
@@ -77,7 +78,7 @@ func runDescribeIndexStatsCmd(ctx context.Context, options describeIndexStatsCmd
 
 	if options.json {
 		json := text.IndentJSON(resp)
-		fmt.Println(json)
+		fmt.Fprintln(os.Stdout, json)
 	} else {
 		presenters.PrintDescribeIndexStatsTable(resp)
 	}

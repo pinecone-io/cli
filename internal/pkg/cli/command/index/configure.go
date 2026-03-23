@@ -3,6 +3,7 @@ package index
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -136,7 +137,7 @@ func runConfigureIndexCmd(ctx context.Context, cmd *cobra.Command, options confi
 
 	if options.json {
 		json := text.IndentJSON(idx)
-		fmt.Println(json)
+		fmt.Fprintln(os.Stdout, json)
 		return
 	}
 

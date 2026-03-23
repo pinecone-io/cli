@@ -2,6 +2,7 @@ package collection
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -38,7 +39,7 @@ func NewDescribeCollectionCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(collection)
-				fmt.Println(json)
+				fmt.Fprintln(os.Stdout, json)
 			} else {
 				presenters.PrintDescribeCollectionTable(collection)
 			}
