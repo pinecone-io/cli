@@ -1,9 +1,11 @@
 package config
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/spf13/cobra"
 )
@@ -26,7 +28,7 @@ func NewGetApiKeyCmd() *cobra.Command {
 			if !options.reveal {
 				apiKey = presenters.MaskHeadTail(apiKey, 4, 4)
 			}
-			pcio.Printf("Current default API key: %s", apiKey)
+			fmt.Fprintf(os.Stdout, "Current default API key: %s", apiKey)
 		},
 	}
 

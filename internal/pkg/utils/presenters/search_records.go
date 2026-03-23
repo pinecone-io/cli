@@ -1,10 +1,10 @@
 package presenters
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
@@ -17,20 +17,20 @@ func PrintSearchRecordsTable(resp *pinecone.SearchRecordsResponse) {
 	}
 
 	if resp.Usage.ReadUnits > 0 {
-		pcio.Fprintf(writer, "Usage: %d (read units)\n", resp.Usage.ReadUnits)
+		fmt.Fprintf(writer, "Usage: %d (read units)\n", resp.Usage.ReadUnits)
 	}
 	if resp.Usage.EmbedTotalTokens != nil {
-		pcio.Fprintf(writer, "Embed tokens: %d\n", *resp.Usage.EmbedTotalTokens)
+		fmt.Fprintf(writer, "Embed tokens: %d\n", *resp.Usage.EmbedTotalTokens)
 	}
 	if resp.Usage.RerankUnits != nil {
-		pcio.Fprintf(writer, "Rerank units: %d\n", *resp.Usage.RerankUnits)
+		fmt.Fprintf(writer, "Rerank units: %d\n", *resp.Usage.RerankUnits)
 	}
 
-	pcio.Fprintln(writer, "ID\tSCORE\tFIELDS")
+	fmt.Fprintln(writer, "ID\tSCORE\tFIELDS")
 
 	for _, hit := range resp.Result.Hits {
 		fields := previewFields(hit.Fields, 3)
-		pcio.Fprintf(writer, "%s\t%f\t%s\n", hit.Id, hit.Score, fields)
+		fmt.Fprintf(writer, "%s\t%f\t%s\n", hit.Id, hit.Score, fields)
 	}
 
 	writer.Flush()

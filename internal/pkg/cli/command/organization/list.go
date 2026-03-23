@@ -1,6 +1,8 @@
 package organization
 
 import (
+	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -8,7 +10,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -41,7 +42,7 @@ func NewListOrganizationsCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(orgs)
-				pcio.PrintJSON(json)
+				fmt.Fprintln(os.Stdout, json)
 				return
 			}
 
@@ -59,7 +60,7 @@ func printTable(orgs []*pinecone.Organization) {
 
 	columns := []string{"NAME", "ID", "CREATED AT", "PAYMENT STATUS", "PLAN", "SUPPORT TIER"}
 	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
+	fmt.Fprint(writer, header)
 
 	for _, org := range orgs {
 		values := []string{
@@ -70,7 +71,7 @@ func printTable(orgs []*pinecone.Organization) {
 			org.Plan,
 			org.SupportTier,
 		}
-		pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
+		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
 	}
 	writer.Flush()
 }

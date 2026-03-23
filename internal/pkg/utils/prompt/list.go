@@ -1,13 +1,13 @@
 package prompt
 
 import (
+	"fmt"
 	"io"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
 type ListModel struct {
@@ -110,7 +110,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 		return
 	}
 
-	str := pcio.Sprintf("%d. %s", index+1, i)
+	str := fmt.Sprintf("%d. %s", index+1, i)
 
 	fn := itemStyle.Render
 	if index == m.Index() {
@@ -119,5 +119,5 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 		}
 	}
 
-	pcio.Fprint(w, fn(str))
+	fmt.Fprint(w, fn(str))
 }

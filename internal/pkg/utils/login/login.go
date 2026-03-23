@@ -7,6 +7,7 @@ import (
 	_ "embed"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"html/template"
 	"io"
 	"net/http"
@@ -20,7 +21,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/oauth"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
@@ -111,13 +111,13 @@ func Run(ctx context.Context, io IO, opts Options) {
 		Name: targetOrg.Name,
 		Id:   targetOrg.Id,
 	})
-	pcio.Println()
-	pcio.Printf(style.InfoMsg("Target org set to %s.\n"), style.Emphasis(targetOrg.Name))
+	fmt.Println()
+	fmt.Printf(style.InfoMsg("Target org set to %s.\n"), style.Emphasis(targetOrg.Name))
 
 	if projects != nil {
 		if len(projects) == 0 {
-			pcio.Printf(style.InfoMsg("No projects found for organization %s.\n"), style.Emphasis(targetOrg.Name))
-			pcio.Println(style.InfoMsg("Please create a project for this organization to work with project resources."))
+			fmt.Printf(style.InfoMsg("No projects found for organization %s.\n"), style.Emphasis(targetOrg.Name))
+			fmt.Println(style.InfoMsg("Please create a project for this organization to work with project resources."))
 		} else {
 			targetProj := projects[0]
 			state.TargetProj.Set(state.TargetProject{
@@ -125,15 +125,15 @@ func Run(ctx context.Context, io IO, opts Options) {
 				Id:   targetProj.Id,
 			})
 
-			pcio.Printf(style.InfoMsg("Target project set %s.\n"), style.Emphasis(targetProj.Name))
+			fmt.Printf(style.InfoMsg("Target project set %s.\n"), style.Emphasis(targetProj.Name))
 		}
 	}
 
-	pcio.Println()
-	pcio.Println(style.CodeHint("Run %s to change the target context.", style.Code("pc target")))
+	fmt.Println()
+	fmt.Println(style.CodeHint("Run %s to change the target context.", style.Code("pc target")))
 
-	pcio.Println()
-	pcio.Printf("Now try %s to learn about index operations.\n", style.Code("pc index -h"))
+	fmt.Println()
+	fmt.Printf("Now try %s to learn about index operations.\n", style.Code("pc index -h"))
 }
 
 // Takes an optional orgId, and attempts to acquire an access token scoped to the orgId if provided.
@@ -147,12 +147,12 @@ func GetAndSetAccessToken(ctx context.Context, orgId *string) error {
 	// PKCE verifier and challenge
 	verifier, challenge, err := a.CreateNewVerifierAndChallenge()
 	if err != nil {
-		return pcio.Errorf("error creating new auth verifier and challenge: %w", err)
+		return fmt.Errorf("error creating new auth verifier and challenge: %w", err)
 	}
 
 	authURL, err := a.GetAuthURL(ctx, csrfState, challenge, orgId)
 	if err != nil {
-		return pcio.Errorf("error getting auth URL: %w", err)
+		return fmt.Errorf("error getting auth URL: %w", err)
 	}
 
 	// Spin up a local server in a goroutine to handle receiving the authorization code from auth0
@@ -170,9 +170,9 @@ func GetAndSetAccessToken(ctx context.Context, orgId *string) error {
 		codeCh <- code
 	}()
 
-	pcio.Printf("Visit %s to authorize the CLI.\n", style.Underline(authURL))
-	pcio.Println()
-	pcio.Printf("Press %s to open the browser, or manually paste the URL above.\n", style.Code("[Enter]"))
+	fmt.Printf("Visit %s to authorize the CLI.\n", style.Underline(authURL))
+	fmt.Println()
+	fmt.Printf("Press %s to open the browser, or manually paste the URL above.\n", style.Code("[Enter]"))
 
 	// spawn a goroutine to optionally wait for [Enter] as input
 	go func(ctx context.Context) {
@@ -208,12 +208,12 @@ func GetAndSetAccessToken(ctx context.Context, orgId *string) error {
 	// Wait for auth code and exchange for access token
 	code := <-codeCh
 	if code == "" {
-		return pcio.Error("error authenticating CLI and retrieving oauth2 access token")
+		return errors.New("error authenticating CLI and retrieving oauth2 access token")
 	}
 
 	token, err := a.ExchangeAuthCode(ctx, verifier, code)
 	if err != nil {
-		return pcio.Errorf("error exchanging auth code for access token: %w", err)
+		return fmt.Errorf("error exchanging auth code for access token: %w", err)
 	}
 
 	claims, err := oauth.ParseClaimsUnverified(token)
@@ -257,7 +257,7 @@ func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error
 		state := r.URL.Query().Get("state")
 
 		if state != csrfState {
-			errCh <- pcio.Errorf("state mismatch on authentication")
+			errCh <- fmt.Errorf("state mismatch on authentication")
 			return
 		}
 
@@ -265,12 +265,12 @@ func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error
 		templateData := map[string]template.HTML{"LogoSVG": template.HTML(logoSVG)}
 		if code == "" {
 			if err := renderHTML(w, errorHTML, templateData); err != nil {
-				errCh <- pcio.Errorf("error rendering authentication response HTML: %w", err)
+				errCh <- fmt.Errorf("error rendering authentication response HTML: %w", err)
 				return
 			}
 		} else {
 			if err := renderHTML(w, successHTML, templateData); err != nil {
-				errCh <- pcio.Errorf("error rendering authentication response HTML: %w", err)
+				errCh <- fmt.Errorf("error rendering authentication response HTML: %w", err)
 				return
 			}
 		}
@@ -285,7 +285,7 @@ func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error
 	}
 	go func() {
 		if err := serve.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			errCh <- pcio.Errorf("error listening for auth code: %w", err)
+			errCh <- fmt.Errorf("error listening for auth code: %w", err)
 			return
 		}
 	}()
@@ -300,22 +300,22 @@ func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error
 	case <-ctx.Done():
 		_ = serve.Shutdown(ctx)
 		if ctx.Err() != nil {
-			return "", pcio.Errorf("error waiting for authorization: %w", ctx.Err())
+			return "", fmt.Errorf("error waiting for authorization: %w", ctx.Err())
 		}
 	}
 
-	return "", pcio.Error("error waiting for authentication response")
+	return "", errors.New("error waiting for authentication response")
 }
 
 func renderHTML(w http.ResponseWriter, htmlTemplate string, data map[string]template.HTML) error {
 	tmpl, err := template.New("auth-response").Parse(htmlTemplate)
 	if err != nil {
-		return pcio.Errorf("error parsing auth response HTML template: %w", err)
+		return fmt.Errorf("error parsing auth response HTML template: %w", err)
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	if err := tmpl.Execute(w, data); err != nil {
-		return pcio.Errorf("error executing auth response HTML template: %w", err)
+		return fmt.Errorf("error executing auth response HTML template: %w", err)
 	}
 	return nil
 }

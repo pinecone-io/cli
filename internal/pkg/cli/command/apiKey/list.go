@@ -1,6 +1,8 @@
 package apiKey
 
 import (
+	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -8,7 +10,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
@@ -65,7 +66,7 @@ func NewListKeysCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(sortedKeys)
-				pcio.PrintJSON(json)
+				fmt.Fprintln(os.Stdout, json)
 			} else {
 				printTable(sortedKeys)
 			}
@@ -78,17 +79,17 @@ func NewListKeysCmd() *cobra.Command {
 }
 
 func printTable(keys []*pinecone.APIKey) {
-	pcio.Printf("Organization: %s (ID: %s)\n", style.Emphasis(state.TargetOrg.Get().Name), style.Emphasis(state.TargetOrg.Get().Id))
-	pcio.Printf("Project: %s (ID: %s)\n", style.Emphasis(state.TargetProj.Get().Name), style.Emphasis(state.TargetProj.Get().Id))
-	pcio.Println()
-	pcio.Println(style.Heading("API Keys"))
-	pcio.Println()
+	fmt.Printf("Organization: %s (ID: %s)\n", style.Emphasis(state.TargetOrg.Get().Name), style.Emphasis(state.TargetOrg.Get().Id))
+	fmt.Printf("Project: %s (ID: %s)\n", style.Emphasis(state.TargetProj.Get().Name), style.Emphasis(state.TargetProj.Get().Id))
+	fmt.Println()
+	fmt.Println(style.Heading("API Keys"))
+	fmt.Println()
 
 	writer := presenters.NewTabWriter()
 
 	columns := []string{"NAME", "ID", "PROJECT ID", "ROLES"}
 	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
+	fmt.Fprint(writer, header)
 
 	for _, key := range keys {
 		values := []string{
@@ -97,7 +98,7 @@ func printTable(keys []*pinecone.APIKey) {
 			key.ProjectId,
 			strings.Join(key.Roles, ", "),
 		}
-		pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
+		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
 	}
 
 	writer.Flush()

@@ -1,8 +1,6 @@
 package state
 
-import (
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
-)
+import "fmt"
 
 type TargetOrganization struct {
 	Name string `json:"name"`
@@ -46,7 +44,7 @@ func GetTargetContext() *TargetContext {
 func GetTargetOrgId() (string, error) {
 	orgId := TargetOrg.Get().Id
 	if orgId == "" {
-		return "", pcio.Errorf("no target organization set")
+		return "", fmt.Errorf("no target organization set")
 	}
 	return orgId, nil
 }
@@ -54,7 +52,7 @@ func GetTargetOrgId() (string, error) {
 func GetTargetProjectId() (string, error) {
 	projId := TargetProj.Get().Id
 	if projId == "" {
-		return "", pcio.Errorf("no target project set")
+		return "", fmt.Errorf("no target project set")
 	}
 	return projId, nil
 }
@@ -62,7 +60,7 @@ func GetTargetProjectId() (string, error) {
 func GetTargetUserAuthContext() (string, error) {
 	context := AuthedUser.Get()
 	if context.AuthContext == AuthNone {
-		return "", pcio.Errorf("no target authentication context set")
+		return "", fmt.Errorf("no target authentication context set")
 	}
 	return string(context.AuthContext), nil
 }

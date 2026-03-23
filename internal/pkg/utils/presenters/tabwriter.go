@@ -1,10 +1,9 @@
 package presenters
 
 import (
+	"fmt"
 	"os"
 	"text/tabwriter"
-
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
 func NewTabWriter() *tabwriter.Writer {
@@ -18,7 +17,7 @@ func PrintEmptyState(writer *tabwriter.Writer, resource string) bool {
 	if resource == "" {
 		resource = "data"
 	}
-	pcio.Fprintf(writer, "No %s available.\n", resource)
+	fmt.Fprintf(writer, "No %s available.\n", resource)
 	writer.Flush()
 	return true
 }

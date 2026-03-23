@@ -1,12 +1,12 @@
 package presenters
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 )
 
@@ -31,16 +31,16 @@ func PrintTargetContext(context *state.TargetContext) {
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
 	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
+	fmt.Fprint(writer, header)
 
 	// Get API key for presentational layer
 	defaultAPIKeyMasked := MaskHeadTail(secrets.DefaultAPIKey.Get(), 4, 4)
 
-	pcio.Fprintf(writer, "Organization\t%s\n", labelUnsetIfEmpty(string(context.Organization.Name)))
-	pcio.Fprintf(writer, "Organization ID\t%s\n", labelUnsetIfEmpty(string(context.Organization.Id)))
-	pcio.Fprintf(writer, "Project\t%s\n", labelUnsetIfEmpty(string(context.Project.Name)))
-	pcio.Fprintf(writer, "Project ID\t%s\n", labelUnsetIfEmpty(string(context.Project.Id)))
-	pcio.Fprintf(writer, "Default API Key\t%s\n", labelUnsetIfEmpty(defaultAPIKeyMasked))
+	fmt.Fprintf(writer, "Organization\t%s\n", labelUnsetIfEmpty(string(context.Organization.Name)))
+	fmt.Fprintf(writer, "Organization ID\t%s\n", labelUnsetIfEmpty(string(context.Organization.Id)))
+	fmt.Fprintf(writer, "Project\t%s\n", labelUnsetIfEmpty(string(context.Project.Name)))
+	fmt.Fprintf(writer, "Project ID\t%s\n", labelUnsetIfEmpty(string(context.Project.Id)))
+	fmt.Fprintf(writer, "Default API Key\t%s\n", labelUnsetIfEmpty(defaultAPIKeyMasked))
 
 	writer.Flush()
 }

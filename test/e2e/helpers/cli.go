@@ -95,7 +95,7 @@ func (c *CLI) RunCtx(ctx context.Context, args ...string) (string, string, error
 	out, err := cmd.CombinedOutput()
 	stdout := string(out)
 
-	// Cobra writes most output to stdout via their pcio helpers; retain single stream
+	// Cobra writes most output to stdout; retain single stream
 	// We still return stderr string for API compatibility.
 	stderr := ""
 	if ctx.Err() == context.DeadlineExceeded {

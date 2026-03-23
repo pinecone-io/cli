@@ -1,12 +1,12 @@
 package style
 
 import (
+	"os"
 	"time"
 
 	"github.com/briandowns/spinner"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
 var (
@@ -34,7 +34,7 @@ func loading(initialMsg, doneMsg, failMsg string, fn func() error) error {
 	s.Prefix = initialMsg
 	s.FinalMSG = doneMsg
 	s.HideCursor = true
-	s.Writer = pcio.Messages
+	s.Writer = os.Stdout
 
 	if err := s.Color(spinnerColor); err != nil {
 		exit.Error(err, "Error setting spinner color")

@@ -3,7 +3,6 @@ package organization
 import (
 	"context"
 	"errors"
-	"os"
 	"testing"
 
 	"github.com/pinecone-io/cli/internal/pkg/cli/testutils"
@@ -18,13 +17,6 @@ type mockDeleteOrganizationService struct {
 func (m *mockDeleteOrganizationService) Delete(ctx context.Context, id string) error {
 	m.lastDeleteId = id
 	return m.deleteErr
-}
-
-func TestMain(m *testing.M) {
-	reset := testutils.SilenceOutput()
-	code := m.Run()
-	reset()
-	os.Exit(code)
 }
 
 func Test_runDeleteOrganizationCmd_Succeeds(t *testing.T) {

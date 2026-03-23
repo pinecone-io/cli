@@ -1,6 +1,8 @@
 package project
 
 import (
+	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -12,8 +14,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 	"github.com/spf13/cobra"
-
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
 type listProjectCmdOptions struct {
@@ -42,7 +42,7 @@ func NewListProjectsCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(projects)
-				pcio.PrintJSON(json)
+				fmt.Fprintln(os.Stdout, json)
 			} else {
 				printTable(projects)
 			}
@@ -59,7 +59,7 @@ func printTable(projects []*pinecone.Project) {
 
 	columns := []string{"NAME", "ID", "ORGANIZATION ID", "CREATED AT", "FORCE ENCRYPTION", "MAX PODS"}
 	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
+	fmt.Fprint(writer, header)
 
 	for _, proj := range projects {
 		values := []string{
@@ -69,7 +69,7 @@ func printTable(projects []*pinecone.Project) {
 			proj.CreatedAt.String(),
 			strconv.FormatBool(proj.ForceEncryptionWithCmek),
 			strconv.Itoa(proj.MaxPods)}
-		pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
+		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
 	}
 	writer.Flush()
 }

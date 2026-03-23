@@ -1,13 +1,14 @@
 package index
 
 import (
+	"fmt"
+	"os"
 	"sort"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -47,7 +48,7 @@ func NewListCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(idxs)
-				pcio.PrintJSON(json)
+				fmt.Fprintln(os.Stdout, json)
 			} else {
 				printTable(idxs, options.wide)
 			}
@@ -69,7 +70,7 @@ func printTable(idxs []*pinecone.Index, wide bool) {
 		columns = append(columns, "EMBED", "TAGS")
 	}
 	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
+	fmt.Fprint(writer, header)
 
 	for _, idx := range idxs {
 		status := "-"
@@ -79,7 +80,7 @@ func printTable(idxs []*pinecone.Index, wide bool) {
 
 		dimension := "nil"
 		if idx.Dimension != nil {
-			dimension = pcio.Sprintf("%d", *idx.Dimension)
+			dimension = fmt.Sprintf("%d", *idx.Dimension)
 		}
 
 		spec := formatSpec(idx.Spec)
@@ -93,11 +94,11 @@ func printTable(idxs []*pinecone.Index, wide bool) {
 		if wide {
 			values = append(values, embed, tags)
 		}
-		pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
+		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
 	}
 
 	if !wide {
-		pcio.Fprint(writer, "\nUse --wide to show host/embed/tags, or --json for full details.\n")
+		fmt.Fprint(writer, "\nUse --wide to show host/embed/tags, or --json for full details.\n")
 	}
 	writer.Flush()
 }

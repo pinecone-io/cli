@@ -1,10 +1,12 @@
 package collection
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -37,7 +39,7 @@ func NewDescribeCollectionCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(collection)
-				pcio.PrintJSON(json)
+				fmt.Fprintln(os.Stdout, json)
 			} else {
 				presenters.PrintDescribeCollectionTable(collection)
 			}

@@ -1,6 +1,8 @@
 package collection
 
 import (
+	"fmt"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -8,7 +10,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -47,7 +48,7 @@ func NewListCollectionsCmd() *cobra.Command {
 
 			if options.json {
 				json := text.IndentJSON(collections)
-				pcio.PrintJSON(json)
+				fmt.Fprintln(os.Stdout, json)
 			} else {
 				printTable(collections)
 			}
@@ -65,11 +66,11 @@ func printTable(collections []*pinecone.Collection) {
 
 	columns := []string{"NAME", "DIMENSION", "SIZE", "STATUS", "VECTORS", "ENVIRONMENT"}
 	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
+	fmt.Fprint(writer, header)
 
 	for _, coll := range collections {
 		values := []string{coll.Name, string(coll.Dimension), strconv.FormatInt(coll.Size, 10), string(coll.Status), string(coll.VectorCount), coll.Environment}
-		pcio.Fprintf(writer, strings.Join(values, "\t")+"\n")
+		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
 	}
 	writer.Flush()
 }

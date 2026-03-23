@@ -1,6 +1,7 @@
 package target
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -14,7 +15,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/login"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/oauth"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/prompt"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
@@ -101,7 +101,7 @@ func NewTargetCmd() *cobra.Command {
 					defaultAPIKey := secrets.DefaultAPIKey.Get()
 					targetContext.DefaultAPIKey = presenters.MaskHeadTail(defaultAPIKey, 4, 4)
 					json := text.IndentJSON(targetContext)
-					pcio.PrintJSON(json)
+					fmt.Fprintln(os.Stdout, json)
 					return
 				}
 				log.Info().
@@ -152,8 +152,8 @@ func NewTargetCmd() *cobra.Command {
 					msg.FailMsg("Failed to target an organization")
 					exit.ErrorMsg("Failed to target an organization")
 				} else {
-					pcio.Println()
-					pcio.Printf(style.SuccessMsg("Target org set to %s.\n"), style.Emphasis(targetOrg.Name))
+					fmt.Println()
+					fmt.Printf(style.SuccessMsg("Target org set to %s.\n"), style.Emphasis(targetOrg.Name))
 
 					// If the org chosen differs from the current orgId in the token, we need to login again
 					if currentTokenOrgId != "" && currentTokenOrgId != targetOrg.Id {
@@ -180,7 +180,7 @@ func NewTargetCmd() *cobra.Command {
 					msg.FailMsg("Failed to target a project")
 					exit.ErrorMsg("failed to target a project")
 				} else {
-					pcio.Printf(style.SuccessMsg("Target project set %s.\n"), style.Emphasis(targetProject.Name))
+					fmt.Printf(style.SuccessMsg("Target project set %s.\n"), style.Emphasis(targetProject.Name))
 					return
 				}
 			}
@@ -260,11 +260,11 @@ func NewTargetCmd() *cobra.Command {
 				defaultAPIKey := secrets.DefaultAPIKey.Get()
 				targetContext.DefaultAPIKey = presenters.MaskHeadTail(defaultAPIKey, 4, 4)
 				json := text.IndentJSON(targetContext)
-				pcio.PrintJSON(json)
+				fmt.Fprintln(os.Stdout, json)
 				return
 			}
 
-			pcio.Println()
+			fmt.Println()
 
 			presenters.PrintTargetContext(state.GetTargetContext())
 		},
@@ -285,12 +285,12 @@ func NewTargetCmd() *cobra.Command {
 func validateTargetOptions(options targetCmdOptions) error {
 	// Check organization targeting
 	if options.org != "" && options.orgID != "" {
-		return pcio.Errorf("cannot specify both --org and --organization-id, use one or the other")
+		return fmt.Errorf("cannot specify both --org and --organization-id, use one or the other")
 	}
 
 	// Check project targeting
 	if options.project != "" && options.projectID != "" {
-		return pcio.Errorf("cannot specify both --project and --project-id, use one or the other")
+		return fmt.Errorf("cannot specify both --project and --project-id, use one or the other")
 	}
 
 	return nil
@@ -330,7 +330,7 @@ func getOrgForTarget(orgs []*pinecone.Organization, orgName, orgID string) (*pin
 			orgNames[i] = org.Name
 		}
 		availableOrgs := strings.Join(orgNames, ", ")
-		return nil, pcio.Errorf("organization %s: %s not found. Available organizations: %s",
+		return nil, fmt.Errorf("organization %s: %s not found. Available organizations: %s",
 			style.Emphasis(searchType),
 			style.Emphasis(searchValue),
 			availableOrgs)
@@ -373,7 +373,7 @@ func getProjectForTarget(projects []*pinecone.Project, projectName, projectID st
 			projectNames[i] = project.Name
 		}
 		availableProjects := strings.Join(projectNames, ", ")
-		return nil, pcio.Errorf("project %s: %s not found. Available projects: %s",
+		return nil, fmt.Errorf("project %s: %s not found. Available projects: %s",
 			style.Emphasis(searchType),
 			style.Emphasis(searchValue),
 			availableProjects)
@@ -395,8 +395,8 @@ func postLoginInteractiveTargetOrg(orgsList []*pinecone.Organization) *pinecone.
 		orgName = organization.Name
 		log.Info().Msgf("Only 1 organization present. Target organization set to %s", orgName)
 	} else {
-		pcio.Println("Many API operations take place in the context of a specific org and project.")
-		pcio.Println(pcio.Sprintf("This CLI maintains a piece of state called the %s so it knows which \n", style.Emphasis("target")) +
+		fmt.Println("Many API operations take place in the context of a specific org and project.")
+		fmt.Println(fmt.Sprintf("This CLI maintains a piece of state called the %s so it knows which \n", style.Emphasis("target")) +
 			"organization and project to use when calling the API on your behalf.")
 
 		orgNames := []string{}
@@ -457,15 +457,15 @@ func postLoginInteractiveTargetProject(projectList []*pinecone.Project) *pinecon
 func uiProjectSelector(projectItems []string) string {
 	var targetProject string = ""
 	m2 := prompt.NewList(projectItems, len(projectItems)+6, "Choose a project to target", func() {
-		pcio.Println("Exiting without targeting a project.")
-		pcio.Printf("You can always run %s to set or change a project context later.\n", style.Code("pc target"))
+		fmt.Println("Exiting without targeting a project.")
+		fmt.Printf("You can always run %s to set or change a project context later.\n", style.Code("pc target"))
 		exit.Success()
 	}, func(choice string) string {
 		targetProject = choice
 		return "Target project: " + choice
 	})
 	if _, err := tea.NewProgram(m2).Run(); err != nil {
-		pcio.Println("Error running program:", err)
+		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}
 	return targetProject
@@ -474,15 +474,15 @@ func uiProjectSelector(projectItems []string) string {
 func uiOrgSelector(orgNames []string) string {
 	var orgName string
 	m := prompt.NewList(orgNames, len(orgNames)+6, "Choose an organization to target", func() {
-		pcio.Println("Exiting without targeting an organization.")
-		pcio.Printf("You can always run %s to set or change a project context later.\n", style.Code("pc target"))
+		fmt.Println("Exiting without targeting an organization.")
+		fmt.Printf("You can always run %s to set or change a project context later.\n", style.Code("pc target"))
 		exit.Success()
 	}, func(choice string) string {
 		orgName = choice
 		return "Target organization: " + choice
 	})
 	if _, err := tea.NewProgram(m).Run(); err != nil {
-		pcio.Println("Error running program:", err)
+		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}
 	return orgName

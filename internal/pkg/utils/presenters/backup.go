@@ -1,10 +1,10 @@
 package presenters
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
@@ -19,25 +19,25 @@ func PrintBackupTable(backup *pinecone.Backup) {
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
 	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
+	fmt.Fprint(writer, header)
 
-	pcio.Fprintf(writer, "Backup ID\t%s\n", backup.BackupId)
-	pcio.Fprintf(writer, "Name\t%s\n", DisplayOrNone(backup.Name))
-	pcio.Fprintf(writer, "Status\t%s\n", colorizeBackupStatus(backup.Status))
-	pcio.Fprintf(writer, "Source Index\t%s\n", backup.SourceIndexName)
-	pcio.Fprintf(writer, "Cloud\t%s\n", backup.Cloud)
-	pcio.Fprintf(writer, "Region\t%s\n", backup.Region)
-	pcio.Fprintf(writer, "Record Count\t%s\n", DisplayOrNone(backup.RecordCount))
-	pcio.Fprintf(writer, "Namespace Count\t%s\n", DisplayOrNone(backup.NamespaceCount))
-	pcio.Fprintf(writer, "Size (bytes)\t%s\n", DisplayOrNone(backup.SizeBytes))
-	pcio.Fprintf(writer, "Metric\t%s\n", DisplayOrNone(backup.Metric))
+	fmt.Fprintf(writer, "Backup ID\t%s\n", backup.BackupId)
+	fmt.Fprintf(writer, "Name\t%s\n", DisplayOrNone(backup.Name))
+	fmt.Fprintf(writer, "Status\t%s\n", colorizeBackupStatus(backup.Status))
+	fmt.Fprintf(writer, "Source Index\t%s\n", backup.SourceIndexName)
+	fmt.Fprintf(writer, "Cloud\t%s\n", backup.Cloud)
+	fmt.Fprintf(writer, "Region\t%s\n", backup.Region)
+	fmt.Fprintf(writer, "Record Count\t%s\n", DisplayOrNone(backup.RecordCount))
+	fmt.Fprintf(writer, "Namespace Count\t%s\n", DisplayOrNone(backup.NamespaceCount))
+	fmt.Fprintf(writer, "Size (bytes)\t%s\n", DisplayOrNone(backup.SizeBytes))
+	fmt.Fprintf(writer, "Metric\t%s\n", DisplayOrNone(backup.Metric))
 	schema := "<none>"
 	if backup.Schema != nil {
 		schema = text.InlineJSON(backup.Schema)
 	}
-	pcio.Fprintf(writer, "Schema\t%s\n", schema)
-	pcio.Fprintf(writer, "Created At\t%s\n", DisplayOrNone(backup.CreatedAt))
-	pcio.Fprintf(writer, "Tags\t%s\n", formatTagsInline(backup.Tags))
+	fmt.Fprintf(writer, "Schema\t%s\n", schema)
+	fmt.Fprintf(writer, "Created At\t%s\n", DisplayOrNone(backup.CreatedAt))
+	fmt.Fprintf(writer, "Tags\t%s\n", formatTagsInline(backup.Tags))
 
 	writer.Flush()
 }
@@ -51,12 +51,12 @@ func PrintBackupList(list *pinecone.BackupList) {
 
 	columns := []string{"BACKUP ID", "NAME", "INDEX", "STATUS", "CLOUD/REGION", "RECORDS", "NAMESPACES", "SIZE (B)", "CREATED"}
 	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
+	fmt.Fprint(writer, header)
 
 	for _, b := range list.Data {
-		cloudRegion := pcio.Sprintf("%s/%s", b.Cloud, b.Region)
+		cloudRegion := fmt.Sprintf("%s/%s", b.Cloud, b.Region)
 		created := DisplayOrNone(b.CreatedAt)
-		pcio.Fprintf(writer, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+		fmt.Fprintf(writer, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
 			b.BackupId,
 			DisplayOrNone(b.Name),
 			b.SourceIndexName,
@@ -70,7 +70,7 @@ func PrintBackupList(list *pinecone.BackupList) {
 	}
 
 	if list.Pagination != nil && list.Pagination.Next != "" {
-		pcio.Fprintf(writer, "\nNext Pagination Token: %s\n", list.Pagination.Next)
+		fmt.Fprintf(writer, "\nNext Pagination Token: %s\n", list.Pagination.Next)
 	}
 
 	writer.Flush()
@@ -85,15 +85,15 @@ func PrintRestoreJob(job *pinecone.RestoreJob) {
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
 	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
+	fmt.Fprint(writer, header)
 
-	pcio.Fprintf(writer, "Restore Job ID\t%s\n", job.RestoreJobId)
-	pcio.Fprintf(writer, "Backup ID\t%s\n", job.BackupId)
-	pcio.Fprintf(writer, "Target Index\t%s\n", job.TargetIndexName)
-	pcio.Fprintf(writer, "Status\t%s\n", colorizeRestoreJobStatus(job.Status))
-	pcio.Fprintf(writer, "Percent Complete\t%s\n", DisplayOrNone(job.PercentComplete))
-	pcio.Fprintf(writer, "Created At\t%s\n", formatTime(job.CreatedAt))
-	pcio.Fprintf(writer, "Completed At\t%s\n", formatTimePtr(job.CompletedAt))
+	fmt.Fprintf(writer, "Restore Job ID\t%s\n", job.RestoreJobId)
+	fmt.Fprintf(writer, "Backup ID\t%s\n", job.BackupId)
+	fmt.Fprintf(writer, "Target Index\t%s\n", job.TargetIndexName)
+	fmt.Fprintf(writer, "Status\t%s\n", colorizeRestoreJobStatus(job.Status))
+	fmt.Fprintf(writer, "Percent Complete\t%s\n", DisplayOrNone(job.PercentComplete))
+	fmt.Fprintf(writer, "Created At\t%s\n", formatTime(job.CreatedAt))
+	fmt.Fprintf(writer, "Completed At\t%s\n", formatTimePtr(job.CompletedAt))
 
 	writer.Flush()
 }
@@ -107,10 +107,10 @@ func PrintRestoreJobList(list *pinecone.RestoreJobList) {
 
 	columns := []string{"RESTORE JOB ID", "BACKUP ID", "TARGET INDEX", "STATUS", "PERCENT", "CREATED", "COMPLETED"}
 	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
+	fmt.Fprint(writer, header)
 
 	for _, job := range list.Data {
-		pcio.Fprintf(writer, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+		fmt.Fprintf(writer, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
 			job.RestoreJobId,
 			job.BackupId,
 			job.TargetIndexName,
@@ -122,7 +122,7 @@ func PrintRestoreJobList(list *pinecone.RestoreJobList) {
 	}
 
 	if list.Pagination != nil && list.Pagination.Next != "" {
-		pcio.Fprintf(writer, "\nNext Pagination Token: %s\n", list.Pagination.Next)
+		fmt.Fprintf(writer, "\nNext Pagination Token: %s\n", list.Pagination.Next)
 	}
 
 	writer.Flush()

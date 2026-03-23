@@ -1,9 +1,9 @@
 package presenters
 
 import (
+	"fmt"
 	"strings"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
 
@@ -16,9 +16,9 @@ func PrintUpdateVectorsByMetadataTable(resp *pinecone.UpdateVectorsByMetadataRes
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
 	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
+	fmt.Fprint(writer, header)
 
-	pcio.Fprintf(writer, "Matched Records\t%d\n", resp.MatchedRecords)
+	fmt.Fprintf(writer, "Matched Records\t%d\n", resp.MatchedRecords)
 
 	writer.Flush()
 }

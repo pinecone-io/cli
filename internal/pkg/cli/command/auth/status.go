@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
@@ -10,7 +12,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/oauth"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -99,7 +100,7 @@ func runAuthStatus(cmd *cobra.Command, options authStatusCmdOptions) error {
 
 	if options.json {
 		json := text.IndentJSON(authStatus)
-		pcio.PrintJSON(json)
+		fmt.Fprintln(os.Stdout, json)
 		return nil
 	}
 

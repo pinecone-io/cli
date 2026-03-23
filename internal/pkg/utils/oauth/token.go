@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -11,7 +12,6 @@ import (
 	"time"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"golang.org/x/oauth2"
 )
 
@@ -182,7 +182,7 @@ func refreshTokenWithOrg(ctx context.Context, cfg *oauth2.Config, currToken *oau
 		return nil, err
 	}
 	if tokenResp.AccessToken == "" {
-		return nil, pcio.Errorf("failed to refresh user token: no access token returned")
+		return nil, fmt.Errorf("failed to refresh user token: no access token returned")
 	}
 
 	// Return a standard oauth2.Token

@@ -1,9 +1,9 @@
 package presenters
 
 import (
+	"fmt"
 	"strings"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
@@ -17,10 +17,10 @@ func PrintQueryVectorsTable(resp *pinecone.QueryVectorsResponse) {
 
 	// Header Block
 	if resp.Namespace != "" {
-		pcio.Fprintf(writer, "Namespace: %s\n", resp.Namespace)
+		fmt.Fprintf(writer, "Namespace: %s\n", resp.Namespace)
 	}
 	if resp.Usage != nil {
-		pcio.Fprintf(writer, "Usage: %d (read units)\n", resp.Usage.ReadUnits)
+		fmt.Fprintf(writer, "Usage: %d (read units)\n", resp.Usage.ReadUnits)
 	}
 
 	// Detect which columns to show
@@ -54,14 +54,14 @@ func PrintQueryVectorsTable(resp *pinecone.QueryVectorsResponse) {
 	if hasMetadata {
 		cols = append(cols, "METADATA")
 	}
-	pcio.Fprintln(writer, strings.Join(cols, "\t"))
+	fmt.Fprintln(writer, strings.Join(cols, "\t"))
 
 	// Rows
 	for _, match := range resp.Matches {
 		if match == nil || match.Vector == nil {
 			continue
 		}
-		row := []string{match.Vector.Id, pcio.Sprintf("%f", match.Score)}
+		row := []string{match.Vector.Id, fmt.Sprintf("%f", match.Score)}
 
 		if hasDense {
 			values := "<none>"
@@ -86,7 +86,7 @@ func PrintQueryVectorsTable(resp *pinecone.QueryVectorsResponse) {
 			row = append(row, metadata)
 		}
 
-		pcio.Fprintln(writer, strings.Join(row, "\t"))
+		fmt.Fprintln(writer, strings.Join(row, "\t"))
 	}
 
 	writer.Flush()

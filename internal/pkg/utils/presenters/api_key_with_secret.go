@@ -1,10 +1,10 @@
 package presenters
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/log"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
 
@@ -19,13 +19,13 @@ func PrintDescribeAPIKeyWithSecretTable(apiKey *pinecone.APIKeyWithSecret) {
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
 	header := strings.Join(columns, "\t") + "\n"
-	pcio.Fprint(writer, header)
+	fmt.Fprint(writer, header)
 
-	pcio.Fprintf(writer, "Name\t%s\n", apiKey.Key.Name)
-	pcio.Fprintf(writer, "ID\t%s\n", apiKey.Key.Id)
-	pcio.Fprintf(writer, "Value\t%s\n", apiKey.Value)
-	pcio.Fprintf(writer, "Project ID\t%s\n", apiKey.Key.ProjectId)
-	pcio.Fprintf(writer, "Roles\t%s\n", strings.Join(apiKey.Key.Roles, ", "))
+	fmt.Fprintf(writer, "Name\t%s\n", apiKey.Key.Name)
+	fmt.Fprintf(writer, "ID\t%s\n", apiKey.Key.Id)
+	fmt.Fprintf(writer, "Value\t%s\n", apiKey.Value)
+	fmt.Fprintf(writer, "Project ID\t%s\n", apiKey.Key.ProjectId)
+	fmt.Fprintf(writer, "Roles\t%s\n", strings.Join(apiKey.Key.Roles, ", "))
 
 	writer.Flush()
 }

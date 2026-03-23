@@ -21,7 +21,6 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/version"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/whoami"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/spf13/cobra"
 )
 
@@ -32,7 +31,6 @@ var (
 )
 
 type GlobalOptions struct {
-	quiet   bool
 	timeout time.Duration
 }
 
@@ -85,8 +83,6 @@ func init() {
 		Use:   "pc",
 		Short: "Manage your Pinecone vector database infrastructure from the command line",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			pcio.SetQuiet(globalOptions.quiet)
-
 			// Apply timeout to the command context
 			if globalOptions.timeout > 0 {
 				ctx, cancel := context.WithTimeout(cmd.Context(), globalOptions.timeout)
@@ -144,6 +140,5 @@ func init() {
 	})
 
 	// Global flags
-	rootCmd.PersistentFlags().BoolVarP(&globalOptions.quiet, "quiet", "q", false, "suppress output")
 	rootCmd.PersistentFlags().DurationVar(&globalOptions.timeout, "timeout", defaultTimeout, "timeout for commands, defaults to 60s (0 to disable)")
 }

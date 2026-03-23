@@ -2,12 +2,13 @@ package namespace
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -82,7 +83,7 @@ func NewCreateNamespaceCmd() *cobra.Command {
 
 func runCreateNamespaceCmd(ctx context.Context, ic NamespaceService, options createNamespaceCmdOptions) error {
 	if strings.TrimSpace(options.name) == "" {
-		return pcio.Errorf("--name is required")
+		return fmt.Errorf("--name is required")
 	}
 
 	req := &pinecone.CreateNamespaceParams{
@@ -96,7 +97,7 @@ func runCreateNamespaceCmd(ctx context.Context, ic NamespaceService, options cre
 
 	if options.json {
 		json := text.IndentJSON(ns)
-		pcio.PrintJSON(json)
+		fmt.Fprintln(os.Stdout, json)
 	} else {
 		msg.SuccessMsg("Namespace %s created successfully.", options.name)
 		presenters.PrintDescribeNamespaceTable(ns)

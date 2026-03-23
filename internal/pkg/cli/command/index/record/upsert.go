@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/argio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
@@ -88,17 +88,17 @@ func NewUpsertCmd() *cobra.Command {
 
 func runUpsertCmd(ctx context.Context, ic RecordService, options upsertCmdOptions) error {
 	if options.file == "" {
-		return pcio.Errorf("either --file or --body must be provided")
+		return fmt.Errorf("either --file or --body must be provided")
 	}
 
 	b, src, err := argio.ReadAll(options.file)
 	if err != nil {
-		return pcio.Errorf("failed to read upsert body (%s): %w", style.Emphasis(src.Label), err)
+		return fmt.Errorf("failed to read upsert body (%s): %w", style.Emphasis(src.Label), err)
 	}
 
 	payload, err := parseUpsertRecordsBody(b)
 	if err != nil {
-		return pcio.Errorf("failed to parse upsert body (%s): %w", style.Emphasis(src.Label), err)
+		return fmt.Errorf("failed to parse upsert body (%s): %w", style.Emphasis(src.Label), err)
 	}
 
 	records := make([]*pinecone.IntegratedRecord, 0, len(payload.Records))
@@ -121,7 +121,7 @@ func runUpsertCmd(ctx context.Context, ic RecordService, options upsertCmdOption
 
 	for i, batch := range batches {
 		if err := ic.UpsertRecords(ctx, batch); err != nil {
-			return pcio.Errorf("failed to upsert %d records in batch %d: %w", len(batch), i+1, err)
+			return fmt.Errorf("failed to upsert %d records in batch %d: %w", len(batch), i+1, err)
 		}
 		if options.json {
 			summary := map[string]any{
@@ -130,7 +130,7 @@ func runUpsertCmd(ctx context.Context, ic RecordService, options upsertCmdOption
 				"records":   len(batch),
 				"namespace": options.namespace,
 			}
-			pcio.PrintJSON(text.IndentJSON(summary))
+			fmt.Println(text.IndentJSON(summary))
 		} else {
 			msg.SuccessMsg("Upserted %d records into namespace %s (batch %d of %d)", len(batch), options.namespace, i+1, len(batches))
 		}
@@ -142,7 +142,7 @@ func runUpsertCmd(ctx context.Context, ic RecordService, options upsertCmdOption
 func parseUpsertRecordsBody(b []byte) (*UpsertRecordsBody, error) {
 	trimmed := bytes.TrimSpace(b)
 	if len(trimmed) == 0 {
-		return nil, pcio.Errorf("no records provided")
+		return nil, fmt.Errorf("no records provided")
 	}
 
 	switch trimmed[0] {
@@ -153,7 +153,7 @@ func parseUpsertRecordsBody(b []byte) (*UpsertRecordsBody, error) {
 			return nil, err
 		}
 		if len(records) == 0 {
-			return nil, pcio.Errorf("no records provided")
+			return nil, fmt.Errorf("no records provided")
 		}
 		return &UpsertRecordsBody{Records: records}, nil
 
@@ -161,7 +161,7 @@ func parseUpsertRecordsBody(b []byte) (*UpsertRecordsBody, error) {
 		return parseUpsertRecordsFromObjects(trimmed)
 
 	default:
-		return nil, pcio.Errorf("input must be a JSON object, array, or JSONL")
+		return nil, fmt.Errorf("input must be a JSON object, array, or JSONL")
 	}
 }
 
@@ -176,7 +176,7 @@ func parseUpsertRecordsFromObjects(b []byte) (*UpsertRecordsBody, error) {
 		dec.DisallowUnknownFields()
 		if err := dec.Decode(&payload); err == nil {
 			if len(payload.Records) == 0 {
-				return nil, pcio.Errorf("no records provided")
+				return nil, fmt.Errorf("no records provided")
 			}
 			return &payload, nil
 		}
@@ -212,7 +212,7 @@ func parseUpsertRecordsFromObjects(b []byte) (*UpsertRecordsBody, error) {
 		records = append(records, rec)
 	}
 	if len(records) == 0 {
-		return nil, pcio.Errorf("no records provided")
+		return nil, fmt.Errorf("no records provided")
 	}
 	// A single decoded object that carries a "records"-shaped key was almost
 	// certainly intended as the {"records":[...]} wrapper but has a typo or
@@ -237,12 +237,12 @@ func rejectIfMalformedWrapper(rec pinecone.IntegratedRecord) error {
 	// that prevented the lenient wrapper parse from matching).
 	if v, ok := m["records"]; ok {
 		if _, isSlice := v.([]interface{}); isSlice {
-			return pcio.Errorf(`found a top-level "records" array; expected wrapper format {"records":[...]}`)
+			return fmt.Errorf(`found a top-level "records" array; expected wrapper format {"records":[...]}`)
 		}
 	}
 	// "record" (singular) is the most common key-name typo for the wrapper.
 	if _, ok := m["record"]; ok {
-		return pcio.Errorf(`unknown key "record": did you mean "records"? Expected format: {"records":[...]}`)
+		return fmt.Errorf(`unknown key "record": did you mean "records"? Expected format: {"records":[...]}`)
 	}
 	return nil
 }

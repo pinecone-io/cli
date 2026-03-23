@@ -2,10 +2,10 @@ package flags
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/argio"
-	"github.com/pinecone-io/cli/internal/pkg/utils/pcio"
 )
 
 type JSONObject map[string]any
@@ -29,7 +29,7 @@ func (m *JSONObject) Set(value string) error {
 
 	var tmp map[string]any
 	if err := json.NewDecoder(rc).Decode(&tmp); err != nil {
-		return pcio.Errorf("failed to parse JSON: %w", err)
+		return fmt.Errorf("failed to parse JSON: %w", err)
 	}
 	*m = tmp
 	return nil
@@ -60,7 +60,7 @@ func (m *Float32List) Set(value string) error {
 
 	var arr []float32
 	if err := json.NewDecoder(rc).Decode(&arr); err != nil {
-		return pcio.Errorf("failed to parse JSON float32 array: %w", err)
+		return fmt.Errorf("failed to parse JSON float32 array: %w", err)
 	}
 	*m = append((*m)[:0], arr...)
 	return nil
@@ -91,7 +91,7 @@ func (m *UInt32List) Set(value string) error {
 
 	var arr []uint32
 	if err := json.NewDecoder(rc).Decode(&arr); err != nil {
-		return pcio.Errorf("failed to parse JSON uint32 array: %w", err)
+		return fmt.Errorf("failed to parse JSON uint32 array: %w", err)
 	}
 	*m = append((*m)[:0], arr...)
 	return nil
@@ -122,7 +122,7 @@ func (m *Int32List) Set(value string) error {
 
 	var arr []int32
 	if err := json.NewDecoder(rc).Decode(&arr); err != nil {
-		return pcio.Errorf("failed to parse JSON int32 array: %w", err)
+		return fmt.Errorf("failed to parse JSON int32 array: %w", err)
 	}
 	*m = append((*m)[:0], arr...)
 	return nil
@@ -153,7 +153,7 @@ func (m *StringList) Set(value string) error {
 
 	var arr []string
 	if err := json.NewDecoder(rc).Decode(&arr); err != nil {
-		return pcio.Errorf("failed to parse JSON string array: %w", err)
+		return fmt.Errorf("failed to parse JSON string array: %w", err)
 	}
 	*m = append((*m)[:0], arr...)
 	return nil
