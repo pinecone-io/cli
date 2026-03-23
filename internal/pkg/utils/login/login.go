@@ -14,6 +14,8 @@ import (
 	"os"
 	"time"
 
+	"golang.org/x/term"
+
 	"github.com/pinecone-io/cli/internal/pkg/utils/browser"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
@@ -23,6 +25,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/oauth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
+	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
 
@@ -41,9 +44,14 @@ type IO struct {
 	Err io.Writer
 }
 
-type Options struct{}
+type Options struct {
+	Json bool
+}
 
 func Run(ctx context.Context, io IO, opts Options) {
+	// Use JSON output if explicitly requested or if stdout is not a TTY (e.g. agent capturing output)
+	jsonMode := opts.Json || !term.IsTerminal(int(os.Stdout.Fd()))
+
 	// Check if the user is currently logged in
 	token, err := oauth.Token(ctx)
 
@@ -60,7 +68,7 @@ func Run(ctx context.Context, io IO, opts Options) {
 	}
 
 	// Initiate login flow
-	err = GetAndSetAccessToken(ctx, nil)
+	err = GetAndSetAccessToken(ctx, nil, opts)
 	if err != nil {
 		msg.FailMsg("Error acquiring access token while logging in: %s", err)
 		exit.Error(err, "Error acquiring access token while logging in")
@@ -77,7 +85,9 @@ func Run(ctx context.Context, io IO, opts Options) {
 		msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
 		exit.Error(err, "Error parsing claims from access token")
 	}
-	msg.SuccessMsg("Logged in as " + style.Emphasis(claims.Email) + ". Defaulted to organization ID: " + style.Emphasis(claims.OrgId))
+	if !jsonMode {
+		msg.SuccessMsg("Logged in as " + style.Emphasis(claims.Email) + ". Defaulted to organization ID: " + style.Emphasis(claims.OrgId))
+	}
 
 	ac := sdk.NewPineconeAdminClient(ctx)
 	if err != nil {
@@ -111,34 +121,55 @@ func Run(ctx context.Context, io IO, opts Options) {
 		Name: targetOrg.Name,
 		Id:   targetOrg.Id,
 	})
-	fmt.Println()
-	fmt.Printf(style.InfoMsg("Target org set to %s.\n"), style.Emphasis(targetOrg.Name))
 
-	if projects != nil {
-		if len(projects) == 0 {
-			fmt.Printf(style.InfoMsg("No projects found for organization %s.\n"), style.Emphasis(targetOrg.Name))
-			fmt.Println(style.InfoMsg("Please create a project for this organization to work with project resources."))
-		} else {
+	if jsonMode {
+		projectId := ""
+		if len(projects) > 0 {
 			targetProj := projects[0]
 			state.TargetProj.Set(state.TargetProject{
 				Name: targetProj.Name,
 				Id:   targetProj.Id,
 			})
-
-			fmt.Printf(style.InfoMsg("Target project set %s.\n"), style.Emphasis(targetProj.Name))
+			projectId = targetProj.Id
 		}
+		fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
+			Status    string `json:"status"`
+			Email     string `json:"email"`
+			OrgId     string `json:"org_id"`
+			ProjectId string `json:"project_id"`
+		}{Status: "authenticated", Email: claims.Email, OrgId: targetOrg.Id, ProjectId: projectId}))
+	} else {
+		fmt.Println()
+		fmt.Printf(style.InfoMsg("Target org set to %s.\n"), style.Emphasis(targetOrg.Name))
+
+		if projects != nil {
+			if len(projects) == 0 {
+				fmt.Printf(style.InfoMsg("No projects found for organization %s.\n"), style.Emphasis(targetOrg.Name))
+				fmt.Println(style.InfoMsg("Please create a project for this organization to work with project resources."))
+			} else {
+				targetProj := projects[0]
+				state.TargetProj.Set(state.TargetProject{
+					Name: targetProj.Name,
+					Id:   targetProj.Id,
+				})
+
+				fmt.Printf(style.InfoMsg("Target project set %s.\n"), style.Emphasis(targetProj.Name))
+			}
+		}
+
+		fmt.Println()
+		fmt.Println(style.CodeHint("Run %s to change the target context.", style.Code("pc target")))
+
+		fmt.Println()
+		fmt.Printf("Now try %s to learn about index operations.\n", style.Code("pc index -h"))
 	}
-
-	fmt.Println()
-	fmt.Println(style.CodeHint("Run %s to change the target context.", style.Code("pc target")))
-
-	fmt.Println()
-	fmt.Printf("Now try %s to learn about index operations.\n", style.Code("pc index -h"))
 }
 
 // Takes an optional orgId, and attempts to acquire an access token scoped to the orgId if provided.
 // If a token is successfully acquired it's set in the secrets store, and the user is considered logged in with state.AuthUserToken.
-func GetAndSetAccessToken(ctx context.Context, orgId *string) error {
+func GetAndSetAccessToken(ctx context.Context, orgId *string, opts Options) error {
+	jsonMode := opts.Json || !term.IsTerminal(int(os.Stdout.Fd()))
+
 	a := oauth.Auth{}
 
 	// CSRF state
@@ -170,40 +201,49 @@ func GetAndSetAccessToken(ctx context.Context, orgId *string) error {
 		codeCh <- code
 	}()
 
-	fmt.Printf("Visit %s to authorize the CLI.\n", style.Underline(authURL))
-	fmt.Println()
-	fmt.Printf("Press %s to open the browser, or manually paste the URL above.\n", style.Code("[Enter]"))
+	if jsonMode {
+		fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
+			Status string `json:"status"`
+			URL    string `json:"url"`
+			Port   int    `json:"port"`
+		}{Status: "pending", URL: authURL, Port: 59049}))
+	} else {
+		fmt.Printf("Visit %s to authorize the CLI.\n", style.Underline(authURL))
+		fmt.Println()
+	}
 
-	// spawn a goroutine to optionally wait for [Enter] as input
-	go func(ctx context.Context) {
-		// inner channel to signal that [Enter] was pressed
-		inputCh := make(chan struct{}, 1)
+	// Only prompt for [Enter] and spawn stdin reader in interactive TTY sessions
+	if term.IsTerminal(int(os.Stdin.Fd())) {
+		fmt.Printf("Press %s to open the browser, or manually paste the URL above.\n", style.Code("[Enter]"))
 
-		// spawn inner goroutine to read stdin (blocking)
-		go func() {
-			_, err := bufio.NewReader(os.Stdin).ReadBytes('\n')
-			if err != nil {
-				log.Error().Err(err).Msg("stdin error: unable to open browser")
+		go func(ctx context.Context) {
+			// inner channel to signal that [Enter] was pressed
+			inputCh := make(chan struct{}, 1)
+
+			// spawn inner goroutine to read stdin (blocking)
+			go func() {
+				_, err := bufio.NewReader(os.Stdin).ReadBytes('\n')
+				if err != nil {
+					log.Error().Err(err).Msg("stdin error: unable to open browser")
+					return
+				}
+				close(inputCh)
+			}()
+
+			// wait for [Enter], auth code, or timeout
+			select {
+			case <-ctx.Done():
+				return
+			case <-inputCh:
+				if err := browser.OpenBrowser(authURL); err != nil {
+					log.Error().Err(err).Msg("error opening browser")
+				}
+			case <-time.After(5 * time.Minute):
+				// extra precaution to prevent hanging indefinitely on stdin
 				return
 			}
-			close(inputCh)
-		}()
-
-		// wait for [Enter], auth code, or timeout
-		select {
-		case <-ctx.Done():
-			return
-		case <-inputCh:
-			err = browser.OpenBrowser(authURL)
-			if err != nil {
-				log.Error().Err(err).Msg("error opening browser")
-				return
-			}
-		case <-time.After(5 * time.Minute):
-			// extra precaution to prevent hanging indefinitely on stdin
-			return
-		}
-	}(serverCtx)
+		}(serverCtx)
+	}
 
 	// Wait for auth code and exchange for access token
 	code := <-codeCh
