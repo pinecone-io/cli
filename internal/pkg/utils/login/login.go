@@ -57,7 +57,22 @@ func Run(ctx context.Context, opts Options) {
 	}
 
 	if !expired && token != nil && token.AccessToken != "" {
-		msg.WarnMsg("You are already logged in. Please log out first using %s.", style.Code("pc auth logout"))
+		if opts.Json {
+			claims, err := oauth.ParseClaimsUnverified(token)
+			if err == nil {
+				fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
+					Status string `json:"status"`
+					Email  string `json:"email"`
+					OrgId  string `json:"org_id"`
+				}{Status: "already_authenticated", Email: claims.Email, OrgId: claims.OrgId}))
+			} else {
+				fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
+					Status string `json:"status"`
+				}{Status: "already_authenticated"}))
+			}
+		} else {
+			msg.WarnMsg("You are already logged in. Please log out first using %s.", style.Code("pc auth logout"))
+		}
 		return
 	}
 
