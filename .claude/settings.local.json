@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__claude_ai_Linear__save_issue",
+      "mcp__claude_ai_Linear__get_issue",
+      "Bash(go test:*)",
+      "Bash(go build:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh api:*)",
+      "Bash(goimports:*)",
+      "Bash(grep -r pcio . --include=*.go)",
+      "Bash(xargs sed:*)",
+      "mcp__claude_ai_Linear__list_teams",
+      "mcp__claude_ai_Linear__list_issue_statuses",
+      "Bash(grep:*)"
+    ]
+  }
+}
