@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"io"
 	"net/http"
 	"os"
 	"time"
@@ -38,17 +37,11 @@ var errorHTML string
 //go:embed assets/pinecone_logo.svg
 var logoSVG string
 
-type IO struct {
-	In  io.Reader
-	Out io.Writer
-	Err io.Writer
-}
-
 type Options struct {
 	Json bool
 }
 
-func Run(ctx context.Context, io IO, opts Options) {
+func Run(ctx context.Context, opts Options) {
 	// Resolve output format once at the top level: explicit --json flag or auto-detected non-TTY stdout.
 	// Normalizing opts.Json here means GetAndSetAccessToken and other helpers use opts.Json directly.
 	opts.Json = opts.Json || !term.IsTerminal(int(os.Stdout.Fd()))

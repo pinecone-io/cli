@@ -38,14 +38,7 @@ func NewLoginCmd() *cobra.Command {
 		`),
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			login.Run(cmd.Context(),
-				login.IO{
-					In:  cmd.InOrStdin(),
-					Out: cmd.OutOrStdout(),
-					Err: cmd.ErrOrStderr(),
-				},
-				login.Options{Json: jsonOutput},
-			)
+			login.Run(cmd.Context(), login.Options{Json: jsonOutput})
 		},
 	}
 
