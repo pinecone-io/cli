@@ -31,3 +31,7 @@ func HintMsg(format string, a ...any) {
 	formatted := fmt.Sprintf(format, a...)
 	fmt.Fprintln(os.Stderr, style.Hint(formatted))
 }
+
+func Blank() {
+	fmt.Fprintln(os.Stderr, "")
+}

@@ -2,7 +2,6 @@ package auth
 
 import (
 	_ "embed"
-	"io"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/login"
@@ -28,6 +27,8 @@ var (
 )
 
 func NewLoginCmd() *cobra.Command {
+	var jsonOutput bool
+
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Authenticate with Pinecone via user login in a web browser",
@@ -37,21 +38,11 @@ func NewLoginCmd() *cobra.Command {
 		`),
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			out := cmd.OutOrStdout()
-			if quiet, _ := cmd.Flags().GetBool("quiet"); quiet {
-				out = io.Discard
-			}
-
-			login.Run(cmd.Context(),
-				login.IO{
-					In:  cmd.InOrStdin(),
-					Out: out,
-					Err: cmd.ErrOrStderr(),
-				},
-				login.Options{},
-			)
+			login.Run(cmd.Context(), login.Options{Json: jsonOutput})
 		},
 	}
+
+	cmd.Flags().BoolVar(&jsonOutput, "json", false, "emit JSON output")
 
 	return cmd
 }
