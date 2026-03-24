@@ -207,9 +207,11 @@ func GetAndSetAccessToken(ctx context.Context, orgId *string, opts Options) erro
 		fmt.Fprintf(os.Stderr, "Visit %s to authorize the CLI.\n", style.Underline(authURL))
 	}
 
-	// Only prompt for [Enter] and spawn stdin reader in prose mode with an interactive TTY.
-	// In JSON mode the URL is in the pending object; browser-open is a prose-mode convenience only.
-	if !opts.Json && term.IsTerminal(int(os.Stdin.Fd())) {
+	// Prompt for [Enter] and spawn stdin reader whenever stdin is an interactive TTY,
+	// regardless of output format. JSON mode only affects what goes to stdout — a user
+	// running --json in a terminal is still at a keyboard and benefits from browser-open.
+	// The prompt goes to stderr so it never corrupts the stdout JSON stream.
+	if term.IsTerminal(int(os.Stdin.Fd())) {
 		msg.Blank()
 		fmt.Fprintf(os.Stderr, "Press %s to open the browser, or manually paste the URL above.\n", style.Code("[Enter]"))
 
