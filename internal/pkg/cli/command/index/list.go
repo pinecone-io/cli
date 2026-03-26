@@ -97,10 +97,10 @@ func printTable(idxs []*pinecone.Index, wide bool) {
 		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
 	}
 
-	if !wide {
-		fmt.Fprint(writer, "\nUse --wide to show host/embed/tags, or --json for full details.\n")
-	}
 	writer.Flush()
+	if !wide {
+		msg.HintMsg("Use --wide to show host/embed/tags, or --json for full details.")
+	}
 }
 
 // formatSpec formats the index spec as "serverless", "byoc", or "pod"
