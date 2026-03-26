@@ -98,7 +98,7 @@ func printTable(keys []*pinecone.APIKey) {
 			key.ProjectId,
 			strings.Join(key.Roles, ", "),
 		}
-		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
+		fmt.Fprint(writer, strings.Join(values, "\t")+"\n")
 	}
 
 	writer.Flush()

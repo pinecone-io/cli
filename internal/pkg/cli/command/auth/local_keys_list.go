@@ -69,7 +69,7 @@ func printTable(managedKeys map[string]secrets.ManagedKey, reveal bool) {
 			keyValue = presenters.MaskHeadTail(keyValue, 4, 4)
 		}
 		values := []string{projectId, managedKey.Name, managedKey.Id, keyValue, string(managedKey.Origin), managedKey.OrganizationId}
-		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
+		fmt.Fprint(writer, strings.Join(values, "\t")+"\n")
 	}
 
 	writer.Flush()

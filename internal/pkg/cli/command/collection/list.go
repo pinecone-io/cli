@@ -70,7 +70,7 @@ func printTable(collections []*pinecone.Collection) {
 
 	for _, coll := range collections {
 		values := []string{coll.Name, string(coll.Dimension), strconv.FormatInt(coll.Size, 10), string(coll.Status), string(coll.VectorCount), coll.Environment}
-		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
+		fmt.Fprint(writer, strings.Join(values, "\t")+"\n")
 	}
 	writer.Flush()
 }

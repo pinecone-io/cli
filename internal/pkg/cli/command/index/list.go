@@ -94,7 +94,7 @@ func printTable(idxs []*pinecone.Index, wide bool) {
 		if wide {
 			values = append(values, embed, tags)
 		}
-		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
+		fmt.Fprint(writer, strings.Join(values, "\t")+"\n")
 	}
 
 	writer.Flush()
