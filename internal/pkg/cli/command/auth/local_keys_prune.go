@@ -190,7 +190,7 @@ func confirmPruneKeys(plan []planItem, options pruneLocalKeysCmdOptions) (bool, 
 	msg.WarnMsg("This action cannot be undone.")
 
 	// Prompt the user
-	fmt.Print("Do you want to continue? (y/N): ")
+	fmt.Fprint(os.Stderr, "Do you want to continue? (y/N): ")
 
 	// Read the user's input
 	reader := bufio.NewReader(os.Stdin)

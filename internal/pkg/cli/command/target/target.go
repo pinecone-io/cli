@@ -152,8 +152,8 @@ func NewTargetCmd() *cobra.Command {
 					msg.FailMsg("Failed to target an organization")
 					exit.ErrorMsg("Failed to target an organization")
 				} else {
-					fmt.Println()
-					fmt.Printf(style.SuccessMsg("Target org set to %s.\n"), style.Emphasis(targetOrg.Name))
+					msg.Blank()
+					msg.SuccessMsg("Target org set to %s.", style.Emphasis(targetOrg.Name))
 
 					// If the org chosen differs from the current orgId in the token, we need to login again
 					if currentTokenOrgId != "" && currentTokenOrgId != targetOrg.Id {
@@ -180,7 +180,7 @@ func NewTargetCmd() *cobra.Command {
 					msg.FailMsg("Failed to target a project")
 					exit.ErrorMsg("failed to target a project")
 				} else {
-					fmt.Printf(style.SuccessMsg("Target project set %s.\n"), style.Emphasis(targetProject.Name))
+					msg.SuccessMsg("Target project set %s.", style.Emphasis(targetProject.Name))
 					return
 				}
 			}
@@ -264,7 +264,7 @@ func NewTargetCmd() *cobra.Command {
 				return
 			}
 
-			fmt.Println()
+			msg.Blank()
 
 			presenters.PrintTargetContext(state.GetTargetContext())
 		},
@@ -395,9 +395,8 @@ func postLoginInteractiveTargetOrg(orgsList []*pinecone.Organization) *pinecone.
 		orgName = organization.Name
 		log.Info().Msgf("Only 1 organization present. Target organization set to %s", orgName)
 	} else {
-		fmt.Println("Many API operations take place in the context of a specific org and project.")
-		fmt.Println(fmt.Sprintf("This CLI maintains a piece of state called the %s so it knows which \n", style.Emphasis("target")) +
-			"organization and project to use when calling the API on your behalf.")
+		msg.InfoMsg("Many API operations take place in the context of a specific org and project.")
+		msg.InfoMsg("This CLI maintains a piece of state called the %s so it knows which organization and project to use when calling the API on your behalf.", style.Emphasis("target"))
 
 		orgNames := []string{}
 		for _, org := range orgsList {
@@ -457,15 +456,15 @@ func postLoginInteractiveTargetProject(projectList []*pinecone.Project) *pinecon
 func uiProjectSelector(projectItems []string) string {
 	var targetProject string = ""
 	m2 := prompt.NewList(projectItems, len(projectItems)+6, "Choose a project to target", func() {
-		fmt.Println("Exiting without targeting a project.")
-		fmt.Printf("You can always run %s to set or change a project context later.\n", style.Code("pc target"))
+		msg.InfoMsg("Exiting without targeting a project.")
+		msg.HintMsg("You can always run %s to set or change a project context later.", style.Code("pc target"))
 		exit.Success()
 	}, func(choice string) string {
 		targetProject = choice
 		return "Target project: " + choice
 	})
 	if _, err := tea.NewProgram(m2).Run(); err != nil {
-		fmt.Println("Error running program:", err)
+		msg.FailMsg("Error running program: %v", err)
 		os.Exit(1)
 	}
 	return targetProject
@@ -474,15 +473,15 @@ func uiProjectSelector(projectItems []string) string {
 func uiOrgSelector(orgNames []string) string {
 	var orgName string
 	m := prompt.NewList(orgNames, len(orgNames)+6, "Choose an organization to target", func() {
-		fmt.Println("Exiting without targeting an organization.")
-		fmt.Printf("You can always run %s to set or change a project context later.\n", style.Code("pc target"))
+		msg.InfoMsg("Exiting without targeting an organization.")
+		msg.HintMsg("You can always run %s to set or change a project context later.", style.Code("pc target"))
 		exit.Success()
 	}, func(choice string) string {
 		orgName = choice
 		return "Target organization: " + choice
 	})
 	if _, err := tea.NewProgram(m).Run(); err != nil {
-		fmt.Println("Error running program:", err)
+		msg.FailMsg("Error running program: %v", err)
 		os.Exit(1)
 	}
 	return orgName

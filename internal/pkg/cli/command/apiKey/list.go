@@ -79,11 +79,11 @@ func NewListKeysCmd() *cobra.Command {
 }
 
 func printTable(keys []*pinecone.APIKey) {
-	fmt.Printf("Organization: %s (ID: %s)\n", style.Emphasis(state.TargetOrg.Get().Name), style.Emphasis(state.TargetOrg.Get().Id))
-	fmt.Printf("Project: %s (ID: %s)\n", style.Emphasis(state.TargetProj.Get().Name), style.Emphasis(state.TargetProj.Get().Id))
-	fmt.Println()
-	fmt.Println(style.Heading("API Keys"))
-	fmt.Println()
+	msg.InfoMsg("Organization: %s (ID: %s)", style.Emphasis(state.TargetOrg.Get().Name), style.Emphasis(state.TargetOrg.Get().Id))
+	msg.InfoMsg("Project: %s (ID: %s)", style.Emphasis(state.TargetProj.Get().Name), style.Emphasis(state.TargetProj.Get().Id))
+	msg.Blank()
+	fmt.Fprintln(os.Stderr, style.Heading("API Keys"))
+	msg.Blank()
 
 	writer := presenters.NewTabWriter()
 

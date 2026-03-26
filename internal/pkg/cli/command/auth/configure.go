@@ -67,16 +67,7 @@ func NewConfigureCmd() *cobra.Command {
 		`),
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			out := cmd.OutOrStdout()
-			if quiet, _ := cmd.Flags().GetBool("quiet"); quiet {
-				out = io.Discard
-			}
-
-			Run(cmd.Context(), IO{
-				In:  cmd.InOrStdin(),
-				Out: out,
-				Err: cmd.ErrOrStderr(),
-			}, options)
+			Run(cmd.Context(), options)
 		},
 	}
 
@@ -91,13 +82,7 @@ func NewConfigureCmd() *cobra.Command {
 	return cmd
 }
 
-type IO struct {
-	In  io.Reader
-	Out io.Writer
-	Err io.Writer
-}
-
-func Run(ctx context.Context, io IO, opts configureCmdOptions) {
+func Run(ctx context.Context, opts configureCmdOptions) {
 	clientID := strings.TrimSpace(opts.clientID)
 	clientSecret := strings.TrimSpace(opts.clientSecret)
 	apiKey := strings.TrimSpace(opts.apiKey)
@@ -105,14 +90,14 @@ func Run(ctx context.Context, io IO, opts configureCmdOptions) {
 	// If clientSecret is not provided via options, prompt if needed
 	if clientSecret == "" {
 		if opts.readSecretFromStdin {
-			secretBytes, err := ioReadAll(io.In)
+			secretBytes, err := ioReadAll(os.Stdin)
 			if err != nil {
 				msg.FailMsg("Error reading client secret from stdin: %+v", err)
 				exit.Error(err, "Error reading client secret from stdin")
 			}
 			clientSecret = string(secretBytes)
 		} else if opts.promptIfMissing && isTerminal(os.Stdin) {
-			fmt.Fprint(io.Out, "Client Secret: ")
+			fmt.Fprint(os.Stderr, "Client Secret: ")
 			secretBytes, err := term.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
 				msg.FailMsg("Error reading client secret from terminal: %+v", err)
@@ -244,7 +229,7 @@ func Run(ctx context.Context, io IO, opts configureCmdOptions) {
 		return
 	}
 
-	fmt.Println()
+	msg.Blank()
 	presenters.PrintTargetContext(state.GetTargetContext())
 }
 
@@ -288,15 +273,15 @@ func uiProjectSelector(projects []*pinecone.Project) *pinecone.Project {
 	}
 
 	m2 := prompt.NewList(projectItems, len(projectItems)+6, "Choose a project to target", func() {
-		fmt.Println("Exiting without targeting a project.")
-		fmt.Printf("You can always run %s to set or change a project context later.\n", style.Code("pc target"))
+		msg.InfoMsg("Exiting without targeting a project.")
+		msg.HintMsg("You can always run %s to set or change a project context later.", style.Code("pc target"))
 		exit.Success()
 	}, func(choice string) string {
 		targetProjectName = choice
 		return "Target project: " + choice
 	})
 	if _, err := tea.NewProgram(m2).Run(); err != nil {
-		fmt.Println("Error running program:", err)
+		msg.FailMsg("Error running program: %v", err)
 		os.Exit(1)
 	}
 

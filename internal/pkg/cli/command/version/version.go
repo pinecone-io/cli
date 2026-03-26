@@ -2,6 +2,7 @@ package version
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/pinecone-io/cli/internal/build"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
@@ -24,7 +25,7 @@ func NewVersionCmd() *cobra.Command {
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			if options.json {
-				fmt.Println(text.IndentJSON(struct {
+				fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
 					Version string `json:"version"`
 					Sha     string `json:"sha"`
 					Built   string `json:"built"`
