@@ -104,7 +104,7 @@ func runPruneLocalKeys(ctx context.Context, options pruneLocalKeysCmdOptions) {
 		projKeys, err := ac.APIKey.List(ctx, projectID)
 		if err != nil { // If we errored on fetching the project keys, skip to the next project
 			log.Error().Err(err).Msg(fmt.Sprintf("Failed to list API keys for project %s: %s", style.Emphasis(projectID), err))
-			msg.FailJSON(options.json, "Failed to list API keys for project %s: %s", style.Emphasis(projectID), err)
+			msg.FailMsg("Failed to list API keys for project %s: %s", style.Emphasis(projectID), err)
 			continue
 		}
 		projKeysMap := createKeysMap(projKeys)
@@ -196,7 +196,7 @@ func confirmPruneKeys(plan []planItem, options pruneLocalKeysCmdOptions) (bool, 
 	reader := bufio.NewReader(os.Stdin)
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		msg.FailJSON(options.json, "Error reading input: %+v", err)
+		msg.FailMsg("Error reading input: %+v", err)
 		return false, err
 	}
 

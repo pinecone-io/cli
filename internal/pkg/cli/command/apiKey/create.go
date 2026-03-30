@@ -111,7 +111,7 @@ func NewCreateApiKeyCmd() *cobra.Command {
 				if ok && managedKey.Origin == secrets.OriginCLICreated {
 					err := ac.APIKey.Delete(cmd.Context(), managedKey.Id)
 					if err != nil {
-						msg.FailJSON(options.json, "Failed to delete previously managed API key: %s, %+v", style.Emphasis(managedKey.Id), err)
+						msg.FailMsg("Failed to delete previously managed API key: %s, %+v", style.Emphasis(managedKey.Id), err)
 						log.Error().Err(err).Msg("Failed to delete previously managed API key")
 					}
 					msg.SuccessMsg("Deleted previously managed API key: %s", style.Emphasis(managedKey.Id))
