@@ -25,7 +25,7 @@ brew tap pinecone-io/tap
 2. **Install the Pinecone CLI**:
 
 ```bash
-brew install pinecone-io/tap/pinecone
+brew install --cask pinecone-io/tap/pinecone
 ```
 
 3. **Verify the installation**:
@@ -36,7 +36,7 @@ pc --help
 
 #### What is a Homebrew tap?
 
-A [Homebrew tap](https://docs.brew.sh/Taps) is a third-party repository of Homebrew formulas. Our official tap at [pinecone-io/homebrew-tap](https://github.com/pinecone-io/homebrew-tap) contains the formula needed to install the Pinecone CLI.
+A [Homebrew tap](https://docs.brew.sh/Taps) is a third-party repository of Homebrew packages. Our official tap at [pinecone-io/homebrew-tap](https://github.com/pinecone-io/homebrew-tap) contains the cask needed to install the Pinecone CLI.
 
 #### Upgrading
 
@@ -44,7 +44,7 @@ To upgrade to the latest version:
 
 ```bash
 brew update
-brew upgrade pinecone
+brew upgrade --cask pinecone
 ```
 
 #### Uninstalling
@@ -52,7 +52,7 @@ brew upgrade pinecone
 To remove the CLI:
 
 ```bash
-brew uninstall pinecone
+brew uninstall --cask pinecone
 ```
 
 To remove the Pinecone tap entirely:
