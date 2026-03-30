@@ -10,7 +10,7 @@ import (
 )
 
 func colorEnabled() bool {
-	return config.Color.Get() && (term.IsTerminal(int(os.Stdout.Fd())) || term.IsTerminal(int(os.Stderr.Fd())))
+	return config.Color.Get() && term.IsTerminal(int(os.Stdout.Fd())) && term.IsTerminal(int(os.Stderr.Fd()))
 }
 
 func applyColor(s string, c *color.Color) string {
