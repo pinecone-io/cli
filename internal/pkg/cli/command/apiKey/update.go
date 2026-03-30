@@ -46,7 +46,7 @@ func NewUpdateAPIKeyCmd() *cobra.Command {
 
 			apiKey, err := ac.APIKey.Update(cmd.Context(), options.apiKeyID, updateParams)
 			if err != nil {
-				msg.FailMsg("Failed to update API key %s: %s\n", options.apiKeyID, err)
+				msg.FailJSON(options.json, "Failed to update API key %s: %s\n", options.apiKeyID, err)
 				exit.Errorf(err, "Failed to update API key %s", options.apiKeyID)
 			}
 

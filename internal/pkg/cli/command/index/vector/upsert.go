@@ -73,19 +73,19 @@ func NewUpsertCmd() *cobra.Command {
 
 func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 	if options.file == "" {
-		msg.FailMsg("Either --file or --body must be provided")
+		msg.FailJSON(options.json, "Either --file or --body must be provided")
 		exit.ErrorMsg("Either --file or --body must be provided")
 	}
 
 	b, src, err := argio.ReadAll(options.file)
 	if err != nil {
-		msg.FailMsg("Failed to read upsert file (%s): %s", style.Emphasis(src.Label), err)
+		msg.FailJSON(options.json, "Failed to read upsert file (%s): %s", style.Emphasis(src.Label), err)
 		exit.Error(err, "Failed to read upsert file")
 	}
 
 	payload, err := parseUpsertBody(b)
 	if err != nil {
-		msg.FailMsg("Failed to parse upsert body (%s): %s", style.Emphasis(src.Label), err)
+		msg.FailJSON(options.json, "Failed to parse upsert body (%s): %s", style.Emphasis(src.Label), err)
 		exit.Error(err, "Failed to parse upsert body")
 	}
 
@@ -93,7 +93,7 @@ func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 	pc := sdk.NewPineconeClient(ctx)
 	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, options.namespace)
 	if err != nil {
-		msg.FailMsg("Failed to create index connection: %s", err)
+		msg.FailJSON(options.json, "Failed to create index connection: %s", err)
 		exit.Error(err, "Failed to create index connection")
 	}
 
@@ -132,7 +132,7 @@ func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 	for i, batch := range batches {
 		resp, err := ic.UpsertVectors(ctx, batch)
 		if err != nil {
-			msg.FailMsg("Failed to upsert %d vectors in batch %d: %s", len(batch), i+1, err)
+			msg.FailJSON(options.json, "Failed to upsert %d vectors in batch %d: %s", len(batch), i+1, err)
 			exit.Errorf(err, "Failed to upsert %d vectors in batch %d", len(batch), i+1)
 		} else {
 			if options.json {

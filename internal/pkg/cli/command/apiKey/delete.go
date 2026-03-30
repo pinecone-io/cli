@@ -56,7 +56,7 @@ func NewDeleteKeyCmd() *cobra.Command {
 			// attempting to delete non-existent key and getting 500 error.
 			keyToDelete, err := ac.APIKey.Describe(cmd.Context(), options.apiKeyId)
 			if err != nil {
-				msg.FailMsg("Failed to describe existing API key: %s", err)
+				msg.FailJSON(options.json, "Failed to describe existing API key: %s", err)
 				exit.Error(err, "Failed to describe existing API key")
 			}
 
@@ -66,7 +66,7 @@ func NewDeleteKeyCmd() *cobra.Command {
 
 			err = ac.APIKey.Delete(cmd.Context(), keyToDelete.Id)
 			if err != nil {
-				msg.FailMsg("Failed to delete API key %s: %s", style.Emphasis(keyToDelete.Name), err)
+				msg.FailJSON(options.json, "Failed to delete API key %s: %s", style.Emphasis(keyToDelete.Name), err)
 				exit.Errorf(err, "Failed to delete API key %s", keyToDelete.Name)
 			}
 
@@ -103,7 +103,7 @@ func confirmDeleteApiKey(apiKeyName string) {
 	msg.WarnMsg("This action cannot be undone.")
 
 	// Prompt the user
-	fmt.Print("Do you want to continue? (y/N): ")
+	fmt.Fprint(os.Stderr, "Do you want to continue? (y/N): ")
 
 	// Read the user's input
 	reader := bufio.NewReader(os.Stdin)

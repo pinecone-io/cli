@@ -81,7 +81,7 @@ func NewTargetCmd() *cobra.Command {
 				Msg("target command invoked")
 
 			if err := validateTargetOptions(options); err != nil {
-				msg.FailMsg("Invalid target options: %s", err)
+				msg.FailJSON(options.json, "Invalid target options: %s", err)
 				exit.Error(err, "Invalid target options")
 				return
 			}
@@ -114,13 +114,13 @@ func NewTargetCmd() *cobra.Command {
 			// Get the current access token and parse the orgID from the claims
 			token, err := oauth.Token(cmd.Context())
 			if err != nil {
-				msg.FailMsg("Error retrieving oauth token: %s", err)
+				msg.FailJSON(options.json, "Error retrieving oauth token: %s", err)
 				exit.Error(err, "Error retrieving oauth token")
 			}
 
 			claims, err := oauth.ParseClaimsUnverified(token)
 			if err != nil {
-				msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
+				msg.FailJSON(options.json, "An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
 				exit.Error(err, "Error parsing claims from access token")
 			}
 			currentTokenOrgId := claims.OrgId
@@ -128,7 +128,7 @@ func NewTargetCmd() *cobra.Command {
 			clientId := secrets.ClientId.Get()
 			clientSecret := secrets.ClientSecret.Get()
 			if token != nil && token.AccessToken == "" && clientId == "" && clientSecret == "" {
-				msg.FailMsg("You must be logged in or have service account credentials configured to set a target context. Run %s to log in, or %s to configure credentials.", style.Code("pc login"), style.Code("pc auth configure"))
+				msg.FailJSON(options.json, "You must be logged in or have service account credentials configured to set a target context. Run %s to log in, or %s to configure credentials.", style.Code("pc login"), style.Code("pc auth configure"))
 				exit.ErrorMsg("You must be logged in or have service account credentials configured to set a target context")
 			}
 
@@ -147,9 +147,9 @@ func NewTargetCmd() *cobra.Command {
 				options.projectID == "" {
 
 				// Ask the user to choose a target org
-				targetOrg := postLoginInteractiveTargetOrg(orgs)
+				targetOrg := postLoginInteractiveTargetOrg(orgs, options.json)
 				if targetOrg == nil {
-					msg.FailMsg("Failed to target an organization")
+					msg.FailJSON(options.json, "Failed to target an organization")
 					exit.ErrorMsg("Failed to target an organization")
 				} else {
 					msg.Blank()
@@ -160,7 +160,7 @@ func NewTargetCmd() *cobra.Command {
 						oauth.Logout()
 						err = login.GetAndSetAccessToken(ctx, &targetOrg.Id, login.Options{})
 						if err != nil {
-							msg.FailMsg("Failed to get access token: %s", err)
+							msg.FailJSON(options.json, "Failed to get access token: %s", err)
 							exit.Error(err, "Error getting access token")
 						}
 					}
@@ -170,14 +170,14 @@ func NewTargetCmd() *cobra.Command {
 				// Fetch the user's projects
 				projects, err := ac.Project.List(cmd.Context())
 				if err != nil {
-					msg.FailMsg("Failed to fetch projects: %s", err)
+					msg.FailJSON(options.json, "Failed to fetch projects: %s", err)
 					exit.Error(err, "error fetching projects")
 				}
 
 				// Ask the user to choose a target project
-				targetProject := postLoginInteractiveTargetProject(projects)
+				targetProject := postLoginInteractiveTargetProject(projects, options.json)
 				if targetProject == nil {
-					msg.FailMsg("Failed to target a project")
+					msg.FailJSON(options.json, "Failed to target a project")
 					exit.ErrorMsg("failed to target a project")
 				} else {
 					msg.SuccessMsg("Target project set %s.", style.Emphasis(targetProject.Name))
@@ -193,7 +193,7 @@ func NewTargetCmd() *cobra.Command {
 				// Use the provided flag to look up the organization
 				org, err = getOrgForTarget(orgs, options.org, options.orgID)
 				if err != nil {
-					msg.FailMsg("Failed to get organization: %s", err)
+					msg.FailJSON(options.json, "Failed to get organization: %s", err)
 					exit.Error(err, "Failed to get organization")
 				}
 				if !options.json {
@@ -206,7 +206,7 @@ func NewTargetCmd() *cobra.Command {
 					oauth.Logout()
 					err = login.GetAndSetAccessToken(ctx, &org.Id, login.Options{})
 					if err != nil {
-						msg.FailMsg("Failed to get access token: %s", err)
+						msg.FailJSON(options.json, "Failed to get access token: %s", err)
 						exit.Error(err, "Error getting access token")
 					}
 				}
@@ -235,14 +235,14 @@ func NewTargetCmd() *cobra.Command {
 				// Fetch the user's projects
 				projects, err := ac.Project.List(cmd.Context())
 				if err != nil {
-					msg.FailMsg("Error fetching projects: %s", err)
+					msg.FailJSON(options.json, "Error fetching projects: %s", err)
 					exit.Error(err, "Error fetching projects")
 				}
 
 				// Use the provided flag to look up the project
 				project, err := getProjectForTarget(projects, options.project, options.projectID)
 				if err != nil {
-					msg.FailMsg("Failed to get project: %s", err)
+					msg.FailJSON(options.json, "Failed to get project: %s", err)
 					exit.Error(err, "Failed to get project")
 				}
 				if !options.json {
@@ -382,7 +382,7 @@ func getProjectForTarget(projects []*pinecone.Project, projectName, projectID st
 	return targetProject, nil
 }
 
-func postLoginInteractiveTargetOrg(orgsList []*pinecone.Organization) *pinecone.Organization {
+func postLoginInteractiveTargetOrg(orgsList []*pinecone.Organization, jsonOutput bool) *pinecone.Organization {
 	if len(orgsList) < 1 {
 		log.Debug().Msg("No organizations found. Please create an organization before proceeding.")
 		exit.ErrorMsg("No organizations found. Please create an organization before proceeding.")
@@ -403,7 +403,7 @@ func postLoginInteractiveTargetOrg(orgsList []*pinecone.Organization) *pinecone.
 			orgNames = append(orgNames, org.Name)
 		}
 
-		orgName = uiOrgSelector(orgNames)
+		orgName = uiOrgSelector(orgNames, jsonOutput)
 		for _, org := range orgsList {
 			if org.Name == orgName {
 				state.TargetOrg.Set(state.TargetOrganization{
@@ -418,7 +418,7 @@ func postLoginInteractiveTargetOrg(orgsList []*pinecone.Organization) *pinecone.
 	return organization
 }
 
-func postLoginInteractiveTargetProject(projectList []*pinecone.Project) *pinecone.Project {
+func postLoginInteractiveTargetProject(projectList []*pinecone.Project, jsonOutput bool) *pinecone.Project {
 	var project *pinecone.Project
 	if len(projectList) < 1 {
 		log.Debug().Msg("No projects available for organization. Please create a project before proceeding.")
@@ -436,7 +436,7 @@ func postLoginInteractiveTargetProject(projectList []*pinecone.Project) *pinecon
 		for _, proj := range projectList {
 			projectItems = append(projectItems, proj.Name)
 		}
-		projectName := uiProjectSelector(projectItems)
+		projectName := uiProjectSelector(projectItems, jsonOutput)
 
 		for _, proj := range projectList {
 			if proj.Name == projectName {
@@ -453,7 +453,7 @@ func postLoginInteractiveTargetProject(projectList []*pinecone.Project) *pinecon
 	return project
 }
 
-func uiProjectSelector(projectItems []string) string {
+func uiProjectSelector(projectItems []string, jsonOutput bool) string {
 	var targetProject string = ""
 	m2 := prompt.NewList(projectItems, len(projectItems)+6, "Choose a project to target", func() {
 		msg.InfoMsg("Exiting without targeting a project.")
@@ -464,13 +464,13 @@ func uiProjectSelector(projectItems []string) string {
 		return "Target project: " + choice
 	})
 	if _, err := tea.NewProgram(m2).Run(); err != nil {
-		msg.FailMsg("Error running program: %v", err)
+		msg.FailJSON(jsonOutput, "Error running program: %v", err)
 		os.Exit(1)
 	}
 	return targetProject
 }
 
-func uiOrgSelector(orgNames []string) string {
+func uiOrgSelector(orgNames []string, jsonOutput bool) string {
 	var orgName string
 	m := prompt.NewList(orgNames, len(orgNames)+6, "Choose an organization to target", func() {
 		msg.InfoMsg("Exiting without targeting an organization.")
@@ -481,7 +481,7 @@ func uiOrgSelector(orgNames []string) string {
 		return "Target organization: " + choice
 	})
 	if _, err := tea.NewProgram(m).Run(); err != nil {
-		msg.FailMsg("Error running program: %v", err)
+		msg.FailJSON(jsonOutput, "Error running program: %v", err)
 		os.Exit(1)
 	}
 	return orgName

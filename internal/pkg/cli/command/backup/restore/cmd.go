@@ -63,7 +63,7 @@ func NewRestoreJobCmd() *cobra.Command {
 
 			err := runRestoreJobCmd(ctx, pc, options)
 			if err != nil {
-				msg.FailMsg("Failed to create restore job: %s\n", err)
+				msg.FailJSON(options.json, "Failed to create restore job: %s\n", err)
 				exit.Error(err, "Failed to create restore job")
 			}
 		},

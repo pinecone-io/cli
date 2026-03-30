@@ -37,7 +37,7 @@ func NewListCmd() *cobra.Command {
 
 			idxs, err := pc.ListIndexes(ctx)
 			if err != nil {
-				msg.FailMsg("Failed to list indexes: %s\n", err)
+				msg.FailJSON(options.json, "Failed to list indexes: %s\n", err)
 				exit.Error(err, "Failed to list indexes")
 			}
 

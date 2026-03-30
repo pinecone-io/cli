@@ -53,19 +53,19 @@ func NewCreateNamespaceCmd() *cobra.Command {
 			pc := sdk.NewPineconeClient(cmd.Context())
 
 			if strings.TrimSpace(options.indexName) == "" {
-				msg.FailMsg("Failed to create namespace: --index-name is required")
+				msg.FailJSON(options.json, "Failed to create namespace: --index-name is required")
 				exit.ErrorMsg("Failed to create namespace: --index-name is required")
 			}
 
 			ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, "")
 			if err != nil {
-				msg.FailMsg("Failed to create namespace: %s\n", err)
+				msg.FailJSON(options.json, "Failed to create namespace: %s\n", err)
 				exit.Error(err, "Failed to create namespace")
 			}
 
 			err = runCreateNamespaceCmd(cmd.Context(), ic, options)
 			if err != nil {
-				msg.FailMsg("Failed to create namespace: %s\n", err)
+				msg.FailJSON(options.json, "Failed to create namespace: %s\n", err)
 				exit.Error(err, "Failed to create namespace")
 			}
 		},

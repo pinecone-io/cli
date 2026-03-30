@@ -35,7 +35,7 @@ func NewDescribeAPIKeyCmd() *cobra.Command {
 
 			apiKey, err := ac.APIKey.Describe(cmd.Context(), options.apiKeyID)
 			if err != nil {
-				msg.FailMsg("Failed to describe API key %s: %s\n", style.Emphasis(options.apiKeyID), err)
+				msg.FailJSON(options.json, "Failed to describe API key %s: %s\n", style.Emphasis(options.apiKeyID), err)
 				exit.Errorf(err, "Failed to describe API key %s", options.apiKeyID)
 			}
 

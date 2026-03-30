@@ -36,10 +36,10 @@ func NewDescribeCmd() *cobra.Command {
 			idx, err := pc.DescribeIndex(cmd.Context(), options.name)
 			if err != nil {
 				if strings.Contains(err.Error(), "not found") {
-					msg.FailMsg("The index %s does not exist\n", style.Emphasis(options.name))
+					msg.FailJSON(options.json, "The index %s does not exist\n", style.Emphasis(options.name))
 					exit.Errorf(err, "The index %s does not exist", style.Emphasis(options.name))
 				} else {
-					msg.FailMsg("Failed to describe index %s: %s\n", style.Emphasis(options.name), err)
+					msg.FailJSON(options.json, "Failed to describe index %s: %s\n", style.Emphasis(options.name), err)
 					exit.Errorf(err, "Failed to describe index %s", style.Emphasis(options.name))
 				}
 			}

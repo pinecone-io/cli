@@ -47,14 +47,14 @@ func NewListKeysCmd() *cobra.Command {
 			if projId == "" {
 				projId, err = state.GetTargetProjectId()
 				if err != nil {
-					msg.FailMsg("No target project set, and no project ID provided. Use %s to set the target project. Use %s to create the key in a specific project.", style.Code("pc target -o <org> -p <project>"), style.Code("pc api-key create -i <project-id> -n <name>"))
+					msg.FailJSON(options.json, "No target project set, and no project ID provided. Use %s to set the target project. Use %s to create the key in a specific project.", style.Code("pc target -o <org> -p <project>"), style.Code("pc api-key create -i <project-id> -n <name>"))
 					exit.ErrorMsg("No project ID provided, and no target project set")
 				}
 			}
 
 			keysResponse, err := ac.APIKey.List(cmd.Context(), projId)
 			if err != nil {
-				msg.FailMsg("Failed to list API keys: %s", err)
+				msg.FailJSON(options.json, "Failed to list API keys: %s", err)
 				exit.Error(err, "Failed to list API keys")
 			}
 

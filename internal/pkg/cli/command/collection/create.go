@@ -41,7 +41,7 @@ func NewCreateCollectionCmd() *cobra.Command {
 			}
 			collection, err := pc.CreateCollection(ctx, req)
 			if err != nil {
-				msg.FailMsg("Failed to create collection: %s\n", err)
+				msg.FailJSON(options.json, "Failed to create collection: %s\n", err)
 				exit.Error(err, "Failed to create collection")
 			}
 

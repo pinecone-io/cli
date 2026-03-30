@@ -45,17 +45,17 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 			// get the organization first
 			org, err := ac.Organization.Describe(cmd.Context(), options.organizationID)
 			if err != nil {
-				msg.FailMsg("Failed to describe organization %s: %s\n", options.organizationID, err)
+				msg.FailJSON(options.json, "Failed to describe organization %s: %s\n", options.organizationID, err)
 				exit.Errorf(err, "Failed to describe organization %s", style.Emphasis(options.organizationID))
 			}
 
-			if !options.skipConfirmation {
+			if !options.skipConfirmation && !options.json {
 				confirmDelete(org.Name, org.Id)
 			}
 
 			err = runDeleteOrganizationCmd(ctx, ac.Organization, options, org.Name, org.Id)
 			if err != nil {
-				msg.FailMsg("Failed to delete organization %s: %s\n", options.organizationID, err)
+				msg.FailJSON(options.json, "Failed to delete organization %s: %s\n", options.organizationID, err)
 				exit.Errorf(err, "Failed to delete organization %s", style.Emphasis(options.organizationID))
 			}
 
@@ -75,7 +75,7 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 
 	// optional flags
 	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "Skip the deletion confirmation prompt")
-	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON (also skips confirmation prompt)")
 
 	return cmd
 }
@@ -110,7 +110,7 @@ func confirmDelete(organizationName string, organizationID string) {
 	input, err := reader.ReadString('\n')
 	if err != nil {
 		msg.FailMsg("Error reading input: %v", err)
-		return
+		exit.Error(err, "Error reading input")
 	}
 
 	input = strings.TrimSpace(strings.ToLower(input))

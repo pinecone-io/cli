@@ -36,7 +36,7 @@ func NewListRestoreJobsCmd() *cobra.Command {
 
 			err := runListRestoreJobsCmd(ctx, pc, options)
 			if err != nil {
-				msg.FailMsg("Failed to list restore jobs: %s\n", err)
+				msg.FailJSON(options.json, "Failed to list restore jobs: %s\n", err)
 				exit.Error(err, "Failed to list restore jobs")
 			}
 		},

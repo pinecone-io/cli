@@ -87,7 +87,7 @@ func runPruneLocalKeys(ctx context.Context, options pruneLocalKeysCmdOptions) {
 		if mk, ok := managedKeys[options.projectID]; ok {
 			managedKeys = map[string]secrets.ManagedKey{options.projectID: mk}
 		} else {
-			msg.FailMsg("No managed keys found for project ID %s", style.Emphasis(options.projectID))
+			msg.FailJSON(options.json, "No managed keys found for project ID %s", style.Emphasis(options.projectID))
 			exit.ErrorMsgf("no managed keys found for project ID: %s", options.projectID)
 		}
 	}
@@ -132,7 +132,7 @@ func runPruneLocalKeys(ctx context.Context, options pruneLocalKeysCmdOptions) {
 	if !options.skipConfirmation {
 		confirmed, err := confirmPruneKeys(plan, options)
 		if err != nil {
-			msg.FailMsg("Failed to confirm pruning keys: %s", err)
+			msg.FailJSON(options.json, "Failed to confirm pruning keys: %s", err)
 			exit.Error(err, "Failed to confirm pruning keys")
 		}
 		shouldPrune = confirmed
@@ -147,7 +147,7 @@ func runPruneLocalKeys(ctx context.Context, options pruneLocalKeysCmdOptions) {
 	for _, key := range plan {
 		if key.onServer {
 			if err := ac.APIKey.Delete(ctx, key.managedKey.Id); err != nil {
-				msg.FailMsg("Failed to delete remote key %s: %v", style.Emphasis(key.managedKey.Id), err)
+				msg.FailJSON(options.json, "Failed to delete remote key %s: %v", style.Emphasis(key.managedKey.Id), err)
 				exit.Errorf(err, "Failed to delete remote key %s", key.managedKey.Id)
 				continue // If we failed to delete the remote key, move on and keep the locally stored key for now
 			}

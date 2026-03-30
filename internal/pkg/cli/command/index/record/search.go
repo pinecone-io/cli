@@ -100,11 +100,11 @@ func NewSearchCmd() *cobra.Command {
 			pc := sdk.NewPineconeClient(ctx)
 			ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, options.namespace)
 			if err != nil {
-				msg.FailMsg("Failed to create index connection: %s", err)
+				msg.FailJSON(options.json, "Failed to create index connection: %s", err)
 				exit.Error(err, "Failed to create index connection")
 			}
 			if err := runSearchCmd(ctx, ic, options); err != nil {
-				msg.FailMsg("%s", err)
+				msg.FailJSON(options.json, "%s", err)
 				exit.Error(err, "search failed")
 			}
 		},

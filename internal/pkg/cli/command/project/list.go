@@ -36,7 +36,7 @@ func NewListProjectsCmd() *cobra.Command {
 
 			projects, err := ac.Project.List(ctx)
 			if err != nil {
-				msg.FailMsg("Failed to list projects: %s\n", err)
+				msg.FailJSON(options.json, "Failed to list projects: %s\n", err)
 				exit.Error(err, "Failed to list projects")
 			}
 

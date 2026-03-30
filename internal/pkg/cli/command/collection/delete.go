@@ -37,7 +37,7 @@ func NewDeleteCollectionCmd() *cobra.Command {
 
 			err := runDeleteCollectionCmd(ctx, pc, options)
 			if err != nil {
-				msg.FailMsg("Failed to delete collection %s: %s\n", style.Emphasis(options.name), err)
+				msg.FailJSON(options.json, "Failed to delete collection %s: %s\n", style.Emphasis(options.name), err)
 				exit.Error(err, "Failed to delete collection")
 			}
 		},
