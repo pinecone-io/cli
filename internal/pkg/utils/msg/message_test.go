@@ -122,6 +122,40 @@ func TestMsgFunctions_FormatString(t *testing.T) {
 	assert.Contains(t, out, "error code 42: bad input")
 }
 
+func TestFailJSON_StripTrailingNewlineFromJSONOutput(t *testing.T) {
+	prev := color.NoColor
+	color.NoColor = true
+	defer func() { color.NoColor = prev }()
+
+	var stdout string
+	captureStderr(t, func() {
+		stdout = captureStdout(t, func() {
+			FailJSON(true, "failed to create backup: %s\n", "timeout")
+		})
+	})
+
+	assert.NotContains(t, stdout, `\n"`, "JSON error value must not contain a trailing newline")
+	assert.Contains(t, stdout, "failed to create backup: timeout")
+}
+
+func TestFailJSON_StripBackticksFromJSONOutput(t *testing.T) {
+	// When stderr is not a TTY, style.Code wraps text in backticks instead of
+	// ANSI codes. Those backticks must be stripped from the JSON error value.
+	prev := color.NoColor
+	color.NoColor = true
+	defer func() { color.NoColor = prev }()
+
+	var stdout string
+	captureStderr(t, func() {
+		stdout = captureStdout(t, func() {
+			FailJSON(true, "run %s to continue", "`pc target`")
+		})
+	})
+
+	assert.NotContains(t, stdout, "`", "JSON output must not contain backtick-wrapped code spans")
+	assert.Contains(t, stdout, "pc target")
+}
+
 func TestFailJSON_StripANSIFromJSONOutput(t *testing.T) {
 	// Simulate the --json pipeline case: stderr is a TTY (colors enabled) but
 	// the JSON value on stdout must still be clean plain text.

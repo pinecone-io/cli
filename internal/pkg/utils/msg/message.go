@@ -4,14 +4,18 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 )
 
-// ansiEscape matches ANSI terminal escape sequences so they can be stripped
-// from strings before embedding in machine-readable output like JSON.
+// ansiEscape matches ANSI terminal escape sequences.
 var ansiEscape = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
+
+// backtickCode matches backtick-wrapped code spans added by style.Code when
+// colors are disabled (e.g. `pc target`), capturing the inner text.
+var backtickCode = regexp.MustCompile("`([^`]*)`")
 
 func FailMsg(format string, a ...any) {
 	formatted := fmt.Sprintf(format, a...)
@@ -31,7 +35,10 @@ func FailMsg(format string, a ...any) {
 // the JSON value clean regardless of terminal state.
 func FailJSON(jsonFlag bool, format string, a ...any) {
 	if jsonFlag {
-		message := ansiEscape.ReplaceAllString(fmt.Sprintf(format, a...), "")
+		message := fmt.Sprintf(format, a...)
+		message = ansiEscape.ReplaceAllString(message, "")
+		message = backtickCode.ReplaceAllString(message, "$1")
+		message = strings.TrimSpace(message)
 		fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
 			Error string `json:"error"`
 		}{Error: message}))
