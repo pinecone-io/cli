@@ -122,6 +122,24 @@ func TestMsgFunctions_FormatString(t *testing.T) {
 	assert.Contains(t, out, "error code 42: bad input")
 }
 
+func TestFailJSON_StripANSIFromJSONOutput(t *testing.T) {
+	// Simulate the --json pipeline case: stderr is a TTY (colors enabled) but
+	// the JSON value on stdout must still be clean plain text.
+	prev := color.NoColor
+	color.NoColor = false // force colors on, as if stderr were a TTY
+	defer func() { color.NoColor = prev }()
+
+	var stdout string
+	captureStderr(t, func() {
+		stdout = captureStdout(t, func() {
+			FailJSON(true, "key %s not found", "\x1b[36mmy-key\x1b[0m")
+		})
+	})
+
+	assert.NotContains(t, stdout, "\x1b[", "JSON output must not contain ANSI escape codes")
+	assert.Contains(t, stdout, "my-key", "JSON output must contain the plain text value")
+}
+
 func TestFailJSON_WithJSONFlag(t *testing.T) {
 	prev := color.NoColor
 	color.NoColor = true
