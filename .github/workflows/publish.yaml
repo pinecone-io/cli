@@ -32,13 +32,3 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS: '/tmp/gcp_key.json'
           HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_GITHUB_API_TOKEN }}
 
-      - name: Trigger update-dev-formula workflow
-        run: |
-          version=$(echo '${{ steps.goreleaser.outputs.metadata }}' | jq -r ".version")
-          echo "Version is $version"
-
-          curl -L -X POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: bearer ${{ secrets.JEN_PAT }}" \
-            https://api.github.com/repos/pinecone-io/homebrew-pinecone/actions/workflows/update-dev-formula.yaml/dispatches \
-            -d "{\"ref\": \"main\", \"inputs\": {\"version\":\"$version\"}}"
