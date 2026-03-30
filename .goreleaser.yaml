@@ -90,3 +90,9 @@ homebrew_casks:
       - "man/man1/*.1"
     custom_block: |
       binary "pc", target: "pinecone"
+      preflight do
+        ["pc", "pinecone"].each do |bin|
+          f = HOMEBREW_PREFIX/"bin"/bin
+          f.delete if f.exist?
+        end
+      end
