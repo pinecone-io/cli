@@ -92,7 +92,7 @@ func Run(ctx context.Context, opts configureCmdOptions) {
 		if opts.readSecretFromStdin {
 			secretBytes, err := ioReadAll(os.Stdin)
 			if err != nil {
-				msg.FailMsg("Error reading client secret from stdin: %+v", err)
+				msg.FailJSON(opts.json, "Error reading client secret from stdin: %+v", err)
 				exit.Error(err, "Error reading client secret from stdin")
 			}
 			clientSecret = string(secretBytes)
@@ -100,7 +100,7 @@ func Run(ctx context.Context, opts configureCmdOptions) {
 			fmt.Fprint(os.Stderr, "Client Secret: ")
 			secretBytes, err := term.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
-				msg.FailMsg("Error reading client secret from terminal: %+v", err)
+				msg.FailJSON(opts.json, "Error reading client secret from terminal: %+v", err)
 				exit.Error(err, "Error reading client secret from terminal")
 			}
 			clientSecret = string(secretBytes)
@@ -109,7 +109,7 @@ func Run(ctx context.Context, opts configureCmdOptions) {
 
 	// If client_id is provided without a client_secret, error
 	if clientID != "" && clientSecret == "" {
-		msg.FailMsg("Client secret is required (use %s or %s to provide it)", style.Emphasis("--client-secret"), style.Emphasis("--client-secret-stdin"))
+		msg.FailJSON(opts.json, "Client secret is required (use %s or %s to provide it)", style.Emphasis("--client-secret"), style.Emphasis("--client-secret-stdin"))
 		exit.ErrorMsgf("error configuring authentication credentials Client secret is required (use %s or %s to provide it)", style.Emphasis("--client-secret"), style.Emphasis("--client-secret-stdin"))
 		return
 	}
@@ -129,12 +129,12 @@ func Run(ctx context.Context, opts configureCmdOptions) {
 		// There should only be one organization listed for a service account
 		orgs, err := ac.Organization.List(ctx)
 		if err != nil {
-			msg.FailMsg("Error listing service account organizations: %+v", err)
+			msg.FailJSON(opts.json, "Error listing service account organizations: %+v", err)
 			exit.Error(err, "Error listing service account organizations")
 		}
 
 		if len(orgs) == 0 {
-			msg.FailMsg("No organizations found for service account")
+			msg.FailJSON(opts.json, "No organizations found for service account")
 			exit.ErrorMsg("No organizations found for service account")
 		}
 
@@ -151,7 +151,7 @@ func Run(ctx context.Context, opts configureCmdOptions) {
 		// List projects, and allow the user to pick one, or match the project-id if provided through the command
 		projects, err := ac.Project.List(ctx)
 		if err != nil {
-			msg.FailMsg("Error listing projects for service account")
+			msg.FailJSON(opts.json, "Error listing projects for service account")
 			exit.Error(err, "Error listing projects for service account")
 		}
 
@@ -185,7 +185,7 @@ func Run(ctx context.Context, opts configureCmdOptions) {
 				}
 			}
 		} else {
-			targetProject = uiProjectSelector(projects)
+			targetProject = uiProjectSelector(projects, opts.json)
 		}
 
 		state.TargetProj.Set(state.TargetProject{
@@ -261,7 +261,7 @@ func isTerminal(f *os.File) bool {
 	return term.IsTerminal(int(f.Fd()))
 }
 
-func uiProjectSelector(projects []*pinecone.Project) *pinecone.Project {
+func uiProjectSelector(projects []*pinecone.Project, jsonOutput bool) *pinecone.Project {
 	var targetProject *pinecone.Project
 	var targetProjectName string
 
@@ -281,7 +281,7 @@ func uiProjectSelector(projects []*pinecone.Project) *pinecone.Project {
 		return "Target project: " + choice
 	})
 	if _, err := tea.NewProgram(m2).Run(); err != nil {
-		msg.FailMsg("Error running program: %v", err)
+		msg.FailJSON(jsonOutput, "Error running program: %v", err)
 		os.Exit(1)
 	}
 

@@ -36,7 +36,7 @@ func NewListOrganizationsCmd() *cobra.Command {
 
 			orgs, err := ac.Organization.List(cmd.Context())
 			if err != nil {
-				msg.FailMsg("Failed to list organizations: %s\n", err)
+				msg.FailJSON(options.json, "Failed to list organizations: %s\n", err)
 				exit.Error(err, "Failed to list organizations")
 			}
 

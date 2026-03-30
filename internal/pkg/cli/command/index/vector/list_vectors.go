@@ -53,7 +53,7 @@ func runListVectorsCmd(ctx context.Context, options listVectorsCmdOptions) {
 	// Get IndexConnection
 	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, options.namespace)
 	if err != nil {
-		msg.FailMsg("Failed to create index connection: %s", err)
+		msg.FailJSON(options.json, "Failed to create index connection: %s", err)
 		exit.Error(err, "Failed to create index connection")
 	}
 
@@ -71,7 +71,7 @@ func runListVectorsCmd(ctx context.Context, options listVectorsCmdOptions) {
 		PaginationToken: paginationToken,
 	})
 	if err != nil {
-		msg.FailMsg("Failed to list vectors: %s", err)
+		msg.FailJSON(options.json, "Failed to list vectors: %s", err)
 		exit.Error(err, "Failed to list vectors")
 	}
 

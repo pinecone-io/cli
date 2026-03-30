@@ -37,7 +37,7 @@ func NewListCollectionsCmd() *cobra.Command {
 
 			collections, err := pc.ListCollections(ctx)
 			if err != nil {
-				msg.FailMsg("Failed to list collections: %s\n", err)
+				msg.FailJSON(options.json, "Failed to list collections: %s\n", err)
 				exit.Error(err, "Failed to list collections")
 			}
 

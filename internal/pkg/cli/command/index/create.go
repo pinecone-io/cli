@@ -119,7 +119,7 @@ func NewCreateIndexCmd() *cobra.Command {
 
 			idx, err := runCreateIndexCmd(ctx, cmd, pc, options)
 			if err != nil {
-				msg.FailMsg("Failed to create index: %s\n", err)
+				msg.FailJSON(options.json, "Failed to create index: %s\n", err)
 				exit.Error(err, "Failed to create index")
 			}
 

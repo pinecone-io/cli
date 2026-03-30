@@ -34,7 +34,7 @@ func NewDescribeBackupCmd() *cobra.Command {
 
 			err := runDescribeBackupCmd(ctx, pc, options)
 			if err != nil {
-				msg.FailMsg("Failed to describe backup: %s\n", err)
+				msg.FailJSON(options.json, "Failed to describe backup: %s\n", err)
 				exit.Error(err, "Failed to describe backup")
 			}
 		},

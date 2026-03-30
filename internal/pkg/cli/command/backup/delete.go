@@ -34,7 +34,7 @@ func NewDeleteBackupCmd() *cobra.Command {
 
 			err := runDeleteBackupCmd(ctx, pc, options)
 			if err != nil {
-				msg.FailMsg("Failed to delete backup: %s\n", err)
+				msg.FailJSON(options.json, "Failed to delete backup: %s\n", err)
 				exit.Error(err, "Failed to delete backup")
 			}
 		},

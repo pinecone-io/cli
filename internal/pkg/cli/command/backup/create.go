@@ -53,7 +53,7 @@ func NewCreateBackupCmd() *cobra.Command {
 
 			err := runCreateBackupCmd(ctx, pc, options)
 			if err != nil {
-				msg.FailMsg("Failed to create backup: %s\n", err)
+				msg.FailJSON(options.json, "Failed to create backup: %s\n", err)
 				exit.Error(err, "Failed to create backup")
 			}
 		},

@@ -87,7 +87,7 @@ func runPruneLocalKeys(ctx context.Context, options pruneLocalKeysCmdOptions) {
 		if mk, ok := managedKeys[options.projectID]; ok {
 			managedKeys = map[string]secrets.ManagedKey{options.projectID: mk}
 		} else {
-			msg.FailMsg("No managed keys found for project ID %s", style.Emphasis(options.projectID))
+			msg.FailJSON(options.json, "No managed keys found for project ID %s", style.Emphasis(options.projectID))
 			exit.ErrorMsgf("no managed keys found for project ID: %s", options.projectID)
 		}
 	}
@@ -104,7 +104,7 @@ func runPruneLocalKeys(ctx context.Context, options pruneLocalKeysCmdOptions) {
 		projKeys, err := ac.APIKey.List(ctx, projectID)
 		if err != nil { // If we errored on fetching the project keys, skip to the next project
 			log.Error().Err(err).Msg(fmt.Sprintf("Failed to list API keys for project %s: %s", style.Emphasis(projectID), err))
-			msg.FailMsg("Failed to list API keys for project %s: %s", style.Emphasis(projectID), err)
+			msg.FailJSON(options.json, "Failed to list API keys for project %s: %s", style.Emphasis(projectID), err)
 			continue
 		}
 		projKeysMap := createKeysMap(projKeys)
@@ -132,7 +132,7 @@ func runPruneLocalKeys(ctx context.Context, options pruneLocalKeysCmdOptions) {
 	if !options.skipConfirmation {
 		confirmed, err := confirmPruneKeys(plan, options)
 		if err != nil {
-			msg.FailMsg("Failed to confirm pruning keys: %s", err)
+			msg.FailJSON(options.json, "Failed to confirm pruning keys: %s", err)
 			exit.Error(err, "Failed to confirm pruning keys")
 		}
 		shouldPrune = confirmed
@@ -147,7 +147,7 @@ func runPruneLocalKeys(ctx context.Context, options pruneLocalKeysCmdOptions) {
 	for _, key := range plan {
 		if key.onServer {
 			if err := ac.APIKey.Delete(ctx, key.managedKey.Id); err != nil {
-				msg.FailMsg("Failed to delete remote key %s: %v", style.Emphasis(key.managedKey.Id), err)
+				msg.FailJSON(options.json, "Failed to delete remote key %s: %v", style.Emphasis(key.managedKey.Id), err)
 				exit.Errorf(err, "Failed to delete remote key %s", key.managedKey.Id)
 				continue // If we failed to delete the remote key, move on and keep the locally stored key for now
 			}
@@ -196,7 +196,7 @@ func confirmPruneKeys(plan []planItem, options pruneLocalKeysCmdOptions) (bool, 
 	reader := bufio.NewReader(os.Stdin)
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		msg.FailMsg("Error reading input: %+v", err)
+		msg.FailJSON(options.json, "Error reading input: %+v", err)
 		return false, err
 	}
 

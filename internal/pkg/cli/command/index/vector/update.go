@@ -94,7 +94,7 @@ func runUpdateCmd(ctx context.Context, options updateCmdOptions) {
 	// Apply body overlay if provided
 	if options.body != "" {
 		if b, src, err := argio.DecodeJSONArg[UpdateBody](options.body); err != nil {
-			msg.FailMsg("Failed to parse update body (%s): %s", style.Emphasis(src.Label), err)
+			msg.FailJSON(options.json, "Failed to parse update body (%s): %s", style.Emphasis(src.Label), err)
 			exit.Errorf(err, "Failed to parse update body (%s): %v", src.Label, err)
 		} else if b != nil {
 			if options.id == "" && b.Id != "" {
@@ -121,13 +121,13 @@ func runUpdateCmd(ctx context.Context, options updateCmdOptions) {
 
 	// Validate update by ID or metadata filter
 	if options.id == "" && options.filter == nil {
-		msg.FailMsg("Either --id or --filter must be provided")
+		msg.FailJSON(options.json, "Either --id or --filter must be provided")
 		exit.ErrorMsg("Either --id or --filter must be provided")
 	}
 
 	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, options.namespace)
 	if err != nil {
-		msg.FailMsg("Failed to create index connection: %s", err)
+		msg.FailJSON(options.json, "Failed to create index connection: %s", err)
 		exit.Error(err, "Failed to create index connection")
 	}
 
@@ -135,7 +135,7 @@ func runUpdateCmd(ctx context.Context, options updateCmdOptions) {
 	if options.id != "" {
 		metadata, err := pinecone.NewMetadata(options.metadata)
 		if err != nil {
-			msg.FailMsg("Failed to create metadata: %s", err)
+			msg.FailJSON(options.json, "Failed to create metadata: %s", err)
 			exit.Errorf(err, "Failed to create metadata")
 		}
 
@@ -154,7 +154,7 @@ func runUpdateCmd(ctx context.Context, options updateCmdOptions) {
 			Metadata:     metadata,
 		})
 		if err != nil {
-			msg.FailMsg("Failed to update vector ID: %s - %v", options.id, err)
+			msg.FailJSON(options.json, "Failed to update vector ID: %s - %v", options.id, err)
 			exit.Errorf(err, "Failed to update vector ID: %s", options.id)
 		}
 
@@ -168,13 +168,13 @@ func runUpdateCmd(ctx context.Context, options updateCmdOptions) {
 	if options.filter != nil {
 		filter, err := pinecone.NewMetadataFilter(options.filter)
 		if err != nil {
-			msg.FailMsg("Failed to create filter: %s", err)
+			msg.FailJSON(options.json, "Failed to create filter: %s", err)
 			exit.Errorf(err, "Failed to create filter")
 		}
 
 		metadata, err := pinecone.NewMetadata(options.metadata)
 		if err != nil {
-			msg.FailMsg("Failed to create metadata: %s", err)
+			msg.FailJSON(options.json, "Failed to create metadata: %s", err)
 			exit.Errorf(err, "Failed to create metadata")
 		}
 
@@ -189,7 +189,7 @@ func runUpdateCmd(ctx context.Context, options updateCmdOptions) {
 			DryRun:   dryRun,
 		})
 		if err != nil {
-			msg.FailMsg("Failed to update vectors by metadata: %s - %v", filter.String(), err)
+			msg.FailJSON(options.json, "Failed to update vectors by metadata: %s - %v", filter.String(), err)
 			exit.Errorf(err, "Failed to update vectors by metadata: %s", filter.String())
 		}
 

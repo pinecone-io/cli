@@ -40,19 +40,19 @@ func NewDeleteNamespaceCmd() *cobra.Command {
 			pc := sdk.NewPineconeClient(ctx)
 
 			if strings.TrimSpace(options.indexName) == "" {
-				msg.FailMsg("Failed to delete namespace: --index-name is required")
+				msg.FailJSON(options.json, "Failed to delete namespace: --index-name is required")
 				exit.ErrorMsg("Failed to delete namespace: --index-name is required")
 			}
 
 			ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, "")
 			if err != nil {
-				msg.FailMsg("Failed to delete namespace: %s", err)
+				msg.FailJSON(options.json, "Failed to delete namespace: %s", err)
 				exit.Error(err, "Failed to delete namespace")
 			}
 
 			err = runDeleteNamespaceCmd(ctx, ic, options)
 			if err != nil {
-				msg.FailMsg("Failed to delete namespace: %s", err)
+				msg.FailJSON(options.json, "Failed to delete namespace: %s", err)
 				exit.Error(err, "Failed to delete namespace")
 			}
 		},

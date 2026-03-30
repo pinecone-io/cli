@@ -50,28 +50,28 @@ func NewDeleteProjectCmd() *cobra.Command {
 			if projId == "" {
 				projId, err = state.GetTargetProjectId()
 				if err != nil {
-					msg.FailMsg("No target project set and no project ID provided. Use %s to set the target project. Use %s to delete a specific project.", style.Code("pc target -p <project>"), style.Code("pc project delete -i <project-id>"))
+					msg.FailJSON(options.json, "No target project set and no project ID provided. Use %s to set the target project. Use %s to delete a specific project.", style.Code("pc target -p <project>"), style.Code("pc project delete -i <project-id>"))
 					exit.ErrorMsg("No project ID provided, and no target project set")
 				}
 			}
 
 			projToDelete, err := ac.Project.Describe(ctx, projId)
 			if err != nil {
-				msg.FailMsg("Failed to retrieve project information: %s\n", err)
+				msg.FailJSON(options.json, "Failed to retrieve project information: %s\n", err)
 				msg.HintMsg("To see a list of projects in the organization, run %s", style.Code("pc project list"))
 				exit.Error(err, "Failed to retrieve project information")
 			}
 
-			verifyNoIndexes(ctx, projToDelete.Id, projToDelete.Name)
-			verifyNoCollections(ctx, projToDelete.Id, projToDelete.Name)
+			verifyNoIndexes(ctx, projToDelete.Id, projToDelete.Name, options.json)
+			verifyNoCollections(ctx, projToDelete.Id, projToDelete.Name, options.json)
 
 			if !options.skipConfirmation {
-				confirmDelete(projToDelete.Name)
+				confirmDelete(projToDelete.Name, options.json)
 			}
 
 			err = runDeleteProjectCmd(ctx, ac.Project, options, projToDelete.Name, projToDelete.Id)
 			if err != nil {
-				msg.FailMsg("Failed to delete project %s: %s\n", style.Emphasis(projToDelete.Name), err)
+				msg.FailJSON(options.json, "Failed to delete project %s: %s\n", style.Emphasis(projToDelete.Name), err)
 				exit.Errorf(err, "Failed to delete project %s", style.Emphasis(projToDelete.Name))
 			}
 
@@ -111,7 +111,7 @@ func runDeleteProjectCmd(ctx context.Context, svc deleteProjectService, opts del
 	return nil
 }
 
-func confirmDelete(projectName string) {
+func confirmDelete(projectName string, jsonOutput bool) {
 	msg.WarnMsg("This will delete the project %s in organization %s.", style.Emphasis(projectName), style.Emphasis(state.TargetOrg.Get().Name))
 	msg.WarnMsg("This action cannot be undone.")
 
@@ -122,7 +122,7 @@ func confirmDelete(projectName string) {
 	reader := bufio.NewReader(os.Stdin)
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		msg.FailMsg("Error reading input: %v", err)
+		msg.FailJSON(jsonOutput, "Error reading input: %v", err)
 		return
 	}
 
@@ -138,33 +138,33 @@ func confirmDelete(projectName string) {
 	}
 }
 
-func verifyNoIndexes(ctx context.Context, projectId string, projectName string) {
+func verifyNoIndexes(ctx context.Context, projectId string, projectName string, jsonOutput bool) {
 	// Check if project contains indexes
 	pc := sdk.NewPineconeClientForProjectById(ctx, projectId)
 
 	idxs, err := pc.ListIndexes(ctx)
 	if err != nil {
-		msg.FailMsg("Failed to list indexes: %s\n", err)
+		msg.FailJSON(jsonOutput, "Failed to list indexes: %s\n", err)
 		exit.Error(err, "Failed to list indexes")
 	}
 	if len(idxs) > 0 {
-		msg.FailMsg("Project %s contains indexes. Delete the indexes before deleting the project.", style.Emphasis(projectName))
+		msg.FailJSON(jsonOutput, "Project %s contains indexes. Delete the indexes before deleting the project.", style.Emphasis(projectName))
 		msg.HintMsg("To see indexes in this project, run %s", fmt.Sprintf(style.Code("pc target -p \"%s\" && pc index list"), projectName))
 		exit.ErrorMsgf("Project %s contains indexes. Delete the indexes before deleting the project.", style.Emphasis(projectName))
 	}
 }
 
-func verifyNoCollections(ctx context.Context, projectId string, projectName string) {
+func verifyNoCollections(ctx context.Context, projectId string, projectName string, jsonOutput bool) {
 	// Check if project contains collections
 	pc := sdk.NewPineconeClientForProjectById(ctx, projectId)
 
 	collections, err := pc.ListCollections(ctx)
 	if err != nil {
-		msg.FailMsg("Failed to list collections: %s\n", err)
+		msg.FailJSON(jsonOutput, "Failed to list collections: %s\n", err)
 		exit.Errorf(err, "Failed to list collections")
 	}
 	if len(collections) > 0 {
-		msg.FailMsg("Project %s contains collections. Delete the collections before deleting the project.", style.Emphasis(projectName))
+		msg.FailJSON(jsonOutput, "Project %s contains collections. Delete the collections before deleting the project.", style.Emphasis(projectName))
 		msg.HintMsg("To see collections in this project, run %s", fmt.Sprintf(style.Code("pc target -p \"%s\" && pc collection list"), projectName))
 		exit.ErrorMsgf("Project %s contains collections. Delete the collections before deleting the project.", style.Emphasis(projectName))
 	}

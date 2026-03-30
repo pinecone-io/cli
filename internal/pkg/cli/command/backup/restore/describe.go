@@ -34,7 +34,7 @@ func NewDescribeRestoreJobCmd() *cobra.Command {
 
 			err := runDescribeRestoreJobCmd(ctx, pc, options)
 			if err != nil {
-				msg.FailMsg("Failed to describe restore job: %s\n", err)
+				msg.FailJSON(options.json, "Failed to describe restore job: %s\n", err)
 				exit.Error(err, "Failed to describe restore job")
 			}
 		},

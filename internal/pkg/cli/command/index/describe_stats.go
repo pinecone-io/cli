@@ -56,7 +56,7 @@ func runDescribeIndexStatsCmd(ctx context.Context, options describeIndexStatsCmd
 
 	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, "")
 	if err != nil {
-		msg.FailMsg("Failed to create index connection: %s", err)
+		msg.FailJSON(options.json, "Failed to create index connection: %s", err)
 		exit.Error(err, "Failed to create index connection")
 	}
 
@@ -65,14 +65,14 @@ func runDescribeIndexStatsCmd(ctx context.Context, options describeIndexStatsCmd
 	if options.filter != nil {
 		filter, err = pinecone.NewMetadataFilter(options.filter)
 		if err != nil {
-			msg.FailMsg("Failed to create filter: %s", err)
+			msg.FailJSON(options.json, "Failed to create filter: %s", err)
 			exit.Errorf(err, "Failed to create filter")
 		}
 	}
 
 	resp, err := ic.DescribeIndexStatsFiltered(ctx, filter)
 	if err != nil {
-		msg.FailMsg("Failed to describe stats: %s", err)
+		msg.FailJSON(options.json, "Failed to describe stats: %s", err)
 		exit.Error(err, "Failed to describe stats")
 	}
 

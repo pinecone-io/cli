@@ -59,12 +59,12 @@ func runDeleteVectorsCmd(ctx context.Context, options deleteVectorsCmdOptions) {
 	pc := sdk.NewPineconeClient(ctx)
 	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, options.namespace)
 	if err != nil {
-		msg.FailMsg("Failed to create index connection: %s", err)
+		msg.FailJSON(options.json, "Failed to create index connection: %s", err)
 		exit.Error(err, "Failed to create index connection")
 	}
 
 	if options.ids == nil && options.filter == nil && !options.deleteAllVectors {
-		msg.FailMsg("Either --ids, --filter, or --all-vectors must be provided")
+		msg.FailJSON(options.json, "Either --ids, --filter, or --all-vectors must be provided")
 		exit.ErrorMsg("Either --ids, --filter, or --all-vectors must be provided")
 	}
 
@@ -72,7 +72,7 @@ func runDeleteVectorsCmd(ctx context.Context, options deleteVectorsCmdOptions) {
 	if options.deleteAllVectors {
 		err = ic.DeleteAllVectorsInNamespace(ctx)
 		if err != nil {
-			msg.FailMsg("Failed to delete all vectors in namespace: %s", err)
+			msg.FailJSON(options.json, "Failed to delete all vectors in namespace: %s", err)
 			exit.Error(err, "Failed to delete all vectors in namespace")
 		}
 		if !options.json {
@@ -85,7 +85,7 @@ func runDeleteVectorsCmd(ctx context.Context, options deleteVectorsCmdOptions) {
 	if len(options.ids) > 0 {
 		err = ic.DeleteVectorsById(ctx, options.ids)
 		if err != nil {
-			msg.FailMsg("Failed to delete vectors by IDs: %s", err)
+			msg.FailJSON(options.json, "Failed to delete vectors by IDs: %s", err)
 			exit.Error(err, "Failed to delete vectors by IDs")
 		}
 		if !options.json {
@@ -98,13 +98,13 @@ func runDeleteVectorsCmd(ctx context.Context, options deleteVectorsCmdOptions) {
 	if options.filter != nil {
 		filter, err := pinecone.NewMetadataFilter(options.filter)
 		if err != nil {
-			msg.FailMsg("Failed to create filter: %s", err)
+			msg.FailJSON(options.json, "Failed to create filter: %s", err)
 			exit.Errorf(err, "Failed to create filter")
 		}
 
 		err = ic.DeleteVectorsByFilter(ctx, filter)
 		if err != nil {
-			msg.FailMsg("Failed to delete vectors by filter: %s", err)
+			msg.FailJSON(options.json, "Failed to delete vectors by filter: %s", err)
 			exit.Error(err, "Failed to delete vectors by filter")
 		}
 		if !options.json {

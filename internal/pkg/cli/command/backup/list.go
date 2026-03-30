@@ -44,7 +44,7 @@ func NewListBackupsCmd() *cobra.Command {
 
 			err := runListBackupsCmd(ctx, pc, options)
 			if err != nil {
-				msg.FailMsg("Failed to list backups: %s\n", err)
+				msg.FailJSON(options.json, "Failed to list backups: %s\n", err)
 				exit.Error(err, "Failed to list backups")
 			}
 		},

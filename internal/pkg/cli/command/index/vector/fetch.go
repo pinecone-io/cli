@@ -87,7 +87,7 @@ func runFetchCmd(ctx context.Context, options fetchCmdOptions) {
 	// Apply body overlay if provided
 	if options.body != "" {
 		if b, src, err := argio.DecodeJSONArg[FetchBody](options.body); err != nil {
-			msg.FailMsg("Failed to parse fetch body (%s): %s", style.Emphasis(src.Label), err)
+			msg.FailJSON(options.json, "Failed to parse fetch body (%s): %s", style.Emphasis(src.Label), err)
 			exit.Errorf(err, "Failed to parse fetch body (%s): %v", src.Label, err)
 		} else if b != nil {
 			if len(options.ids) == 0 && len(b.Ids) > 0 {
@@ -106,18 +106,18 @@ func runFetchCmd(ctx context.Context, options fetchCmdOptions) {
 	}
 
 	if len(options.ids) > 0 && (options.limit > 0 || options.paginationToken != "") {
-		msg.FailMsg("ids and limit/pagination-token cannot be used together")
+		msg.FailJSON(options.json, "ids and limit/pagination-token cannot be used together")
 		exit.ErrorMsg("ids and limit/pagination-token cannot be used together")
 	}
 
 	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, options.namespace)
 	if err != nil {
-		msg.FailMsg("Failed to create index connection: %s", err)
+		msg.FailJSON(options.json, "Failed to create index connection: %s", err)
 		exit.Error(err, "Failed to create index connection")
 	}
 
 	if options.ids == nil && options.filter == nil {
-		msg.FailMsg("Either --ids or --filter must be provided")
+		msg.FailJSON(options.json, "Either --ids or --filter must be provided")
 		exit.ErrorMsg("Either --ids or --filter must be provided")
 	}
 
@@ -134,7 +134,7 @@ func runFetchCmd(ctx context.Context, options fetchCmdOptions) {
 	if options.filter != nil {
 		filter, err := pinecone.NewMetadataFilter(options.filter)
 		if err != nil {
-			msg.FailMsg("Failed to create filter: %s", err)
+			msg.FailJSON(options.json, "Failed to create filter: %s", err)
 			exit.Errorf(err, "Failed to create filter")
 		}
 

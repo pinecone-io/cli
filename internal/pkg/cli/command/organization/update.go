@@ -41,7 +41,7 @@ func NewUpdateOrganizationCmd() *cobra.Command {
 			if orgId == "" {
 				orgId, err = state.GetTargetOrgId()
 				if err != nil {
-					msg.FailMsg("No target organization set and no organization ID provided. Use %s to set the target organization. Use %s to describe an organization by ID.", style.Code("pc target -o <org>"), style.Code("pc organization describe -i <organization-id>"))
+					msg.FailJSON(options.json, "No target organization set and no organization ID provided. Use %s to set the target organization. Use %s to describe an organization by ID.", style.Code("pc target -o <org>"), style.Code("pc organization describe -i <organization-id>"))
 					exit.ErrorMsg("No organization ID provided, and no target organization set")
 				}
 			}
@@ -54,7 +54,7 @@ func NewUpdateOrganizationCmd() *cobra.Command {
 
 			org, err := ac.Organization.Update(cmd.Context(), orgId, updateParams)
 			if err != nil {
-				msg.FailMsg("Failed to update organization %s: %s\n", orgId, err)
+				msg.FailJSON(options.json, "Failed to update organization %s: %s\n", orgId, err)
 				exit.Errorf(err, "Failed to update organization %s", style.Emphasis(orgId))
 			}
 

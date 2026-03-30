@@ -1,18 +1,26 @@
 package style
 
 import (
+	"os"
+
 	"github.com/fatih/color"
+	"golang.org/x/term"
+
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 )
 
+func colorEnabled() bool {
+	return config.Color.Get() && term.IsTerminal(int(os.Stderr.Fd()))
+}
+
 func applyColor(s string, c *color.Color) string {
-	color.NoColor = !config.Color.Get()
+	color.NoColor = !colorEnabled()
 	colored := c.SprintFunc()
 	return colored(s)
 }
 
 func applyStyle(s string, c color.Attribute) string {
-	color.NoColor = !config.Color.Get()
+	color.NoColor = !colorEnabled()
 	colored := color.New(c).SprintFunc()
 	return colored(s)
 }

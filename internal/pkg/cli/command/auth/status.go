@@ -32,7 +32,7 @@ func NewCmdAuthStatus() *cobra.Command {
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := runAuthStatus(cmd, options); err != nil {
-				msg.FailMsg("Error retrieving authentication status: %s", err)
+				msg.FailJSON(options.json, "Error retrieving authentication status: %s", err)
 				exit.Error(err, "Error retrieving authentication status")
 			}
 		},

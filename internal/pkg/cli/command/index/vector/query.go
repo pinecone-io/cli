@@ -106,7 +106,7 @@ func runQueryCmd(ctx context.Context, options queryCmdOptions) {
 	// Apply body overlay if provided
 	if options.body != "" {
 		if b, src, err := argio.DecodeJSONArg[QueryBody](options.body); err != nil {
-			msg.FailMsg("Failed to parse query body (%s): %s", style.Emphasis(src.Label), err)
+			msg.FailJSON(options.json, "Failed to parse query body (%s): %s", style.Emphasis(src.Label), err)
 			exit.Errorf(err, "Failed to parse query body (%s): %v", src.Label, err)
 		} else if b != nil {
 			if options.id == "" && b.Id != "" {
@@ -135,14 +135,14 @@ func runQueryCmd(ctx context.Context, options queryCmdOptions) {
 	}
 
 	if options.id == "" && options.vector == nil && options.sparseIndices == nil && options.sparseValues == nil {
-		msg.FailMsg("Either --id, --vector, --sparse-indices & --sparse-values")
+		msg.FailJSON(options.json, "Either --id, --vector, --sparse-indices & --sparse-values")
 		exit.ErrorMsg("Either --id, --vector, --sparse-indices & --sparse-values")
 	}
 
 	// Get IndexConnection
 	ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, options.namespace)
 	if err != nil {
-		msg.FailMsg("Failed to create index connection: %s", err)
+		msg.FailJSON(options.json, "Failed to create index connection: %s", err)
 		exit.Error(err, "Failed to create index connection")
 	}
 
@@ -153,7 +153,7 @@ func runQueryCmd(ctx context.Context, options queryCmdOptions) {
 	if options.filter != nil {
 		filter, err = pinecone.NewMetadataFilter(options.filter)
 		if err != nil {
-			msg.FailMsg("Failed to create filter: %s", err)
+			msg.FailJSON(options.json, "Failed to create filter: %s", err)
 			exit.Errorf(err, "Failed to create filter")
 		}
 	}

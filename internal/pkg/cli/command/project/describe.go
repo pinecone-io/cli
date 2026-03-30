@@ -39,14 +39,14 @@ func NewDescribeProjectCmd() *cobra.Command {
 			if projId == "" {
 				projId, err = state.GetTargetProjectId()
 				if err != nil {
-					msg.FailMsg("No target project set and no project ID provided. Use %s to set the target project. Use %s to delete a specific project.", style.Code("pc target -p <project>"), style.Code("pc project delete -i <project-id>"))
+					msg.FailJSON(options.json, "No target project set and no project ID provided. Use %s to set the target project. Use %s to delete a specific project.", style.Code("pc target -p <project>"), style.Code("pc project delete -i <project-id>"))
 					exit.ErrorMsg("No project ID provided, and no target project set")
 				}
 			}
 
 			project, err := ac.Project.Describe(ctx, projId)
 			if err != nil {
-				msg.FailMsg("Failed to describe project %s: %s\n", projId, err)
+				msg.FailJSON(options.json, "Failed to describe project %s: %s\n", projId, err)
 				exit.Errorf(err, "Failed to describe project %s", style.Emphasis(projId))
 			}
 

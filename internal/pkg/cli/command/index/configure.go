@@ -118,7 +118,7 @@ func runConfigureIndexCmd(ctx context.Context, cmd *cobra.Command, options confi
 	// read capacity configuration
 	readCapacity, err := buildReadCapacityFromFlags(cmd, options.readMode, options.readNodeType, options.readShards, options.readReplicas)
 	if err != nil {
-		msg.FailMsg("Failed to configure index %s: %+v\n", style.Emphasis(options.name), err)
+		msg.FailJSON(options.json, "Failed to configure index %s: %+v\n", style.Emphasis(options.name), err)
 		exit.Error(err, "Failed to configure index")
 	}
 
@@ -131,7 +131,7 @@ func runConfigureIndexCmd(ctx context.Context, cmd *cobra.Command, options confi
 		Embed:              embed,
 	})
 	if err != nil {
-		msg.FailMsg("Failed to configure index %s: %+v\n", style.Emphasis(options.name), err)
+		msg.FailJSON(options.json, "Failed to configure index %s: %+v\n", style.Emphasis(options.name), err)
 		exit.Error(err, "Failed to configure index")
 	}
 
