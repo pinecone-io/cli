@@ -49,8 +49,8 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 				exit.Errorf(err, "Failed to describe organization %s", style.Emphasis(options.organizationID))
 			}
 
-			if !options.skipConfirmation {
-				confirmDelete(org.Name, org.Id, options.json)
+			if !options.skipConfirmation && !options.json {
+				confirmDelete(org.Name, org.Id)
 			}
 
 			err = runDeleteOrganizationCmd(ctx, ac.Organization, options, org.Name, org.Id)
@@ -98,7 +98,7 @@ func runDeleteOrganizationCmd(ctx context.Context, svc deleteOrganizationService
 	return nil
 }
 
-func confirmDelete(organizationName string, organizationID string, jsonOutput bool) {
+func confirmDelete(organizationName string, organizationID string) {
 	msg.WarnMsg("This will delete the organization %s (ID: %s).", style.Emphasis(organizationName), style.Emphasis(organizationID))
 	msg.WarnMsg("This action cannot be undone.")
 
@@ -109,8 +109,8 @@ func confirmDelete(organizationName string, organizationID string, jsonOutput bo
 	reader := bufio.NewReader(os.Stdin)
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		msg.FailJSON(jsonOutput, "Error reading input: %v", err)
-		return
+		msg.FailMsg("Error reading input: %v", err)
+		exit.Error(err, "Error reading input")
 	}
 
 	input = strings.TrimSpace(strings.ToLower(input))

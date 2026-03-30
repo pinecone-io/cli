@@ -65,8 +65,8 @@ func NewDeleteProjectCmd() *cobra.Command {
 			verifyNoIndexes(ctx, projToDelete.Id, projToDelete.Name, options.json)
 			verifyNoCollections(ctx, projToDelete.Id, projToDelete.Name, options.json)
 
-			if !options.skipConfirmation {
-				confirmDelete(projToDelete.Name, options.json)
+			if !options.skipConfirmation && !options.json {
+				confirmDelete(projToDelete.Name)
 			}
 
 			err = runDeleteProjectCmd(ctx, ac.Project, options, projToDelete.Name, projToDelete.Id)
@@ -111,7 +111,7 @@ func runDeleteProjectCmd(ctx context.Context, svc deleteProjectService, opts del
 	return nil
 }
 
-func confirmDelete(projectName string, jsonOutput bool) {
+func confirmDelete(projectName string) {
 	msg.WarnMsg("This will delete the project %s in organization %s.", style.Emphasis(projectName), style.Emphasis(state.TargetOrg.Get().Name))
 	msg.WarnMsg("This action cannot be undone.")
 
@@ -122,8 +122,8 @@ func confirmDelete(projectName string, jsonOutput bool) {
 	reader := bufio.NewReader(os.Stdin)
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		msg.FailJSON(jsonOutput, "Error reading input: %v", err)
-		return
+		msg.FailMsg("Error reading input: %v", err)
+		exit.Error(err, "Error reading input")
 	}
 
 	// Trim any whitespace from the input and convert to lowercase
