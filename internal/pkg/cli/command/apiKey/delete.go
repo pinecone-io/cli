@@ -61,7 +61,7 @@ func NewDeleteKeyCmd() *cobra.Command {
 			}
 
 			if !options.skipConfirmation && !options.json {
-				confirmDeleteApiKey(keyToDelete.Name, options.json)
+				confirmDeleteApiKey(keyToDelete.Name)
 			}
 
 			err = ac.APIKey.Delete(cmd.Context(), keyToDelete.Id)
@@ -97,19 +97,19 @@ func NewDeleteKeyCmd() *cobra.Command {
 	return cmd
 }
 
-func confirmDeleteApiKey(apiKeyName string, jsonOutput bool) {
+func confirmDeleteApiKey(apiKeyName string) {
 	msg.WarnMsg("This operation will delete API key %s from project %s.", style.Emphasis(apiKeyName), style.Emphasis(state.TargetProj.Get().Name))
 	msg.WarnMsg("Any integrations that authenticate with this API key will immediately stop working.")
 	msg.WarnMsg("This action cannot be undone.")
 
 	// Prompt the user
-	fmt.Print("Do you want to continue? (y/N): ")
+	fmt.Fprint(os.Stderr, "Do you want to continue? (y/N): ")
 
 	// Read the user's input
 	reader := bufio.NewReader(os.Stdin)
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		msg.FailJSON(jsonOutput, "Error reading input: %+v", err)
+		msg.FailMsg("Error reading input: %+v", err)
 		exit.Error(err, "Error reading input")
 	}
 
