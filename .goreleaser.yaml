@@ -93,6 +93,6 @@ homebrew_casks:
       preflight do
         ["pc", "pinecone"].each do |bin|
           f = HOMEBREW_PREFIX/"bin"/bin
-          f.delete if f.exist?
+          f.delete if f.exist? || f.symlink?
         end
       end

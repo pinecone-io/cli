@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__claude_ai_Linear__save_issue",
+      "mcp__claude_ai_Linear__get_issue",
+      "Bash(go test:*)",
+      "Bash(go build:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh api:*)",
+      "Bash(goimports:*)",
+      "Bash(grep -r pcio . --include=*.go)",
+      "Bash(xargs sed:*)",
+      "mcp__claude_ai_Linear__list_teams",
+      "mcp__claude_ai_Linear__list_issue_statuses",
+      "Bash(grep:*)",
+      "Bash(python3:*)",
+      "Bash(while read:*)",
+      "Bash(do if:*)",
+      "Bash(then echo:*)",
+      "Bash(go mod:*)",
+      "Bash(go get:*)",
+      "Bash(go list:*)",
+      "mcp__claude_ai_Linear__list_projects",
+      "mcp__claude_ai_Linear__list_issue_labels",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:brew.sh)",
+      "WebFetch(domain:docs.brew.sh)",
+      "WebFetch(domain:goreleaser.com)"
+    ]
+  }
+}
