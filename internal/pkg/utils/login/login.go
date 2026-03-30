@@ -96,7 +96,7 @@ func Run(ctx context.Context, opts Options) {
 	}
 	if !opts.Json {
 		msg.Blank()
-		msg.SuccessMsg("Logged in as " + style.Emphasis(claims.Email) + ". Defaulted to organization ID: " + style.Emphasis(claims.OrgId))
+		msg.SuccessMsg("Logged in as %s. Defaulted to organization ID: %s", style.Emphasis(claims.Email), style.Emphasis(claims.OrgId))
 	}
 
 	ac := sdk.NewPineconeAdminClient(ctx)

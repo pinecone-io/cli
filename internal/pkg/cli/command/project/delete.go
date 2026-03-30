@@ -99,7 +99,7 @@ func runDeleteProjectCmd(ctx context.Context, svc deleteProjectService, opts del
 	}
 
 	if opts.json {
-		fmt.Println(text.IndentJSON(struct {
+		fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
 			Deleted bool   `json:"deleted"`
 			Name    string `json:"name"`
 			Id      string `json:"id"`
@@ -116,13 +116,13 @@ func confirmDelete(projectName string) {
 	msg.WarnMsg("This action cannot be undone.")
 
 	// Prompt the user
-	fmt.Print("Do you want to continue? (y/N): ")
+	fmt.Fprint(os.Stderr, "Do you want to continue? (y/N): ")
 
 	// Read the user's input
 	reader := bufio.NewReader(os.Stdin)
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		fmt.Println(fmt.Errorf("Error reading input: %w", err))
+		msg.FailMsg("Error reading input: %v", err)
 		return
 	}
 

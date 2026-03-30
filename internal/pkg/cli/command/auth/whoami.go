@@ -53,7 +53,7 @@ func NewWhoAmICmd() *cobra.Command {
 				return
 			}
 
-			msg.InfoMsg("Logged in as " + style.Emphasis(claims.Email))
+			msg.InfoMsg("Logged in as %s", style.Emphasis(claims.Email))
 		},
 	}
 

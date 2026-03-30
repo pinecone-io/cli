@@ -69,7 +69,7 @@ func printTable(projects []*pinecone.Project) {
 			proj.CreatedAt.String(),
 			strconv.FormatBool(proj.ForceEncryptionWithCmek),
 			strconv.Itoa(proj.MaxPods)}
-		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
+		fmt.Fprint(writer, strings.Join(values, "\t")+"\n")
 	}
 	writer.Flush()
 }

@@ -71,7 +71,7 @@ func printTable(orgs []*pinecone.Organization) {
 			org.Plan,
 			org.SupportTier,
 		}
-		fmt.Fprintf(writer, strings.Join(values, "\t")+"\n")
+		fmt.Fprint(writer, strings.Join(values, "\t")+"\n")
 	}
 	writer.Flush()
 }
