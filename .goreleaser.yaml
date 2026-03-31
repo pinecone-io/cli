@@ -96,3 +96,9 @@ homebrew_casks:
           f.delete if f.exist? || f.symlink?
         end
       end
+      postflight do
+        if OS.mac?
+          system_command "/usr/bin/xattr",
+            args: ["-dr", "com.apple.quarantine", staged_path.to_s]
+        end
+      end
