@@ -263,6 +263,9 @@ func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, wait bool, ses
 
 	if wait {
 		// Caller needs the token on return — block until the daemon completes.
+		// Print the auth URL to stderr so the user/agent can navigate to it while
+		// we poll. Stderr keeps stdout clean for the caller's own JSON output.
+		fmt.Fprintf(os.Stderr, "Visit the following URL to authenticate:\n\n  %s\n\n", authURL)
 		return pollForResult(sessionId, newSess.CreatedAt, true)
 	}
 
