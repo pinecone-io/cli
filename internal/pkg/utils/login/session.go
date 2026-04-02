@@ -13,12 +13,11 @@ import (
 )
 
 type SessionState struct {
-	SessionId    string    `json:"session_id"`
-	PKCEVerifier string    `json:"pkce_verifier"`
-	CSRFState    string    `json:"csrf_state"`
-	AuthURL      string    `json:"auth_url"`
-	OrgId        *string   `json:"org_id,omitempty"`
-	CreatedAt    time.Time `json:"created_at"`
+	SessionId string    `json:"session_id"`
+	CSRFState string    `json:"csrf_state"`
+	AuthURL   string    `json:"auth_url"`
+	OrgId     *string   `json:"org_id,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type SessionResult struct {

@@ -216,17 +216,18 @@ func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, sess *SessionS
 
 	sessionId := newSessionId()
 	sess = &SessionState{
-		SessionId:    sessionId,
-		PKCEVerifier: verifier,
-		CSRFState:    csrfState,
-		AuthURL:      authURL,
-		OrgId:        orgId,
-		CreatedAt:    time.Now(),
+		SessionId: sessionId,
+		CSRFState: csrfState,
+		AuthURL:   authURL,
+		OrgId:     orgId,
+		CreatedAt: time.Now(),
 	}
 	if err := writeSessionState(*sess); err != nil {
 		return fmt.Errorf("error writing session state: %w", err)
 	}
-	if err := spawnDaemon(sessionId); err != nil {
+	// Pass the PKCE verifier to the daemon via environment variable rather than
+	// writing it to the session file, so it never touches disk.
+	if err := spawnDaemon(sessionId, verifier); err != nil {
 		CleanupSession(sessionId)
 		return fmt.Errorf("error spawning auth daemon: %w", err)
 	}
@@ -481,7 +482,8 @@ func RunPostAuthSetup(ctx context.Context) error {
 }
 
 // spawnDaemon starts a detached `pc auth _daemon --session-id <id>` process.
-func spawnDaemon(sessionId string) error {
+// The PKCE verifier is passed via environment variable so it never touches disk.
+func spawnDaemon(sessionId, pkceVerifier string) error {
 	exe, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("error finding executable path: %w", err)
@@ -491,6 +493,7 @@ func spawnDaemon(sessionId string) error {
 	cmd.Stdin = nil
 	cmd.Stdout = nil
 	cmd.Stderr = nil
+	cmd.Env = append(os.Environ(), "PINECONE_PKCE_VERIFIER="+pkceVerifier)
 	return cmd.Start()
 }
 

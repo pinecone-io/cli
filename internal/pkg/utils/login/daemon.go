@@ -3,6 +3,7 @@ package login
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
@@ -42,8 +43,14 @@ func RunDaemon(sessionId string) {
 		return
 	}
 
+	pkceVerifier := os.Getenv("PINECONE_PKCE_VERIFIER")
+	if pkceVerifier == "" {
+		writeDaemonError(sessionId, "PKCE verifier not provided to daemon")
+		return
+	}
+
 	a := oauth.Auth{}
-	token, err := a.ExchangeAuthCode(ctx, sess.PKCEVerifier, code)
+	token, err := a.ExchangeAuthCode(ctx, pkceVerifier, code)
 	if err != nil {
 		writeDaemonError(sessionId, fmt.Sprintf("error exchanging auth code: %s", err))
 		return
