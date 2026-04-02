@@ -7,6 +7,8 @@ import (
 	"syscall"
 	"time"
 
+	"golang.org/x/term"
+
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/apiKey"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/auth"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/backup"
@@ -20,7 +22,10 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/target"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/version"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/whoami"
+	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
+	loginutil "github.com/pinecone-io/cli/internal/pkg/utils/login"
+	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/spf13/cobra"
 )
 
@@ -29,6 +34,26 @@ var (
 	globalOptions  GlobalOptions
 	cancelRootFunc context.CancelFunc
 )
+
+// skipAuthCommands lists the full command paths that do not require authentication.
+// These are commands that either establish credentials or work on local state only.
+// When adding new commands that don't need auth, add their CommandPath() here.
+var skipAuthCommands = map[string]struct{}{
+	"pc login":                   {},
+	"pc logout":                  {},
+	"pc auth login":              {},
+	"pc auth logout":             {},
+	"pc auth configure":          {},
+	"pc auth clear":              {},
+	"pc auth status":             {},
+	"pc auth _daemon":            {},
+	"pc version":                 {},
+	"pc config":                  {},
+	"pc config get-api-key":      {},
+	"pc config set-api-key":      {},
+	"pc config set-color":        {},
+	"pc config set-environment":  {},
+}
 
 type GlobalOptions struct {
 	timeout time.Duration
@@ -88,6 +113,23 @@ func init() {
 				ctx, cancel := context.WithTimeout(cmd.Context(), globalOptions.timeout)
 				cancelRootFunc = cancel
 				cmd.SetContext(ctx)
+			}
+
+			// Skip auth check for commands that establish or manage credentials.
+			if _, skip := skipAuthCommands[cmd.CommandPath()]; skip {
+				return
+			}
+
+			// JSON mode: non-TTY stdout OR the command's own --json/-j flag was set.
+			isJSON := !term.IsTerminal(int(os.Stdout.Fd()))
+			if !isJSON {
+				if f := cmd.Flags().Lookup("json"); f != nil && f.Value.String() == "true" {
+					isJSON = true
+				}
+			}
+			if err := loginutil.EnsureAuthenticated(cmd.Context()); err != nil {
+				msg.FailJSON(isJSON, "%s", err)
+				exit.Error(err, "authentication required")
 			}
 		},
 		PersistentPostRun: func(cmd *cobra.Command, args []string) {

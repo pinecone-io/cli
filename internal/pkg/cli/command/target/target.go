@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"golang.org/x/term"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
@@ -72,6 +73,8 @@ func NewTargetCmd() *cobra.Command {
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
+			// Auto-detect non-TTY (agentic) environments just as the login flow does.
+			options.json = options.json || !term.IsTerminal(int(os.Stdout.Fd()))
 			log.Debug().
 				Str("org", options.org).
 				Str("project", options.project).
@@ -145,6 +148,16 @@ func NewTargetCmd() *cobra.Command {
 				options.orgID == "" &&
 				options.project == "" &&
 				options.projectID == "" {
+
+				if options.json {
+					// In non-TTY/JSON mode there's no interactive selector — just
+					// show the current target context so agents can read it.
+					targetContext := state.GetTargetContext()
+					defaultAPIKey := secrets.DefaultAPIKey.Get()
+					targetContext.DefaultAPIKey = presenters.MaskHeadTail(defaultAPIKey, 4, 4)
+					fmt.Fprintln(os.Stdout, text.IndentJSON(targetContext))
+					return
+				}
 
 				// Ask the user to choose a target org
 				targetOrg := postLoginInteractiveTargetOrg(orgs, options.json)

@@ -263,8 +263,14 @@ func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, wait bool, ses
 
 	if wait {
 		// Caller needs the token on return — block until the daemon completes.
-		// Print the auth URL to stderr so the user/agent can navigate to it while
-		// we poll. Stderr keeps stdout clean for the caller's own JSON output.
+		// Emit the auth URL to stdout as JSON so agents watching stdout can extract
+		// it. Also write to stderr for human users. The caller is responsible for
+		// emitting its own JSON result once this function returns.
+		fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
+			Status    string `json:"status"`
+			URL       string `json:"url"`
+			SessionId string `json:"session_id"`
+		}{Status: "authenticating", URL: authURL, SessionId: sessionId}))
 		fmt.Fprintf(os.Stderr, "Visit the following URL to authenticate:\n\n  %s\n\n", authURL)
 		return pollForResult(sessionId, newSess.CreatedAt, true)
 	}
@@ -480,9 +486,10 @@ func getAndSetAccessTokenInteractive(ctx context.Context, orgId *string) error {
 	return nil
 }
 
-// RunPostAuthSetup fetches the user's org/project context, sets target defaults,
-// and emits the final {"status":"authenticated",...} JSON.
-func RunPostAuthSetup(ctx context.Context) error {
+// applyAuthContext fetches the user's org/project and writes them to state.
+// It is the side-effect half of the post-auth setup, separated so that callers
+// that don't want to emit JSON (e.g. EnsureAuthenticated) can still set context.
+func applyAuthContext(ctx context.Context) error {
 	token, err := oauth.Token(ctx)
 	if err != nil {
 		return fmt.Errorf("error retrieving oauth token: %w", err)
@@ -519,17 +526,35 @@ func RunPostAuthSetup(ctx context.Context) error {
 		Id:   targetOrg.Id,
 	})
 
-	projectId := ""
-	projectName := ""
 	if len(projects) > 0 {
 		targetProj := projects[0]
 		state.TargetProj.Set(state.TargetProject{
 			Name: targetProj.Name,
 			Id:   targetProj.Id,
 		})
-		projectId = targetProj.Id
-		projectName = targetProj.Name
 	}
+
+	return nil
+}
+
+// RunPostAuthSetup fetches the user's org/project context, sets target defaults,
+// and emits the final {"status":"authenticated",...} JSON.
+func RunPostAuthSetup(ctx context.Context) error {
+	if err := applyAuthContext(ctx); err != nil {
+		return err
+	}
+
+	token, err := oauth.Token(ctx)
+	if err != nil {
+		return fmt.Errorf("error retrieving oauth token: %w", err)
+	}
+	claims, err := oauth.ParseClaimsUnverified(token)
+	if err != nil {
+		return fmt.Errorf("error parsing token claims: %w", err)
+	}
+
+	targetOrg := state.TargetOrg.Get()
+	targetProj := state.TargetProj.Get()
 
 	fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
 		Status      string `json:"status"`
@@ -538,7 +563,7 @@ func RunPostAuthSetup(ctx context.Context) error {
 		OrgName     string `json:"org_name"`
 		ProjectId   string `json:"project_id"`
 		ProjectName string `json:"project_name"`
-	}{Status: "authenticated", Email: claims.Email, OrgId: targetOrg.Id, OrgName: targetOrg.Name, ProjectId: projectId, ProjectName: projectName}))
+	}{Status: "authenticated", Email: claims.Email, OrgId: targetOrg.Id, OrgName: targetOrg.Name, ProjectId: targetProj.Id, ProjectName: targetProj.Name}))
 
 	return nil
 }
@@ -626,6 +651,81 @@ func renderHTML(w http.ResponseWriter, htmlTemplate string, data map[string]temp
 	w.WriteHeader(http.StatusOK)
 	if err := tmpl.Execute(w, data); err != nil {
 		return fmt.Errorf("error executing auth response HTML template: %w", err)
+	}
+	return nil
+}
+
+// EnsureAuthenticated verifies that valid credentials are available, transparently
+// completing a finished pending session if one exists.
+//
+//   - Valid token or non-OAuth credentials present → returns nil immediately.
+//   - Pending session whose daemon has already completed → reloads credentials from
+//     disk and returns nil. This is the "lazy completion" path: after a successful
+//     browser login the next command just works without a second `pc login` call.
+//   - Pending session still in progress → returns an error containing the auth URL.
+//   - No credentials and no session → returns a "not authenticated" error.
+func EnsureAuthenticated(ctx context.Context) error {
+	// Service-account and API key credentials don't use OAuth tokens.
+	if secrets.ClientId.Get() != "" && secrets.ClientSecret.Get() != "" {
+		return nil
+	}
+	if secrets.DefaultAPIKey.Get() != "" {
+		return nil
+	}
+
+	// Check for a valid OAuth token.
+	token, err := oauth.Token(ctx)
+	var te *oauth.TokenError
+	if err != nil {
+		if !errors.As(err, &te) || te.Kind != oauth.TokenErrSessionExpired {
+			// Real error (network failure, etc.) — propagate it.
+			return err
+		}
+		// Session expired — fall through to check for a pending session.
+	} else if token != nil && token.AccessToken != "" {
+		// Valid token. If no target org is set yet (e.g. first command after a fresh
+		// login before a second `pc login` call was made), initialize the context now
+		// so the calling command doesn't fail with "need to target a project".
+		if state.TargetOrg.Get().Id == "" {
+			if err := applyAuthContext(ctx); err != nil {
+				log.Debug().Err(err).Msg("EnsureAuthenticated: applyAuthContext failed")
+			}
+		}
+		return nil
+	}
+
+	// No valid token — look for a pending session whose daemon may have finished.
+	sess, result, sessErr := findResumableSession()
+	if sessErr != nil {
+		return fmt.Errorf("error checking auth session: %w", sessErr)
+	}
+
+	if sess == nil {
+		if err != nil {
+			// Token was expired and there's no pending session to fall back to.
+			return err
+		}
+		return fmt.Errorf("not authenticated. Run %s to log in.", style.Code("pc login"))
+	}
+
+	if result == nil {
+		// Daemon still running — auth not yet complete.
+		return fmt.Errorf("authentication in progress. Visit the following URL to complete login, then retry:\n\n  %s\n\nOr run %s to check status.", sess.AuthURL, style.Code("pc login -j"))
+	}
+
+	// Daemon finished.
+	defer CleanupSession(sess.SessionId)
+	if result.Status == "error" {
+		return fmt.Errorf("authentication failed: %s. Run %s to try again.", result.Error, style.Code("pc login"))
+	}
+
+	// Reload credentials written by the daemon process into this process's cache,
+	// then set the target org/project context so the calling command can proceed
+	// without a separate `pc login` or `pc target` call.
+	_ = secrets.SecretsViper.ReadInConfig()
+	if err := applyAuthContext(ctx); err != nil {
+		// Non-fatal: credentials are valid, context setup is best-effort.
+		log.Debug().Err(err).Msg("EnsureAuthenticated: applyAuthContext failed after lazy credential reload")
 	}
 	return nil
 }

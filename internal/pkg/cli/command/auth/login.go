@@ -42,7 +42,7 @@ func NewLoginCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVar(&jsonOutput, "json", false, "emit JSON output")
+	cmd.Flags().BoolVarP(&jsonOutput, "json", "j", false, "emit JSON output")
 
 	return cmd
 }
