@@ -48,6 +48,10 @@ func RunDaemon(sessionId string) {
 		writeDaemonError(sessionId, fmt.Sprintf("error exchanging auth code: %s", err))
 		return
 	}
+	if token == nil {
+		writeDaemonError(sessionId, "error exchanging auth code: no token returned")
+		return
+	}
 
 	claims, err := oauth.ParseClaimsUnverified(token)
 	if err != nil {

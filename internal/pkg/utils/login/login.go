@@ -255,7 +255,7 @@ func resumeSession(sess *SessionState, result *SessionResult) error {
 	}
 	// Still pending — re-surface the URL and keep polling.
 	printPendingJSON(sess.AuthURL, sess.SessionId)
-	return pollForResult(sess.SessionId)
+	return pollForResult(sess.SessionId, sess.CreatedAt)
 }
 
 // pollForResult polls the daemon's result file until auth completes or the session expires.
@@ -263,14 +263,21 @@ func resumeSession(sess *SessionState, result *SessionResult) error {
 // On timeout it returns without cleaning up so the daemon can still complete and be
 // resumed on the next invocation.
 //
+// createdAt is the session's creation time; the deadline is computed from it so that
+// the total wait never exceeds sessionMaxAge regardless of when polling started.
+//
 // The polling loop runs on context.Background() rather than the caller's context so that
 // the root command's --timeout flag (default 60s) does not interrupt a user who is still
 // authenticating in the browser. The caller's context is passed through only to
 // RunPostAuthSetup for the subsequent API calls.
-func pollForResult(sessionId string) error {
+func pollForResult(sessionId string, createdAt time.Time) error {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
-	deadline := time.NewTimer(sessionMaxAge)
+	remaining := time.Until(createdAt.Add(sessionMaxAge))
+	if remaining <= 0 {
+		return errors.New("timed out waiting for authentication")
+	}
+	deadline := time.NewTimer(remaining)
 	defer deadline.Stop()
 
 	for {
