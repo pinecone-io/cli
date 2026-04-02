@@ -328,6 +328,19 @@ func printPendingJSON(authURL, sessionId string) {
 // getAndSetAccessTokenInteractive is the original interactive path: inline callback server,
 // optional [Enter]-to-open-browser prompt when stdin is a TTY.
 func getAndSetAccessTokenInteractive(ctx context.Context, orgId *string) error {
+	// If a daemon from a prior JSON-mode login is still running, it holds the
+	// callback port. Attempting to bind the same port would fail with a confusing
+	// "address already in use" error. Detect this upfront and tell the user.
+	sess, _, err := findResumableSession()
+	if err != nil {
+		return fmt.Errorf("error checking for existing auth session: %w", err)
+	}
+	if sess != nil {
+		fmt.Fprintf(os.Stderr, "An authentication flow is already in progress. Visit the URL below to complete it:\n\n  %s\n\n", sess.AuthURL)
+		return fmt.Errorf("authentication already in progress (started at %s) — complete the existing flow or wait for it to expire",
+			sess.CreatedAt.Format(time.RFC3339))
+	}
+
 	a := oauth.Auth{}
 	csrfState := randomCSRFState()
 
