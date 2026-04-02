@@ -11,6 +11,7 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"os/exec"
 	"time"
 
 	"golang.org/x/term"
@@ -39,14 +40,36 @@ var logoSVG string
 
 type Options struct {
 	Json bool
+	// Wait makes the daemon path block until the token is acquired and stored,
+	// rather than returning immediately after printing "pending". Use this when
+	// the caller needs a valid token on return (e.g. pc target re-auth).
+	// RunPostAuthSetup is not called in Wait mode; the caller is responsible
+	// for any post-auth state setup and output.
+	Wait bool
 }
 
 func Run(ctx context.Context, opts Options) {
 	// Resolve output format once at the top level: explicit --json flag or auto-detected non-TTY stdout.
-	// Normalizing opts.Json here means GetAndSetAccessToken and other helpers use opts.Json directly.
 	opts.Json = opts.Json || !term.IsTerminal(int(os.Stdout.Fd()))
 
-	// Check if the user is currently logged in
+	// In JSON mode, check for a pending session once here. If found, skip the
+	// already_authenticated guard and pass the result directly into GetAndSetAccessToken
+	// to avoid a redundant directory scan and TOCTOU window.
+	if opts.Json {
+		sess, result, err := findResumableSession()
+		if err != nil {
+			msg.FailMsg("Error checking for existing auth session: %s", err)
+			exit.Error(err, "Error checking for existing auth session")
+		}
+		if sess != nil {
+			if err := getAndSetAccessTokenJSON(ctx, nil, false, sess, result); err != nil {
+				msg.FailMsg("Error acquiring access token while logging in: %s", err)
+				exit.Error(err, "Error acquiring access token while logging in")
+			}
+			return
+		}
+	}
+
 	token, err := oauth.Token(ctx)
 
 	var te *oauth.TokenError
@@ -76,14 +99,18 @@ func Run(ctx context.Context, opts Options) {
 		return
 	}
 
-	// Initiate login flow
 	err = GetAndSetAccessToken(ctx, nil, opts)
 	if err != nil {
 		msg.FailMsg("Error acquiring access token while logging in: %s", err)
 		exit.Error(err, "Error acquiring access token while logging in")
 	}
 
-	// Parse token claims to get orgId
+	if opts.Json {
+		// JSON mode: GetAndSetAccessToken handled all output (pending → polling → authenticated).
+		return
+	}
+
+	// Non-JSON: complete post-auth setup with human-readable output.
 	token, err = oauth.Token(ctx)
 	if err != nil {
 		msg.FailMsg("Error retrieving oauth token: %s", err)
@@ -94,18 +121,11 @@ func Run(ctx context.Context, opts Options) {
 		msg.FailMsg("An auth token was fetched but an error occurred while parsing the token's claims: %s", err)
 		exit.Error(err, "Error parsing claims from access token")
 	}
-	if !opts.Json {
-		msg.Blank()
-		msg.SuccessMsg("Logged in as %s. Defaulted to organization ID: %s", style.Emphasis(claims.Email), style.Emphasis(claims.OrgId))
-	}
+	msg.Blank()
+	msg.SuccessMsg("Logged in as %s. Defaulted to organization ID: %s", style.Emphasis(claims.Email), style.Emphasis(claims.OrgId))
 
 	ac := sdk.NewPineconeAdminClient(ctx)
-	if err != nil {
-		msg.FailMsg("Error creating Pinecone admin client: %s", err)
-		exit.Error(err, "Error creating Pinecone admin client")
-	}
 
-	// Fetch the user's organizations and projects for the default org associated with the JWT token (if it exists)
 	orgs, err := ac.Organization.List(ctx)
 	if err != nil {
 		msg.FailMsg("Error fetching organizations: %s", err)
@@ -118,7 +138,6 @@ func Run(ctx context.Context, opts Options) {
 		exit.Error(err, "Error fetching projects")
 	}
 
-	// target organization is whatever the JWT token's orgId is - defaults on first login currently
 	var targetOrg *pinecone.Organization
 	for _, org := range orgs {
 		if org.Id == claims.OrgId {
@@ -132,55 +151,88 @@ func Run(ctx context.Context, opts Options) {
 		Id:   targetOrg.Id,
 	})
 
-	if opts.Json {
-		projectId := ""
-		if len(projects) > 0 {
+	msg.InfoMsg("Target org set to %s.", style.Emphasis(targetOrg.Name))
+
+	if projects != nil {
+		if len(projects) == 0 {
+			msg.InfoMsg("No projects found for organization %s.", style.Emphasis(targetOrg.Name))
+			msg.InfoMsg("Please create a project for this organization to work with project resources.")
+		} else {
 			targetProj := projects[0]
 			state.TargetProj.Set(state.TargetProject{
 				Name: targetProj.Name,
 				Id:   targetProj.Id,
 			})
-			projectId = targetProj.Id
+			msg.InfoMsg("Target project set %s.", style.Emphasis(targetProj.Name))
 		}
-		fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
-			Status    string `json:"status"`
-			Email     string `json:"email"`
-			OrgId     string `json:"org_id"`
-			ProjectId string `json:"project_id"`
-		}{Status: "authenticated", Email: claims.Email, OrgId: targetOrg.Id, ProjectId: projectId}))
-	} else {
-		msg.InfoMsg("Target org set to %s.", style.Emphasis(targetOrg.Name))
-
-		if projects != nil {
-			if len(projects) == 0 {
-				msg.InfoMsg("No projects found for organization %s.", style.Emphasis(targetOrg.Name))
-				msg.InfoMsg("Please create a project for this organization to work with project resources.")
-			} else {
-				targetProj := projects[0]
-				state.TargetProj.Set(state.TargetProject{
-					Name: targetProj.Name,
-					Id:   targetProj.Id,
-				})
-
-				msg.InfoMsg("Target project set %s.", style.Emphasis(targetProj.Name))
-			}
-		}
-
-		msg.Blank()
-		msg.HintMsg("Run %s to change the target context.", style.Code("pc target"))
-		msg.HintMsg("Now try %s to learn about index operations.", style.Code("pc index -h"))
 	}
+
+	msg.Blank()
+	msg.HintMsg("Run %s to change the target context.", style.Code("pc target"))
+	msg.HintMsg("Now try %s to learn about index operations.", style.Code("pc index -h"))
 }
 
-// Takes an optional orgId, and attempts to acquire an access token scoped to the orgId if provided.
-// If a token is successfully acquired it's set in the secrets store, and the user is considered logged in with state.AuthUserToken.
+// GetAndSetAccessToken acquires an OAuth token via the PKCE browser flow and stores it.
+//
+// Non-JSON mode: runs the callback server inline (blocking), prompts for [Enter] to open
+// the browser when stdin is an interactive TTY.
+//
+// JSON mode: spawns a background daemon that owns the local callback server, prints
+// {"status":"pending","url":"..."} immediately so agents can extract the URL from partial
+// output, then polls the daemon's result file. When the daemon completes it prints
+// {"status":"authenticated",...} and returns. If this process is killed before the daemon
+// finishes (e.g. an agent timeout), the daemon keeps running; the next call to this
+// function will detect the pending session and resume polling rather than starting a new flow.
 func GetAndSetAccessToken(ctx context.Context, orgId *string, opts Options) error {
-	a := oauth.Auth{}
+	// Apply TTY auto-detection here so callers don't have to — if stdout is not
+	// a terminal (agentic context), always use the JSON/daemon path.
+	opts.Json = opts.Json || !term.IsTerminal(int(os.Stdout.Fd()))
+	if opts.Json {
+		return getAndSetAccessTokenJSON(ctx, orgId, opts.Wait, nil, nil)
+	}
+	return getAndSetAccessTokenInteractive(ctx, orgId)
+}
 
-	// CSRF state
+// getAndSetAccessTokenJSON is the agentic path: daemon-backed, non-blocking on stdin.
+// sess and result may be pre-fetched by the caller to avoid a redundant directory scan;
+// if nil, findResumableSession is called here.
+//
+// When wait is false (default for pc login): spawns daemon, prints pending JSON, and
+// returns immediately. The caller is expected to call again to poll for the result.
+//
+// When wait is true (for callers like pc target that need a token on return): spawns
+// daemon, blocks until auth completes, and returns with the token stored. RunPostAuthSetup
+// is not called; the caller owns post-auth state and output.
+func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, wait bool, sess *SessionState, result *SessionResult) error {
+	if sess == nil {
+		// No pre-fetched session — look one up now.
+		var err error
+		sess, result, err = findResumableSession()
+		if err != nil {
+			return fmt.Errorf("error checking for existing auth session: %w", err)
+		}
+	}
+	if sess != nil {
+		// If the caller is requesting a specific org that doesn't match the pending
+		// session's org, the existing session cannot be used.
+		if orgId != nil && sess.OrgId != nil && *orgId != *sess.OrgId {
+			if result != nil {
+				// Daemon has finished and released the port — clean up and start fresh.
+				CleanupSession(sess.SessionId)
+				// Fall through to start a new flow.
+			} else {
+				// Daemon is still running and holds the callback port.
+				return fmt.Errorf("an auth session for a different organization (%s) is already in progress; wait for it to expire or complete it first", *sess.OrgId)
+			}
+		} else {
+			return resumeSession(sess, result, wait)
+		}
+	}
+
+	// Start a new flow.
+	a := oauth.Auth{}
 	csrfState := randomCSRFState()
 
-	// PKCE verifier and challenge
 	verifier, challenge, err := a.CreateNewVerifierAndChallenge()
 	if err != nil {
 		return fmt.Errorf("error creating new auth verifier and challenge: %w", err)
@@ -191,9 +243,168 @@ func GetAndSetAccessToken(ctx context.Context, orgId *string, opts Options) erro
 		return fmt.Errorf("error getting auth URL: %w", err)
 	}
 
-	// Spin up a local server in a goroutine to handle receiving the authorization code from auth0
+	sessionId := newSessionId()
+	newSess := &SessionState{
+		SessionId: sessionId,
+		CSRFState: csrfState,
+		AuthURL:   authURL,
+		OrgId:     orgId,
+		CreatedAt: time.Now(),
+	}
+	if err := writeSessionState(*newSess); err != nil {
+		return fmt.Errorf("error writing session state: %w", err)
+	}
+	// Pass the PKCE verifier to the daemon via environment variable rather than
+	// writing it to the session file, so it never touches disk.
+	if err := spawnDaemon(sessionId, verifier); err != nil {
+		CleanupSession(sessionId)
+		return fmt.Errorf("error spawning auth daemon: %w", err)
+	}
+
+	if wait {
+		// Caller needs the token on return — block until the daemon completes.
+		// Print the auth URL to stderr so the user/agent can navigate to it while
+		// we poll. Stderr keeps stdout clean for the caller's own JSON output.
+		fmt.Fprintf(os.Stderr, "Visit the following URL to authenticate:\n\n  %s\n\n", authURL)
+		return pollForResult(sessionId, newSess.CreatedAt, true)
+	}
+
+	// Agentic login (first call): print pending and return immediately. The daemon
+	// owns the callback server and will write a result file when auth completes.
+	// The next invocation will detect the pending session and poll for the result.
+	printPendingJSON(authURL, sessionId)
+	return nil
+}
+
+// resumeSession handles a session that was already started (e.g. after a process restart).
+// If the daemon already finished, it handles the result immediately. Otherwise it polls.
+// When wait is true, RunPostAuthSetup is skipped; the caller owns post-auth state and output.
+func resumeSession(sess *SessionState, result *SessionResult, wait bool) error {
+	if result != nil {
+		// Daemon already completed while we were away.
+		defer CleanupSession(sess.SessionId)
+		if result.Status == "error" {
+			return fmt.Errorf("authentication failed: %s", result.Error)
+		}
+		_ = secrets.SecretsViper.ReadInConfig()
+		if wait {
+			return nil
+		}
+		setupCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		return RunPostAuthSetup(setupCtx)
+	}
+	// Still pending — poll until the daemon completes.
+	// Don't re-emit pending here: this call will block until done, keeping stdout
+	// to a single JSON value per invocation.
+	return pollForResult(sess.SessionId, sess.CreatedAt, wait)
+}
+
+// pollForResult polls the daemon's result file until auth completes or the session expires.
+// On success, when wait is false it calls RunPostAuthSetup to emit authenticated JSON;
+// when wait is true it reloads credentials and returns, leaving output to the caller.
+// On timeout it returns without cleaning up so the daemon can still complete and be
+// resumed on the next invocation.
+//
+// createdAt is the session's creation time; the deadline is computed from it so that
+// the total wait never exceeds sessionMaxAge regardless of when polling started.
+//
+// The polling loop runs on context.Background() so that the root command's --timeout
+// flag (default 60s) does not interrupt a user still authenticating in the browser.
+func pollForResult(sessionId string, createdAt time.Time, wait bool) error {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	remaining := time.Until(createdAt.Add(sessionMaxAge))
+	if remaining <= 0 {
+		return errors.New("timed out waiting for authentication")
+	}
+	deadline := time.NewTimer(remaining)
+	defer deadline.Stop()
+
+	for {
+		select {
+		case <-deadline.C:
+			// Don't clean up — daemon may still complete; next call will resume.
+			return errors.New("timed out waiting for authentication")
+		case <-ticker.C:
+			result, err := readSessionResult(sessionId)
+			if err != nil {
+				return fmt.Errorf("error reading session result: %w", err)
+			}
+			if result == nil {
+				continue // daemon not done yet
+			}
+			defer CleanupSession(sessionId)
+			if result.Status == "error" {
+				return fmt.Errorf("authentication failed: %s", result.Error)
+			}
+			// The daemon wrote the token to secrets.yaml from a separate process.
+			// Reload from disk so this process's Viper cache reflects it.
+			_ = secrets.SecretsViper.ReadInConfig()
+			if wait {
+				// Caller handles post-auth state and output.
+				return nil
+			}
+			// Use a fresh context for the post-auth API calls: the original ctx may
+			// have expired if the user took longer than --timeout to authenticate.
+			setupCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			return RunPostAuthSetup(setupCtx)
+		}
+	}
+}
+
+func printPendingJSON(authURL, sessionId string) {
+	fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
+		Status      string `json:"status"`
+		URL         string `json:"url"`
+		SessionId   string `json:"session_id"`
+		Description string `json:"description"`
+	}{
+		Status:      "pending",
+		URL:         authURL,
+		SessionId:   sessionId,
+		Description: "Navigate to the URL to complete the OAuth authorization flow, then call this command again to retrieve credentials.",
+	}))
+}
+
+// getAndSetAccessTokenInteractive is the original interactive path: inline callback server,
+// optional [Enter]-to-open-browser prompt when stdin is a TTY.
+func getAndSetAccessTokenInteractive(ctx context.Context, orgId *string) error {
+	// If a daemon from a prior JSON-mode login exists, check whether it has
+	// already finished before deciding whether to block interactive login.
+	sess, result, err := findResumableSession()
+	if err != nil {
+		return fmt.Errorf("error checking for existing auth session: %w", err)
+	}
+	if sess != nil {
+		if result != nil {
+			// Daemon finished (success or error) and has released the port.
+			// Clean up the stale session and proceed with interactive login.
+			CleanupSession(sess.SessionId)
+		} else {
+			// Daemon is still running and holds the callback port.
+			fmt.Fprintf(os.Stderr, "An authentication flow is already in progress. Visit the URL below to complete it:\n\n  %s\n\n", sess.AuthURL)
+			return fmt.Errorf("authentication already in progress (started at %s) — complete the existing flow or wait for it to expire",
+				sess.CreatedAt.Format(time.RFC3339))
+		}
+	}
+
+	a := oauth.Auth{}
+	csrfState := randomCSRFState()
+
+	verifier, challenge, err := a.CreateNewVerifierAndChallenge()
+	if err != nil {
+		return fmt.Errorf("error creating new auth verifier and challenge: %w", err)
+	}
+
+	authURL, err := a.GetAuthURL(ctx, csrfState, challenge, orgId)
+	if err != nil {
+		return fmt.Errorf("error getting auth URL: %w", err)
+	}
+
 	codeCh := make(chan string, 1)
-	serverCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	serverCtx, cancel := context.WithTimeout(ctx, sessionMaxAge)
 	defer cancel()
 
 	go func() {
@@ -206,28 +417,14 @@ func GetAndSetAccessToken(ctx context.Context, orgId *string, opts Options) erro
 		codeCh <- code
 	}()
 
-	if opts.Json {
-		fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
-			Status string `json:"status"`
-			URL    string `json:"url"`
-		}{Status: "pending", URL: authURL}))
-	} else {
-		fmt.Fprintf(os.Stderr, "Visit %s to authorize the CLI.\n", style.Underline(authURL))
-	}
+	fmt.Fprintf(os.Stderr, "Visit %s to authorize the CLI.\n", style.Underline(authURL))
 
-	// Prompt for [Enter] and spawn stdin reader whenever stdin is an interactive TTY,
-	// regardless of output format. JSON mode only affects what goes to stdout — a user
-	// running --json in a terminal is still at a keyboard and benefits from browser-open.
-	// The prompt goes to stderr so it never corrupts the stdout JSON stream.
 	if term.IsTerminal(int(os.Stdin.Fd())) {
 		msg.Blank()
 		fmt.Fprintf(os.Stderr, "Press %s to open the browser, or manually paste the URL above.\n", style.Code("[Enter]"))
 
 		go func(ctx context.Context) {
-			// inner channel to signal that [Enter] was pressed
 			inputCh := make(chan struct{}, 1)
-
-			// spawn inner goroutine to read stdin (blocking)
 			go func() {
 				_, err := bufio.NewReader(os.Stdin).ReadBytes('\n')
 				if err != nil {
@@ -236,8 +433,6 @@ func GetAndSetAccessToken(ctx context.Context, orgId *string, opts Options) erro
 				}
 				close(inputCh)
 			}()
-
-			// wait for [Enter], auth code, or timeout
 			select {
 			case <-ctx.Done():
 				return
@@ -245,14 +440,12 @@ func GetAndSetAccessToken(ctx context.Context, orgId *string, opts Options) erro
 				if err := browser.OpenBrowser(authURL); err != nil {
 					log.Error().Err(err).Msg("error opening browser")
 				}
-			case <-time.After(5 * time.Minute):
-				// extra precaution to prevent hanging indefinitely on stdin
+			case <-time.After(sessionMaxAge):
 				return
 			}
 		}(serverCtx)
 	}
 
-	// Wait for auth code and exchange for access token
 	code := <-codeCh
 	if code == "" {
 		return errors.New("error authenticating CLI and retrieving oauth2 access token")
@@ -270,17 +463,11 @@ func GetAndSetAccessToken(ctx context.Context, orgId *string, opts Options) erro
 	}
 
 	if token != nil {
-		// Store the token
 		secrets.SetOAuth2Token(*token)
-
-		// Clear any existing client_id and client_secret values
 		secrets.ClientId.Set("")
 		secrets.ClientSecret.Set("")
 
-		// Update target credentials context
 		authContext := state.AuthUserToken
-
-		// If there's a default API key set, we want to keep that as the current auth context
 		if state.AuthedUser.Get().AuthContext == state.AuthDefaultAPIKey {
 			authContext = state.AuthDefaultAPIKey
 		}
@@ -293,11 +480,89 @@ func GetAndSetAccessToken(ctx context.Context, orgId *string, opts Options) erro
 	return nil
 }
 
+// RunPostAuthSetup fetches the user's org/project context, sets target defaults,
+// and emits the final {"status":"authenticated",...} JSON.
+func RunPostAuthSetup(ctx context.Context) error {
+	token, err := oauth.Token(ctx)
+	if err != nil {
+		return fmt.Errorf("error retrieving oauth token: %w", err)
+	}
+	claims, err := oauth.ParseClaimsUnverified(token)
+	if err != nil {
+		return fmt.Errorf("error parsing token claims: %w", err)
+	}
+
+	ac := sdk.NewPineconeAdminClient(ctx)
+
+	orgs, err := ac.Organization.List(ctx)
+	if err != nil {
+		return fmt.Errorf("error fetching organizations: %w", err)
+	}
+	projects, err := ac.Project.List(ctx)
+	if err != nil {
+		return fmt.Errorf("error fetching projects: %w", err)
+	}
+
+	var targetOrg *pinecone.Organization
+	for _, org := range orgs {
+		if org.Id == claims.OrgId {
+			targetOrg = org
+			break
+		}
+	}
+	if targetOrg == nil {
+		return fmt.Errorf("target organization %s not found", claims.OrgId)
+	}
+
+	state.TargetOrg.Set(state.TargetOrganization{
+		Name: targetOrg.Name,
+		Id:   targetOrg.Id,
+	})
+
+	projectId := ""
+	projectName := ""
+	if len(projects) > 0 {
+		targetProj := projects[0]
+		state.TargetProj.Set(state.TargetProject{
+			Name: targetProj.Name,
+			Id:   targetProj.Id,
+		})
+		projectId = targetProj.Id
+		projectName = targetProj.Name
+	}
+
+	fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
+		Status      string `json:"status"`
+		Email       string `json:"email"`
+		OrgId       string `json:"org_id"`
+		OrgName     string `json:"org_name"`
+		ProjectId   string `json:"project_id"`
+		ProjectName string `json:"project_name"`
+	}{Status: "authenticated", Email: claims.Email, OrgId: targetOrg.Id, OrgName: targetOrg.Name, ProjectId: projectId, ProjectName: projectName}))
+
+	return nil
+}
+
+// spawnDaemon starts a detached `pc auth _daemon --session-id <id>` process.
+// The PKCE verifier is passed via environment variable so it never touches disk.
+func spawnDaemon(sessionId, pkceVerifier string) error {
+	exe, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("error finding executable path: %w", err)
+	}
+	cmd := exec.Command(exe, "auth", "_daemon", "--session-id", sessionId)
+	detachProcess(cmd)
+	cmd.Stdin = nil
+	cmd.Stdout = nil
+	cmd.Stderr = nil
+	cmd.Env = append(os.Environ(), "PINECONE_PKCE_VERIFIER="+pkceVerifier)
+	return cmd.Start()
+}
+
 func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error) {
 	codeCh := make(chan string)
 	errCh := make(chan error)
 
-	// start server to receive the auth code
 	mux := http.NewServeMux()
 	mux.HandleFunc("/auth-callback", func(w http.ResponseWriter, r *http.Request) {
 		code := r.URL.Query().Get("code")
@@ -308,7 +573,6 @@ func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error
 			return
 		}
 
-		// Code is empty, there was an error authenticating, return error HTML
 		templateData := map[string]template.HTML{"LogoSVG": template.HTML(logoSVG)}
 		if code == "" {
 			if err := renderHTML(w, errorHTML, templateData); err != nil {
@@ -325,7 +589,6 @@ func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error
 		codeCh <- code
 	})
 
-	// Start server and listen for auth code response
 	serve := &http.Server{
 		Addr:    "127.0.0.1:59049",
 		Handler: mux,
