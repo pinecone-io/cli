@@ -185,7 +185,10 @@ func GetAndSetAccessToken(ctx context.Context, orgId *string, opts Options) erro
 func getAndSetAccessTokenJSON(ctx context.Context, orgId *string) error {
 	// Resume a pending session if one exists (e.g. this process was killed mid-poll).
 	sess, result, err := findResumableSession()
-	if err == nil && sess != nil {
+	if err != nil {
+		return fmt.Errorf("error checking for existing auth session: %w", err)
+	}
+	if sess != nil {
 		return resumeSession(sess, result)
 	}
 
