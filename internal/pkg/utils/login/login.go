@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"time"
@@ -45,6 +46,21 @@ type Options struct {
 func Run(ctx context.Context, opts Options) {
 	// Resolve output format once at the top level: explicit --json flag or auto-detected non-TTY stdout.
 	opts.Json = opts.Json || !term.IsTerminal(int(os.Stdout.Fd()))
+
+	// In JSON mode, a pending session means the daemon just completed and wrote
+	// the token to disk. Skip the already_authenticated guard so that
+	// getAndSetAccessTokenJSON → resumeSession → RunPostAuthSetup can run,
+	// set TargetOrg/TargetProj, emit the authenticated JSON, and clean up
+	// the session files.
+	if opts.Json {
+		if sess, _, _ := findResumableSession(); sess != nil {
+			if err := GetAndSetAccessToken(ctx, nil, opts); err != nil {
+				msg.FailMsg("Error acquiring access token while logging in: %s", err)
+				exit.Error(err, "Error acquiring access token while logging in")
+			}
+			return
+		}
+	}
 
 	token, err := oauth.Token(ctx)
 
@@ -171,7 +187,7 @@ func getAndSetAccessTokenJSON(ctx context.Context, orgId *string) error {
 	// Resume a pending session if one exists (e.g. this process was killed mid-poll).
 	sess, result, err := findResumableSession()
 	if err == nil && sess != nil {
-		return resumeSession(ctx, sess, result)
+		return resumeSession(sess, result)
 	}
 
 	// Start a new flow.
@@ -215,7 +231,7 @@ func getAndSetAccessTokenJSON(ctx context.Context, orgId *string) error {
 // resumeSession handles a session that was already started (e.g. after a process restart).
 // If the daemon already finished, it handles the result immediately. Otherwise it re-prints
 // the pending URL and continues polling.
-func resumeSession(ctx context.Context, sess *SessionState, result *SessionResult) error {
+func resumeSession(sess *SessionState, result *SessionResult) error {
 	if result != nil {
 		// Daemon already completed while we were away.
 		defer CleanupSession(sess.SessionId)
@@ -223,18 +239,25 @@ func resumeSession(ctx context.Context, sess *SessionState, result *SessionResul
 			return fmt.Errorf("authentication failed: %s", result.Error)
 		}
 		_ = secrets.SecretsViper.ReadInConfig()
-		return RunPostAuthSetup(ctx)
+		setupCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		return RunPostAuthSetup(setupCtx)
 	}
 	// Still pending — re-surface the URL and keep polling.
 	printPendingJSON(sess.AuthURL, sess.SessionId)
-	return pollForResult(ctx, sess.SessionId)
+	return pollForResult(sess.SessionId)
 }
 
 // pollForResult polls the daemon's result file until auth completes or the session expires.
 // On success it runs post-auth setup and emits the final authenticated JSON.
 // On timeout it returns without cleaning up so the daemon can still complete and be
 // resumed on the next invocation.
-func pollForResult(ctx context.Context, sessionId string) error {
+//
+// The polling loop runs on context.Background() rather than the caller's context so that
+// the root command's --timeout flag (default 60s) does not interrupt a user who is still
+// authenticating in the browser. The caller's context is passed through only to
+// RunPostAuthSetup for the subsequent API calls.
+func pollForResult(sessionId string) error {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 	deadline := time.NewTimer(sessionMaxAge)
@@ -242,8 +265,6 @@ func pollForResult(ctx context.Context, sessionId string) error {
 
 	for {
 		select {
-		case <-ctx.Done():
-			return ctx.Err()
 		case <-deadline.C:
 			// Don't clean up — daemon may still complete; next call will resume.
 			return errors.New("timed out waiting for authentication")
@@ -262,17 +283,33 @@ func pollForResult(ctx context.Context, sessionId string) error {
 			// The daemon wrote the token to secrets.yaml from a separate process.
 			// Reload from disk so this process's Viper cache reflects it.
 			_ = secrets.SecretsViper.ReadInConfig()
-			return RunPostAuthSetup(ctx)
+			// Use a fresh context for the post-auth API calls: the original ctx may
+			// have expired if the user took longer than --timeout to authenticate.
+			setupCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			return RunPostAuthSetup(setupCtx)
 		}
 	}
 }
 
 func printPendingJSON(authURL, sessionId string) {
+	// Decode percent-encoded characters (e.g. %3A→: %2F→/) so the URL is
+	// human-readable when copied from the terminal. Browsers re-encode correctly.
+	displayURL, err := url.PathUnescape(authURL)
+	if err != nil {
+		displayURL = authURL
+	}
 	fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
-		Status    string `json:"status"`
-		URL       string `json:"url"`
-		SessionId string `json:"session_id"`
-	}{Status: "pending", URL: authURL, SessionId: sessionId}))
+		Status      string `json:"status"`
+		URL         string `json:"url"`
+		SessionId   string `json:"session_id"`
+		Description string `json:"description"`
+	}{
+		Status:      "pending",
+		URL:         displayURL,
+		SessionId:   sessionId,
+		Description: "Navigate to the URL to complete the OAuth authorization flow, then call this command again to retrieve credentials.",
+	}))
 }
 
 // getAndSetAccessTokenInteractive is the original interactive path: inline callback server,
@@ -408,6 +445,7 @@ func RunPostAuthSetup(ctx context.Context) error {
 	})
 
 	projectId := ""
+	projectName := ""
 	if len(projects) > 0 {
 		targetProj := projects[0]
 		state.TargetProj.Set(state.TargetProject{
@@ -415,14 +453,17 @@ func RunPostAuthSetup(ctx context.Context) error {
 			Id:   targetProj.Id,
 		})
 		projectId = targetProj.Id
+		projectName = targetProj.Name
 	}
 
 	fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
-		Status    string `json:"status"`
-		Email     string `json:"email"`
-		OrgId     string `json:"org_id"`
-		ProjectId string `json:"project_id"`
-	}{Status: "authenticated", Email: claims.Email, OrgId: targetOrg.Id, ProjectId: projectId}))
+		Status      string `json:"status"`
+		Email       string `json:"email"`
+		OrgId       string `json:"org_id"`
+		OrgName     string `json:"org_name"`
+		ProjectId   string `json:"project_id"`
+		ProjectName string `json:"project_name"`
+	}{Status: "authenticated", Email: claims.Email, OrgId: targetOrg.Id, OrgName: targetOrg.Name, ProjectId: projectId, ProjectName: projectName}))
 
 	return nil
 }

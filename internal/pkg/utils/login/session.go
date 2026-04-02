@@ -91,7 +91,28 @@ func WriteSessionResult(r SessionResult) error {
 	if err != nil {
 		return fmt.Errorf("error marshaling session result: %w", err)
 	}
-	return os.WriteFile(path, data, 0600)
+	// Write to a temp file in the same directory, then rename for atomicity.
+	dir := filepath.Dir(path)
+	tmp, err := os.CreateTemp(dir, ".result-*.tmp")
+	if err != nil {
+		return fmt.Errorf("error creating temp result file: %w", err)
+	}
+	tmpPath := tmp.Name()
+	if _, err := tmp.Write(data); err != nil {
+		tmp.Close()
+		os.Remove(tmpPath)
+		return fmt.Errorf("error writing temp result file: %w", err)
+	}
+	if err := tmp.Chmod(0600); err != nil {
+		tmp.Close()
+		os.Remove(tmpPath)
+		return fmt.Errorf("error setting permissions on temp result file: %w", err)
+	}
+	if err := tmp.Close(); err != nil {
+		os.Remove(tmpPath)
+		return fmt.Errorf("error closing temp result file: %w", err)
+	}
+	return os.Rename(tmpPath, path)
 }
 
 func readSessionResult(sessionId string) (*SessionResult, error) {
@@ -108,7 +129,8 @@ func readSessionResult(sessionId string) (*SessionResult, error) {
 	}
 	var r SessionResult
 	if err := json.Unmarshal(data, &r); err != nil {
-		return nil, fmt.Errorf("error unmarshaling session result: %w", err)
+		// Partial write in progress — treat as not ready yet.
+		return nil, nil
 	}
 	return &r, nil
 }
