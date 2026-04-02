@@ -40,6 +40,12 @@ var logoSVG string
 
 type Options struct {
 	Json bool
+	// Wait makes the daemon path block until the token is acquired and stored,
+	// rather than returning immediately after printing "pending". Use this when
+	// the caller needs a valid token on return (e.g. pc target re-auth).
+	// RunPostAuthSetup is not called in Wait mode; the caller is responsible
+	// for any post-auth state setup and output.
+	Wait bool
 }
 
 func Run(ctx context.Context, opts Options) {
@@ -56,7 +62,7 @@ func Run(ctx context.Context, opts Options) {
 			exit.Error(err, "Error checking for existing auth session")
 		}
 		if sess != nil {
-			if err := getAndSetAccessTokenJSON(ctx, nil, sess, result); err != nil {
+			if err := getAndSetAccessTokenJSON(ctx, nil, false, sess, result); err != nil {
 				msg.FailMsg("Error acquiring access token while logging in: %s", err)
 				exit.Error(err, "Error acquiring access token while logging in")
 			}
@@ -182,7 +188,7 @@ func GetAndSetAccessToken(ctx context.Context, orgId *string, opts Options) erro
 	// a terminal (agentic context), always use the JSON/daemon path.
 	opts.Json = opts.Json || !term.IsTerminal(int(os.Stdout.Fd()))
 	if opts.Json {
-		return getAndSetAccessTokenJSON(ctx, orgId, nil, nil)
+		return getAndSetAccessTokenJSON(ctx, orgId, opts.Wait, nil, nil)
 	}
 	return getAndSetAccessTokenInteractive(ctx, orgId)
 }
@@ -190,7 +196,14 @@ func GetAndSetAccessToken(ctx context.Context, orgId *string, opts Options) erro
 // getAndSetAccessTokenJSON is the agentic path: daemon-backed, non-blocking on stdin.
 // sess and result may be pre-fetched by the caller to avoid a redundant directory scan;
 // if nil, findResumableSession is called here.
-func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, sess *SessionState, result *SessionResult) error {
+//
+// When wait is false (default for pc login): spawns daemon, prints pending JSON, and
+// returns immediately. The caller is expected to call again to poll for the result.
+//
+// When wait is true (for callers like pc target that need a token on return): spawns
+// daemon, blocks until auth completes, and returns with the token stored. RunPostAuthSetup
+// is not called; the caller owns post-auth state and output.
+func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, wait bool, sess *SessionState, result *SessionResult) error {
 	if sess == nil {
 		// No pre-fetched session — look one up now.
 		var err error
@@ -200,7 +213,20 @@ func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, sess *SessionS
 		}
 	}
 	if sess != nil {
-		return resumeSession(sess, result)
+		// If the caller is requesting a specific org that doesn't match the pending
+		// session's org, the existing session cannot be used.
+		if orgId != nil && sess.OrgId != nil && *orgId != *sess.OrgId {
+			if result != nil {
+				// Daemon has finished and released the port — clean up and start fresh.
+				CleanupSession(sess.SessionId)
+				// Fall through to start a new flow.
+			} else {
+				// Daemon is still running and holds the callback port.
+				return fmt.Errorf("an auth session for a different organization (%s) is already in progress; wait for it to expire or complete it first", *sess.OrgId)
+			}
+		} else {
+			return resumeSession(sess, result, wait)
+		}
 	}
 
 	// Start a new flow.
@@ -218,14 +244,14 @@ func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, sess *SessionS
 	}
 
 	sessionId := newSessionId()
-	sess = &SessionState{
+	newSess := &SessionState{
 		SessionId: sessionId,
 		CSRFState: csrfState,
 		AuthURL:   authURL,
 		OrgId:     orgId,
 		CreatedAt: time.Now(),
 	}
-	if err := writeSessionState(*sess); err != nil {
+	if err := writeSessionState(*newSess); err != nil {
 		return fmt.Errorf("error writing session state: %w", err)
 	}
 	// Pass the PKCE verifier to the daemon via environment variable rather than
@@ -235,17 +261,22 @@ func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, sess *SessionS
 		return fmt.Errorf("error spawning auth daemon: %w", err)
 	}
 
-	// Print the pending JSON and exit immediately. The daemon owns the callback
-	// server and will write a result file when auth completes. The next invocation
-	// of this command will detect the pending session and poll for the result.
+	if wait {
+		// Caller needs the token on return — block until the daemon completes.
+		return pollForResult(sessionId, newSess.CreatedAt, true)
+	}
+
+	// Agentic login (first call): print pending and return immediately. The daemon
+	// owns the callback server and will write a result file when auth completes.
+	// The next invocation will detect the pending session and poll for the result.
 	printPendingJSON(authURL, sessionId)
 	return nil
 }
 
 // resumeSession handles a session that was already started (e.g. after a process restart).
-// If the daemon already finished, it handles the result immediately. Otherwise it re-prints
-// the pending URL and continues polling.
-func resumeSession(sess *SessionState, result *SessionResult) error {
+// If the daemon already finished, it handles the result immediately. Otherwise it polls.
+// When wait is true, RunPostAuthSetup is skipped; the caller owns post-auth state and output.
+func resumeSession(sess *SessionState, result *SessionResult, wait bool) error {
 	if result != nil {
 		// Daemon already completed while we were away.
 		defer CleanupSession(sess.SessionId)
@@ -253,29 +284,31 @@ func resumeSession(sess *SessionState, result *SessionResult) error {
 			return fmt.Errorf("authentication failed: %s", result.Error)
 		}
 		_ = secrets.SecretsViper.ReadInConfig()
+		if wait {
+			return nil
+		}
 		setupCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 		return RunPostAuthSetup(setupCtx)
 	}
-	// Still pending — poll until the daemon completes and emit authenticated JSON.
-	// Don't re-emit pending here: this call will block until done and emit exactly
-	// one JSON object (authenticated), keeping stdout to a single JSON value per invocation.
-	return pollForResult(sess.SessionId, sess.CreatedAt)
+	// Still pending — poll until the daemon completes.
+	// Don't re-emit pending here: this call will block until done, keeping stdout
+	// to a single JSON value per invocation.
+	return pollForResult(sess.SessionId, sess.CreatedAt, wait)
 }
 
 // pollForResult polls the daemon's result file until auth completes or the session expires.
-// On success it runs post-auth setup and emits the final authenticated JSON.
+// On success, when wait is false it calls RunPostAuthSetup to emit authenticated JSON;
+// when wait is true it reloads credentials and returns, leaving output to the caller.
 // On timeout it returns without cleaning up so the daemon can still complete and be
 // resumed on the next invocation.
 //
 // createdAt is the session's creation time; the deadline is computed from it so that
 // the total wait never exceeds sessionMaxAge regardless of when polling started.
 //
-// The polling loop runs on context.Background() rather than the caller's context so that
-// the root command's --timeout flag (default 60s) does not interrupt a user who is still
-// authenticating in the browser. The caller's context is passed through only to
-// RunPostAuthSetup for the subsequent API calls.
-func pollForResult(sessionId string, createdAt time.Time) error {
+// The polling loop runs on context.Background() so that the root command's --timeout
+// flag (default 60s) does not interrupt a user still authenticating in the browser.
+func pollForResult(sessionId string, createdAt time.Time, wait bool) error {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 	remaining := time.Until(createdAt.Add(sessionMaxAge))
@@ -305,6 +338,10 @@ func pollForResult(sessionId string, createdAt time.Time) error {
 			// The daemon wrote the token to secrets.yaml from a separate process.
 			// Reload from disk so this process's Viper cache reflects it.
 			_ = secrets.SecretsViper.ReadInConfig()
+			if wait {
+				// Caller handles post-auth state and output.
+				return nil
+			}
 			// Use a fresh context for the post-auth API calls: the original ctx may
 			// have expired if the user took longer than --timeout to authenticate.
 			setupCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
