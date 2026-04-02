@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
 	"time"
@@ -293,12 +292,6 @@ func pollForResult(sessionId string) error {
 }
 
 func printPendingJSON(authURL, sessionId string) {
-	// Decode percent-encoded characters (e.g. %3A→: %2F→/) so the URL is
-	// human-readable when copied from the terminal. Browsers re-encode correctly.
-	displayURL, err := url.PathUnescape(authURL)
-	if err != nil {
-		displayURL = authURL
-	}
 	fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
 		Status      string `json:"status"`
 		URL         string `json:"url"`
@@ -306,7 +299,7 @@ func printPendingJSON(authURL, sessionId string) {
 		Description string `json:"description"`
 	}{
 		Status:      "pending",
-		URL:         displayURL,
+		URL:         authURL,
 		SessionId:   sessionId,
 		Description: "Navigate to the URL to complete the OAuth authorization flow, then call this command again to retrieve credentials.",
 	}))
