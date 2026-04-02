@@ -178,6 +178,9 @@ func Run(ctx context.Context, opts Options) {
 // finishes (e.g. an agent timeout), the daemon keeps running; the next call to this
 // function will detect the pending session and resume polling rather than starting a new flow.
 func GetAndSetAccessToken(ctx context.Context, orgId *string, opts Options) error {
+	// Apply TTY auto-detection here so callers don't have to — if stdout is not
+	// a terminal (agentic context), always use the JSON/daemon path.
+	opts.Json = opts.Json || !term.IsTerminal(int(os.Stdout.Fd()))
 	if opts.Json {
 		return getAndSetAccessTokenJSON(ctx, orgId, nil, nil)
 	}
