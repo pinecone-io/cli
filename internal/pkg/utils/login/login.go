@@ -253,8 +253,9 @@ func resumeSession(sess *SessionState, result *SessionResult) error {
 		defer cancel()
 		return RunPostAuthSetup(setupCtx)
 	}
-	// Still pending — re-surface the URL and keep polling.
-	printPendingJSON(sess.AuthURL, sess.SessionId)
+	// Still pending — poll until the daemon completes and emit authenticated JSON.
+	// Don't re-emit pending here: this call will block until done and emit exactly
+	// one JSON object (authenticated), keeping stdout to a single JSON value per invocation.
 	return pollForResult(sess.SessionId, sess.CreatedAt)
 }
 
