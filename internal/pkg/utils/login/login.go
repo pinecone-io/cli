@@ -46,14 +46,17 @@ func Run(ctx context.Context, opts Options) {
 	// Resolve output format once at the top level: explicit --json flag or auto-detected non-TTY stdout.
 	opts.Json = opts.Json || !term.IsTerminal(int(os.Stdout.Fd()))
 
-	// In JSON mode, a pending session means the daemon just completed and wrote
-	// the token to disk. Skip the already_authenticated guard so that
-	// getAndSetAccessTokenJSON → resumeSession → RunPostAuthSetup can run,
-	// set TargetOrg/TargetProj, emit the authenticated JSON, and clean up
-	// the session files.
+	// In JSON mode, check for a pending session once here. If found, skip the
+	// already_authenticated guard and pass the result directly into GetAndSetAccessToken
+	// to avoid a redundant directory scan and TOCTOU window.
 	if opts.Json {
-		if sess, _, _ := findResumableSession(); sess != nil {
-			if err := GetAndSetAccessToken(ctx, nil, opts); err != nil {
+		sess, result, err := findResumableSession()
+		if err != nil {
+			msg.FailMsg("Error checking for existing auth session: %s", err)
+			exit.Error(err, "Error checking for existing auth session")
+		}
+		if sess != nil {
+			if err := getAndSetAccessTokenJSON(ctx, nil, sess, result); err != nil {
 				msg.FailMsg("Error acquiring access token while logging in: %s", err)
 				exit.Error(err, "Error acquiring access token while logging in")
 			}
@@ -176,17 +179,22 @@ func Run(ctx context.Context, opts Options) {
 // function will detect the pending session and resume polling rather than starting a new flow.
 func GetAndSetAccessToken(ctx context.Context, orgId *string, opts Options) error {
 	if opts.Json {
-		return getAndSetAccessTokenJSON(ctx, orgId)
+		return getAndSetAccessTokenJSON(ctx, orgId, nil, nil)
 	}
 	return getAndSetAccessTokenInteractive(ctx, orgId)
 }
 
 // getAndSetAccessTokenJSON is the agentic path: daemon-backed, non-blocking on stdin.
-func getAndSetAccessTokenJSON(ctx context.Context, orgId *string) error {
-	// Resume a pending session if one exists (e.g. this process was killed mid-poll).
-	sess, result, err := findResumableSession()
-	if err != nil {
-		return fmt.Errorf("error checking for existing auth session: %w", err)
+// sess and result may be pre-fetched by the caller to avoid a redundant directory scan;
+// if nil, findResumableSession is called here.
+func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, sess *SessionState, result *SessionResult) error {
+	if sess == nil {
+		// No pre-fetched session — look one up now.
+		var err error
+		sess, result, err = findResumableSession()
+		if err != nil {
+			return fmt.Errorf("error checking for existing auth session: %w", err)
+		}
 	}
 	if sess != nil {
 		return resumeSession(sess, result)
