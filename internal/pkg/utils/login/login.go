@@ -263,14 +263,8 @@ func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, wait bool, ses
 
 	if wait {
 		// Caller needs the token on return — block until the daemon completes.
-		// Emit the auth URL to stdout as JSON so agents watching stdout can extract
-		// it. Also write to stderr for human users. The caller is responsible for
-		// emitting its own JSON result once this function returns.
-		fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
-			Status    string `json:"status"`
-			URL       string `json:"url"`
-			SessionId string `json:"session_id"`
-		}{Status: "authenticating", URL: authURL, SessionId: sessionId}))
+		// Print the auth URL to stderr only: stdout must stay clean so the caller
+		// can emit a single JSON document once this function returns.
 		fmt.Fprintf(os.Stderr, "Visit the following URL to authenticate:\n\n  %s\n\n", authURL)
 		return pollForResult(sessionId, newSess.CreatedAt, true)
 	}
