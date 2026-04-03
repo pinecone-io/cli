@@ -114,6 +114,13 @@ func NewTargetCmd() *cobra.Command {
 				return
 			}
 
+			// --show and --clear are local-state operations that return above.
+			// Everything below requires valid credentials, so check now.
+			if err := login.EnsureAuthenticated(ctx); err != nil {
+				msg.FailJSON(options.json, "%s", err)
+				exit.Error(err, "authentication required")
+			}
+
 			// Get the current access token and parse the orgID from the claims
 			token, err := oauth.Token(cmd.Context())
 			if err != nil {

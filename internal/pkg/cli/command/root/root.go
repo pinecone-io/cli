@@ -47,6 +47,7 @@ var skipAuthCommands = map[string]struct{}{
 	"pc auth clear":              {},
 	"pc auth status":             {},
 	"pc auth _daemon":            {},
+	"pc target":                  {}, // handles its own auth after --show/--clear early returns
 	"pc version":                 {},
 	"pc config":                  {},
 	"pc config get-api-key":      {},

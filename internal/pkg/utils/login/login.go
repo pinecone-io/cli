@@ -526,12 +526,16 @@ func applyAuthContext(ctx context.Context) error {
 		Id:   targetOrg.Id,
 	})
 
+	// Always write TargetProj so stale data from a previous session is never
+	// returned when the current org has no projects.
 	if len(projects) > 0 {
 		targetProj := projects[0]
 		state.TargetProj.Set(state.TargetProject{
 			Name: targetProj.Name,
 			Id:   targetProj.Id,
 		})
+	} else {
+		state.TargetProj.Set(state.TargetProject{})
 	}
 
 	return nil
