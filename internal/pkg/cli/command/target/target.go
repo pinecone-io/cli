@@ -100,11 +100,7 @@ func NewTargetCmd() *cobra.Command {
 			if options.show {
 				if options.json {
 					log.Info().Msg("Outputting target context as JSON")
-					targetContext := state.GetTargetContext()
-					defaultAPIKey := secrets.DefaultAPIKey.Get()
-					targetContext.DefaultAPIKey = presenters.MaskHeadTail(defaultAPIKey, 4, 4)
-					json := text.IndentJSON(targetContext)
-					fmt.Fprintln(os.Stdout, json)
+					printTargetContextJSON()
 					return
 				}
 				log.Info().
@@ -114,8 +110,19 @@ func NewTargetCmd() *cobra.Command {
 				return
 			}
 
-			// --show and --clear are local-state operations that return above.
-			// Everything below requires valid credentials, so check now.
+			// In JSON mode with no targeting flags, show current context — same as
+			// --show --json. This is a local-state read with no API calls needed.
+			if options.json &&
+				options.org == "" &&
+				options.orgID == "" &&
+				options.project == "" &&
+				options.projectID == "" {
+				printTargetContextJSON()
+				return
+			}
+
+			// --show, --clear, and the no-flags JSON path are local-state operations
+			// that return above. Everything below requires valid credentials.
 			if err := login.EnsureAuthenticated(ctx); err != nil {
 				msg.FailJSON(options.json, "%s", err)
 				exit.Error(err, "authentication required")
@@ -155,16 +162,6 @@ func NewTargetCmd() *cobra.Command {
 				options.orgID == "" &&
 				options.project == "" &&
 				options.projectID == "" {
-
-				if options.json {
-					// In non-TTY/JSON mode there's no interactive selector — just
-					// show the current target context so agents can read it.
-					targetContext := state.GetTargetContext()
-					defaultAPIKey := secrets.DefaultAPIKey.Get()
-					targetContext.DefaultAPIKey = presenters.MaskHeadTail(defaultAPIKey, 4, 4)
-					fmt.Fprintln(os.Stdout, text.IndentJSON(targetContext))
-					return
-				}
 
 				// Ask the user to choose a target org
 				targetOrg := postLoginInteractiveTargetOrg(orgs, options.json)
@@ -276,11 +273,7 @@ func NewTargetCmd() *cobra.Command {
 
 			// Output JSON if the option was passed
 			if options.json {
-				targetContext := state.GetTargetContext()
-				defaultAPIKey := secrets.DefaultAPIKey.Get()
-				targetContext.DefaultAPIKey = presenters.MaskHeadTail(defaultAPIKey, 4, 4)
-				json := text.IndentJSON(targetContext)
-				fmt.Fprintln(os.Stdout, json)
+				printTargetContextJSON()
 				return
 			}
 
@@ -300,6 +293,12 @@ func NewTargetCmd() *cobra.Command {
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 
 	return cmd
+}
+
+func printTargetContextJSON() {
+	targetContext := state.GetTargetContext()
+	targetContext.DefaultAPIKey = presenters.MaskHeadTail(secrets.DefaultAPIKey.Get(), 4, 4)
+	fmt.Fprintln(os.Stdout, text.IndentJSON(targetContext))
 }
 
 func validateTargetOptions(options targetCmdOptions) error {
