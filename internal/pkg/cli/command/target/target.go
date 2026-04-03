@@ -126,6 +126,7 @@ func NewTargetCmd() *cobra.Command {
 			if err := login.EnsureAuthenticated(ctx); err != nil {
 				msg.FailJSON(options.json, "%s", err)
 				exit.Error(err, "authentication required")
+				return
 			}
 
 			// Get the current access token and parse the orgID from the claims

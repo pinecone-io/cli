@@ -133,6 +133,7 @@ func init() {
 			if err := loginutil.EnsureAuthenticated(cmd.Context()); err != nil {
 				msg.FailJSON(isJSON, "%s", err)
 				exit.Error(err, "authentication required")
+				return
 			}
 		},
 		PersistentPostRun: func(cmd *cobra.Command, args []string) {
