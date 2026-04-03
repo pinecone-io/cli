@@ -487,27 +487,29 @@ func getAndSetAccessTokenInteractive(ctx context.Context, orgId *string) error {
 }
 
 // applyAuthContext fetches the user's org/project and writes them to state.
-// It is the side-effect half of the post-auth setup, separated so that callers
-// that don't want to emit JSON (e.g. EnsureAuthenticated) can still set context.
-func applyAuthContext(ctx context.Context) error {
+// It returns the authenticated user's email so callers can use it without a
+// second token fetch. It is the side-effect half of the post-auth setup,
+// separated so that callers that don't want to emit JSON (e.g.
+// EnsureAuthenticated) can still set context.
+func applyAuthContext(ctx context.Context) (email string, err error) {
 	token, err := oauth.Token(ctx)
 	if err != nil {
-		return fmt.Errorf("error retrieving oauth token: %w", err)
+		return "", fmt.Errorf("error retrieving oauth token: %w", err)
 	}
 	claims, err := oauth.ParseClaimsUnverified(token)
 	if err != nil {
-		return fmt.Errorf("error parsing token claims: %w", err)
+		return "", fmt.Errorf("error parsing token claims: %w", err)
 	}
 
 	ac := sdk.NewPineconeAdminClient(ctx)
 
 	orgs, err := ac.Organization.List(ctx)
 	if err != nil {
-		return fmt.Errorf("error fetching organizations: %w", err)
+		return "", fmt.Errorf("error fetching organizations: %w", err)
 	}
 	projects, err := ac.Project.List(ctx)
 	if err != nil {
-		return fmt.Errorf("error fetching projects: %w", err)
+		return "", fmt.Errorf("error fetching projects: %w", err)
 	}
 
 	var targetOrg *pinecone.Organization
@@ -518,7 +520,7 @@ func applyAuthContext(ctx context.Context) error {
 		}
 	}
 	if targetOrg == nil {
-		return fmt.Errorf("target organization %s not found", claims.OrgId)
+		return "", fmt.Errorf("target organization %s not found", claims.OrgId)
 	}
 
 	state.TargetOrg.Set(state.TargetOrganization{
@@ -538,23 +540,15 @@ func applyAuthContext(ctx context.Context) error {
 		state.TargetProj.Set(state.TargetProject{})
 	}
 
-	return nil
+	return claims.Email, nil
 }
 
 // RunPostAuthSetup fetches the user's org/project context, sets target defaults,
 // and emits the final {"status":"authenticated",...} JSON.
 func RunPostAuthSetup(ctx context.Context) error {
-	if err := applyAuthContext(ctx); err != nil {
+	email, err := applyAuthContext(ctx)
+	if err != nil {
 		return err
-	}
-
-	token, err := oauth.Token(ctx)
-	if err != nil {
-		return fmt.Errorf("error retrieving oauth token: %w", err)
-	}
-	claims, err := oauth.ParseClaimsUnverified(token)
-	if err != nil {
-		return fmt.Errorf("error parsing token claims: %w", err)
 	}
 
 	targetOrg := state.TargetOrg.Get()
@@ -567,7 +561,7 @@ func RunPostAuthSetup(ctx context.Context) error {
 		OrgName     string `json:"org_name"`
 		ProjectId   string `json:"project_id"`
 		ProjectName string `json:"project_name"`
-	}{Status: "authenticated", Email: claims.Email, OrgId: targetOrg.Id, OrgName: targetOrg.Name, ProjectId: targetProj.Id, ProjectName: targetProj.Name}))
+	}{Status: "authenticated", Email: email, OrgId: targetOrg.Id, OrgName: targetOrg.Name, ProjectId: targetProj.Id, ProjectName: targetProj.Name}))
 
 	return nil
 }
@@ -691,7 +685,7 @@ func EnsureAuthenticated(ctx context.Context) error {
 		// login before a second `pc login` call was made), initialize the context now
 		// so the calling command doesn't fail with "need to target a project".
 		if state.TargetOrg.Get().Id == "" {
-			if err := applyAuthContext(ctx); err != nil {
+			if _, err := applyAuthContext(ctx); err != nil {
 				log.Debug().Err(err).Msg("EnsureAuthenticated: applyAuthContext failed")
 			}
 		}
@@ -727,7 +721,7 @@ func EnsureAuthenticated(ctx context.Context) error {
 	// then set the target org/project context so the calling command can proceed
 	// without a separate `pc login` or `pc target` call.
 	_ = secrets.SecretsViper.ReadInConfig()
-	if err := applyAuthContext(ctx); err != nil {
+	if _, err := applyAuthContext(ctx); err != nil {
 		// Non-fatal: credentials are valid, context setup is best-effort.
 		log.Debug().Err(err).Msg("EnsureAuthenticated: applyAuthContext failed after lazy credential reload")
 	}
