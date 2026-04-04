@@ -43,16 +43,40 @@ var (
 		After authenticating through the CLI with user login or service account credentials, you can use
 		this command to set the target organization or project context for control and data plane operations.
 
-		When using a default API key for authentication, there's no need to specify a project context, because the API 
+		When using a default API key for authentication, there's no need to specify a project context, because the API
 		key is already associated with a specific organization and project.
+
+		INTERACTIVE MODE (default, TTY only)
+
+		Running without flags launches an interactive selector to choose an
+		organization and project from your account.
+
+		NON-INTERACTIVE / AGENTIC MODE
+
+		Pass --org, --project, --organization-id, or --project-id to set the
+		target programmatically without a TTY. Use --json / -j to receive the
+		updated context as a JSON object.
+
+		Running with --json and no targeting flags shows the current target
+		context as JSON (equivalent to --show --json). This works without
+		authentication and is safe to call at any time to inspect state.
+
+		--show and --clear are local-state operations and do not require
+		authentication.
 	`)
 
 	targetExample = help.Examples(`
 		# Interactively target from available organizations and projects
 		pc target
 
+		# Show the current target context
+		pc target --show
+
+		# Show the current target context as JSON (no auth required)
+		pc target --json
+
 		# Target an organization and project by name
-		pc target --org "organization-name" -project "project-name"
+		pc target --org "organization-name" --project "project-name"
 
 		# Target a project by name
 		pc target --project "project-name"
