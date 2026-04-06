@@ -17,12 +17,33 @@ var (
 		organizations, projects, and other account-level resources directly
 		from the command line), as well as control and data plane operations.
 
-		Running this command opens a browser to the Pinecone login page.
-		After you successfully authenticate, the CLI is automatically configured with a
+		INTERACTIVE MODE (default)
+
+		Opens a browser to the Pinecone login page and waits for you to complete
+		authentication. Once complete, the CLI is automatically configured with a
 		default target organization and project.
-		
-		You can view your current target with 'pc target -s' or change it at any
-		time with 'pc target -o "ORGANIZATION_NAME" -p "PROECT_NAME"'.
+
+		You can view your current target with 'pc target --show' or change it at
+		any time with 'pc target --org "ORG_NAME" --project "PROJECT_NAME"'.
+
+		AGENTIC / NON-INTERACTIVE MODE (--json / -j, or non-TTY stdout)
+
+		Uses a daemon-backed two-call flow designed for AI agents and scripts:
+
+		First call — starts a background listener and returns immediately:
+		  {"status":"pending","url":"<auth-url>","session_id":"<id>"}
+
+		Open the URL in a browser to complete authentication. The background
+		listener captures the OAuth callback automatically.
+
+		Second call (or any other command) — completes the flow:
+		  {"status":"authenticated","email":"...","org_id":"...","org_name":"...","project_id":"...","project_name":"..."}
+
+		If the process is interrupted between calls, the background listener keeps
+		running. The next invocation detects the pending session and resumes
+		automatically. After authentication is complete, the first subsequent
+		command also sets the target context automatically, so a separate
+		'pc target' call is not required.
 	`)
 )
 
@@ -34,7 +55,14 @@ func NewLoginCmd() *cobra.Command {
 		Short: "Authenticate with Pinecone via user login in a web browser",
 		Long:  loginHelp,
 		Example: help.Examples(`
+			# Interactive login (opens a browser)
 			pc auth login
+
+			# Agentic login — first call returns a pending URL
+			pc auth login --json
+
+			# Agentic login — second call (or any command) completes the flow
+			pc auth login --json
 		`),
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -42,7 +70,7 @@ func NewLoginCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVar(&jsonOutput, "json", false, "emit JSON output")
+	cmd.Flags().BoolVarP(&jsonOutput, "json", "j", false, "emit JSON output")
 
 	return cmd
 }

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"golang.org/x/term"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
@@ -42,16 +43,40 @@ var (
 		After authenticating through the CLI with user login or service account credentials, you can use
 		this command to set the target organization or project context for control and data plane operations.
 
-		When using a default API key for authentication, there's no need to specify a project context, because the API 
+		When using a default API key for authentication, there's no need to specify a project context, because the API
 		key is already associated with a specific organization and project.
+
+		INTERACTIVE MODE (default, TTY only)
+
+		Running without flags launches an interactive selector to choose an
+		organization and project from your account.
+
+		NON-INTERACTIVE / AGENTIC MODE
+
+		Pass --org, --project, --organization-id, or --project-id to set the
+		target programmatically without a TTY. Use --json / -j to receive the
+		updated context as a JSON object.
+
+		Running with --json and no targeting flags shows the current target
+		context as JSON (equivalent to --show --json). This works without
+		authentication and is safe to call at any time to inspect state.
+
+		--show and --clear are local-state operations and do not require
+		authentication.
 	`)
 
 	targetExample = help.Examples(`
 		# Interactively target from available organizations and projects
 		pc target
 
+		# Show the current target context
+		pc target --show
+
+		# Show the current target context as JSON (no auth required)
+		pc target --json
+
 		# Target an organization and project by name
-		pc target --org "organization-name" -project "project-name"
+		pc target --org "organization-name" --project "project-name"
 
 		# Target a project by name
 		pc target --project "project-name"
@@ -72,6 +97,8 @@ func NewTargetCmd() *cobra.Command {
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
+			// Auto-detect non-TTY (agentic) environments just as the login flow does.
+			options.json = options.json || !term.IsTerminal(int(os.Stdout.Fd()))
 			log.Debug().
 				Str("org", options.org).
 				Str("project", options.project).
@@ -97,17 +124,32 @@ func NewTargetCmd() *cobra.Command {
 			if options.show {
 				if options.json {
 					log.Info().Msg("Outputting target context as JSON")
-					targetContext := state.GetTargetContext()
-					defaultAPIKey := secrets.DefaultAPIKey.Get()
-					targetContext.DefaultAPIKey = presenters.MaskHeadTail(defaultAPIKey, 4, 4)
-					json := text.IndentJSON(targetContext)
-					fmt.Fprintln(os.Stdout, json)
+					printTargetContextJSON()
 					return
 				}
 				log.Info().
 					Msg("Outputting target context as table")
 
 				presenters.PrintTargetContext(state.GetTargetContext())
+				return
+			}
+
+			// In JSON mode with no targeting flags, show current context — same as
+			// --show --json. This is a local-state read with no API calls needed.
+			if options.json &&
+				options.org == "" &&
+				options.orgID == "" &&
+				options.project == "" &&
+				options.projectID == "" {
+				printTargetContextJSON()
+				return
+			}
+
+			// --show, --clear, and the no-flags JSON path are local-state operations
+			// that return above. Everything below requires valid credentials.
+			if err := login.EnsureAuthenticated(ctx); err != nil {
+				msg.FailJSON(options.json, "%s", err)
+				exit.Error(err, "authentication required")
 				return
 			}
 
@@ -256,11 +298,7 @@ func NewTargetCmd() *cobra.Command {
 
 			// Output JSON if the option was passed
 			if options.json {
-				targetContext := state.GetTargetContext()
-				defaultAPIKey := secrets.DefaultAPIKey.Get()
-				targetContext.DefaultAPIKey = presenters.MaskHeadTail(defaultAPIKey, 4, 4)
-				json := text.IndentJSON(targetContext)
-				fmt.Fprintln(os.Stdout, json)
+				printTargetContextJSON()
 				return
 			}
 
@@ -280,6 +318,12 @@ func NewTargetCmd() *cobra.Command {
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 
 	return cmd
+}
+
+func printTargetContextJSON() {
+	targetContext := state.GetTargetContext()
+	targetContext.DefaultAPIKey = presenters.MaskHeadTail(secrets.DefaultAPIKey.Get(), 4, 4)
+	fmt.Fprintln(os.Stdout, text.IndentJSON(targetContext))
 }
 
 func validateTargetOptions(options targetCmdOptions) error {
