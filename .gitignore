@@ -36,3 +36,6 @@ secrets
 
 # Man pages
 man/
+
+# Agent scratch space
+scratch/

@@ -54,11 +54,18 @@ Output formatting lives in `internal/pkg/utils/presenters/` — one file per out
 
 Three auth methods, resolved in `internal/pkg/utils/sdk/` and `internal/pkg/utils/oauth/`:
 
-1. User login (OAuth2 PKCE flow)
-2. Service account
-3. API key
+| Priority | Method | Env vars |
+|---|---|---|
+| 1 (highest) | API key | `PINECONE_API_KEY` |
+| 2 | Service account | `PINECONE_CLIENT_ID`, `PINECONE_CLIENT_SECRET` |
+| 3 | User login (OAuth2 PKCE) | stored token in `~/.config/pinecone/secrets.yaml` |
 
-Credentials are stored in `~/.config/pinecone/`.
+API key mode does not require a target project to be set. OAuth and service account modes do.
+
+Credentials and tokens are stored in `~/.config/pinecone/`. The directory holds two files:
+
+- `config.yaml` — non-secret settings (`color`, `environment`)
+- `secrets.yaml` — credentials and tokens (`api_key`, `client_id`, `client_secret`, `oauth2_token`); created with `0600` permissions
 
 ### Input handling
 
@@ -91,8 +98,10 @@ Available on most commands. Forces structured, machine-readable output. Also act
 
 ```bash
 just build                                    # goreleaser build for current OS → ./dist/
+just build-all                                # goreleaser build for all supported OSes
 just test-unit                                # go test -v ./... (no external deps required)
 just test-e2e                                 # builds binary, runs E2E suite (requires credentials)
+just gen-manpages                             # generate man pages → ./man/
 go test -v -run TestNameHere ./internal/...   # run a single test by name
 ```
 
@@ -113,7 +122,7 @@ PINECONE_CLIENT_SECRET=...
 - All exported symbols require a GoDoc comment starting with the symbol name.
 - Return errors; do not panic. Wrap with `fmt.Errorf("context: %w", err)`.
 - Pass `context.Context` as the first parameter of any function that does I/O.
-- Unit test names end with `Unit`. E2E tests live in `test/e2e/`.
+- Unit test function names follow the pattern `Test<FunctionName>` or `Test<FunctionName>_<Scenario>`. E2E tests live in `test/e2e/` and use the `//go:build e2e` build tag — `just test-unit` excludes them automatically.
 
 ---
 
