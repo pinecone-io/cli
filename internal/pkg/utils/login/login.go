@@ -46,6 +46,10 @@ type Options struct {
 	// RunPostAuthSetup is not called in Wait mode; the caller is responsible
 	// for any post-auth state setup and output.
 	Wait bool
+	// OrgId pins the login flow to a specific organization. When set, the SSO
+	// connection for that org is looked up and passed to Auth0, routing the
+	// browser directly to the org's identity provider if SSO is enforced.
+	OrgId *string
 }
 
 func Run(ctx context.Context, opts Options) {
@@ -99,7 +103,7 @@ func Run(ctx context.Context, opts Options) {
 		return
 	}
 
-	err = GetAndSetAccessToken(ctx, nil, opts)
+	err = GetAndSetAccessToken(ctx, opts.OrgId, opts)
 	if err != nil {
 		msg.FailMsg("Error acquiring access token while logging in: %s", err)
 		exit.Error(err, "Error acquiring access token while logging in")
@@ -238,7 +242,18 @@ func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, wait bool, ses
 		return fmt.Errorf("error creating new auth verifier and challenge: %w", err)
 	}
 
-	authURL, err := a.GetAuthURL(ctx, csrfState, challenge, orgId)
+	var ssoConnection *string
+	if orgId != nil && *orgId != "" {
+		conn, err := FetchSSOConnection(ctx, *orgId)
+		if err != nil {
+			log.Debug().Err(err).Msg("SSO connection lookup failed, proceeding without connection param")
+		}
+		if conn != "" {
+			ssoConnection = &conn
+		}
+	}
+
+	authURL, err := a.GetAuthURL(ctx, csrfState, challenge, orgId, ssoConnection)
 	if err != nil {
 		return fmt.Errorf("error getting auth URL: %w", err)
 	}
@@ -398,7 +413,18 @@ func getAndSetAccessTokenInteractive(ctx context.Context, orgId *string) error {
 		return fmt.Errorf("error creating new auth verifier and challenge: %w", err)
 	}
 
-	authURL, err := a.GetAuthURL(ctx, csrfState, challenge, orgId)
+	var ssoConnection *string
+	if orgId != nil && *orgId != "" {
+		conn, err := FetchSSOConnection(ctx, *orgId)
+		if err != nil {
+			log.Debug().Err(err).Msg("SSO connection lookup failed, proceeding without connection param")
+		}
+		if conn != "" {
+			ssoConnection = &conn
+		}
+	}
+
+	authURL, err := a.GetAuthURL(ctx, csrfState, challenge, orgId, ssoConnection)
 	if err != nil {
 		return fmt.Errorf("error getting auth URL: %w", err)
 	}
