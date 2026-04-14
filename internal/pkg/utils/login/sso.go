@@ -23,6 +23,20 @@ type dashboardOrgsResponse struct {
 	NewOrgs []dashboardOrg `json:"newOrgs"`
 }
 
+// ResolveSSOConnection is a convenience wrapper around FetchSSOConnection that
+// returns a pointer to the connection name when SSO is enforced for the org, or
+// nil otherwise. Errors are logged at debug level and treated as "no SSO".
+func ResolveSSOConnection(ctx context.Context, orgId string) *string {
+	conn, err := FetchSSOConnection(ctx, orgId)
+	if err != nil {
+		log.Debug().Err(err).Str("orgId", orgId).Msg("SSO connection lookup failed, proceeding without connection param")
+	}
+	if conn == "" {
+		return nil
+	}
+	return &conn
+}
+
 // FetchSSOConnection calls the private dashboard API to retrieve the Auth0
 // connection name for the given orgId. It returns ("", nil) when the org has
 // no SSO configured, enforce_sso_authentication is false, or any error occurs.

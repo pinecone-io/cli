@@ -201,13 +201,7 @@ func NewTargetCmd() *cobra.Command {
 					if currentTokenOrgId != "" && currentTokenOrgId != targetOrg.Id {
 						// Fetch SSO connection while the current token is still valid,
 						// before logout clears it.
-						var ssoConn *string
-						conn, connErr := login.FetchSSOConnection(ctx, targetOrg.Id)
-						if connErr != nil {
-							log.Debug().Err(connErr).Msg("SSO connection lookup failed, proceeding without connection param")
-						} else if conn != "" {
-							ssoConn = &conn
-						}
+						ssoConn := login.ResolveSSOConnection(ctx, targetOrg.Id)
 						oauth.Logout()
 						err = login.GetAndSetAccessToken(ctx, &targetOrg.Id, login.Options{Json: options.json, Wait: true, SSOConnection: ssoConn})
 						if err != nil {
@@ -256,13 +250,7 @@ func NewTargetCmd() *cobra.Command {
 				if currentTokenOrgId != org.Id {
 					// Fetch SSO connection while the current token is still valid,
 					// before logout clears it.
-					var ssoConn *string
-					conn, connErr := login.FetchSSOConnection(ctx, org.Id)
-					if connErr != nil {
-						log.Debug().Err(connErr).Msg("SSO connection lookup failed, proceeding without connection param")
-					} else if conn != "" {
-						ssoConn = &conn
-					}
+					ssoConn := login.ResolveSSOConnection(ctx, org.Id)
 					oauth.Logout()
 					err = login.GetAndSetAccessToken(ctx, &org.Id, login.Options{Json: options.json, Wait: true, SSOConnection: ssoConn})
 					if err != nil {

@@ -98,13 +98,7 @@ func Run(ctx context.Context, opts Options) {
 		}
 
 		if differentOrg {
-			conn, lookupErr := FetchSSOConnection(ctx, *opts.OrgId)
-			if lookupErr != nil {
-				log.Debug().Err(lookupErr).Msg("SSO connection lookup failed, proceeding without connection param")
-			}
-			if conn != "" {
-				opts.SSOConnection = &conn
-			}
+			opts.SSOConnection = ResolveSSOConnection(ctx, *opts.OrgId)
 			oauth.Logout()
 			// Fall through to GetAndSetAccessToken.
 		} else {
