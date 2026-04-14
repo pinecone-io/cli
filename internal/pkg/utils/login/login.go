@@ -69,7 +69,7 @@ func Run(ctx context.Context, opts Options) {
 			exit.Error(err, "Error checking for existing auth session")
 		}
 		if sess != nil {
-			if err := getAndSetAccessTokenJSON(ctx, nil, false, nil, sess, result); err != nil {
+			if err := getAndSetAccessTokenJSON(ctx, opts.OrgId, false, opts.SSOConnection, sess, result); err != nil {
 				msg.FailMsg("Error acquiring access token while logging in: %s", err)
 				exit.Error(err, "Error acquiring access token while logging in")
 			}
