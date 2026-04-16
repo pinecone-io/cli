@@ -506,7 +506,14 @@ func getAndSetAccessTokenInteractive(ctx context.Context, orgId *string, ssoConn
 		return errors.New("error authenticating CLI and retrieving oauth2 access token")
 	}
 
-	token, err := a.ExchangeAuthCode(ctx, verifier, code)
+	// Use a fresh context for post-callback network operations. The original ctx
+	// may have already exceeded the root command's 60s timeout if the user took
+	// a while to authenticate — the server accepted the callback successfully, so
+	// we must not let a stale deadline fail the code exchange or SSO lookup.
+	apiCtx, apiCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer apiCancel()
+
+	token, err := a.ExchangeAuthCode(apiCtx, verifier, code)
 	if err != nil {
 		return fmt.Errorf("error exchanging auth code for access token: %w", err)
 	}
@@ -535,7 +542,7 @@ func getAndSetAccessTokenInteractive(ctx context.Context, orgId *string, ssoConn
 	// Round 1 — check whether SSO enforcement is needed.
 	// ssoConnection being non-nil means we're already in the SSO round; skip.
 	if ssoConnection == nil {
-		if conn := ResolveSSOConnection(ctx, claims.OrgId); conn != nil {
+		if conn := ResolveSSOConnection(apiCtx, claims.OrgId); conn != nil {
 			fmt.Fprintf(os.Stderr, "\nSSO is required for your organization. Re-authenticating with your identity provider...\n")
 			oauth.Logout()
 			return getAndSetAccessTokenInteractive(ctx, &claims.OrgId, conn)
