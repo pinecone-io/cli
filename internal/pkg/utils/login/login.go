@@ -306,14 +306,22 @@ func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, wait bool, sso
 // authenticated JSON directly. Otherwise check whether SSO is enforced for
 // the authenticated org; if so, log out and start a second SSO login round
 // (emitting a new pending JSON for agents to follow).
-func finishAuthWithSSO(ctx context.Context, ssoConnection *string) error {
+//
+// sessionId is the just-completed session. When starting an SSO round it is
+// cleaned up eagerly before calling getAndSetAccessTokenJSON, so that
+// findResumableSession does not pick up the stale session and resume it
+// instead of starting the new SSO flow. The deferred CleanupSession in the
+// caller is a no-op once the files are already removed.
+func finishAuthWithSSO(ctx context.Context, sessionId string, ssoConnection *string) error {
 	if ssoConnection == nil {
 		// Round 1 — check whether SSO enforcement is needed.
 		token, _ := oauth.Token(ctx)
 		if token != nil && token.AccessToken != "" {
 			if claims, err := oauth.ParseClaimsUnverified(token); err == nil {
 				if conn := ResolveSSOConnection(ctx, claims.OrgId); conn != nil {
-					// SSO enforced — clear credentials and start the SSO round.
+					// Clean up the completed session before starting the SSO round
+					// so findResumableSession won't find and re-resume it.
+					CleanupSession(sessionId)
 					oauth.Logout()
 					return getAndSetAccessTokenJSON(ctx, &claims.OrgId, false, conn, nil, nil)
 				}
@@ -340,7 +348,7 @@ func resumeSession(sess *SessionState, result *SessionResult, wait bool) error {
 		if wait {
 			return nil
 		}
-		return finishAuthWithSSO(context.Background(), sess.SSOConnection)
+		return finishAuthWithSSO(context.Background(), sess.SessionId, sess.SSOConnection)
 	}
 	// Still pending — poll until the daemon completes.
 	// Don't re-emit pending here: this call will block until done, keeping stdout
@@ -393,7 +401,7 @@ func pollForResult(sessionId string, createdAt time.Time, wait bool, ssoConnecti
 				// Caller handles post-auth state and output.
 				return nil
 			}
-			return finishAuthWithSSO(context.Background(), ssoConnection)
+			return finishAuthWithSSO(context.Background(), sessionId, ssoConnection)
 		}
 	}
 }
