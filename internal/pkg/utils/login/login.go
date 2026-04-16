@@ -90,8 +90,11 @@ func Run(ctx context.Context, opts Options) {
 		// If --org targets a different organization, re-authenticate now while
 		// the token is still valid so we can look up the SSO connection before
 		// clearing credentials.
-		differentOrg := false
-		if opts.OrgId != nil && *opts.OrgId != "" {
+		// Default to true when --org is explicitly set: if claims parsing fails
+		// we can't confirm the current org matches, so re-authenticating is the
+		// safer choice (and will resolve a malformed token situation).
+		differentOrg := opts.OrgId != nil && *opts.OrgId != ""
+		if differentOrg {
 			if claims, claimsErr := oauth.ParseClaimsUnverified(token); claimsErr == nil {
 				differentOrg = claims.OrgId != *opts.OrgId
 			}
