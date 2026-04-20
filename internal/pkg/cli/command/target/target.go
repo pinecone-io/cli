@@ -199,8 +199,11 @@ func NewTargetCmd() *cobra.Command {
 
 					// If the org chosen differs from the current orgId in the token, we need to login again
 					if currentTokenOrgId != "" && currentTokenOrgId != targetOrg.Id {
+						// Fetch SSO connection while the current token is still valid,
+						// before logout clears it.
+						ssoConn := login.ResolveSSOConnection(ctx, targetOrg.Id)
 						oauth.Logout()
-						err = login.GetAndSetAccessToken(ctx, &targetOrg.Id, login.Options{Json: options.json, Wait: true})
+						err = login.GetAndSetAccessToken(ctx, &targetOrg.Id, login.Options{Json: options.json, Wait: true, SSOConnection: ssoConn})
 						if err != nil {
 							msg.FailJSON(options.json, "Failed to get access token: %s", err)
 							exit.Error(err, "Error getting access token")
@@ -245,8 +248,11 @@ func NewTargetCmd() *cobra.Command {
 
 				// If the org chosen differs from the current orgId in the token, we need to login again
 				if currentTokenOrgId != org.Id {
+					// Fetch SSO connection while the current token is still valid,
+					// before logout clears it.
+					ssoConn := login.ResolveSSOConnection(ctx, org.Id)
 					oauth.Logout()
-					err = login.GetAndSetAccessToken(ctx, &org.Id, login.Options{Json: options.json, Wait: true})
+					err = login.GetAndSetAccessToken(ctx, &org.Id, login.Options{Json: options.json, Wait: true, SSOConnection: ssoConn})
 					if err != nil {
 						msg.FailJSON(options.json, "Failed to get access token: %s", err)
 						exit.Error(err, "Error getting access token")

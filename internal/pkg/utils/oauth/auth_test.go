@@ -21,7 +21,7 @@ func TestGetAuthURL_ContainsSourceTag(t *testing.T) {
 		t.Fatalf("failed to create verifier/challenge: %v", err)
 	}
 
-	rawURL, err := a.GetAuthURL(ctx, "test-csrf-state", challenge, nil)
+	rawURL, err := a.GetAuthURL(ctx, "test-csrf-state", challenge, nil, nil)
 	if err != nil {
 		t.Fatalf("GetAuthURL returned error: %v", err)
 	}
@@ -48,7 +48,7 @@ func TestGetAuthURL_RequiredParams(t *testing.T) {
 	}
 
 	csrfState := "test-state-123"
-	rawURL, err := a.GetAuthURL(ctx, csrfState, challenge, nil)
+	rawURL, err := a.GetAuthURL(ctx, csrfState, challenge, nil, nil)
 	if err != nil {
 		t.Fatalf("GetAuthURL returned error: %v", err)
 	}
@@ -84,7 +84,7 @@ func TestGetAuthURL_WithOrgId(t *testing.T) {
 	}
 
 	orgId := "test-org-456"
-	rawURL, err := a.GetAuthURL(ctx, "state", challenge, &orgId)
+	rawURL, err := a.GetAuthURL(ctx, "state", challenge, &orgId, nil)
 	if err != nil {
 		t.Fatalf("GetAuthURL returned error: %v", err)
 	}
@@ -109,7 +109,7 @@ func TestGetAuthURL_WithEmptyOrgId(t *testing.T) {
 	}
 
 	emptyOrgId := ""
-	rawURL, err := a.GetAuthURL(ctx, "state", challenge, &emptyOrgId)
+	rawURL, err := a.GetAuthURL(ctx, "state", challenge, &emptyOrgId, nil)
 	if err != nil {
 		t.Fatalf("GetAuthURL returned error: %v", err)
 	}
@@ -121,5 +121,79 @@ func TestGetAuthURL_WithEmptyOrgId(t *testing.T) {
 
 	if got := parsed.Query().Get("orgId"); got != "" {
 		t.Errorf("expected orgId to be absent for empty string, got %q", got)
+	}
+}
+
+func TestGetAuthURL_WithSSOConnection(t *testing.T) {
+	a := &Auth{}
+	ctx := context.Background()
+
+	_, challenge, err := a.CreateNewVerifierAndChallenge()
+	if err != nil {
+		t.Fatalf("failed to create verifier/challenge: %v", err)
+	}
+
+	connection := "alby-saml"
+	rawURL, err := a.GetAuthURL(ctx, "state", challenge, nil, &connection)
+	if err != nil {
+		t.Fatalf("GetAuthURL returned error: %v", err)
+	}
+
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		t.Fatalf("failed to parse auth URL: %v", err)
+	}
+
+	if got := parsed.Query().Get("connection"); got != connection {
+		t.Errorf("expected connection=%q, got %q", connection, got)
+	}
+}
+
+func TestGetAuthURL_WithNilSSOConnection(t *testing.T) {
+	a := &Auth{}
+	ctx := context.Background()
+
+	_, challenge, err := a.CreateNewVerifierAndChallenge()
+	if err != nil {
+		t.Fatalf("failed to create verifier/challenge: %v", err)
+	}
+
+	rawURL, err := a.GetAuthURL(ctx, "state", challenge, nil, nil)
+	if err != nil {
+		t.Fatalf("GetAuthURL returned error: %v", err)
+	}
+
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		t.Fatalf("failed to parse auth URL: %v", err)
+	}
+
+	if got := parsed.Query().Get("connection"); got != "" {
+		t.Errorf("expected connection param to be absent, got %q", got)
+	}
+}
+
+func TestGetAuthURL_WithEmptySSOConnection(t *testing.T) {
+	a := &Auth{}
+	ctx := context.Background()
+
+	_, challenge, err := a.CreateNewVerifierAndChallenge()
+	if err != nil {
+		t.Fatalf("failed to create verifier/challenge: %v", err)
+	}
+
+	emptyConnection := ""
+	rawURL, err := a.GetAuthURL(ctx, "state", challenge, nil, &emptyConnection)
+	if err != nil {
+		t.Fatalf("GetAuthURL returned error: %v", err)
+	}
+
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		t.Fatalf("failed to parse auth URL: %v", err)
+	}
+
+	if got := parsed.Query().Get("connection"); got != "" {
+		t.Errorf("expected connection param to be absent for empty string, got %q", got)
 	}
 }

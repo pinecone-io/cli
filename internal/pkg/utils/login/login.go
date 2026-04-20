@@ -46,6 +46,11 @@ type Options struct {
 	// RunPostAuthSetup is not called in Wait mode; the caller is responsible
 	// for any post-auth state setup and output.
 	Wait bool
+	// SSOConnection is the Auth0 connection name to pass as `connection=` in the
+	// authorization URL, routing the browser directly to the org's IdP.
+	// Callers that hold a valid token before clearing credentials (e.g. pc target)
+	// should resolve this with FetchSSOConnection before logout, then pass it here.
+	SSOConnection *string
 }
 
 func Run(ctx context.Context, opts Options) {
@@ -62,7 +67,7 @@ func Run(ctx context.Context, opts Options) {
 			exit.Error(err, "Error checking for existing auth session")
 		}
 		if sess != nil {
-			if err := getAndSetAccessTokenJSON(ctx, nil, false, sess, result); err != nil {
+			if err := getAndSetAccessTokenJSON(ctx, nil, false, opts.SSOConnection, sess, result); err != nil {
 				msg.FailMsg("Error acquiring access token while logging in: %s", err)
 				exit.Error(err, "Error acquiring access token while logging in")
 			}
@@ -79,27 +84,46 @@ func Run(ctx context.Context, opts Options) {
 		exit.Error(err, "Error retrieving oauth token")
 	}
 
+	var ssoOrgId *string
 	if !expired && token != nil && token.AccessToken != "" {
-		if opts.Json {
-			claims, err := oauth.ParseClaimsUnverified(token)
-			if err == nil {
-				fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
-					Status string `json:"status"`
-					Email  string `json:"email"`
-					OrgId  string `json:"org_id"`
-				}{Status: "already_authenticated", Email: claims.Email, OrgId: claims.OrgId}))
-			} else {
-				fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
-					Status string `json:"status"`
-				}{Status: "already_authenticated"}))
-			}
-		} else {
-			msg.WarnMsg("You are already logged in. Please log out first using %s.", style.Code("pc auth logout"))
+		// Check whether SSO is now enforced for the current org.
+		needsReauth := false
+		if claims, claimsErr := oauth.ParseClaimsUnverified(token); claimsErr != nil {
+			// Can't parse the existing token — log it, but there is no orgId to
+			// look up SSO against, so fall through and treat as already logged in.
+			log.Debug().Err(claimsErr).Msg("Run: could not parse existing token claims; skipping SSO enforcement check")
+		} else if conn := ResolveSSOConnection(ctx, claims.OrgId); conn != nil {
+			orgId := claims.OrgId
+			ssoOrgId = &orgId
+			opts.SSOConnection = conn
+			oauth.Logout()
+			needsReauth = true
 		}
-		return
+
+		if !needsReauth {
+			// Genuinely already authenticated, no SSO enforcement — show "already logged in".
+			if opts.Json {
+				claims, err := oauth.ParseClaimsUnverified(token)
+				if err == nil {
+					fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
+						Status string `json:"status"`
+						Email  string `json:"email"`
+						OrgId  string `json:"org_id"`
+					}{Status: "already_authenticated", Email: claims.Email, OrgId: claims.OrgId}))
+				} else {
+					fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
+						Status string `json:"status"`
+					}{Status: "already_authenticated"}))
+				}
+			} else {
+				msg.WarnMsg("You are already logged in. Please log out first using %s.", style.Code("pc auth logout"))
+			}
+			return
+		}
+		// Fall through to GetAndSetAccessToken.
 	}
 
-	err = GetAndSetAccessToken(ctx, nil, opts)
+	err = GetAndSetAccessToken(ctx, ssoOrgId, opts)
 	if err != nil {
 		msg.FailMsg("Error acquiring access token while logging in: %s", err)
 		exit.Error(err, "Error acquiring access token while logging in")
@@ -188,9 +212,9 @@ func GetAndSetAccessToken(ctx context.Context, orgId *string, opts Options) erro
 	// a terminal (agentic context), always use the JSON/daemon path.
 	opts.Json = opts.Json || !term.IsTerminal(int(os.Stdout.Fd()))
 	if opts.Json {
-		return getAndSetAccessTokenJSON(ctx, orgId, opts.Wait, nil, nil)
+		return getAndSetAccessTokenJSON(ctx, orgId, opts.Wait, opts.SSOConnection, nil, nil)
 	}
-	return getAndSetAccessTokenInteractive(ctx, orgId)
+	return getAndSetAccessTokenInteractive(ctx, orgId, opts.SSOConnection)
 }
 
 // getAndSetAccessTokenJSON is the agentic path: daemon-backed, non-blocking on stdin.
@@ -203,7 +227,7 @@ func GetAndSetAccessToken(ctx context.Context, orgId *string, opts Options) erro
 // When wait is true (for callers like pc target that need a token on return): spawns
 // daemon, blocks until auth completes, and returns with the token stored. RunPostAuthSetup
 // is not called; the caller owns post-auth state and output.
-func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, wait bool, sess *SessionState, result *SessionResult) error {
+func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, wait bool, ssoConnection *string, sess *SessionState, result *SessionResult) error {
 	if sess == nil {
 		// No pre-fetched session — look one up now.
 		var err error
@@ -214,15 +238,21 @@ func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, wait bool, ses
 	}
 	if sess != nil {
 		// If the caller is requesting a specific org that doesn't match the pending
-		// session's org, the existing session cannot be used.
-		if orgId != nil && sess.OrgId != nil && *orgId != *sess.OrgId {
+		// session's org, the existing session cannot be used. A session with no
+		// recorded org (sess.OrgId == nil) is also a mismatch when orgId is set,
+		// since it was started without an org constraint and may yield the wrong org.
+		if orgId != nil && (sess.OrgId == nil || *orgId != *sess.OrgId) {
 			if result != nil {
 				// Daemon has finished and released the port — clean up and start fresh.
 				CleanupSession(sess.SessionId)
 				// Fall through to start a new flow.
 			} else {
 				// Daemon is still running and holds the callback port.
-				return fmt.Errorf("an auth session for a different organization (%s) is already in progress; wait for it to expire or complete it first", *sess.OrgId)
+				sessOrg := "unknown"
+				if sess.OrgId != nil {
+					sessOrg = *sess.OrgId
+				}
+				return fmt.Errorf("an auth session for a different organization (%s) is already in progress; wait for it to expire or complete it first", sessOrg)
 			}
 		} else {
 			return resumeSession(sess, result, wait)
@@ -238,18 +268,19 @@ func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, wait bool, ses
 		return fmt.Errorf("error creating new auth verifier and challenge: %w", err)
 	}
 
-	authURL, err := a.GetAuthURL(ctx, csrfState, challenge, orgId)
+	authURL, err := a.GetAuthURL(ctx, csrfState, challenge, orgId, ssoConnection)
 	if err != nil {
 		return fmt.Errorf("error getting auth URL: %w", err)
 	}
 
 	sessionId := newSessionId()
 	newSess := &SessionState{
-		SessionId: sessionId,
-		CSRFState: csrfState,
-		AuthURL:   authURL,
-		OrgId:     orgId,
-		CreatedAt: time.Now(),
+		SessionId:     sessionId,
+		CSRFState:     csrfState,
+		AuthURL:       authURL,
+		OrgId:         orgId,
+		SSOConnection: ssoConnection,
+		CreatedAt:     time.Now(),
 	}
 	if err := writeSessionState(*newSess); err != nil {
 		return fmt.Errorf("error writing session state: %w", err)
@@ -266,7 +297,7 @@ func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, wait bool, ses
 		// Print the auth URL to stderr only: stdout must stay clean so the caller
 		// can emit a single JSON document once this function returns.
 		fmt.Fprintf(os.Stderr, "Visit the following URL to authenticate:\n\n  %s\n\n", authURL)
-		return pollForResult(sessionId, newSess.CreatedAt, true)
+		return pollForResult(sessionId, newSess.CreatedAt, true, ssoConnection)
 	}
 
 	// Agentic login (first call): print pending and return immediately. The daemon
@@ -274,6 +305,39 @@ func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, wait bool, ses
 	// The next invocation will detect the pending session and poll for the result.
 	printPendingJSON(authURL, sessionId)
 	return nil
+}
+
+// finishAuthWithSSO is called when a login session completes successfully.
+// If ssoConnection is non-nil, the session was already an SSO round — emit
+// authenticated JSON directly. Otherwise check whether SSO is enforced for
+// the authenticated org; if so, log out and start a second SSO login round
+// (emitting a new pending JSON for agents to follow).
+//
+// sessionId is the just-completed session. When starting an SSO round it is
+// cleaned up eagerly before calling getAndSetAccessTokenJSON, so that
+// findResumableSession does not pick up the stale session and resume it
+// instead of starting the new SSO flow. The deferred CleanupSession in the
+// caller is a no-op once the files are already removed.
+func finishAuthWithSSO(ctx context.Context, sessionId string, ssoConnection *string) error {
+	if ssoConnection == nil {
+		// Round 1 — check whether SSO enforcement is needed.
+		token, _ := oauth.Token(ctx)
+		if token != nil && token.AccessToken != "" {
+			if claims, err := oauth.ParseClaimsUnverified(token); err == nil {
+				if conn := ResolveSSOConnection(ctx, claims.OrgId); conn != nil {
+					// Clean up the completed session before starting the SSO round
+					// so findResumableSession won't find and re-resume it.
+					CleanupSession(sessionId)
+					oauth.Logout()
+					return getAndSetAccessTokenJSON(ctx, &claims.OrgId, false, conn, nil, nil)
+				}
+			}
+		}
+	}
+	// Already in SSO round, or SSO not enforced — emit authenticated JSON.
+	setupCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	return RunPostAuthSetup(setupCtx)
 }
 
 // resumeSession handles a session that was already started (e.g. after a process restart).
@@ -290,14 +354,12 @@ func resumeSession(sess *SessionState, result *SessionResult, wait bool) error {
 		if wait {
 			return nil
 		}
-		setupCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-		return RunPostAuthSetup(setupCtx)
+		return finishAuthWithSSO(context.Background(), sess.SessionId, sess.SSOConnection)
 	}
 	// Still pending — poll until the daemon completes.
 	// Don't re-emit pending here: this call will block until done, keeping stdout
 	// to a single JSON value per invocation.
-	return pollForResult(sess.SessionId, sess.CreatedAt, wait)
+	return pollForResult(sess.SessionId, sess.CreatedAt, wait, sess.SSOConnection)
 }
 
 // pollForResult polls the daemon's result file until auth completes or the session expires.
@@ -311,7 +373,7 @@ func resumeSession(sess *SessionState, result *SessionResult, wait bool) error {
 //
 // The polling loop runs on context.Background() so that the root command's --timeout
 // flag (default 60s) does not interrupt a user still authenticating in the browser.
-func pollForResult(sessionId string, createdAt time.Time, wait bool) error {
+func pollForResult(sessionId string, createdAt time.Time, wait bool, ssoConnection *string) error {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 	remaining := time.Until(createdAt.Add(sessionMaxAge))
@@ -345,11 +407,7 @@ func pollForResult(sessionId string, createdAt time.Time, wait bool) error {
 				// Caller handles post-auth state and output.
 				return nil
 			}
-			// Use a fresh context for the post-auth API calls: the original ctx may
-			// have expired if the user took longer than --timeout to authenticate.
-			setupCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-			defer cancel()
-			return RunPostAuthSetup(setupCtx)
+			return finishAuthWithSSO(context.Background(), sessionId, ssoConnection)
 		}
 	}
 }
@@ -370,7 +428,7 @@ func printPendingJSON(authURL, sessionId string) {
 
 // getAndSetAccessTokenInteractive is the original interactive path: inline callback server,
 // optional [Enter]-to-open-browser prompt when stdin is a TTY.
-func getAndSetAccessTokenInteractive(ctx context.Context, orgId *string) error {
+func getAndSetAccessTokenInteractive(ctx context.Context, orgId *string, ssoConnection *string) error {
 	// If a daemon from a prior JSON-mode login exists, check whether it has
 	// already finished before deciding whether to block interactive login.
 	sess, result, err := findResumableSession()
@@ -398,13 +456,16 @@ func getAndSetAccessTokenInteractive(ctx context.Context, orgId *string) error {
 		return fmt.Errorf("error creating new auth verifier and challenge: %w", err)
 	}
 
-	authURL, err := a.GetAuthURL(ctx, csrfState, challenge, orgId)
+	authURL, err := a.GetAuthURL(ctx, csrfState, challenge, orgId, ssoConnection)
 	if err != nil {
 		return fmt.Errorf("error getting auth URL: %w", err)
 	}
 
 	codeCh := make(chan string, 1)
-	serverCtx, cancel := context.WithTimeout(ctx, sessionMaxAge)
+	// Use context.Background() so the root command's --timeout flag (default 60s)
+	// does not cut off a user who is still authenticating in the browser. Each
+	// interactive round gets a fresh sessionMaxAge window, matching the daemon path.
+	serverCtx, cancel := context.WithTimeout(context.Background(), sessionMaxAge)
 	defer cancel()
 
 	go func() {
@@ -451,7 +512,14 @@ func getAndSetAccessTokenInteractive(ctx context.Context, orgId *string) error {
 		return errors.New("error authenticating CLI and retrieving oauth2 access token")
 	}
 
-	token, err := a.ExchangeAuthCode(ctx, verifier, code)
+	// Use a fresh context for post-callback network operations. The original ctx
+	// may have already exceeded the root command's 60s timeout if the user took
+	// a while to authenticate — the server accepted the callback successfully, so
+	// we must not let a stale deadline fail the code exchange or SSO lookup.
+	apiCtx, apiCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer apiCancel()
+
+	token, err := a.ExchangeAuthCode(apiCtx, verifier, code)
 	if err != nil {
 		return fmt.Errorf("error exchanging auth code for access token: %w", err)
 	}
@@ -475,6 +543,20 @@ func getAndSetAccessTokenInteractive(ctx context.Context, orgId *string) error {
 			AuthContext: authContext,
 			Email:       claims.Email,
 		})
+	}
+
+	// Round 1 — check whether SSO enforcement is needed.
+	// ssoConnection being non-nil means we're already in the SSO round; skip.
+	if ssoConnection == nil {
+		if conn := ResolveSSOConnection(apiCtx, claims.OrgId); conn != nil {
+			fmt.Fprintf(os.Stderr, "\nSSO is required for your organization. Re-authenticating with your identity provider...\n")
+			oauth.Logout()
+			// Cancel the outer serverCtx before starting the SSO round so the
+			// stdin-watching goroutine above exits via ctx.Done() and cannot race
+			// with the new round's goroutine for the next Enter keypress.
+			cancel()
+			return getAndSetAccessTokenInteractive(ctx, &claims.OrgId, conn)
+		}
 	}
 
 	return nil
@@ -706,15 +788,33 @@ func EnsureAuthenticated(ctx context.Context) error {
 	}
 
 	// Daemon finished.
-	defer CleanupSession(sess.SessionId)
 	if result.Status == "error" {
+		defer CleanupSession(sess.SessionId)
 		return fmt.Errorf("authentication failed: %s. Run %s to try again.", result.Error, style.Code("pc login"))
 	}
 
-	// Reload credentials written by the daemon process into this process's cache,
-	// then set the target org/project context so the calling command can proceed
-	// without a separate `pc login` or `pc target` call.
+	// Reload credentials so we can check SSO enforcement before finalising.
 	_ = secrets.SecretsViper.ReadInConfig()
+
+	// If this was a round-1 session (no SSO connection recorded), check whether
+	// the org requires SSO before handing off to the calling command.
+	// When SSO is required we do NOT clean up the session or clear the token:
+	// the next `pc login -j` call will find the still-alive session, resume it
+	// via finishAuthWithSSO, detect SSO, and emit a new pending URL for the SSO
+	// round — so the user only has to complete one more browser step, not two.
+	if sess.SSOConnection == nil {
+		token, _ := oauth.Token(ctx)
+		if token != nil && token.AccessToken != "" {
+			if claims, claimsErr := oauth.ParseClaimsUnverified(token); claimsErr == nil {
+				if ResolveSSOConnection(ctx, claims.OrgId) != nil {
+					return fmt.Errorf("SSO authentication is required for this organization. Run %s to complete authentication.", style.Code("pc login"))
+				}
+			}
+		}
+	}
+
+	// No SSO required (or already in SSO round) — finalise lazy completion.
+	defer CleanupSession(sess.SessionId)
 	if _, err := applyAuthContext(ctx); err != nil {
 		// Non-fatal: credentials are valid, context setup is best-effort.
 		log.Debug().Err(err).Msg("EnsureAuthenticated: applyAuthContext failed after lazy credential reload")

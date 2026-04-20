@@ -15,7 +15,7 @@ const (
 	SourceTag = "pinecone_cli"
 )
 
-func (a *Auth) GetAuthURL(ctx context.Context, csrfState string, codeChallenge string, orgId *string) (string, error) {
+func (a *Auth) GetAuthURL(ctx context.Context, csrfState string, codeChallenge string, orgId *string, ssoConnection *string) (string, error) {
 	conf, err := newOauth2Config()
 	if err != nil {
 		return "", err
@@ -33,6 +33,9 @@ func (a *Auth) GetAuthURL(ctx context.Context, csrfState string, codeChallenge s
 	opts = append(opts, oauth2.SetAuthURLParam("sourceTag", SourceTag))
 	if orgId != nil && *orgId != "" {
 		opts = append(opts, oauth2.SetAuthURLParam("orgId", *orgId))
+	}
+	if ssoConnection != nil && *ssoConnection != "" {
+		opts = append(opts, oauth2.SetAuthURLParam("connection", *ssoConnection))
 	}
 
 	return conf.AuthCodeURL(csrfState, opts...), nil

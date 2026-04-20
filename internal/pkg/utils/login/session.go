@@ -17,7 +17,11 @@ type SessionState struct {
 	CSRFState string    `json:"csrf_state"`
 	AuthURL   string    `json:"auth_url"`
 	OrgId     *string   `json:"org_id,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
+	// SSOConnection is set on the second-round SSO session. A non-nil value
+	// means this session was started specifically for SSO enforcement, so the
+	// completion handler should skip the SSO check and emit "authenticated".
+	SSOConnection *string   `json:"sso_connection,omitempty"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 type SessionResult struct {
