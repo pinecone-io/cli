@@ -41,7 +41,6 @@ var (
 
 func NewLoginCmd() *cobra.Command {
 	var jsonOutput bool
-	var orgId string
 
 	cmd := &cobra.Command{
 		Use:   "login",
@@ -51,9 +50,6 @@ func NewLoginCmd() *cobra.Command {
 			# Interactive login (opens a browser)
 			pc login
 
-			# Login scoped to a specific organization (enables SSO routing)
-			pc login --org "ORG_ID"
-
 			# Agentic login — first call returns a pending URL
 			pc login --json
 
@@ -62,16 +58,11 @@ func NewLoginCmd() *cobra.Command {
 		`),
 		GroupID: help.GROUP_AUTH.ID,
 		Run: func(cmd *cobra.Command, args []string) {
-			opts := login.Options{Json: jsonOutput}
-			if cmd.Flags().Changed("org") {
-				opts.OrgId = &orgId
-			}
-			login.Run(cmd.Context(), opts)
+			login.Run(cmd.Context(), login.Options{Json: jsonOutput})
 		},
 	}
 
 	cmd.Flags().BoolVarP(&jsonOutput, "json", "j", false, "emit JSON output")
-	cmd.Flags().StringVar(&orgId, "org", "", "Organization ID to authenticate into (enables SSO routing for organizations with SSO enforced)")
 
 	return cmd
 }

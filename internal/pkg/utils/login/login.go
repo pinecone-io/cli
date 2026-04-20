@@ -46,8 +46,6 @@ type Options struct {
 	// RunPostAuthSetup is not called in Wait mode; the caller is responsible
 	// for any post-auth state setup and output.
 	Wait bool
-	// OrgId pins the login flow to a specific organization.
-	OrgId *string
 	// SSOConnection is the Auth0 connection name to pass as `connection=` in the
 	// authorization URL, routing the browser directly to the org's IdP.
 	// Callers that hold a valid token before clearing credentials (e.g. pc target)
@@ -69,7 +67,7 @@ func Run(ctx context.Context, opts Options) {
 			exit.Error(err, "Error checking for existing auth session")
 		}
 		if sess != nil {
-			if err := getAndSetAccessTokenJSON(ctx, opts.OrgId, false, opts.SSOConnection, sess, result); err != nil {
+			if err := getAndSetAccessTokenJSON(ctx, nil, false, opts.SSOConnection, sess, result); err != nil {
 				msg.FailMsg("Error acquiring access token while logging in: %s", err)
 				exit.Error(err, "Error acquiring access token while logging in")
 			}
@@ -87,37 +85,16 @@ func Run(ctx context.Context, opts Options) {
 	}
 
 	if !expired && token != nil && token.AccessToken != "" {
-		// If --org targets a different organization, re-authenticate now while
-		// the token is still valid so we can look up the SSO connection before
-		// clearing credentials.
-		// Default to true when --org is explicitly set: if claims parsing fails
-		// we can't confirm the current org matches, so re-authenticating is the
-		// safer choice (and will resolve a malformed token situation).
-		differentOrg := opts.OrgId != nil && *opts.OrgId != ""
-		if differentOrg {
-			if claims, claimsErr := oauth.ParseClaimsUnverified(token); claimsErr == nil {
-				differentOrg = claims.OrgId != *opts.OrgId
-			}
-		}
-
+		// Check whether SSO is now enforced for the current org.
 		needsReauth := false
-		if differentOrg {
-			opts.SSOConnection = ResolveSSOConnection(ctx, *opts.OrgId)
-			oauth.Logout()
-			needsReauth = true
-		} else if claims, claimsErr := oauth.ParseClaimsUnverified(token); claimsErr != nil {
+		if claims, claimsErr := oauth.ParseClaimsUnverified(token); claimsErr != nil {
 			// Can't parse the existing token — log it, but there is no orgId to
 			// look up SSO against, so fall through and treat as already logged in.
 			log.Debug().Err(claimsErr).Msg("Run: could not parse existing token claims; skipping SSO enforcement check")
-		} else {
-			// Same org (or no --org flag) — check whether SSO is now enforced.
-			if conn := ResolveSSOConnection(ctx, claims.OrgId); conn != nil {
-				opts.SSOConnection = conn
-				orgId := claims.OrgId
-				opts.OrgId = &orgId
-				oauth.Logout()
-				needsReauth = true
-			}
+		} else if conn := ResolveSSOConnection(ctx, claims.OrgId); conn != nil {
+			opts.SSOConnection = conn
+			oauth.Logout()
+			needsReauth = true
 		}
 
 		if !needsReauth {
@@ -143,7 +120,7 @@ func Run(ctx context.Context, opts Options) {
 		// Fall through to GetAndSetAccessToken.
 	}
 
-	err = GetAndSetAccessToken(ctx, opts.OrgId, opts)
+	err = GetAndSetAccessToken(ctx, nil, opts)
 	if err != nil {
 		msg.FailMsg("Error acquiring access token while logging in: %s", err)
 		exit.Error(err, "Error acquiring access token while logging in")
