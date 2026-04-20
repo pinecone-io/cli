@@ -100,12 +100,28 @@ func Run(ctx context.Context, opts Options) {
 			}
 		}
 
+		needsReauth := false
 		if differentOrg {
 			opts.SSOConnection = ResolveSSOConnection(ctx, *opts.OrgId)
 			oauth.Logout()
-			// Fall through to GetAndSetAccessToken.
+			needsReauth = true
+		} else if claims, claimsErr := oauth.ParseClaimsUnverified(token); claimsErr != nil {
+			// Can't parse the existing token — log it, but there is no orgId to
+			// look up SSO against, so fall through and treat as already logged in.
+			log.Debug().Err(claimsErr).Msg("Run: could not parse existing token claims; skipping SSO enforcement check")
 		} else {
-			// Same org (or no --org flag) — show "already logged in".
+			// Same org (or no --org flag) — check whether SSO is now enforced.
+			if conn := ResolveSSOConnection(ctx, claims.OrgId); conn != nil {
+				opts.SSOConnection = conn
+				orgId := claims.OrgId
+				opts.OrgId = &orgId
+				oauth.Logout()
+				needsReauth = true
+			}
+		}
+
+		if !needsReauth {
+			// Genuinely already authenticated, no SSO enforcement — show "already logged in".
 			if opts.Json {
 				claims, err := oauth.ParseClaimsUnverified(token)
 				if err == nil {
@@ -124,6 +140,7 @@ func Run(ctx context.Context, opts Options) {
 			}
 			return
 		}
+		// Fall through to GetAndSetAccessToken.
 	}
 
 	err = GetAndSetAccessToken(ctx, opts.OrgId, opts)
