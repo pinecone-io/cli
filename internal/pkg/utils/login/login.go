@@ -571,6 +571,10 @@ func getAndSetAccessTokenInteractive(ctx context.Context, orgId *string, ssoConn
 		if conn := ResolveSSOConnection(apiCtx, claims.OrgId); conn != nil {
 			fmt.Fprintf(os.Stderr, "\nSSO is required for your organization. Re-authenticating with your identity provider...\n")
 			oauth.Logout()
+			// Cancel the outer serverCtx before starting the SSO round so the
+			// stdin-watching goroutine above exits via ctx.Done() and cannot race
+			// with the new round's goroutine for the next Enter keypress.
+			cancel()
 			return getAndSetAccessTokenInteractive(ctx, &claims.OrgId, conn)
 		}
 	}
