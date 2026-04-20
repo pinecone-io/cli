@@ -251,7 +251,11 @@ func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, wait bool, sso
 				// Fall through to start a new flow.
 			} else {
 				// Daemon is still running and holds the callback port.
-				return fmt.Errorf("an auth session for a different organization (%s) is already in progress; wait for it to expire or complete it first", *sess.OrgId)
+				sessOrg := "unknown"
+				if sess.OrgId != nil {
+					sessOrg = *sess.OrgId
+				}
+				return fmt.Errorf("an auth session for a different organization (%s) is already in progress; wait for it to expire or complete it first", sessOrg)
 			}
 		} else {
 			return resumeSession(sess, result, wait)
