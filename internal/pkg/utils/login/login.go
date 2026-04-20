@@ -241,8 +241,10 @@ func getAndSetAccessTokenJSON(ctx context.Context, orgId *string, wait bool, sso
 	}
 	if sess != nil {
 		// If the caller is requesting a specific org that doesn't match the pending
-		// session's org, the existing session cannot be used.
-		if orgId != nil && sess.OrgId != nil && *orgId != *sess.OrgId {
+		// session's org, the existing session cannot be used. A session with no
+		// recorded org (sess.OrgId == nil) is also a mismatch when orgId is set,
+		// since it was started without an org constraint and may yield the wrong org.
+		if orgId != nil && (sess.OrgId == nil || *orgId != *sess.OrgId) {
 			if result != nil {
 				// Daemon has finished and released the port — clean up and start fresh.
 				CleanupSession(sess.SessionId)
@@ -781,15 +783,33 @@ func EnsureAuthenticated(ctx context.Context) error {
 	}
 
 	// Daemon finished.
-	defer CleanupSession(sess.SessionId)
 	if result.Status == "error" {
+		defer CleanupSession(sess.SessionId)
 		return fmt.Errorf("authentication failed: %s. Run %s to try again.", result.Error, style.Code("pc login"))
 	}
 
-	// Reload credentials written by the daemon process into this process's cache,
-	// then set the target org/project context so the calling command can proceed
-	// without a separate `pc login` or `pc target` call.
+	// Reload credentials so we can check SSO enforcement before finalising.
 	_ = secrets.SecretsViper.ReadInConfig()
+
+	// If this was a round-1 session (no SSO connection recorded), check whether
+	// the org requires SSO before handing off to the calling command.
+	// When SSO is required we do NOT clean up the session or clear the token:
+	// the next `pc login -j` call will find the still-alive session, resume it
+	// via finishAuthWithSSO, detect SSO, and emit a new pending URL for the SSO
+	// round — so the user only has to complete one more browser step, not two.
+	if sess.SSOConnection == nil {
+		token, _ := oauth.Token(ctx)
+		if token != nil && token.AccessToken != "" {
+			if claims, claimsErr := oauth.ParseClaimsUnverified(token); claimsErr == nil {
+				if ResolveSSOConnection(ctx, claims.OrgId) != nil {
+					return fmt.Errorf("SSO authentication is required for this organization. Run %s to complete authentication.", style.Code("pc login"))
+				}
+			}
+		}
+	}
+
+	// No SSO required (or already in SSO round) — finalise lazy completion.
+	defer CleanupSession(sess.SessionId)
 	if _, err := applyAuthContext(ctx); err != nil {
 		// Non-fatal: credentials are valid, context setup is best-effort.
 		log.Debug().Err(err).Msg("EnsureAuthenticated: applyAuthContext failed after lazy credential reload")
