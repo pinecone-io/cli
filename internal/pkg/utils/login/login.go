@@ -84,6 +84,7 @@ func Run(ctx context.Context, opts Options) {
 		exit.Error(err, "Error retrieving oauth token")
 	}
 
+	var ssoOrgId *string
 	if !expired && token != nil && token.AccessToken != "" {
 		// Check whether SSO is now enforced for the current org.
 		needsReauth := false
@@ -92,6 +93,8 @@ func Run(ctx context.Context, opts Options) {
 			// look up SSO against, so fall through and treat as already logged in.
 			log.Debug().Err(claimsErr).Msg("Run: could not parse existing token claims; skipping SSO enforcement check")
 		} else if conn := ResolveSSOConnection(ctx, claims.OrgId); conn != nil {
+			orgId := claims.OrgId
+			ssoOrgId = &orgId
 			opts.SSOConnection = conn
 			oauth.Logout()
 			needsReauth = true
@@ -120,7 +123,7 @@ func Run(ctx context.Context, opts Options) {
 		// Fall through to GetAndSetAccessToken.
 	}
 
-	err = GetAndSetAccessToken(ctx, nil, opts)
+	err = GetAndSetAccessToken(ctx, ssoOrgId, opts)
 	if err != nil {
 		msg.FailMsg("Error acquiring access token while logging in: %s", err)
 		exit.Error(err, "Error acquiring access token while logging in")
