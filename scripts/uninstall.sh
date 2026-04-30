@@ -143,20 +143,9 @@ remove_binary() {
 # =========================================================
 
 remove_config() {
-    local uname_os
-    uname_os="$(uname -s)"
+    CONFIG_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/pinecone"
 
-    CONFIG_DIR=""
-    case "$uname_os" in
-        Darwin)
-            CONFIG_DIR="${HOME}/Library/Application Support/pinecone"
-            ;;
-        Linux)
-            CONFIG_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/pinecone"
-            ;;
-    esac
-
-    if [ -n "$CONFIG_DIR" ] && [ -d "$CONFIG_DIR" ]; then
+    if [ -d "$CONFIG_DIR" ]; then
         log "Removing configuration directory ${CONFIG_DIR}..."
         rm -rf "$CONFIG_DIR"
         log "Configuration removed."
