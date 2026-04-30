@@ -74,16 +74,14 @@ command_exists() {
 # =========================================================
 
 check_package_manager() {
-    PC_PATH="$(command -v pc 2>/dev/null || true)"
-
     # Homebrew: check if pc resolves into a Homebrew prefix (Cellar or Caskroom)
-    if [ -n "$PC_PATH" ] && command_exists brew; then
+    if [ -e "$BINARY_PATH" ] && command_exists brew; then
         BREW_PREFIX="$(brew --prefix 2>/dev/null || true)"
-        REAL_PC="$(readlink "$PC_PATH" 2>/dev/null || true)"
+        REAL_PC="$(readlink "$BINARY_PATH" 2>/dev/null || true)"
         # readlink may return a relative path on macOS; resolve it to absolute
         case "$REAL_PC" in
             /*) ;;
-            ?*) REAL_PC="$(cd "$(dirname "$PC_PATH")" && cd "$(dirname "$REAL_PC")" && pwd)/$(basename "$REAL_PC")" ;;
+            ?*) REAL_PC="$(cd "$(dirname "$BINARY_PATH")" && cd "$(dirname "$REAL_PC")" && pwd)/$(basename "$REAL_PC")" ;;
         esac
         case "$REAL_PC" in
             "${BREW_PREFIX}"/Caskroom/*)
