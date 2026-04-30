@@ -80,6 +80,11 @@ check_package_manager() {
     if [ -n "$PC_PATH" ] && command_exists brew; then
         BREW_PREFIX="$(brew --prefix 2>/dev/null || true)"
         REAL_PC="$(readlink "$PC_PATH" 2>/dev/null || true)"
+        # readlink may return a relative path on macOS; resolve it to absolute
+        case "$REAL_PC" in
+            /*) ;;
+            ?*) REAL_PC="$(cd "$(dirname "$PC_PATH")" && cd "$(dirname "$REAL_PC")" && pwd)/$(basename "$REAL_PC")" ;;
+        esac
         case "$REAL_PC" in
             "${BREW_PREFIX}"/Caskroom/*)
                 CASK_NAME="$(echo "$REAL_PC" | sed "s|${BREW_PREFIX}/Caskroom/||" | cut -d/ -f1)"

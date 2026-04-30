@@ -274,6 +274,12 @@ verify_checksum() {
 # =========================================================
 
 install_binary() {
+    # Try unprivileged directory creation first so a user-owned path like
+    # $HOME/.local/bin is never created as root via sudo.
+    if [ ! -d "$INSTALL_DIR" ]; then
+        mkdir -p "$INSTALL_DIR" 2>/dev/null || true
+    fi
+
     # Create install directory if it doesn't exist, then move binary into it.
     if [ -d "$INSTALL_DIR" ] && [ -w "$INSTALL_DIR" ]; then
         mv "${WORK_DIR}/${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}"
@@ -283,13 +289,6 @@ install_binary() {
     elif command_exists doas; then
         log "Password may be required to install to ${INSTALL_DIR}."
         doas sh -c "mkdir -p \"$INSTALL_DIR\" && mv \"${WORK_DIR}/${BINARY_NAME}\" \"${INSTALL_DIR}/${BINARY_NAME}\""
-    elif [ ! -d "$INSTALL_DIR" ]; then
-        # No sudo/doas but directory doesn't exist — try to create it (works if parent is writable)
-        mkdir -p "$INSTALL_DIR" 2>/dev/null || \
-            err "Cannot create ${INSTALL_DIR} and neither sudo nor doas are available." \
-                "Either run this script as root or set PINECONE_INSTALL to a writable directory:" \
-                "  curl -fsSL https://pinecone.io/install.sh | PINECONE_INSTALL=\$HOME/.local/bin sh"
-        mv "${WORK_DIR}/${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}"
     else
         err "Cannot write to ${INSTALL_DIR} and neither sudo nor doas are available." \
             "Either run this script as root or set PINECONE_INSTALL to a writable directory:" \
