@@ -26,6 +26,7 @@ BINARY_NAME="pc"
 main() {
     INSTALL_DIR="${PINECONE_INSTALL:-/usr/local/bin}"
     VERSION="${PINECONE_VERSION:-}"
+    VERSION="${VERSION#v}"
     NO_VERIFY="${PINECONE_NO_VERIFY:-0}"
 
     need_cmd uname
@@ -251,7 +252,7 @@ verify_checksum() {
     download "$CHECKSUMS_URL" "${WORK_DIR}/checksums.txt"
 
     local expected actual
-    expected=$(grep "${FILENAME}" "${WORK_DIR}/checksums.txt" | awk '{print $1}')
+    expected=$(awk -v f="${FILENAME}" '$2 == f {print $1}' "${WORK_DIR}/checksums.txt")
 
     if [ -z "$expected" ]; then
         err "Could not find checksum for ${FILENAME} in checksums file."
