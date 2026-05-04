@@ -170,7 +170,11 @@ func NewIndexConnection(ctx context.Context, pc *pinecone.Client, indexName stri
 	if err != nil {
 		return nil, fmt.Errorf("failed to create index connection: %w", err)
 	}
-	return ic, nil
+	// The SDK coerces Namespace="" to "__default__" inside pc.Index. Re-apply
+	// the caller's value via WithNamespace so that an empty namespace is sent
+	// as "" on the wire (proto3 zero value) rather than the literal string
+	// "__default__", which requires an active server-side conversion.
+	return ic.WithNamespace(namespace), nil
 }
 
 func getCLIAPIKeyForProject(ctx context.Context, ac *pinecone.AdminClient, project *pinecone.Project) (string, error) {
