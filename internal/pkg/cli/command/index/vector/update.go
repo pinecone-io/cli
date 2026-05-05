@@ -71,7 +71,7 @@ func NewUpdateCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of the index to update")
-	cmd.Flags().StringVar(&options.namespace, "namespace", "__default__", "namespace to update the vector in")
+	cmd.Flags().StringVar(&options.namespace, "namespace", "", "namespace to update the vector in")
 	cmd.Flags().StringVar(&options.id, "id", "", "ID of the vector to update")
 	cmd.Flags().Var(&options.values, "values", "values to update the vector with (inline JSON array, ./path.json, or '-' for stdin)")
 	cmd.Flags().Var(&options.sparseIndices, "sparse-indices", "sparse indices to update the vector with (inline JSON array, ./path.json, or '-' for stdin)")
