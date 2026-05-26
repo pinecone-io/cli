@@ -29,7 +29,7 @@ func NewListCollectionsCmd() *cobra.Command {
 		Use:   "list",
 		Short: "See the list of collections in your project",
 		Example: help.Examples(`
-			pc collection list
+			pc index collection list
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
@@ -41,7 +41,6 @@ func NewListCollectionsCmd() *cobra.Command {
 				exit.Error(err, "Failed to list collections")
 			}
 
-			// Sort results alphabetically by name
 			sort.SliceStable(collections, func(i, j int) bool {
 				return collections[i].Name < collections[j].Name
 			})
@@ -55,7 +54,6 @@ func NewListCollectionsCmd() *cobra.Command {
 		},
 	}
 
-	// Optional flags
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 
 	return cmd

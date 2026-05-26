@@ -38,4 +38,8 @@ var (
 		ID:    "index-namespace",
 		Title: style.Heading("Index Namespace Commands"),
 	}
+	GROUP_INDEX_MANAGEMENT = &cobra.Group{
+		ID:    "index-management",
+		Title: style.Heading("Index Management Commands"),
+	}
 )

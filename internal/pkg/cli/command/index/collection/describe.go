@@ -25,7 +25,7 @@ func NewDescribeCollectionCmd() *cobra.Command {
 		Use:   "describe",
 		Short: "Describe a collection by name",
 		Example: help.Examples(`
-			pc collection describe --name "collection-name"
+			pc index collection describe --name my-collection
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
@@ -46,11 +46,8 @@ func NewDescribeCollectionCmd() *cobra.Command {
 		},
 	}
 
-	// required flags
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of collection to describe")
 	_ = cmd.MarkFlagRequired("name")
-
-	// optional flags
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 
 	return cmd

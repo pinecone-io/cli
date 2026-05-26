@@ -29,7 +29,13 @@ func NewCollectionCmd() *cobra.Command {
 		Use:     "collection",
 		Short:   "Work with collections (pod-based indexes only)",
 		Long:    collectionHelp,
-		GroupID: help.GROUP_VECTORDB.ID,
+		GroupID: help.GROUP_INDEX_MANAGEMENT.ID,
+		Example: help.Examples(`
+			pc index collection list
+			pc index collection create --name my-collection --source my-index
+			pc index collection describe --name my-collection
+			pc index collection delete --name my-collection
+		`),
 	}
 
 	cmd.AddCommand(NewCreateCollectionCmd())

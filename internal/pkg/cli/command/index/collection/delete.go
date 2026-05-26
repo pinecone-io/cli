@@ -29,7 +29,7 @@ func NewDeleteCollectionCmd() *cobra.Command {
 		Use:   "delete",
 		Short: "Delete a collection",
 		Example: help.Examples(`
-			pc collection delete --name "collection-name"
+			pc index collection delete --name my-collection
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
@@ -43,10 +43,8 @@ func NewDeleteCollectionCmd() *cobra.Command {
 		},
 	}
 
-	// required flags
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of collection to delete")
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output result as JSON")
-
 	_ = cmd.MarkFlagRequired("name")
 
 	return cmd

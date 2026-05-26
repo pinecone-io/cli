@@ -90,31 +90,31 @@ func Test_runListRestoreJobsCmd_PopulatesParams(t *testing.T) {
 	}
 }
 
-func Test_runRestoreJobCmd_ValidatesRequired(t *testing.T) {
+func Test_runRestoreCmd_ValidatesRequired(t *testing.T) {
 	svc := &mockRestoreJobService{}
 
-	err := runRestoreJobCmd(context.Background(), svc, restoreJobCmdOptions{})
+	err := runRestoreCmd(context.Background(), svc, restoreCmdOptions{})
 	assert.Error(t, err)
 
-	err = runRestoreJobCmd(context.Background(), svc, restoreJobCmdOptions{backupId: "b1"})
+	err = runRestoreCmd(context.Background(), svc, restoreCmdOptions{backupId: "b1"})
 	assert.Error(t, err)
 }
 
-func Test_runCreateIndexFromBackupCmd_Succeeds(t *testing.T) {
+func Test_runRestoreCmd_Succeeds(t *testing.T) {
 	svc := &mockRestoreJobService{
 		createIndexFromBackupResp: &pinecone.CreateIndexFromBackupResponse{
 			IndexId:      "idx-id",
 			RestoreJobId: "rj-1",
 		},
 	}
-	opts := restoreJobCmdOptions{
+	opts := restoreCmdOptions{
 		backupId:           "b1",
 		name:               "new-index",
 		deletionProtection: "enabled",
 		tags:               map[string]string{"env": "prod"},
 	}
 
-	err := runRestoreJobCmd(context.Background(), svc, opts)
+	err := runRestoreCmd(context.Background(), svc, opts)
 
 	if assert.NoError(t, err) {
 		if assert.NotNil(t, svc.lastCreateIndexFromBackupReq) {

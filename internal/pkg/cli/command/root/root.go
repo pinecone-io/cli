@@ -11,8 +11,6 @@ import (
 
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/apiKey"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/auth"
-	"github.com/pinecone-io/cli/internal/pkg/cli/command/backup"
-	"github.com/pinecone-io/cli/internal/pkg/cli/command/collection"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/config"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/index"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/login"
@@ -172,8 +170,6 @@ func init() {
 	// Vector database group
 	rootCmd.AddGroup(help.GROUP_VECTORDB)
 	rootCmd.AddCommand(index.NewIndexCmd())
-	rootCmd.AddCommand(collection.NewCollectionCmd())
-	rootCmd.AddCommand(backup.NewBackupCmd())
 
 	// Misc group
 	rootCmd.AddCommand(version.NewVersionCmd())

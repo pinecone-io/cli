@@ -16,18 +16,19 @@ import (
 )
 
 var (
-	restoreJobHelp = help.Long(`
-		Restore an index from a backup, and list/describe restore jobs.
+	restoreHelp = help.Long(`
+		Restore an index from a backup, and list or describe restore jobs.
 
-		When restoring a serverless index from backup, you can change the index name, tags, and deletion protection setting. 
-		All other properties of the restored index will remain identical to the source index, including cloud and region, 
-		dimension and similarity metric, and associated embedding model when restoring an index with integrated embedding.
+		When restoring a serverless index from a backup, you can change the index name, tags,
+		and deletion protection setting. All other properties of the restored index will remain
+		identical to the source index, including cloud and region, dimension and similarity metric,
+		and associated embedding model when restoring an index with integrated embedding.
 
 		See: https://docs.pinecone.io/guides/manage-data/restore-an-index
 	`)
 )
 
-type restoreJobCmdOptions struct {
+type restoreCmdOptions struct {
 	backupId           string
 	name               string
 	deletionProtection string
@@ -35,33 +36,35 @@ type restoreJobCmdOptions struct {
 	json               bool
 }
 
+// RestoreJobService defines the SDK operations used by restore commands.
 type RestoreJobService interface {
 	DescribeRestoreJob(ctx context.Context, restoreJobId string) (*pinecone.RestoreJob, error)
 	ListRestoreJobs(ctx context.Context, in *pinecone.ListRestoreJobsParams) (*pinecone.RestoreJobList, error)
 	CreateIndexFromBackup(ctx context.Context, in *pinecone.CreateIndexFromBackupParams) (*pinecone.CreateIndexFromBackupResponse, error)
 }
 
-func NewRestoreJobCmd() *cobra.Command {
-	options := restoreJobCmdOptions{}
+func NewRestoreCmd() *cobra.Command {
+	options := restoreCmdOptions{}
 	cmd := &cobra.Command{
-		Use:   "restore",
-		Short: "Restore an index from a backup, and inspect restore jobs",
-		Long:  restoreJobHelp,
+		Use:     "restore",
+		Short:   "Restore an index from a backup and manage restore jobs",
+		Long:    restoreHelp,
+		GroupID: help.GROUP_INDEX_MANAGEMENT.ID,
 		Example: help.Examples(`
 			# Restore an index from a backup
-			pc backup restore --id backup-123 --name restored-index --tags env=prod,team=search --deletion-protection enabled
+			pc index restore --id backup-123 --name restored-index --tags env=prod,team=search --deletion-protection enabled
 
 			# List restore jobs
-			pc backup restore list
+			pc index restore list
 
 			# Describe a restore job
-			pc backup restore describe --id rj-123
+			pc index restore describe --id rj-123
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
 			pc := sdk.NewPineconeClient(ctx)
 
-			err := runRestoreJobCmd(ctx, pc, options)
+			err := runRestoreCmd(ctx, pc, options)
 			if err != nil {
 				msg.FailJSON(options.json, "Failed to create restore job: %s\n", err)
 				exit.Error(err, "Failed to create restore job")
@@ -83,7 +86,7 @@ func NewRestoreJobCmd() *cobra.Command {
 	return cmd
 }
 
-func runRestoreJobCmd(ctx context.Context, svc RestoreJobService, options restoreJobCmdOptions) error {
+func runRestoreCmd(ctx context.Context, svc RestoreJobService, options restoreCmdOptions) error {
 	if strings.TrimSpace(options.backupId) == "" {
 		return fmt.Errorf("--id is required")
 	}
@@ -119,7 +122,7 @@ func runRestoreJobCmd(ctx context.Context, svc RestoreJobService, options restor
 
 	msg.SuccessMsg("Restore job %s started for backup %s.\n", style.Emphasis(resp.RestoreJobId), style.Emphasis(options.backupId))
 	msg.InfoMsg("Created index ID: %s\n", style.Emphasis(resp.IndexId))
-	msg.InfoMsg("Use %s to monitor progress.\n", style.Code("pc backup restore describe --id "+resp.RestoreJobId))
+	msg.InfoMsg("Use %s to monitor progress.\n", style.Code("pc index restore describe --id "+resp.RestoreJobId))
 	return nil
 }
 

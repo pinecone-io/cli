@@ -1,8 +1,11 @@
 package index
 
 import (
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/index/backup"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/index/collection"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/index/namespace"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/index/record"
+	"github.com/pinecone-io/cli/internal/pkg/cli/command/index/restore"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/index/vector"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/spf13/cobra"
@@ -48,6 +51,11 @@ func NewIndexCmd() *cobra.Command {
 
 	cmd.AddGroup(help.GROUP_INDEX_NAMESPACE)
 	cmd.AddCommand(namespace.NewNamespaceCmd())
+
+	cmd.AddGroup(help.GROUP_INDEX_MANAGEMENT)
+	cmd.AddCommand(backup.NewBackupCmd())
+	cmd.AddCommand(restore.NewRestoreCmd())
+	cmd.AddCommand(collection.NewCollectionCmd())
 
 	return cmd
 }

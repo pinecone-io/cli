@@ -16,12 +16,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// BackupService defines the SDK operations used by backup commands.
 type BackupService interface {
 	CreateBackup(ctx context.Context, in *pinecone.CreateBackupParams) (*pinecone.Backup, error)
 	DescribeBackup(ctx context.Context, backupId string) (*pinecone.Backup, error)
 	ListBackups(ctx context.Context, in *pinecone.ListBackupsParams) (*pinecone.BackupList, error)
 	DeleteBackup(ctx context.Context, backupId string) error
-	CreateIndexFromBackup(ctx context.Context, in *pinecone.CreateIndexFromBackupParams) (*pinecone.CreateIndexFromBackupResponse, error)
 }
 
 type createBackupCmdOptions struct {
@@ -44,8 +44,8 @@ func NewCreateBackupCmd() *cobra.Command {
 			the backup later.
 		`),
 		Example: help.Examples(`
-			pc backup create --index-name my-index
-			pc backup create --index-name my-index --name nightly --description "Nightly backup"
+			pc index backup create --index-name my-index
+			pc index backup create --index-name my-index --name nightly --description "Nightly backup"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
