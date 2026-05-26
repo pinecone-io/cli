@@ -23,10 +23,13 @@ func PrintBackupTable(backup *pinecone.Backup) {
 
 	fmt.Fprintf(writer, "Backup ID\t%s\n", backup.BackupId)
 	fmt.Fprintf(writer, "Name\t%s\n", DisplayOrNone(backup.Name))
+	fmt.Fprintf(writer, "Description\t%s\n", DisplayOrNone(backup.Description))
 	fmt.Fprintf(writer, "Status\t%s\n", colorizeBackupStatus(backup.Status))
 	fmt.Fprintf(writer, "Source Index\t%s\n", backup.SourceIndexName)
+	fmt.Fprintf(writer, "Source Index ID\t%s\n", backup.SourceIndexId)
 	fmt.Fprintf(writer, "Cloud\t%s\n", backup.Cloud)
 	fmt.Fprintf(writer, "Region\t%s\n", backup.Region)
+	fmt.Fprintf(writer, "Dimension\t%s\n", DisplayOrNone(backup.Dimension))
 	fmt.Fprintf(writer, "Record Count\t%s\n", DisplayOrNone(backup.RecordCount))
 	fmt.Fprintf(writer, "Namespace Count\t%s\n", DisplayOrNone(backup.NamespaceCount))
 	fmt.Fprintf(writer, "Size (bytes)\t%s\n", DisplayOrNone(backup.SizeBytes))

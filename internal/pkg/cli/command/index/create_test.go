@@ -134,6 +134,38 @@ func Test_runCreateIndexWithService_Integrated_Args(t *testing.T) {
 	assert.Equal(t, toInterfaceMap(options.readParameters), *svc.lastIntegrated.Embed.ReadParameters)
 	assert.Equal(t, toInterfaceMap(options.writeParameters), *svc.lastIntegrated.Embed.WriteParameters)
 	assert.Equal(t, pinecone.IndexTags(options.tags), *svc.lastIntegrated.Tags)
+	// metric and dimension not explicitly set — must not be forwarded to the embed request
+	assert.Nil(t, svc.lastIntegrated.Embed.Metric)
+	assert.Nil(t, svc.lastIntegrated.Embed.Dimension)
+}
+
+func Test_runCreateIndexWithService_Integrated_MetricAndDimension(t *testing.T) {
+	cmd := NewCreateIndexCmd()
+	_ = cmd.Flags().Set("metric", "dotproduct")
+	_ = cmd.Flags().Set("dimension", "512")
+
+	svc := &mockIndexService{result: &pinecone.Index{Name: "my-index"}}
+	options := createIndexOptions{
+		name:      "my-index",
+		cloud:     "aws",
+		region:    "us-east-1",
+		model:     "multilingual-e5-large",
+		fieldMap:  map[string]string{"text": "chunk"},
+		metric:    "dotproduct",
+		dimension: 512,
+	}
+
+	_, err := runCreateIndexCmd(context.Background(), cmd, svc, options)
+	assert.NoError(t, err)
+
+	if assert.NotNil(t, svc.lastIntegrated) {
+		if assert.NotNil(t, svc.lastIntegrated.Embed.Metric) {
+			assert.Equal(t, pinecone.IndexMetric("dotproduct"), *svc.lastIntegrated.Embed.Metric)
+		}
+		if assert.NotNil(t, svc.lastIntegrated.Embed.Dimension) {
+			assert.Equal(t, 512, *svc.lastIntegrated.Embed.Dimension)
+		}
+	}
 }
 
 func Test_createIndexOptions_deriveIndexType(t *testing.T) {

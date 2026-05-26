@@ -262,6 +262,14 @@ func runCreateIndexCmd(ctx context.Context, cmd *cobra.Command, service CreateIn
 			return nil, err
 		}
 
+		// Only forward metric if explicitly set — the model has its own default and
+		// the flag default ("cosine") must not silently override it.
+		var embedMetric *pinecone.IndexMetric
+		if cmd.Flags().Changed("metric") {
+			m := pinecone.IndexMetric(options.metric)
+			embedMetric = &m
+		}
+
 		args := pinecone.CreateIndexForModelRequest{
 			Name:               options.name,
 			Cloud:              pinecone.Cloud(options.cloud),
@@ -270,6 +278,8 @@ func runCreateIndexCmd(ctx context.Context, cmd *cobra.Command, service CreateIn
 			Embed: pinecone.CreateIndexForModelEmbed{
 				Model:           options.model,
 				FieldMap:        toInterfaceMap(options.fieldMap),
+				Metric:          embedMetric,
+				Dimension:       pointerOrNil(int(options.dimension)),
 				ReadParameters:  &readParams,
 				WriteParameters: &writeParams,
 			},
