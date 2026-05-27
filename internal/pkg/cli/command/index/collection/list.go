@@ -29,7 +29,7 @@ func NewListCollectionsCmd() *cobra.Command {
 		Use:   "list",
 		Short: "See the list of collections in your project",
 		Example: help.Examples(`
-			pc collection list
+			pc index collection list
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()

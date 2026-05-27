@@ -59,6 +59,7 @@ func NewConfigureIndexCmd() *cobra.Command {
 
 	// Required flags
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "Name of index to configure")
+	_ = cmd.MarkFlagRequired("name")
 
 	// pods
 	cmd.Flags().StringVarP(&options.podType, "pod-type", "t", "", "Type of pod to use, can only upgrade when configuring")

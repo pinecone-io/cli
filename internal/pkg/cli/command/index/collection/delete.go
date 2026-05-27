@@ -18,7 +18,8 @@ type deleteCollectionCmdOptions struct {
 	json bool
 }
 
-type deleteCollectionService interface {
+// DeleteCollectionService abstracts the Pinecone Go SDK for unit testing (runDeleteCollectionCmd)
+type DeleteCollectionService interface {
 	DeleteCollection(ctx context.Context, name string) error
 }
 
@@ -29,7 +30,7 @@ func NewDeleteCollectionCmd() *cobra.Command {
 		Use:   "delete",
 		Short: "Delete a collection",
 		Example: help.Examples(`
-			pc collection delete --name "collection-name"
+			pc index collection delete --name my-collection
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
@@ -43,16 +44,17 @@ func NewDeleteCollectionCmd() *cobra.Command {
 		},
 	}
 
-	// required flags
+	// Required flags
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of collection to delete")
-	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output result as JSON")
-
 	_ = cmd.MarkFlagRequired("name")
+
+	// Optional flags
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output result as JSON")
 
 	return cmd
 }
 
-func runDeleteCollectionCmd(ctx context.Context, svc deleteCollectionService, options deleteCollectionCmdOptions) error {
+func runDeleteCollectionCmd(ctx context.Context, svc DeleteCollectionService, options deleteCollectionCmdOptions) error {
 	if err := svc.DeleteCollection(ctx, options.name); err != nil {
 		return err
 	}

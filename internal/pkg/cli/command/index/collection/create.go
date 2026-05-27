@@ -29,7 +29,7 @@ func NewCreateCollectionCmd() *cobra.Command {
 		Use:   "create",
 		Short: "Create a collection from a pod-based index",
 		Example: help.Examples(`
-			pc collection create --name "collection-name" --source "index-source-name"
+			pc index collection create --name my-collection --source my-index
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
@@ -49,7 +49,7 @@ func NewCreateCollectionCmd() *cobra.Command {
 				json := text.IndentJSON(collection)
 				fmt.Fprintln(os.Stdout, json)
 			} else {
-				describeCommand := fmt.Sprintf("pc collection describe --name %s", collection.Name)
+				describeCommand := fmt.Sprintf("pc index collection describe --name %s", collection.Name)
 				msg.SuccessMsg("Collection %s created successfully. Run %s to check status. \n\n", style.Emphasis(collection.Name), style.Code(describeCommand))
 				presenters.PrintDescribeCollectionTable(collection)
 			}

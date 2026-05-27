@@ -2,7 +2,6 @@ package backup
 
 import (
 	"context"
-
 	"fmt"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
@@ -33,10 +32,10 @@ func NewListBackupsCmd() *cobra.Command {
 		`),
 		Example: help.Examples(`
 			# List backups for the current project
-			pc backup list
+			pc index backup list
 
 			# List backups for a specific index
-			pc backup list --index-name my-index --limit 10
+			pc index backup list --index-name my-index --limit 10
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()

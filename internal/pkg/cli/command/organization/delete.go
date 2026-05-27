@@ -23,7 +23,8 @@ type deleteOrganizationCmdOptions struct {
 	json             bool
 }
 
-type deleteOrganizationService interface {
+// DeleteOrganizationService abstracts the Pinecone Go SDK for unit testing (runDeleteOrganizationCmd)
+type DeleteOrganizationService interface {
 	Delete(ctx context.Context, id string) error
 }
 
@@ -80,7 +81,7 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 	return cmd
 }
 
-func runDeleteOrganizationCmd(ctx context.Context, svc deleteOrganizationService, opts deleteOrganizationCmdOptions, name, id string) error {
+func runDeleteOrganizationCmd(ctx context.Context, svc DeleteOrganizationService, opts deleteOrganizationCmdOptions, name, id string) error {
 	if err := svc.Delete(ctx, id); err != nil {
 		return err
 	}
