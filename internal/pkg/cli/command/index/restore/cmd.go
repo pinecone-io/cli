@@ -36,7 +36,7 @@ type restoreCmdOptions struct {
 	json               bool
 }
 
-// RestoreJobService defines the SDK operations used by restore commands.
+// RestoreJobService abstracts the Pinecone Go SDK for unit testing (runRestoreCmd)
 type RestoreJobService interface {
 	DescribeRestoreJob(ctx context.Context, restoreJobId string) (*pinecone.RestoreJob, error)
 	ListRestoreJobs(ctx context.Context, in *pinecone.ListRestoreJobsParams) (*pinecone.RestoreJobList, error)

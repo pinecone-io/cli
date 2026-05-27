@@ -56,10 +56,13 @@ func NewCreateCollectionCmd() *cobra.Command {
 		},
 	}
 
+	// Required flags
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name you want to give the collection")
 	_ = cmd.MarkFlagRequired("name")
 	cmd.Flags().StringVarP(&options.sourceIndex, "source", "s", "", "name of the index to use as the source for the collection")
 	_ = cmd.MarkFlagRequired("source")
+
+	// Optional flags
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 
 	return cmd

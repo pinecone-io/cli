@@ -41,6 +41,7 @@ func NewListCollectionsCmd() *cobra.Command {
 				exit.Error(err, "Failed to list collections")
 			}
 
+			// Sort results alphabetically by name
 			sort.SliceStable(collections, func(i, j int) bool {
 				return collections[i].Name < collections[j].Name
 			})
@@ -54,6 +55,7 @@ func NewListCollectionsCmd() *cobra.Command {
 		},
 	}
 
+	// Optional flags
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 
 	return cmd

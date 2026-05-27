@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// BackupService defines the SDK operations used by backup commands.
+// BackupService abstracts the Pinecone Go SDK for unit testing across backup commands (runCreateBackupCmd, runDeleteBackup, runDescribeBackupCmd, runListBackupsCmd)
 type BackupService interface {
 	CreateBackup(ctx context.Context, in *pinecone.CreateBackupParams) (*pinecone.Backup, error)
 	DescribeBackup(ctx context.Context, backupId string) (*pinecone.Backup, error)

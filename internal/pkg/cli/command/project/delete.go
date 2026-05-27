@@ -23,7 +23,8 @@ type deleteProjectCmdOptions struct {
 	json             bool
 }
 
-type deleteProjectService interface {
+// DeleteProjectService abstracts the Pinecone Go SDK for unit testing (runDeleteProjectCmd)
+type DeleteProjectService interface {
 	Delete(ctx context.Context, id string) error
 }
 
@@ -93,7 +94,7 @@ func NewDeleteProjectCmd() *cobra.Command {
 	return cmd
 }
 
-func runDeleteProjectCmd(ctx context.Context, svc deleteProjectService, opts deleteProjectCmdOptions, name, id string) error {
+func runDeleteProjectCmd(ctx context.Context, svc DeleteProjectService, opts deleteProjectCmdOptions, name, id string) error {
 	if err := svc.Delete(ctx, id); err != nil {
 		return err
 	}

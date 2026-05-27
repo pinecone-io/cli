@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NamespaceService abstracts the Pinecone Go SDK for unit testing (runCreateNamespaceCmd, runDescribeNamespaceCmd, runListNamespacesCmd, runDeleteNamespaceCmd)
 type NamespaceService interface {
 	CreateNamespace(ctx context.Context, req *pinecone.CreateNamespaceParams) (*pinecone.NamespaceDescription, error)
 	DescribeNamespace(ctx context.Context, name string) (*pinecone.NamespaceDescription, error)

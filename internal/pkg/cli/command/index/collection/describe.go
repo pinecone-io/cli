@@ -46,8 +46,11 @@ func NewDescribeCollectionCmd() *cobra.Command {
 		},
 	}
 
+	// Required flags
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of collection to describe")
 	_ = cmd.MarkFlagRequired("name")
+
+	// Optional flags
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 
 	return cmd

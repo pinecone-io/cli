@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Abstracts the Pinecone Go SDK for unit testing (runCreateIndex)
+// CreateIndexService abstracts the Pinecone Go SDK for unit testing (runCreateIndex)
 type CreateIndexService interface {
 	CreateServerlessIndex(ctx context.Context, req *pinecone.CreateServerlessIndexRequest) (*pinecone.Index, error)
 	CreatePodIndex(ctx context.Context, req *pinecone.CreatePodIndexRequest) (*pinecone.Index, error)

@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-
 var (
 	backupHelp = help.Long(`
 		Manage backups for serverless indexes. A backup is a static copy of a serverless index

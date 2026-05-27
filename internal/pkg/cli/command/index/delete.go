@@ -19,7 +19,8 @@ type deleteCmdOptions struct {
 	json bool
 }
 
-type deleteIndexService interface {
+// DeleteIndexService abstracts the Pinecone Go SDK for unit testing (runDeleteIndexCmd)
+type DeleteIndexService interface {
 	DeleteIndex(ctx context.Context, name string) error
 }
 
@@ -57,7 +58,7 @@ func NewDeleteCmd() *cobra.Command {
 	return cmd
 }
 
-func runDeleteIndexCmd(ctx context.Context, svc deleteIndexService, options deleteCmdOptions) error {
+func runDeleteIndexCmd(ctx context.Context, svc DeleteIndexService, options deleteCmdOptions) error {
 	if err := svc.DeleteIndex(ctx, options.name); err != nil {
 		return err
 	}
