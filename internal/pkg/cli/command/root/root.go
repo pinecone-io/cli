@@ -50,6 +50,11 @@ var skipAuthCommands = map[string]struct{}{
 	"pc target":                  {}, // handles its own auth after --show/--clear early returns
 	"pc version":                 {},
 	"pc config":                  {},
+	"pc config get":              {},
+	"pc config set":              {},
+	"pc config unset":            {},
+	"pc config list":             {},
+	"pc config describe":         {},
 	"pc config get-api-key":      {},
 	"pc config set-api-key":      {},
 	"pc config set-color":        {},

@@ -12,8 +12,10 @@ import (
 
 func NewSetColorCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "set-color",
-		Short: "Configure whether the CLI prints output with color",
+		Use:        "set-color",
+		Short:      "Configure whether the CLI prints output with color",
+		Deprecated: "use 'pc config set color <true|false>' instead",
+		Hidden:     true,
 		Example: help.Examples(`
 			pc config set-color true
 			pc config set-color false

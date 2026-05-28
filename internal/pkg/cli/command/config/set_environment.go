@@ -15,13 +15,14 @@ import (
 
 func NewSetEnvCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "set-environment <production|staging>",
-		Short: "Configure the environment (production or staging)",
+		Use:        "set-environment <production|staging>",
+		Short:      "Configure the environment (production or staging)",
+		Deprecated: "use 'pc config set environment <production|staging>' instead",
+		Hidden:     true,
 		Example: help.Examples(`
 			pc config set-environment "production"
 			pc config set-environment "staging"
 		`),
-		Hidden: false,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 				msg.FailMsg("Please provide a value for environment. Accepted values are %s, %s", style.Emphasis("production"), style.Emphasis("staging"))
@@ -64,9 +65,9 @@ func NewSetEnvCmd() *cobra.Command {
 
 			if secrets.DefaultAPIKey.Get() != "" {
 				secrets.DefaultAPIKey.Clear()
-				msg.InfoMsg("API key cleared; to set a new API key, run %s", style.Code("pc config set-api-key"))
+				msg.InfoMsg("API key cleared; to set a new API key, run %s", style.Code("pc config set api-key <value>"))
 			} else {
-				msg.InfoMsg("To set a new API key, run %s", style.Code("pc config set-api-key"))
+				msg.InfoMsg("To set a new API key, run %s", style.Code("pc config set api-key <value>"))
 			}
 
 			if state.TargetOrg.Get().Name != "" || state.TargetProj.Get().Name != "" {
