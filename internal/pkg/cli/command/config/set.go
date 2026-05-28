@@ -48,10 +48,11 @@ func NewSetCmd() *cobra.Command {
 				return
 			}
 
+			newVal := keyDesc.getStr()
 			msg.SuccessMsg("%s updated", style.Emphasis(keyName))
 
 			if keyDesc.onChange != nil {
-				for _, line := range keyDesc.onChange(cmd.Context(), oldVal, value) {
+				for _, line := range keyDesc.onChange(cmd.Context(), oldVal, newVal) {
 					msg.InfoMsg("%s", line)
 				}
 			}

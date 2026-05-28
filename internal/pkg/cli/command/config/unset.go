@@ -27,8 +27,16 @@ func NewUnsetCmd() *cobra.Command {
 				return
 			}
 
+			oldVal := keyDesc.getStr()
 			keyDesc.clearStr()
+			newVal := keyDesc.getStr()
 			msg.SuccessMsg("%s cleared", style.Emphasis(keyName))
+
+			if keyDesc.onChange != nil && oldVal != newVal {
+				for _, line := range keyDesc.onChange(cmd.Context(), oldVal, newVal) {
+					msg.InfoMsg("%s", line)
+				}
+			}
 		},
 	}
 
