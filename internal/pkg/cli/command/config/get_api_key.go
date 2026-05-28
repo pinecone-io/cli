@@ -21,8 +21,10 @@ func NewGetApiKeyCmd() *cobra.Command {
 	options := GetAPIKeyCmdOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "get-api-key",
-		Short: "Get the current default API key configured for the Pinecone CLI",
+		Use:        "get-api-key",
+		Short:      "Get the current default API key configured for the Pinecone CLI",
+		Deprecated: "use 'pc config get api-key' instead",
+		Hidden:     true,
 		Example: help.Examples(`
 		    pc config get-api-key
 		`),

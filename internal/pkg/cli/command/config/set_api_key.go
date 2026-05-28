@@ -20,9 +20,11 @@ var (
 
 func NewSetApiKeyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "set-api-key",
-		Short: "Configure the CLI to authenticate with Pinecone using a default API key",
-		Long:  setAPIKeyHelp,
+		Use:        "set-api-key",
+		Short:      "Configure the CLI to authenticate with Pinecone using a default API key",
+		Long:       setAPIKeyHelp,
+		Deprecated: "use 'pc config set api-key <value>' instead",
+		Hidden:     true,
 		Example: help.Examples(`
 		    pc config set-api-key "api-key-value"
 		`),
