@@ -32,7 +32,7 @@ func NewListCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			svc := newDefaultConfigService()
 			if err := runListCmd(svc, options); err != nil {
-				msg.FailMsg("%s", err)
+				msg.FailJSON(options.json, "%s", err)
 				exit.ErrorMsg(err.Error())
 			}
 		},
