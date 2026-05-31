@@ -74,19 +74,19 @@ var configRegistry = map[string]keyDescriptor{
 
 	"color": {
 		Description: "Enable or disable colored terminal output",
-		ValidValues: []string{"true", "false"},
+		ValidValues: []string{"true", "false", "on", "off"},
 		defaultVal:  "true",
 		getStr: func() string {
 			return text.BoolToString(conf.Color.Get())
 		},
 		validateStr: func(value string) (string, error) {
 			switch strings.ToLower(value) {
-			case "true", "on", "1":
+			case "true", "on":
 				return "true", nil
-			case "false", "off", "0":
+			case "false", "off":
 				return "false", nil
 			default:
-				return "", fmt.Errorf("invalid value %q for color; must be one of: true, false", value)
+				return "", fmt.Errorf("invalid value %q for color; must be one of: true, false, on, off", value)
 			}
 		},
 		persistStr: func(value string) {
@@ -114,10 +114,8 @@ var configRegistry = map[string]keyDescriptor{
 		},
 		validateStr: func(value string) (string, error) {
 			switch value {
-			case "production", "prod":
-				value = "production"
-			case "staging":
-				// already the canonical value
+			case "production", "staging":
+				// canonical values
 			default:
 				return "", fmt.Errorf("invalid environment %q; must be one of: production, staging", value)
 			}
