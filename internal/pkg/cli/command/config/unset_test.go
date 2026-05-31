@@ -37,6 +37,14 @@ func Test_runUnsetCmd_SucceedsWithOnChangeLines(t *testing.T) {
 	assert.Equal(t, "environment", svc.lastUnsetKey)
 }
 
+func Test_runUnsetCmd_ReturnsNilOnNoChange(t *testing.T) {
+	svc := &mockConfigService{unsetErr: ErrNoChange}
+
+	err := runUnsetCmd(context.Background(), svc, "color", UnsetCmdOptions{})
+
+	assert.NoError(t, err)
+}
+
 func Test_runUnsetCmd_JSONOutput(t *testing.T) {
 	svc := &mockConfigService{}
 
@@ -46,4 +54,15 @@ func Test_runUnsetCmd_JSONOutput(t *testing.T) {
 	})
 
 	assert.JSONEq(t, `{"key":"api-key","cleared":true}`, out)
+}
+
+func Test_runUnsetCmd_JSONOutputOnNoChange(t *testing.T) {
+	svc := &mockConfigService{unsetErr: ErrNoChange}
+
+	out := testutils.CaptureStdout(t, func() {
+		err := runUnsetCmd(context.Background(), svc, "color", UnsetCmdOptions{json: true})
+		assert.NoError(t, err)
+	})
+
+	assert.JSONEq(t, `{"key":"color","cleared":false}`, out)
 }

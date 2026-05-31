@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 
@@ -52,6 +53,14 @@ func runUnsetCmd(ctx context.Context, svc ConfigService, keyName string, opts Un
 
 	lines, err := svc.Unset(ctx, keyName)
 	if err != nil {
+		if errors.Is(err, ErrNoChange) {
+			if opts.json {
+				fmt.Fprintln(os.Stdout, text.IndentJSON(unsetOutput{Key: keyName, Cleared: false}))
+				return nil
+			}
+			msg.InfoMsg("%s is already at its default value", style.Emphasis(keyName))
+			return nil
+		}
 		return err
 	}
 

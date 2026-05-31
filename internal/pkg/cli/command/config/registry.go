@@ -263,7 +263,7 @@ func (s *defaultConfigService) Unset(ctx context.Context, key string) ([]string,
 	oldVal := desc.getStr()
 	newVal := desc.defaultVal
 	if oldVal == newVal {
-		return nil, nil
+		return nil, ErrNoChange
 	}
 	// Run onChange before persisting so the config file is not written if onChange fails.
 	var lines []string
