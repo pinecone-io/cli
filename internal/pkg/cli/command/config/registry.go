@@ -9,16 +9,14 @@ import (
 	conf "github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
-	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
-	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/oauth"
 	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 )
 
-// ErrNoChange is returned by a keyDescriptor's setStr when the incoming value
-// is equivalent to the current stored value and no write is needed.
+// ErrNoChange is returned by validateStr when the incoming value is equivalent
+// to the current stored value and no write is needed.
 var ErrNoChange = errors.New("no change")
 
 // keyDescriptor describes a single user-configurable setting.
@@ -28,12 +26,19 @@ type keyDescriptor struct {
 	Sensitive       bool
 	Hidden          bool
 	ValidValues     []string // non-nil: values shown in help; nil: any non-empty string accepted
+	defaultVal      string   // the value restored by Unset; must match what getStr returns at the default
 	getStr          func() string
-	setStr          func(value string) error // returns ErrNoChange or a validation error
-	clearStr        func()
-	// onChange is invoked after a successful setStr. It may call exit.Error for
-	// fatal side-effect failures. Returns human-readable info lines for the user.
-	onChange func(ctx context.Context, oldVal, newVal string) []string
+	// validateStr normalises the incoming value and checks whether it differs from
+	// the current value. It is pure (no I/O) and must be called before persistStr.
+	// Returns ErrNoChange when the value is already current, or a validation error.
+	// If nil, the value is passed through to persistStr unchanged.
+	validateStr func(value string) (normalizedValue string, err error)
+	// onChange is called with the prospective new value before it is persisted.
+	// Returning an error aborts the operation; nothing is written to disk.
+	onChange func(ctx context.Context, oldVal, newVal string) ([]string, error)
+	// persistStr writes a normalised value returned by validateStr. It is only
+	// called after validateStr and onChange have both succeeded.
+	persistStr func(normalizedValue string)
 }
 
 // configKeys represent the set of valid configuration keys.
@@ -57,47 +62,38 @@ var configRegistry = map[string]keyDescriptor{
 
 			To clear the explicit API key, run 'pc config unset api-key'.
 		`),
-		Sensitive: true,
-		Hidden:    false,
+		Sensitive:  true,
+		defaultVal: "",
 		getStr: func() string {
 			return secrets.DefaultAPIKey.Get()
 		},
-		setStr: func(value string) error {
-			if value == "" {
-				return fmt.Errorf("api-key value cannot be empty")
-			}
+		persistStr: func(value string) {
 			secrets.DefaultAPIKey.Set(value)
-			return nil
-		},
-		clearStr: func() {
-			secrets.DefaultAPIKey.Clear()
 		},
 	},
+
 	"color": {
 		Description: "Enable or disable colored terminal output",
-		Sensitive:   false,
-		Hidden:      false,
 		ValidValues: []string{"true", "false"},
+		defaultVal:  "true",
 		getStr: func() string {
 			return text.BoolToString(conf.Color.Get())
 		},
-		setStr: func(value string) error {
-			var colorSetting bool
+		validateStr: func(value string) (string, error) {
 			switch strings.ToLower(value) {
 			case "true", "on", "1":
-				colorSetting = true
+				return "true", nil
 			case "false", "off", "0":
-				colorSetting = false
+				return "false", nil
 			default:
-				return fmt.Errorf("invalid value %q for color; must be one of: true, false", value)
+				return "", fmt.Errorf("invalid value %q for color; must be one of: true, false", value)
 			}
-			conf.Color.Set(colorSetting)
-			return nil
 		},
-		clearStr: func() {
-			conf.Color.Clear()
+		persistStr: func(value string) {
+			conf.Color.Set(value == "true")
 		},
 	},
+
 	"environment": {
 		Description: "Pinecone environment to target (production or staging)",
 		LongDescription: help.Long(`
@@ -110,38 +106,36 @@ var configRegistry = map[string]keyDescriptor{
 			target organization and project are reset. You will need to re-authenticate
 			and re-target after switching.
 		`),
-		Sensitive:   false,
 		Hidden:      true,
 		ValidValues: []string{"production", "staging"},
+		defaultVal:  "production",
 		getStr: func() string {
 			return conf.Environment.Get()
 		},
-		setStr: func(value string) error {
+		validateStr: func(value string) (string, error) {
 			switch value {
 			case "production", "prod":
 				value = "production"
 			case "staging":
 				// already the canonical value
 			default:
-				return fmt.Errorf("invalid environment %q; must be one of: production, staging", value)
+				return "", fmt.Errorf("invalid environment %q; must be one of: production, staging", value)
 			}
 			if conf.Environment.Get() == value {
-				return ErrNoChange
+				return "", ErrNoChange
 			}
+			return value, nil
+		},
+		persistStr: func(value string) {
 			conf.Environment.Set(value)
-			return nil
 		},
-		clearStr: func() {
-			conf.Environment.Clear()
-		},
-		onChange: func(ctx context.Context, _, _ string) []string {
+		onChange: func(ctx context.Context, _, _ string) ([]string, error) {
 			var lines []string
 
+			// Check for existing OAuth sessions and login credentials and clear them when the environment is changed.
 			token, err := oauth.Token(ctx)
 			if err != nil {
-				msg.FailMsg("Error retrieving oauth token: %s", err)
-				exit.Error(err, "error retrieving oauth token")
-				return nil // unreachable
+				return nil, fmt.Errorf("error retrieving oauth token: %w", err)
 			}
 			if token != nil && (token.AccessToken != "" || token.RefreshToken != "") {
 				oauth.Logout()
@@ -163,7 +157,7 @@ var configRegistry = map[string]keyDescriptor{
 				lines = append(lines, fmt.Sprintf("Target organization and project cleared; to set a new target, run %s", style.Code("pc target -o myorg -p myproj")))
 			}
 
-			return lines
+			return lines, nil
 		},
 	},
 }
@@ -246,14 +240,21 @@ func (s *defaultConfigService) Set(ctx context.Context, key, value string) ([]st
 		return nil, err
 	}
 	oldVal := desc.getStr()
-	if err := desc.setStr(value); err != nil {
-		return nil, err
+	normalizedVal := value
+	if desc.validateStr != nil {
+		if normalizedVal, err = desc.validateStr(value); err != nil {
+			return nil, err
+		}
 	}
-	newVal := desc.getStr()
+	// Run onChange before persisting so the config file is not written if onChange fails.
+	var lines []string
 	if desc.onChange != nil {
-		return desc.onChange(ctx, oldVal, newVal), nil
+		if lines, err = desc.onChange(ctx, oldVal, normalizedVal); err != nil {
+			return nil, err
+		}
 	}
-	return nil, nil
+	desc.persistStr(normalizedVal)
+	return lines, nil
 }
 
 func (s *defaultConfigService) Unset(ctx context.Context, key string) ([]string, error) {
@@ -262,18 +263,25 @@ func (s *defaultConfigService) Unset(ctx context.Context, key string) ([]string,
 		return nil, err
 	}
 	oldVal := desc.getStr()
-	desc.clearStr()
-	newVal := desc.getStr()
-	if desc.onChange != nil && oldVal != newVal {
-		return desc.onChange(ctx, oldVal, newVal), nil
+	newVal := desc.defaultVal
+	if oldVal == newVal {
+		return nil, nil
 	}
-	return nil, nil
+	// Run onChange before persisting so the config file is not written if onChange fails.
+	var lines []string
+	if desc.onChange != nil {
+		if lines, err = desc.onChange(ctx, oldVal, newVal); err != nil {
+			return nil, err
+		}
+	}
+	desc.persistStr(newVal)
+	return lines, nil
 }
 
 func (s *defaultConfigService) List() []ConfigEntry {
-	visibleKeys := visibleKeys()
-	entries := make([]ConfigEntry, 0, len(visibleKeys))
-	for _, key := range visibleKeys {
+	visible := visibleKeys()
+	entries := make([]ConfigEntry, 0, len(visible))
+	for _, key := range visible {
 		desc := configRegistry[key]
 		entries = append(entries, ConfigEntry{
 			Key:         key,
