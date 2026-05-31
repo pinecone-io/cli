@@ -173,9 +173,9 @@ func lookupKey(name string) (keyDescriptor, error) {
 
 // visibleKeys returns the set of config keys that are surfaced to the user.
 func visibleKeys() []string {
-	keys := make([]string, 0, len(configRegistry))
-	for key, desc := range configRegistry {
-		if !desc.Hidden {
+	keys := make([]string, 0, len(configKeys))
+	for _, key := range configKeys {
+		if !configRegistry[key].Hidden {
 			keys = append(keys, key)
 		}
 	}
