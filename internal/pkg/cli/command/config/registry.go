@@ -26,6 +26,7 @@ type keyDescriptor struct {
 	Description     string
 	LongDescription string // optional multi-paragraph detail shown by `pc config describe`
 	Sensitive       bool
+	Hidden          bool
 	ValidValues     []string // non-nil: values shown in help; nil: any non-empty string accepted
 	getStr          func() string
 	setStr          func(value string) error // returns ErrNoChange or a validation error
@@ -35,11 +36,13 @@ type keyDescriptor struct {
 	onChange func(ctx context.Context, oldVal, newVal string) []string
 }
 
-// configKeyOrder is the stable iteration order used by pc config list.
-var configKeyOrder = []string{
+// configKeys represent the set of valid configuration keys.
+// This is used by lookupKey to validate keys on config commands,
+// and the order of keys in the list command.
+var configKeys = []string{
 	"api-key",
-	"environment",
 	"color",
+	"environment",
 }
 
 // configRegistry is a map of all config keys and their descriptors.
@@ -55,6 +58,7 @@ var configRegistry = map[string]keyDescriptor{
 			To clear the explicit API key, run 'pc config unset api-key'.
 		`),
 		Sensitive: true,
+		Hidden:    false,
 		getStr: func() string {
 			return secrets.DefaultAPIKey.Get()
 		},
@@ -69,7 +73,31 @@ var configRegistry = map[string]keyDescriptor{
 			secrets.DefaultAPIKey.Clear()
 		},
 	},
-
+	"color": {
+		Description: "Enable or disable colored terminal output",
+		Sensitive:   false,
+		Hidden:      false,
+		ValidValues: []string{"true", "false"},
+		getStr: func() string {
+			return text.BoolToString(conf.Color.Get())
+		},
+		setStr: func(value string) error {
+			var colorSetting bool
+			switch strings.ToLower(value) {
+			case "true", "on", "1":
+				colorSetting = true
+			case "false", "off", "0":
+				colorSetting = false
+			default:
+				return fmt.Errorf("invalid value %q for color; must be one of: true, false", value)
+			}
+			conf.Color.Set(colorSetting)
+			return nil
+		},
+		clearStr: func() {
+			conf.Color.Clear()
+		},
+	},
 	"environment": {
 		Description: "Pinecone environment to target (production or staging)",
 		LongDescription: help.Long(`
@@ -83,6 +111,7 @@ var configRegistry = map[string]keyDescriptor{
 			and re-target after switching.
 		`),
 		Sensitive:   false,
+		Hidden:      true,
 		ValidValues: []string{"production", "staging"},
 		getStr: func() string {
 			return conf.Environment.Get()
@@ -137,40 +166,26 @@ var configRegistry = map[string]keyDescriptor{
 			return lines
 		},
 	},
-
-	"color": {
-		Description: "Enable or disable colored terminal output",
-		Sensitive:   false,
-		ValidValues: []string{"true", "false"},
-		getStr: func() string {
-			return text.BoolToString(conf.Color.Get())
-		},
-		setStr: func(value string) error {
-			var colorSetting bool
-			switch strings.ToLower(value) {
-			case "true", "on", "1":
-				colorSetting = true
-			case "false", "off", "0":
-				colorSetting = false
-			default:
-				return fmt.Errorf("invalid value %q for color; must be one of: true, false", value)
-			}
-			conf.Color.Set(colorSetting)
-			return nil
-		},
-		clearStr: func() {
-			conf.Color.Clear()
-		},
-	},
 }
 
 // lookupKey returns the descriptor for name, or a descriptive error listing valid keys.
 func lookupKey(name string) (keyDescriptor, error) {
 	desc, ok := configRegistry[name]
 	if !ok {
-		return keyDescriptor{}, fmt.Errorf("unknown config key %q; valid keys are: %s", name, strings.Join(configKeyOrder, ", "))
+		return keyDescriptor{}, fmt.Errorf("unknown config key %q; valid keys are: %s", name, strings.Join(configKeys, ", "))
 	}
 	return desc, nil
+}
+
+// visibleKeys returns the set of config keys that are surfaced to the user.
+func visibleKeys() []string {
+	keys := make([]string, 0, len(configRegistry))
+	for key, desc := range configRegistry {
+		if !desc.Hidden {
+			keys = append(keys, key)
+		}
+	}
+	return keys
 }
 
 // displayValue formats a config value for human-readable output, substituting
@@ -180,4 +195,107 @@ func displayValue(value string) string {
 		return "<not set>"
 	}
 	return value
+}
+
+// ConfigEntry holds the key, value, and metadata for a single config setting,
+// used by the list command.
+type ConfigEntry struct {
+	Key         string
+	Value       string
+	Description string
+	Sensitive   bool
+}
+
+// ConfigDescription holds full metadata for a config key, used by the describe command.
+type ConfigDescription struct {
+	Key             string
+	Value           string
+	Description     string
+	LongDescription string
+	Sensitive       bool
+	ValidValues     []string
+}
+
+// ConfigService abstracts config registry operations for unit testing across
+// the get, set, unset, list, and describe commands.
+type ConfigService interface {
+	Get(key string) (value string, sensitive bool, err error)
+	Set(ctx context.Context, key, value string) (onChangeLines []string, err error)
+	Unset(ctx context.Context, key string) (onChangeLines []string, err error)
+	List() []ConfigEntry
+	Describe(key string) (ConfigDescription, error)
+}
+
+type defaultConfigService struct{}
+
+func newDefaultConfigService() ConfigService {
+	return &defaultConfigService{}
+}
+
+func (s *defaultConfigService) Get(key string) (string, bool, error) {
+	desc, err := lookupKey(key)
+	if err != nil {
+		return "", false, err
+	}
+	return desc.getStr(), desc.Sensitive, nil
+}
+
+func (s *defaultConfigService) Set(ctx context.Context, key, value string) ([]string, error) {
+	desc, err := lookupKey(key)
+	if err != nil {
+		return nil, err
+	}
+	oldVal := desc.getStr()
+	if err := desc.setStr(value); err != nil {
+		return nil, err
+	}
+	newVal := desc.getStr()
+	if desc.onChange != nil {
+		return desc.onChange(ctx, oldVal, newVal), nil
+	}
+	return nil, nil
+}
+
+func (s *defaultConfigService) Unset(ctx context.Context, key string) ([]string, error) {
+	desc, err := lookupKey(key)
+	if err != nil {
+		return nil, err
+	}
+	oldVal := desc.getStr()
+	desc.clearStr()
+	newVal := desc.getStr()
+	if desc.onChange != nil && oldVal != newVal {
+		return desc.onChange(ctx, oldVal, newVal), nil
+	}
+	return nil, nil
+}
+
+func (s *defaultConfigService) List() []ConfigEntry {
+	visibleKeys := visibleKeys()
+	entries := make([]ConfigEntry, 0, len(visibleKeys))
+	for _, key := range visibleKeys {
+		desc := configRegistry[key]
+		entries = append(entries, ConfigEntry{
+			Key:         key,
+			Value:       desc.getStr(),
+			Description: desc.Description,
+			Sensitive:   desc.Sensitive,
+		})
+	}
+	return entries
+}
+
+func (s *defaultConfigService) Describe(key string) (ConfigDescription, error) {
+	desc, err := lookupKey(key)
+	if err != nil {
+		return ConfigDescription{}, err
+	}
+	return ConfigDescription{
+		Key:             key,
+		Value:           desc.getStr(),
+		Description:     desc.Description,
+		LongDescription: desc.LongDescription,
+		Sensitive:       desc.Sensitive,
+		ValidValues:     desc.ValidValues,
+	}, nil
 }

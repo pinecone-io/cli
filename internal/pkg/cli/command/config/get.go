@@ -31,30 +31,13 @@ func NewGetCmd() *cobra.Command {
 		    pc config get color
 		`),
 		Args:      cobra.ExactArgs(1),
-		ValidArgs: configKeyOrder,
+		ValidArgs: visibleKeys(),
 		Run: func(cmd *cobra.Command, args []string) {
-			keyName := args[0]
-			keyDesc, err := lookupKey(keyName)
-			if err != nil {
+			svc := newDefaultConfigService()
+			if err := runGetCmd(svc, args[0], options); err != nil {
 				msg.FailMsg("%s", err)
 				exit.ErrorMsg(err.Error())
-				return
 			}
-
-			value := keyDesc.getStr()
-			if keyDesc.Sensitive && !options.reveal {
-				value = presenters.MaskHeadTail(value, 4, 4)
-			}
-
-			if options.json {
-				fmt.Fprintln(os.Stdout, text.IndentJSON(struct {
-					Key   string `json:"key"`
-					Value string `json:"value"`
-				}{Key: keyName, Value: value}))
-				return
-			}
-
-			msg.InfoMsg("%s: %s", style.Emphasis(keyName), displayValue(value))
 		},
 	}
 
@@ -62,4 +45,29 @@ func NewGetCmd() *cobra.Command {
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
 
 	return cmd
+}
+
+func runGetCmd(svc ConfigService, keyName string, opts GetCmdOptions) error {
+	// --json output for the get command
+	type getOutput struct {
+		Key   string `json:"key"`
+		Value string `json:"value"`
+	}
+
+	value, sensitive, err := svc.Get(keyName)
+	if err != nil {
+		return err
+	}
+
+	if sensitive && !opts.reveal {
+		value = presenters.MaskHeadTail(value, 4, 4)
+	}
+
+	if opts.json {
+		fmt.Fprintln(os.Stdout, text.IndentJSON(getOutput{Key: keyName, Value: value}))
+		return nil
+	}
+
+	msg.InfoMsg("%s: %s", style.Emphasis(keyName), displayValue(value))
+	return nil
 }

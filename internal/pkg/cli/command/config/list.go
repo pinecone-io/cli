@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
+	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -28,40 +30,11 @@ func NewListCmd() *cobra.Command {
 		`),
 		Args: cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			if options.json {
-				type entry struct {
-					Key         string `json:"key"`
-					Value       string `json:"value"`
-					Description string `json:"description"`
-				}
-				entries := make([]entry, 0, len(configKeyOrder))
-				for _, keyName := range configKeyOrder {
-					keyDesc := configRegistry[keyName]
-					value := keyDesc.getStr()
-					if keyDesc.Sensitive && !options.reveal {
-						value = presenters.MaskHeadTail(value, 4, 4)
-					}
-					entries = append(entries, entry{
-						Key:         keyName,
-						Value:       value,
-						Description: keyDesc.Description,
-					})
-				}
-				fmt.Fprintln(os.Stdout, text.IndentJSON(entries))
-				return
+			svc := newDefaultConfigService()
+			if err := runListCmd(svc, options); err != nil {
+				msg.FailMsg("%s", err)
+				exit.ErrorMsg(err.Error())
 			}
-
-			w := presenters.NewTabWriter()
-			fmt.Fprintln(w, "KEY\tVALUE\tDESCRIPTION")
-			for _, keyName := range configKeyOrder {
-				keyDesc := configRegistry[keyName]
-				value := keyDesc.getStr()
-				if keyDesc.Sensitive && !options.reveal {
-					value = presenters.MaskHeadTail(value, 4, 4)
-				}
-				fmt.Fprintf(w, "%s\t%s\t%s\n", keyName, displayValue(value), keyDesc.Description)
-			}
-			w.Flush()
 		},
 	}
 
@@ -69,4 +42,40 @@ func NewListCmd() *cobra.Command {
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
 
 	return cmd
+}
+
+func runListCmd(svc ConfigService, opts ListCmdOptions) error {
+	// --json output for the list command
+	type listOutput struct {
+		Key         string `json:"key"`
+		Value       string `json:"value"`
+		Description string `json:"description"`
+	}
+
+	entries := svc.List()
+
+	if opts.json {
+		jsonEntries := make([]listOutput, 0, len(entries))
+		for _, e := range entries {
+			value := e.Value
+			if e.Sensitive && !opts.reveal {
+				value = presenters.MaskHeadTail(value, 4, 4)
+			}
+			jsonEntries = append(jsonEntries, listOutput{Key: e.Key, Value: value, Description: e.Description})
+		}
+		fmt.Fprintln(os.Stdout, text.IndentJSON(jsonEntries))
+		return nil
+	}
+
+	w := presenters.NewTabWriter()
+	fmt.Fprintln(w, "KEY\tVALUE\tDESCRIPTION")
+	for _, e := range entries {
+		value := e.Value
+		if e.Sensitive && !opts.reveal {
+			value = presenters.MaskHeadTail(value, 4, 4)
+		}
+		fmt.Fprintf(w, "%s\t%s\t%s\n", e.Key, displayValue(value), e.Description)
+	}
+	w.Flush()
+	return nil
 }
