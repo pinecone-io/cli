@@ -56,6 +56,21 @@ func Test_runUnsetCmd_JSONOutput(t *testing.T) {
 	assert.JSONEq(t, `{"key":"api-key","cleared":true}`, out)
 }
 
+func Test_runUnsetCmd_JSONOutputIncludesOnChangeMessages(t *testing.T) {
+	svc := &mockConfigService{
+		unsetLines: []string{"You have been logged out", "Target cleared"},
+	}
+
+	out := testutils.CaptureStdout(t, func() {
+		err := runUnsetCmd(context.Background(), svc, "environment", UnsetCmdOptions{json: true})
+		assert.NoError(t, err)
+	})
+
+	assert.Contains(t, out, `"messages"`)
+	assert.Contains(t, out, "You have been logged out")
+	assert.Contains(t, out, "Target cleared")
+}
+
 func Test_runUnsetCmd_JSONOutputOnNoChange(t *testing.T) {
 	svc := &mockConfigService{unsetErr: ErrNoChange}
 

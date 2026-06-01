@@ -53,8 +53,9 @@ func NewSetCmd() *cobra.Command {
 func runSetCmd(ctx context.Context, svc ConfigService, keyName, value string, opts SetCmdOptions) error {
 	// --json output for the set command
 	type setOutput struct {
-		Key   string `json:"key"`
-		Value string `json:"value"`
+		Key      string   `json:"key"`
+		Value    string   `json:"value"`
+		Messages []string `json:"messages,omitempty"`
 	}
 
 	// Fetch the current value up front so it can be shown in the ErrNoChange message.
@@ -77,7 +78,10 @@ func runSetCmd(ctx context.Context, svc ConfigService, keyName, value string, op
 	}
 
 	if opts.json {
-		fmt.Fprintln(os.Stdout, text.IndentJSON(setOutput{Key: keyName, Value: value}))
+		// Re-read the stored value so the output reflects what was actually
+		// persisted (e.g. "true" rather than the user-supplied alias "on").
+		storedValue, _, _ := svc.Get(keyName)
+		fmt.Fprintln(os.Stdout, text.IndentJSON(setOutput{Key: keyName, Value: storedValue, Messages: lines}))
 		return nil
 	}
 

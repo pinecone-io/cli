@@ -165,10 +165,10 @@ var configRegistry = map[string]keyDescriptor{
 			var lines []string
 
 			// Check for existing OAuth sessions and login credentials and clear them when the environment is changed.
-			token, err := oauth.Token(ctx)
-			if err != nil {
-				return nil, fmt.Errorf("error retrieving oauth token: %w", err)
-			}
+			// A read error means the OAuth record is absent or unreadable —
+			// treat it as no active session and proceed rather than blocking
+			// users who authenticate via API key.
+			token, _ := oauth.Token(ctx)
 			if token != nil && (token.AccessToken != "" || token.RefreshToken != "") {
 				oauth.Logout()
 				lines = append(lines, fmt.Sprintf("You have been logged out; to login again, run %s", style.Code("pc login")))

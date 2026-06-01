@@ -47,8 +47,9 @@ func NewUnsetCmd() *cobra.Command {
 func runUnsetCmd(ctx context.Context, svc ConfigService, keyName string, opts UnsetCmdOptions) error {
 	// --json output for the unset command
 	type unsetOutput struct {
-		Key     string `json:"key"`
-		Cleared bool   `json:"cleared"`
+		Key      string   `json:"key"`
+		Cleared  bool     `json:"cleared"`
+		Messages []string `json:"messages,omitempty"`
 	}
 
 	lines, err := svc.Unset(ctx, keyName)
@@ -65,7 +66,7 @@ func runUnsetCmd(ctx context.Context, svc ConfigService, keyName string, opts Un
 	}
 
 	if opts.json {
-		fmt.Fprintln(os.Stdout, text.IndentJSON(unsetOutput{Key: keyName, Cleared: true}))
+		fmt.Fprintln(os.Stdout, text.IndentJSON(unsetOutput{Key: keyName, Cleared: true, Messages: lines}))
 		return nil
 	}
 
