@@ -71,6 +71,9 @@ var configRegistry = map[string]keyDescriptor{
 		getStr: func() string {
 			return secrets.DefaultAPIKey.Get()
 		},
+		getStoredStr: func() string {
+			return secrets.DefaultAPIKey.GetStored()
+		},
 		persistStr: func(value string) {
 			secrets.DefaultAPIKey.Set(value)
 		},
