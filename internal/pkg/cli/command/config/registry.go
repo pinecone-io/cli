@@ -27,7 +27,11 @@ type keyDescriptor struct {
 	Hidden          bool
 	ValidValues     []string // non-nil: values shown in help; nil: any non-empty string accepted
 	defaultVal      string   // the value restored by Unset; must match what getStr returns at the default
-	getStr          func() string
+	getStr func() string
+	// getStoredStr reads the value from the config file only, bypassing env var
+	// overrides. Used for change-detection in Set and Unset. If nil, getStr is
+	// used for comparisons instead.
+	getStoredStr func() string
 	// validateStr normalises the incoming value and checks whether it differs from
 	// the current value. It is pure (no I/O) and must be called before persistStr.
 	// Returns ErrNoChange when the value is already current, or a validation error.
@@ -112,6 +116,9 @@ var configRegistry = map[string]keyDescriptor{
 		getStr: func() string {
 			return conf.Environment.Get()
 		},
+		getStoredStr: func() string {
+			return conf.Environment.GetStored()
+		},
 		validateStr: func(value string) (string, error) {
 			switch value {
 			case "prod":
@@ -121,7 +128,7 @@ var configRegistry = map[string]keyDescriptor{
 			default:
 				return "", fmt.Errorf("invalid environment %q; must be one of: production, staging", value)
 			}
-			if conf.Environment.Get() == value {
+			if conf.Environment.GetStored() == value {
 				return "", ErrNoChange
 			}
 			return value, nil
@@ -239,7 +246,11 @@ func (s *defaultConfigService) Set(ctx context.Context, key, value string) ([]st
 	if err != nil {
 		return nil, err
 	}
-	oldVal := desc.getStr()
+	getStored := desc.getStr
+	if desc.getStoredStr != nil {
+		getStored = desc.getStoredStr
+	}
+	oldVal := getStored()
 	normalizedVal := value
 	if desc.validateStr != nil {
 		if normalizedVal, err = desc.validateStr(value); err != nil {
@@ -262,7 +273,13 @@ func (s *defaultConfigService) Unset(ctx context.Context, key string) ([]string,
 	if err != nil {
 		return nil, err
 	}
-	oldVal := desc.getStr()
+	// Use the stored (file) value for the no-op check so that an env var
+	// overriding the effective value does not cause a spurious onChange.
+	getStored := desc.getStr
+	if desc.getStoredStr != nil {
+		getStored = desc.getStoredStr
+	}
+	oldVal := getStored()
 	newVal := desc.defaultVal
 	if oldVal == newVal {
 		return nil, ErrNoChange
