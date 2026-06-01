@@ -249,7 +249,10 @@ type ConfigDescription struct {
 // ConfigService abstracts config registry operations for unit testing across
 // the get, set, unset, list, and describe commands.
 type ConfigService interface {
+	// Get returns the effective value, including any env var override.
 	Get(key string) (value string, sensitive bool, err error)
+	// GetStored returns the value persisted in the config file, bypassing env var overrides.
+	GetStored(key string) (value string, sensitive bool, err error)
 	Set(ctx context.Context, key, value string) (onChangeLines []string, err error)
 	Unset(ctx context.Context, key string) (onChangeLines []string, err error)
 	List(includeHidden bool) []ConfigEntry
@@ -266,6 +269,17 @@ func (s *defaultConfigService) Get(key string) (string, bool, error) {
 	desc, err := lookupKey(key)
 	if err != nil {
 		return "", false, err
+	}
+	return desc.getStr(), desc.Sensitive, nil
+}
+
+func (s *defaultConfigService) GetStored(key string) (string, bool, error) {
+	desc, err := lookupKey(key)
+	if err != nil {
+		return "", false, err
+	}
+	if desc.getStoredStr != nil {
+		return desc.getStoredStr(), desc.Sensitive, nil
 	}
 	return desc.getStr(), desc.Sensitive, nil
 }

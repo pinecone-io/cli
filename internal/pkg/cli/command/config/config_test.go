@@ -12,6 +12,13 @@ type mockConfigService struct {
 	getErr       error
 	lastGetKey   string
 
+	// GetStored — defaults to getValue/getSensitive/getErr when not explicitly set
+	getStoredValue     string
+	getStoredSensitive bool
+	getStoredErr       error
+	getStoredOverride  bool // set to true to use getStored* fields instead of get* fields
+	lastGetStoredKey   string
+
 	// Set
 	setLines     []string
 	setErr       error
@@ -34,6 +41,14 @@ type mockConfigService struct {
 
 func (m *mockConfigService) Get(key string) (string, bool, error) {
 	m.lastGetKey = key
+	return m.getValue, m.getSensitive, m.getErr
+}
+
+func (m *mockConfigService) GetStored(key string) (string, bool, error) {
+	m.lastGetStoredKey = key
+	if m.getStoredOverride {
+		return m.getStoredValue, m.getStoredSensitive, m.getStoredErr
+	}
 	return m.getValue, m.getSensitive, m.getErr
 }
 

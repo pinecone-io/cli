@@ -58,8 +58,9 @@ func runSetCmd(ctx context.Context, svc ConfigService, keyName, value string, op
 		Messages []string `json:"messages,omitempty"`
 	}
 
-	// Fetch the current value up front so it can be shown in the ErrNoChange message.
-	currentValue, _, err := svc.Get(keyName)
+	// Use the stored (file) value throughout so output reflects what is actually
+	// persisted rather than any env var override.
+	currentValue, _, err := svc.GetStored(keyName)
 	if err != nil {
 		return err
 	}
@@ -78,9 +79,7 @@ func runSetCmd(ctx context.Context, svc ConfigService, keyName, value string, op
 	}
 
 	if opts.json {
-		// Re-read the stored value so the output reflects what was actually
-		// persisted (e.g. "true" rather than the user-supplied alias "on").
-		storedValue, _, _ := svc.Get(keyName)
+		storedValue, _, _ := svc.GetStored(keyName)
 		fmt.Fprintln(os.Stdout, text.IndentJSON(setOutput{Key: keyName, Value: storedValue, Messages: lines}))
 		return nil
 	}
