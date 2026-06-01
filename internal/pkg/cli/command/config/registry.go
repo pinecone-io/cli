@@ -27,7 +27,7 @@ type keyDescriptor struct {
 	Hidden          bool
 	ValidValues     []string // non-nil: values shown in help; nil: any non-empty string accepted
 	defaultVal      string   // the value restored by Unset; must match what getStr returns at the default
-	getStr func() string
+	getStr          func() string
 	// getStoredStr reads the value from the config file only, bypassing env var
 	// overrides. Used for change-detection in Set and Unset. If nil, getStr is
 	// used for comparisons instead.
@@ -106,16 +106,16 @@ var configRegistry = map[string]keyDescriptor{
 
 	"color": {
 		Description: "Enable or disable colored terminal output",
-		ValidValues: []string{"true", "false", "on", "off"},
+		ValidValues: []string{"true", "false", "on", "off", "1", "0"},
 		defaultVal:  "true",
 		getStr: func() string {
 			return text.BoolToString(conf.Color.Get())
 		},
 		validateStr: func(value string) (string, error) {
 			switch strings.ToLower(value) {
-			case "true", "on":
+			case "true", "on", "1":
 				return "true", nil
-			case "false", "off":
+			case "false", "off", "0":
 				return "false", nil
 			default:
 				return "", fmt.Errorf("invalid value %q for color; must be one of: true, false, on, off", value)
