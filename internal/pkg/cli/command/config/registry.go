@@ -107,13 +107,15 @@ var configRegistry = map[string]keyDescriptor{
 			and re-target after switching.
 		`),
 		Hidden:      true,
-		ValidValues: []string{"production", "staging"},
+		ValidValues: []string{"production", "prod", "staging"},
 		defaultVal:  "production",
 		getStr: func() string {
 			return conf.Environment.Get()
 		},
 		validateStr: func(value string) (string, error) {
 			switch value {
+			case "prod":
+				value = "production"
 			case "production", "staging":
 				// canonical values
 			default:
