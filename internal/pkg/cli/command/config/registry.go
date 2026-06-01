@@ -171,12 +171,14 @@ var configRegistry = map[string]keyDescriptor{
 			var lines []string
 
 			// Check for existing OAuth sessions and login credentials and clear them when the environment is changed.
-			// A read error means the OAuth record is absent or unreadable —
-			// treat it as no active session and proceed rather than blocking
-			// users who authenticate via API key.
+			// Always clear any stored OAuth session when switching environments.
+			// oauth.Token may fail (e.g. expired refresh, parse error) even when
+			// tokens are still on disk, so we cannot rely on its success to decide
+			// whether to call Logout — we call it unconditionally. The result is
+			// only used to pick the right message.
 			token, _ := oauth.Token(ctx)
+			oauth.Logout()
 			if token != nil && (token.AccessToken != "" || token.RefreshToken != "") {
-				oauth.Logout()
 				lines = append(lines, fmt.Sprintf("You have been logged out; to login again, run %s", style.Code("pc login")))
 			} else {
 				lines = append(lines, fmt.Sprintf("To login, run %s", style.Code("pc login")))
