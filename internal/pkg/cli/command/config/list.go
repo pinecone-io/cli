@@ -15,6 +15,7 @@ import (
 type ListCmdOptions struct {
 	reveal bool
 	json   bool
+	all    bool
 }
 
 func NewListCmd() *cobra.Command {
@@ -25,6 +26,7 @@ func NewListCmd() *cobra.Command {
 		Short: "List all configuration settings and their current values",
 		Example: help.Examples(`
 		    pc config list
+		    pc config list --all
 		    pc config list --reveal
 		    pc config list --json
 		`),
@@ -40,6 +42,7 @@ func NewListCmd() *cobra.Command {
 
 	cmd.Flags().BoolVar(&options.reveal, "reveal", false, "Reveal the full value for sensitive settings like api-key")
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
+	cmd.Flags().BoolVarP(&options.all, "all", "a", false, "Include hidden settings such as environment")
 
 	return cmd
 }
@@ -50,9 +53,10 @@ func runListCmd(svc ConfigService, opts ListCmdOptions) error {
 		Key         string `json:"key"`
 		Value       string `json:"value"`
 		Description string `json:"description"`
+		Hidden      bool   `json:"hidden,omitempty"`
 	}
 
-	entries := svc.List()
+	entries := svc.List(opts.all)
 
 	if opts.json {
 		jsonEntries := make([]listOutput, 0, len(entries))
@@ -61,7 +65,7 @@ func runListCmd(svc ConfigService, opts ListCmdOptions) error {
 			if e.Sensitive && !opts.reveal {
 				value = presenters.MaskHeadTail(value, 4, 4)
 			}
-			jsonEntries = append(jsonEntries, listOutput{Key: e.Key, Value: value, Description: e.Description})
+			jsonEntries = append(jsonEntries, listOutput{Key: e.Key, Value: value, Description: e.Description, Hidden: e.Hidden})
 		}
 		fmt.Fprintln(os.Stdout, text.IndentJSON(jsonEntries))
 		return nil

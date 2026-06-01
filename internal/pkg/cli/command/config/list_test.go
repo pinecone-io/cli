@@ -71,6 +71,42 @@ func Test_runListCmd_JSONOutput(t *testing.T) {
 	assert.Contains(t, out, `"true"`)
 }
 
+func Test_runListCmd_AllFlagIncludesHiddenKeys(t *testing.T) {
+	svc := &mockConfigService{
+		listResult: []ConfigEntry{
+			{Key: "api-key", Value: "", Description: "API key", Sensitive: true},
+			{Key: "color", Value: "true", Description: "Color output"},
+			{Key: "environment", Value: "production", Description: "Environment", Hidden: true},
+		},
+	}
+
+	out := testutils.CaptureStdout(t, func() {
+		err := runListCmd(svc, ListCmdOptions{all: true})
+		assert.NoError(t, err)
+	})
+
+	assert.Contains(t, out, "environment")
+}
+
+func Test_runListCmd_JSONAllFlagIncludesHiddenField(t *testing.T) {
+	svc := &mockConfigService{
+		listResult: []ConfigEntry{
+			{Key: "color", Value: "true", Description: "Color output", Hidden: false},
+			{Key: "environment", Value: "production", Description: "Environment", Hidden: true},
+		},
+	}
+
+	out := testutils.CaptureStdout(t, func() {
+		err := runListCmd(svc, ListCmdOptions{json: true, all: true})
+		assert.NoError(t, err)
+	})
+
+	assert.Contains(t, out, "environment")
+	assert.Contains(t, out, `"hidden": true`)
+	// Non-hidden keys should not have the hidden field (omitempty)
+	assert.NotContains(t, out, `"hidden": false`)
+}
+
 func Test_runListCmd_JSONOutputRevealsSensitiveKey(t *testing.T) {
 	svc := &mockConfigService{
 		listResult: []ConfigEntry{

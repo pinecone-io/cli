@@ -48,7 +48,7 @@ func (m *mockConfigService) Unset(ctx context.Context, key string) ([]string, er
 	return m.unsetLines, m.unsetErr
 }
 
-func (m *mockConfigService) List() []ConfigEntry {
+func (m *mockConfigService) List(includeHidden bool) []ConfigEntry {
 	return m.listResult
 }
 

@@ -130,6 +130,9 @@ var configRegistry = map[string]keyDescriptor{
 			leave this set to 'production'; 'staging' is intended for Pinecone
 			internal development.
 
+			This setting is hidden from 'pc config list' by default. Use
+			'pc config list --all' to include it.
+
 			Changing the environment clears your existing authentication state: any
 			OAuth session is logged out, the default API key is cleared, and the
 			target organization and project are reset. You will need to re-authenticate
@@ -230,6 +233,7 @@ type ConfigEntry struct {
 	Value       string
 	Description string
 	Sensitive   bool
+	Hidden      bool
 }
 
 // ConfigDescription holds full metadata for a config key, used by the describe command.
@@ -248,7 +252,7 @@ type ConfigService interface {
 	Get(key string) (value string, sensitive bool, err error)
 	Set(ctx context.Context, key, value string) (onChangeLines []string, err error)
 	Unset(ctx context.Context, key string) (onChangeLines []string, err error)
-	List() []ConfigEntry
+	List(includeHidden bool) []ConfigEntry
 	Describe(key string) (ConfigDescription, error)
 }
 
@@ -320,16 +324,20 @@ func (s *defaultConfigService) Unset(ctx context.Context, key string) ([]string,
 	return lines, nil
 }
 
-func (s *defaultConfigService) List() []ConfigEntry {
-	visible := visibleKeys()
-	entries := make([]ConfigEntry, 0, len(visible))
-	for _, key := range visible {
+func (s *defaultConfigService) List(includeHidden bool) []ConfigEntry {
+	keys := visibleKeys()
+	if includeHidden {
+		keys = configKeys
+	}
+	entries := make([]ConfigEntry, 0, len(keys))
+	for _, key := range keys {
 		desc := configRegistry[key]
 		entries = append(entries, ConfigEntry{
 			Key:         key,
 			Value:       desc.getStr(),
 			Description: desc.Description,
 			Sensitive:   desc.Sensitive,
+			Hidden:      desc.Hidden,
 		})
 	}
 	return entries
