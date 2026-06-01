@@ -74,6 +74,31 @@ var configRegistry = map[string]keyDescriptor{
 		persistStr: func(value string) {
 			secrets.DefaultAPIKey.Set(value)
 		},
+		// Reconcile the auth context whenever the API key changes, matching the
+		// behaviour of pc auth clear --api-key.
+		onChange: func(_ context.Context, _, newVal string) ([]string, error) {
+			if newVal != "" {
+				state.AuthedUser.Update(func(u *state.TargetUser) {
+					u.AuthContext = state.AuthDefaultAPIKey
+				})
+				return nil, nil
+			}
+			// Key was cleared — fall back to whichever credential remains.
+			if secrets.ClientId.Get() != "" && secrets.ClientSecret.Get() != "" {
+				state.AuthedUser.Update(func(u *state.TargetUser) {
+					u.AuthContext = state.AuthServiceAccount
+				})
+			} else if secrets.GetOAuth2Token().AccessToken != "" {
+				state.AuthedUser.Update(func(u *state.TargetUser) {
+					u.AuthContext = state.AuthUserToken
+				})
+			} else {
+				state.AuthedUser.Update(func(u *state.TargetUser) {
+					u.AuthContext = state.AuthNone
+				})
+			}
+			return nil, nil
+		},
 	},
 
 	"color": {

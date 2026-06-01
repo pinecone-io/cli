@@ -43,7 +43,7 @@ var (
 		When you configure a service account, the CLI automatically targets the organization
 		associated with that account, and prompts you to select a project if multiple exist.
 		
-		An API overrides any explicitly targeted organization and project, instead targeting
+		An API key overrides any explicitly targeted organization and project, instead targeting
 		the organization and project associated with the API key itself. API keys do not grant
 		Admin API access.
 		
