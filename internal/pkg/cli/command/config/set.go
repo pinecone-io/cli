@@ -32,7 +32,7 @@ func NewSetCmd() *cobra.Command {
 		Args: cobra.ExactArgs(2),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			if len(args) == 0 {
-				return configKeys, cobra.ShellCompDirectiveNoFileComp
+				return visibleKeys(), cobra.ShellCompDirectiveNoFileComp
 			}
 			return nil, cobra.ShellCompDirectiveNoFileComp
 		},
