@@ -49,14 +49,13 @@ func NewDescribeCmd() *cobra.Command {
 func runDescribeCmd(svc ConfigService, keyName string, opts DescribeCmdOptions) error {
 	// --json output for the describe command
 	type describeOutput struct {
-		Key             string   `json:"key"`
-		Value           string   `json:"value"`
-		EnvVarName      string   `json:"env_var_name,omitempty"`
-		EnvVarOverride  *bool    `json:"env_var_override,omitempty"`
-		Description     string   `json:"description"`
-		LongDescription string   `json:"long_description,omitempty"`
-		Sensitive       bool     `json:"sensitive"`
-		ValidValues     []string `json:"valid_values,omitempty"`
+		Key            string   `json:"key"`
+		Value          string   `json:"value"`
+		EnvVarName     string   `json:"env_var_name,omitempty"`
+		EnvVarOverride *bool    `json:"env_var_override,omitempty"`
+		Description    string   `json:"description"`
+		Sensitive      bool     `json:"sensitive"`
+		ValidValues    []string `json:"valid_values,omitempty"`
 	}
 
 	desc, err := svc.Describe(keyName)
@@ -70,13 +69,12 @@ func runDescribeCmd(svc ConfigService, keyName string, opts DescribeCmdOptions) 
 	}
 	if opts.json {
 		out := describeOutput{
-			Key:             desc.Key,
-			Value:           value,
-			EnvVarName:      desc.EnvVarName,
-			Description:     desc.Description,
-			LongDescription: desc.LongDescription,
-			Sensitive:       desc.Sensitive,
-			ValidValues:     desc.ValidValues,
+			Key:         desc.Key,
+			Value:       value,
+			EnvVarName:  desc.EnvVarName,
+			Description: desc.Description,
+			Sensitive:   desc.Sensitive,
+			ValidValues: desc.ValidValues,
 		}
 		if desc.EnvVarName != "" {
 			out.EnvVarOverride = &desc.EnvVarOverride
