@@ -21,9 +21,17 @@ func NewConfigCmd() *cobra.Command {
 		Long:  configHelp,
 	}
 
-	cmd.AddCommand(NewSetColorCmd())
-	cmd.AddCommand(NewSetApiKeyCmd())
+	// Primary commands
+	cmd.AddCommand(NewGetCmd())
+	cmd.AddCommand(NewSetCmd())
+	cmd.AddCommand(NewUnsetCmd())
+	cmd.AddCommand(NewListCmd())
+	cmd.AddCommand(NewDescribeCmd())
+
+	// Deprecated aliases kept for backwards compatibility
 	cmd.AddCommand(NewGetApiKeyCmd())
+	cmd.AddCommand(NewSetApiKeyCmd())
+	cmd.AddCommand(NewSetColorCmd())
 	cmd.AddCommand(NewSetEnvCmd())
 
 	return cmd

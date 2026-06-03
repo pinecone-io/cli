@@ -1,0 +1,83 @@
+package config
+
+import (
+	"context"
+	"errors"
+	"testing"
+
+	"github.com/pinecone-io/cli/internal/pkg/cli/testutils"
+	"github.com/stretchr/testify/assert"
+)
+
+func Test_runUnsetCmd_ReturnsErrorOnUnknownKey(t *testing.T) {
+	svc := &mockConfigService{unsetErr: errors.New("unknown config key")}
+
+	err := runUnsetCmd(context.Background(), svc, "bad-key", UnsetCmdOptions{})
+
+	assert.Error(t, err)
+}
+
+func Test_runUnsetCmd_Succeeds(t *testing.T) {
+	svc := &mockConfigService{}
+
+	err := runUnsetCmd(context.Background(), svc, "api-key", UnsetCmdOptions{})
+
+	assert.NoError(t, err)
+	assert.Equal(t, "api-key", svc.lastUnsetKey)
+}
+
+func Test_runUnsetCmd_SucceedsWithOnChangeLines(t *testing.T) {
+	svc := &mockConfigService{
+		unsetLines: []string{"You have been logged out"},
+	}
+
+	err := runUnsetCmd(context.Background(), svc, "environment", UnsetCmdOptions{})
+
+	assert.NoError(t, err)
+	assert.Equal(t, "environment", svc.lastUnsetKey)
+}
+
+func Test_runUnsetCmd_ReturnsNilOnNoChange(t *testing.T) {
+	svc := &mockConfigService{unsetErr: ErrNoChange}
+
+	err := runUnsetCmd(context.Background(), svc, "color", UnsetCmdOptions{})
+
+	assert.NoError(t, err)
+}
+
+func Test_runUnsetCmd_JSONOutput(t *testing.T) {
+	svc := &mockConfigService{}
+
+	out := testutils.CaptureStdout(t, func() {
+		err := runUnsetCmd(context.Background(), svc, "api-key", UnsetCmdOptions{json: true})
+		assert.NoError(t, err)
+	})
+
+	assert.JSONEq(t, `{"key":"api-key","cleared":true}`, out)
+}
+
+func Test_runUnsetCmd_JSONOutputIncludesOnChangeMessages(t *testing.T) {
+	svc := &mockConfigService{
+		unsetLines: []string{"You have been logged out", "Target cleared"},
+	}
+
+	out := testutils.CaptureStdout(t, func() {
+		err := runUnsetCmd(context.Background(), svc, "environment", UnsetCmdOptions{json: true})
+		assert.NoError(t, err)
+	})
+
+	assert.Contains(t, out, `"messages"`)
+	assert.Contains(t, out, "You have been logged out")
+	assert.Contains(t, out, "Target cleared")
+}
+
+func Test_runUnsetCmd_JSONOutputOnNoChange(t *testing.T) {
+	svc := &mockConfigService{unsetErr: ErrNoChange}
+
+	out := testutils.CaptureStdout(t, func() {
+		err := runUnsetCmd(context.Background(), svc, "color", UnsetCmdOptions{json: true})
+		assert.NoError(t, err)
+	})
+
+	assert.JSONEq(t, `{"key":"color","cleared":false}`, out)
+}

@@ -38,6 +38,22 @@ func (c ConfigProperty[T]) Get() T {
 	return c.ViperStore.Get(c.KeyName).(T)
 }
 
+// GetStored reads the value directly from the config file, bypassing any
+// environment variable overrides. Use this for change-detection comparisons
+// where the persisted value matters rather than the effective runtime value.
+func (c ConfigProperty[T]) GetStored() T {
+	v := viper.New()
+	v.SetConfigFile(c.ViperStore.ConfigFileUsed())
+	if err := v.ReadInConfig(); err != nil {
+		return c.DefaultValue
+	}
+	result := v.Get(c.KeyName)
+	if result == nil {
+		return c.DefaultValue
+	}
+	return result.(T)
+}
+
 func (c ConfigProperty[T]) Clear() {
 	c.Set(c.DefaultValue)
 }
