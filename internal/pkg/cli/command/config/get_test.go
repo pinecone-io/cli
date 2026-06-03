@@ -59,3 +59,74 @@ func Test_runGetCmd_RevealsSensitiveKeyInJSON(t *testing.T) {
 
 	assert.Contains(t, out, "supersecretvalue")
 }
+
+func Test_runGetCmd_JSONOutputIncludesEnvVarNameWhenActive(t *testing.T) {
+	svc := &mockConfigService{
+		getValue:          "staging",
+		getEnvVarName:     "PINECONE_ENVIRONMENT",
+		getEnvVarOverride: true,
+	}
+
+	out := testutils.CaptureStdout(t, func() {
+		err := runGetCmd(svc, "environment", GetCmdOptions{json: true})
+		assert.NoError(t, err)
+	})
+
+	assert.Contains(t, out, `"PINECONE_ENVIRONMENT"`)
+	assert.Contains(t, out, `"env_var_override": true`)
+}
+
+func Test_runGetCmd_JSONOutputShowsFalseOverrideWhenEnvVarNotActive(t *testing.T) {
+	svc := &mockConfigService{
+		getValue:          "production",
+		getEnvVarName:     "PINECONE_ENVIRONMENT",
+		getEnvVarOverride: false,
+	}
+
+	out := testutils.CaptureStdout(t, func() {
+		err := runGetCmd(svc, "environment", GetCmdOptions{json: true})
+		assert.NoError(t, err)
+	})
+
+	assert.Contains(t, out, `"PINECONE_ENVIRONMENT"`)
+	assert.Contains(t, out, `"env_var_override": false`)
+}
+
+func Test_runGetCmd_JSONOutputOmitsEnvVarFieldsWhenNoBinding(t *testing.T) {
+	svc := &mockConfigService{getValue: "true"}
+
+	out := testutils.CaptureStdout(t, func() {
+		err := runGetCmd(svc, "color", GetCmdOptions{json: true})
+		assert.NoError(t, err)
+	})
+
+	assert.NotContains(t, out, "env_var_name")
+	assert.NotContains(t, out, "env_var_override")
+}
+
+func Test_runGetCmd_HumanOutputAnnotatesEnvVarOverride(t *testing.T) {
+	svc := &mockConfigService{
+		getValue:          "staging",
+		getEnvVarName:     "PINECONE_ENVIRONMENT",
+		getEnvVarOverride: true,
+	}
+
+	out := testutils.CaptureStderr(t, func() {
+		err := runGetCmd(svc, "environment", GetCmdOptions{})
+		assert.NoError(t, err)
+	})
+
+	assert.Contains(t, out, "staging")
+	assert.Contains(t, out, "$PINECONE_ENVIRONMENT")
+}
+
+func Test_runGetCmd_HumanOutputNoAnnotationWithoutOverride(t *testing.T) {
+	svc := &mockConfigService{getValue: "production", getEnvVarName: "PINECONE_ENVIRONMENT"}
+
+	out := testutils.CaptureStderr(t, func() {
+		err := runGetCmd(svc, "environment", GetCmdOptions{})
+		assert.NoError(t, err)
+	})
+
+	assert.NotContains(t, out, "set via")
+}

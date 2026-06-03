@@ -66,8 +66,9 @@ func Test_runSetCmd_SucceedsWithOnChangeLines(t *testing.T) {
 }
 
 func Test_runSetCmd_JSONOutput(t *testing.T) {
-	// getValue is returned by the post-set Get call and represents the normalized
-	// stored value — distinct from the raw user input to catch normalization bugs.
+	// getValue is returned by the post-set GetStored call and represents the
+	// normalized stored value — distinct from the raw user input to catch
+	// normalization bugs.
 	svc := &mockConfigService{getValue: "true"}
 
 	out := testutils.CaptureStdout(t, func() {

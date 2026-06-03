@@ -50,24 +50,35 @@ func NewGetCmd() *cobra.Command {
 func runGetCmd(svc ConfigService, keyName string, opts GetCmdOptions) error {
 	// --json output for the get command
 	type getOutput struct {
-		Key   string `json:"key"`
-		Value string `json:"value"`
+		Key            string `json:"key"`
+		Value          string `json:"value"`
+		EnvVarName     string `json:"env_var_name,omitempty"`
+		EnvVarOverride *bool  `json:"env_var_override,omitempty"`
 	}
 
-	value, sensitive, err := svc.Get(keyName)
+	value, sensitive, envVarName, envVarOverride, err := svc.Get(keyName)
 	if err != nil {
 		return err
 	}
 
+	// Mask sensitive values if not revealing
 	if sensitive && !opts.reveal {
 		value = presenters.MaskHeadTail(value, 4, 4)
 	}
 
 	if opts.json {
-		fmt.Fprintln(os.Stdout, text.IndentJSON(getOutput{Key: keyName, Value: value}))
+		out := getOutput{Key: keyName, Value: value, EnvVarName: envVarName}
+		if envVarName != "" {
+			out.EnvVarOverride = &envVarOverride
+		}
+		fmt.Fprintln(os.Stdout, text.IndentJSON(out))
 		return nil
 	}
 
-	msg.InfoMsg("%s: %s", style.Emphasis(keyName), displayValue(value))
+	if envVarOverride {
+		msg.InfoMsg("%s: %s (set via $%s)", style.Emphasis(keyName), displayValue(value), envVarName)
+	} else {
+		msg.InfoMsg("%s: %s", style.Emphasis(keyName), displayValue(value))
+	}
 	return nil
 }

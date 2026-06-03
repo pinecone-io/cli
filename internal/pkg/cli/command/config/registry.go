@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	conf "github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
@@ -27,13 +28,14 @@ type keyDescriptor struct {
 	Hidden          bool
 	ValidValues     []string // non-nil: values shown in help; nil: any non-empty string accepted
 	defaultVal      string   // the value restored by Unset; must match what getStr returns at the default
-	getStr          func() string
-	// getStoredStr reads the value from the config file only, bypassing env var
-	// overrides. Used for change-detection in Set and Unset. If nil, getStr is
-	// used for comparisons instead.
-	getStoredStr func() string
+	// getStr reads the value persisted in the config file, bypassing any env var override.
+	getStr func() string
+	// envVarName is the environment variable that can override this key (e.g. "PINECONE_API_KEY").
+	// Empty for keys with no env var binding. When non-empty, Set and Unset skip onChange because
+	// writing the config file does not change the runtime value — the env var continues to win.
+	envVarName string
 	// validateStr normalises the incoming value and checks whether it differs from
-	// the current value. It is pure (no I/O) and must be called before persistStr.
+	// the current stored value. It is pure (no I/O) and must be called before persistStr.
 	// Returns ErrNoChange when the value is already current, or a validation error.
 	// If nil, the value is passed through to persistStr unchanged.
 	validateStr func(value string) (normalizedValue string, err error)
@@ -65,15 +67,18 @@ var configRegistry = map[string]keyDescriptor{
 			user login or service account credentials, and is used for all API calls.
 
 			To clear the explicit API key, run 'pc config unset api-key'.
+
+			The PINECONE_API_KEY environment variable takes precedence over any value
+			stored here. When it is set, 'pc config set api-key' and 'pc config unset
+			api-key' still update the stored preference, but authentication state is
+			left unchanged because the environment variable controls the runtime value.
 		`),
 		Sensitive:  true,
 		defaultVal: "",
 		getStr: func() string {
-			return secrets.DefaultAPIKey.Get()
-		},
-		getStoredStr: func() string {
 			return secrets.DefaultAPIKey.GetStored()
 		},
+		envVarName: "PINECONE_API_KEY",
 		persistStr: func(value string) {
 			secrets.DefaultAPIKey.Set(value)
 		},
@@ -140,16 +145,19 @@ var configRegistry = map[string]keyDescriptor{
 			OAuth session is logged out, the default API key is cleared, and the
 			target organization and project are reset. You will need to re-authenticate
 			and re-target after switching.
+
+			The PINECONE_ENVIRONMENT environment variable takes precedence over any
+			value stored here. When it is set, 'pc config set environment' still
+			updates the stored preference, but authentication state is left unchanged
+			because the environment variable controls the runtime environment.
 		`),
 		Hidden:      true,
 		ValidValues: []string{"production", "prod", "staging"},
 		defaultVal:  "production",
 		getStr: func() string {
-			return conf.Environment.Get()
-		},
-		getStoredStr: func() string {
 			return conf.Environment.GetStored()
 		},
+		envVarName: "PINECONE_ENVIRONMENT",
 		validateStr: func(value string) (string, error) {
 			switch value {
 			case "prod":
@@ -231,20 +239,23 @@ func displayValue(value string) string {
 	return value
 }
 
-// ConfigEntry holds the key, value, and metadata for a single config setting,
-// used by the list command.
+// ConfigEntry holds the key, value, and metadata for a single config setting, used by the list command.
 type ConfigEntry struct {
-	Key         string
-	Value       string
-	Description string
-	Sensitive   bool
-	Hidden      bool
+	Key            string
+	Value          string // effective value: the env var value when overriding, otherwise the stored file value
+	EnvVarName     string // non-empty when an env var is available for this key through the config viper store
+	EnvVarOverride bool   // true when an env var is currently overriding this key's stored file value
+	Description    string
+	Sensitive      bool
+	Hidden         bool
 }
 
 // ConfigDescription holds full metadata for a config key, used by the describe command.
 type ConfigDescription struct {
 	Key             string
-	Value           string
+	Value           string // effective value: the env var value when overriding, otherwise the stored file value
+	EnvVarName      string // non-empty when an env var is available for this key through the config viper store
+	EnvVarOverride  bool   // true when an env var is currently overriding this key's stored file value
 	Description     string
 	LongDescription string
 	Sensitive       bool
@@ -254,8 +265,9 @@ type ConfigDescription struct {
 // ConfigService abstracts config registry operations for unit testing across
 // the get, set, unset, list, and describe commands.
 type ConfigService interface {
-	// Get returns the effective value, including any env var override.
-	Get(key string) (value string, sensitive bool, err error)
+	// Get returns the effective value (env var if one is active, otherwise the stored file value)
+	// along with the name of the overriding env var when one is active (empty string otherwise).
+	Get(key string) (value string, sensitive bool, envVarName string, envVarOverride bool, err error)
 	// GetStored returns the value persisted in the config file, bypassing env var overrides.
 	GetStored(key string) (value string, sensitive bool, err error)
 	Set(ctx context.Context, key, value string) (onChangeLines []string, err error)
@@ -270,21 +282,24 @@ func newDefaultConfigService() ConfigService {
 	return &defaultConfigService{}
 }
 
-func (s *defaultConfigService) Get(key string) (string, bool, error) {
+func (s *defaultConfigService) Get(key string) (value string, sensitive bool, envVarName string, envVarOverride bool, err error) {
 	desc, err := lookupKey(key)
 	if err != nil {
-		return "", false, err
+		return "", false, "", false, err
 	}
-	return desc.getStr(), desc.Sensitive, nil
+	if desc.envVarName != "" {
+		if v := os.Getenv(desc.envVarName); v != "" {
+			return v, desc.Sensitive, desc.envVarName, true, nil
+		}
+		return desc.getStr(), desc.Sensitive, desc.envVarName, false, nil
+	}
+	return desc.getStr(), desc.Sensitive, "", false, nil
 }
 
 func (s *defaultConfigService) GetStored(key string) (string, bool, error) {
 	desc, err := lookupKey(key)
 	if err != nil {
 		return "", false, err
-	}
-	if desc.getStoredStr != nil {
-		return desc.getStoredStr(), desc.Sensitive, nil
 	}
 	return desc.getStr(), desc.Sensitive, nil
 }
@@ -294,20 +309,18 @@ func (s *defaultConfigService) Set(ctx context.Context, key, value string) ([]st
 	if err != nil {
 		return nil, err
 	}
-	getStored := desc.getStr
-	if desc.getStoredStr != nil {
-		getStored = desc.getStoredStr
-	}
-	oldVal := getStored()
+	oldVal := desc.getStr()
 	normalizedVal := value
 	if desc.validateStr != nil {
 		if normalizedVal, err = desc.validateStr(value); err != nil {
 			return nil, err
 		}
 	}
-	// Run onChange before persisting so the config file is not written if onChange fails.
+	// Skip onChange when an env var is overriding the effective value: writing to
+	// the config file won't change what the CLI uses at runtime, so side effects
+	// like clearing auth state would be incorrect.
 	var lines []string
-	if desc.onChange != nil {
+	if desc.onChange != nil && (desc.envVarName == "" || os.Getenv(desc.envVarName) == "") {
 		if lines, err = desc.onChange(ctx, oldVal, normalizedVal); err != nil {
 			return nil, err
 		}
@@ -321,20 +334,14 @@ func (s *defaultConfigService) Unset(ctx context.Context, key string) ([]string,
 	if err != nil {
 		return nil, err
 	}
-	// Use the stored (file) value for the no-op check so that an env var
-	// overriding the effective value does not cause a spurious onChange.
-	getStored := desc.getStr
-	if desc.getStoredStr != nil {
-		getStored = desc.getStoredStr
-	}
-	oldVal := getStored()
+	oldVal := desc.getStr()
 	newVal := desc.defaultVal
 	if oldVal == newVal {
 		return nil, ErrNoChange
 	}
-	// Run onChange before persisting so the config file is not written if onChange fails.
+	// Skip onChange when an env var is overriding the effective value (same rationale as Set).
 	var lines []string
-	if desc.onChange != nil {
+	if desc.onChange != nil && (desc.envVarName == "" || os.Getenv(desc.envVarName) == "") {
 		if lines, err = desc.onChange(ctx, oldVal, newVal); err != nil {
 			return nil, err
 		}
@@ -351,13 +358,21 @@ func (s *defaultConfigService) List(includeHidden bool) []ConfigEntry {
 	entries := make([]ConfigEntry, 0, len(keys))
 	for _, key := range keys {
 		desc := configRegistry[key]
-		entries = append(entries, ConfigEntry{
+		entry := ConfigEntry{
 			Key:         key,
 			Value:       desc.getStr(),
 			Description: desc.Description,
 			Sensitive:   desc.Sensitive,
 			Hidden:      desc.Hidden,
-		})
+		}
+		if desc.envVarName != "" {
+			entry.EnvVarName = desc.envVarName
+			if v := os.Getenv(desc.envVarName); v != "" {
+				entry.Value = v
+				entry.EnvVarOverride = true
+			}
+		}
+		entries = append(entries, entry)
 	}
 	return entries
 }
@@ -367,12 +382,20 @@ func (s *defaultConfigService) Describe(key string) (ConfigDescription, error) {
 	if err != nil {
 		return ConfigDescription{}, err
 	}
-	return ConfigDescription{
+	d := ConfigDescription{
 		Key:             key,
 		Value:           desc.getStr(),
 		Description:     desc.Description,
 		LongDescription: desc.LongDescription,
 		Sensitive:       desc.Sensitive,
 		ValidValues:     desc.ValidValues,
-	}, nil
+	}
+	if desc.envVarName != "" {
+		d.EnvVarName = desc.envVarName
+		if v := os.Getenv(desc.envVarName); v != "" {
+			d.Value = v
+			d.EnvVarOverride = true
+		}
+	}
+	return d, nil
 }

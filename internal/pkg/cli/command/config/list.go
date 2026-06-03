@@ -50,10 +50,12 @@ func NewListCmd() *cobra.Command {
 func runListCmd(svc ConfigService, opts ListCmdOptions) error {
 	// --json output for the list command
 	type listOutput struct {
-		Key         string `json:"key"`
-		Value       string `json:"value"`
-		Description string `json:"description"`
-		Hidden      bool   `json:"hidden,omitempty"`
+		Key            string `json:"key"`
+		Value          string `json:"value"`
+		EnvVarName     string `json:"env_var_name,omitempty"`
+		EnvVarOverride *bool  `json:"env_var_override,omitempty"`
+		Description    string `json:"description"`
+		Hidden         bool   `json:"hidden,omitempty"`
 	}
 
 	entries := svc.List(opts.all)
@@ -65,20 +67,39 @@ func runListCmd(svc ConfigService, opts ListCmdOptions) error {
 			if e.Sensitive && !opts.reveal {
 				value = presenters.MaskHeadTail(value, 4, 4)
 			}
-			jsonEntries = append(jsonEntries, listOutput{Key: e.Key, Value: value, Description: e.Description, Hidden: e.Hidden})
+			entry := listOutput{Key: e.Key, Value: value, EnvVarName: e.EnvVarName, Description: e.Description, Hidden: e.Hidden}
+			if e.EnvVarName != "" {
+				entry.EnvVarOverride = &e.EnvVarOverride
+			}
+			jsonEntries = append(jsonEntries, entry)
 		}
 		fmt.Fprintln(os.Stdout, text.IndentJSON(jsonEntries))
 		return nil
 	}
 
 	w := presenters.NewTabWriter()
-	fmt.Fprintln(w, "KEY\tVALUE\tDESCRIPTION")
+	fmt.Fprintln(w, "KEY\tVALUE\tENV VAR NAME\tENV VAR OVERRIDE\tDESCRIPTION")
 	for _, e := range entries {
 		value := e.Value
 		if e.Sensitive && !opts.reveal {
 			value = presenters.MaskHeadTail(value, 4, 4)
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\n", e.Key, displayValue(value), e.Description)
+		displayVal := displayValue(value)
+		if e.EnvVarOverride {
+			displayVal = fmt.Sprintf("%s [$%s]", displayVal, e.EnvVarName)
+		}
+
+		envOverride := ""
+		if e.EnvVarName != "" {
+			envOverride = text.BoolToString(e.EnvVarOverride)
+		}
+
+		fmt.Fprintf(w,
+			"%s\t%s\t%s\t%s\t%s\n",
+			e.Key, displayVal,
+			e.EnvVarName,
+			envOverride,
+			e.Description)
 	}
 	w.Flush()
 	return nil

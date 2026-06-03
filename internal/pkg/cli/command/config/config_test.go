@@ -7,10 +7,12 @@ import "context"
 // The last* fields record the arguments of the most recent call.
 type mockConfigService struct {
 	// Get
-	getValue     string
-	getSensitive bool
-	getErr       error
-	lastGetKey   string
+	getValue          string
+	getSensitive      bool
+	getEnvVarName     string
+	getEnvVarOverride bool
+	getErr            error
+	lastGetKey        string
 
 	// GetStored — defaults to getValue/getSensitive/getErr when not explicitly set
 	getStoredValue     string
@@ -39,9 +41,9 @@ type mockConfigService struct {
 	lastDescribeKey string
 }
 
-func (m *mockConfigService) Get(key string) (string, bool, error) {
+func (m *mockConfigService) Get(key string) (string, bool, string, bool, error) {
 	m.lastGetKey = key
-	return m.getValue, m.getSensitive, m.getErr
+	return m.getValue, m.getSensitive, m.getEnvVarName, m.getEnvVarOverride, m.getErr
 }
 
 func (m *mockConfigService) GetStored(key string) (string, bool, error) {

@@ -51,6 +51,8 @@ func runDescribeCmd(svc ConfigService, keyName string, opts DescribeCmdOptions) 
 	type describeOutput struct {
 		Key             string   `json:"key"`
 		Value           string   `json:"value"`
+		EnvVarName      string   `json:"env_var_name,omitempty"`
+		EnvVarOverride  *bool    `json:"env_var_override,omitempty"`
 		Description     string   `json:"description"`
 		LongDescription string   `json:"long_description,omitempty"`
 		Sensitive       bool     `json:"sensitive"`
@@ -66,22 +68,30 @@ func runDescribeCmd(svc ConfigService, keyName string, opts DescribeCmdOptions) 
 	if desc.Sensitive && !opts.reveal {
 		value = presenters.MaskHeadTail(value, 4, 4)
 	}
-
 	if opts.json {
-		fmt.Fprintln(os.Stdout, text.IndentJSON(describeOutput{
+		out := describeOutput{
 			Key:             desc.Key,
 			Value:           value,
+			EnvVarName:      desc.EnvVarName,
 			Description:     desc.Description,
 			LongDescription: desc.LongDescription,
 			Sensitive:       desc.Sensitive,
 			ValidValues:     desc.ValidValues,
-		}))
+		}
+		if desc.EnvVarName != "" {
+			out.EnvVarOverride = &desc.EnvVarOverride
+		}
+		fmt.Fprintln(os.Stdout, text.IndentJSON(out))
 		return nil
 	}
 
 	w := presenters.NewTabWriter()
 	fmt.Fprintf(w, "KEY\t%s\n", desc.Key)
 	fmt.Fprintf(w, "VALUE\t%s\n", displayValue(value))
+	if desc.EnvVarName != "" {
+		fmt.Fprintf(w, "ENV VAR NAME\t$%s\n", desc.EnvVarName)
+		fmt.Fprintf(w, "ENV VAR OVERRIDE\t%s\n", text.BoolToString(desc.EnvVarOverride))
+	}
 	fmt.Fprintf(w, "SENSITIVE\t%s\n", text.BoolToString(desc.Sensitive))
 	if len(desc.ValidValues) > 0 {
 		fmt.Fprintf(w, "VALID VALUES\t%s\n", strings.Join(desc.ValidValues, ", "))

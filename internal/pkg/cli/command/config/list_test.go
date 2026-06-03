@@ -17,6 +17,8 @@ func Test_runListCmd_TabularOutputIncludesHeader(t *testing.T) {
 
 	assert.Contains(t, out, "KEY")
 	assert.Contains(t, out, "VALUE")
+	assert.Contains(t, out, "ENV VAR NAME")
+	assert.Contains(t, out, "ENV VAR OVERRIDE")
 	assert.Contains(t, out, "DESCRIPTION")
 }
 
@@ -120,4 +122,70 @@ func Test_runListCmd_JSONOutputRevealsSensitiveKey(t *testing.T) {
 	})
 
 	assert.Contains(t, out, "sk-supersecret")
+}
+
+func Test_runListCmd_TabularOutputAnnotatesActiveEnvVarOverride(t *testing.T) {
+	svc := &mockConfigService{
+		listResult: []ConfigEntry{
+			{Key: "environment", Value: "staging", EnvVarName: "PINECONE_ENVIRONMENT", EnvVarOverride: true},
+		},
+	}
+
+	out := testutils.CaptureStdout(t, func() {
+		err := runListCmd(svc, ListCmdOptions{all: true})
+		assert.NoError(t, err)
+	})
+
+	assert.Contains(t, out, "staging")
+	assert.Contains(t, out, "[$PINECONE_ENVIRONMENT]")
+}
+
+func Test_runListCmd_TabularOutputNoAnnotationWithoutOverride(t *testing.T) {
+	svc := &mockConfigService{
+		listResult: []ConfigEntry{
+			{Key: "environment", Value: "production", EnvVarName: "PINECONE_ENVIRONMENT", EnvVarOverride: false},
+		},
+	}
+
+	out := testutils.CaptureStdout(t, func() {
+		err := runListCmd(svc, ListCmdOptions{all: true})
+		assert.NoError(t, err)
+	})
+
+	assert.NotContains(t, out, "[$PINECONE_ENVIRONMENT]")
+}
+
+func Test_runListCmd_JSONOutputIncludesEnvVarFieldsWhenBound(t *testing.T) {
+	svc := &mockConfigService{
+		listResult: []ConfigEntry{
+			{Key: "environment", Value: "staging", EnvVarName: "PINECONE_ENVIRONMENT", EnvVarOverride: true},
+			{Key: "color", Value: "true"},
+		},
+	}
+
+	out := testutils.CaptureStdout(t, func() {
+		err := runListCmd(svc, ListCmdOptions{json: true, all: true})
+		assert.NoError(t, err)
+	})
+
+	assert.Contains(t, out, `"PINECONE_ENVIRONMENT"`)
+	assert.Contains(t, out, `"env_var_override": true`)
+	// color has no env var binding — fields should be absent
+	assert.NotContains(t, out, `"env_var_override": false`)
+}
+
+func Test_runListCmd_JSONOutputEnvVarOverrideIsFalseWhenNotActive(t *testing.T) {
+	svc := &mockConfigService{
+		listResult: []ConfigEntry{
+			{Key: "environment", Value: "production", EnvVarName: "PINECONE_ENVIRONMENT", EnvVarOverride: false},
+		},
+	}
+
+	out := testutils.CaptureStdout(t, func() {
+		err := runListCmd(svc, ListCmdOptions{json: true, all: true})
+		assert.NoError(t, err)
+	})
+
+	assert.Contains(t, out, `"PINECONE_ENVIRONMENT"`)
+	assert.Contains(t, out, `"env_var_override": false`)
 }
