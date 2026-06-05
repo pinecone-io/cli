@@ -3,6 +3,7 @@ package index
 import (
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/index/backup"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/index/collection"
+	importcmd "github.com/pinecone-io/cli/internal/pkg/cli/command/index/import"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/index/namespace"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/index/record"
 	"github.com/pinecone-io/cli/internal/pkg/cli/command/index/restore"
@@ -56,6 +57,7 @@ func NewIndexCmd() *cobra.Command {
 	cmd.AddCommand(backup.NewBackupCmd())
 	cmd.AddCommand(restore.NewRestoreCmd())
 	cmd.AddCommand(collection.NewCollectionCmd())
+	cmd.AddCommand(importcmd.NewImportCmd())
 
 	return cmd
 }
