@@ -51,8 +51,8 @@ func NewDescribeImportCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "Name of the index the import belongs to")
-	cmd.Flags().StringVarP(&options.importId, "id", "i", "", "ID of the import to describe")
+	cmd.Flags().StringVarP(&options.indexName, "index-name", "i", "", "Name of the index the import belongs to")
+	cmd.Flags().StringVar(&options.importId, "id", "", "ID of the import to describe")
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
 	_ = cmd.MarkFlagRequired("index-name")
 	_ = cmd.MarkFlagRequired("id")

@@ -110,7 +110,7 @@ func NewSearchCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of the index to search")
+	cmd.Flags().StringVarP(&options.indexName, "index-name", "i", "", "name of the index to search")
 	cmd.Flags().StringVar(&options.namespace, "namespace", "", "namespace to search")
 	cmd.Flags().IntVarP(&options.topK, "top-k", "k", defaultSearchTopK, "number of results to return")
 	cmd.Flags().Var(&options.inputs, "inputs", "query inputs for search (inline JSON, ./path.json, or '-' for stdin); requires integrated embedding")

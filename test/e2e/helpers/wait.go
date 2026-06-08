@@ -43,7 +43,7 @@ func WaitForIndexReady(c JSONRunner, name string, max time.Duration) error {
 				State string `json:"state"`
 			} `json:"status"`
 		}
-		stdout, err := c.RunJSON(&idx, "index", "describe", "--name", name)
+		stdout, err := c.RunJSON(&idx, "index", "describe", "--index-name", name)
 		if err != nil {
 			// If index not found yet, keep polling
 			if strings.Contains(stdout, "does not exist") {

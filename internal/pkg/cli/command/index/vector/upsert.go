@@ -60,7 +60,7 @@ func NewUpsertCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of index to upsert into")
+	cmd.Flags().StringVarP(&options.indexName, "index-name", "i", "", "name of index to upsert into")
 	cmd.Flags().StringVar(&options.namespace, "namespace", "", "namespace to upsert into")
 	cmd.Flags().StringVar(&options.file, "file", "", "request body JSON or JSONL (inline, ./path.json[l], or '-' for stdin; only one argument may use stdin)")
 	cmd.Flags().StringVar(&options.file, "body", "", "alias for --file")

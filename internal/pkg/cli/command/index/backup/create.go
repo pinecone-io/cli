@@ -61,7 +61,7 @@ func NewCreateBackupCmd() *cobra.Command {
 
 	cmd.Flags().StringVarP(&options.indexName, "index-name", "i", "", "Name of the index to back up")
 	cmd.Flags().StringVarP(&options.description, "description", "d", "", "Optional description for the backup")
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "Optional name for the backup")
+	cmd.Flags().StringVar(&options.name, "name", "", "Optional name for the backup")
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
 	_ = cmd.MarkFlagRequired("index-name")
 

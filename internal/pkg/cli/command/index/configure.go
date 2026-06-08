@@ -18,7 +18,7 @@ import (
 
 type configureIndexOptions struct {
 	// required for index lookup
-	name string
+	indexName string
 
 	// pods
 	podType  string
@@ -50,16 +50,23 @@ func NewConfigureIndexCmd() *cobra.Command {
 		Use:   "configure",
 		Short: "Configure an existing index",
 		Example: help.Examples(`
-			pc index configure --name "index-name" --deletion-protection "enabled"
+			pc index configure --index-name "index-name" --deletion-protection "enabled"
 		`),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if !cmd.Flags().Changed("index-name") && !cmd.Flags().Changed("name") {
+				return fmt.Errorf("required flag(s) \"index-name\" not set")
+			}
+			return nil
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			runConfigureIndexCmd(cmd.Context(), cmd, options)
 		},
 	}
 
 	// Required flags
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "Name of index to configure")
-	_ = cmd.MarkFlagRequired("name")
+	cmd.Flags().StringVarP(&options.indexName, "index-name", "i", "", "Name of index to configure")
+	cmd.Flags().StringVarP(&options.indexName, "name", "n", "", "Name of index to configure")
+	_ = cmd.Flags().MarkDeprecated("name", "use --index-name instead")
 
 	// pods
 	cmd.Flags().StringVarP(&options.podType, "pod-type", "t", "", "Type of pod to use, can only upgrade when configuring")
@@ -119,11 +126,11 @@ func runConfigureIndexCmd(ctx context.Context, cmd *cobra.Command, options confi
 	// read capacity configuration
 	readCapacity, err := buildReadCapacityFromFlags(cmd, options.readMode, options.readNodeType, options.readShards, options.readReplicas)
 	if err != nil {
-		msg.FailJSON(options.json, "Failed to configure index %s: %+v\n", style.Emphasis(options.name), err)
+		msg.FailJSON(options.json, "Failed to configure index %s: %+v\n", style.Emphasis(options.indexName), err)
 		exit.Error(err, "Failed to configure index")
 	}
 
-	idx, err := pc.ConfigureIndex(ctx, options.name, pinecone.ConfigureIndexParams{
+	idx, err := pc.ConfigureIndex(ctx, options.indexName, pinecone.ConfigureIndexParams{
 		PodType:            options.podType,
 		Replicas:           options.replicas,
 		DeletionProtection: pinecone.DeletionProtection(options.deletionProtection),
@@ -132,7 +139,7 @@ func runConfigureIndexCmd(ctx context.Context, cmd *cobra.Command, options confi
 		Embed:              embed,
 	})
 	if err != nil {
-		msg.FailJSON(options.json, "Failed to configure index %s: %+v\n", style.Emphasis(options.name), err)
+		msg.FailJSON(options.json, "Failed to configure index %s: %+v\n", style.Emphasis(options.indexName), err)
 		exit.Error(err, "Failed to configure index")
 	}
 
@@ -142,7 +149,7 @@ func runConfigureIndexCmd(ctx context.Context, cmd *cobra.Command, options confi
 		return
 	}
 
-	describeCommand := fmt.Sprintf("pc index describe --name %s", idx.Name)
+	describeCommand := fmt.Sprintf("pc index describe --index-name %s", idx.Name)
 	msg.SuccessMsg("Index %s configured successfully. Run %s to check status. \n\n", style.Emphasis(idx.Name), style.Code(describeCommand))
 	presenters.PrintDescribeIndexTable(idx)
 }
