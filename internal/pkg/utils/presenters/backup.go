@@ -33,7 +33,6 @@ func PrintBackupTable(backup *pinecone.Backup) {
 	fmt.Fprintf(writer, "Record Count\t%s\n", DisplayOrNone(backup.RecordCount))
 	fmt.Fprintf(writer, "Namespace Count\t%s\n", DisplayOrNone(backup.NamespaceCount))
 	fmt.Fprintf(writer, "Size (bytes)\t%s\n", DisplayOrNone(backup.SizeBytes))
-	fmt.Fprintf(writer, "Metric\t%s\n", DisplayOrNone(backup.Metric))
 	schema := "<none>"
 	if backup.Schema != nil {
 		schema = text.InlineJSON(backup.Schema)
@@ -46,37 +45,42 @@ func PrintBackupTable(backup *pinecone.Backup) {
 }
 
 func PrintBackupList(list *pinecone.BackupList) {
-	writer := NewTabWriter()
 	if list == nil || len(list.Data) == 0 {
-		PrintEmptyState(writer, "backups")
+		w := NewTabWriter()
+		PrintEmptyState(w, "backups")
 		return
 	}
 
-	columns := []string{"BACKUP ID", "NAME", "INDEX", "STATUS", "CLOUD/REGION", "RECORDS", "NAMESPACES", "SIZE (B)", "CREATED"}
-	header := strings.Join(columns, "\t") + "\n"
-	fmt.Fprint(writer, header)
-
-	for _, b := range list.Data {
-		cloudRegion := fmt.Sprintf("%s/%s", b.Cloud, b.Region)
-		created := DisplayOrNone(b.CreatedAt)
-		fmt.Fprintf(writer, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+	cols := []tableColumn{
+		{header: "BACKUP ID"},
+		{header: "NAME"},
+		{header: "INDEX"},
+		{header: "STATUS", colorizer: colorizeBackupStatus},
+		{header: "CLOUD/REGION"},
+		{header: "RECORDS"},
+		{header: "NAMESPACES"},
+		{header: "SIZE (B)"},
+		{header: "CREATED"},
+	}
+	rows := make([][]string, len(list.Data))
+	for i, b := range list.Data {
+		rows[i] = []string{
 			b.BackupId,
 			DisplayOrNone(b.Name),
 			b.SourceIndexName,
 			b.Status,
-			cloudRegion,
+			fmt.Sprintf("%s/%s", b.Cloud, b.Region),
 			DisplayOrNone(b.RecordCount),
 			DisplayOrNone(b.NamespaceCount),
 			DisplayOrNone(b.SizeBytes),
-			created,
-		)
+			DisplayOrNone(b.CreatedAt),
+		}
 	}
+	printColorizedTable(cols, rows)
 
 	if list.Pagination != nil && list.Pagination.Next != "" {
-		fmt.Fprintf(writer, "\nNext Pagination Token: %s\n", list.Pagination.Next)
+		fmt.Printf("\nNext Pagination Token: %s\n", list.Pagination.Next)
 	}
-
-	writer.Flush()
 }
 
 func PrintRestoreJob(job *pinecone.RestoreJob) {
@@ -102,18 +106,24 @@ func PrintRestoreJob(job *pinecone.RestoreJob) {
 }
 
 func PrintRestoreJobList(list *pinecone.RestoreJobList) {
-	writer := NewTabWriter()
 	if list == nil || len(list.Data) == 0 {
-		PrintEmptyState(writer, "restore jobs")
+		w := NewTabWriter()
+		PrintEmptyState(w, "restore jobs")
 		return
 	}
 
-	columns := []string{"RESTORE JOB ID", "BACKUP ID", "TARGET INDEX", "STATUS", "PERCENT", "CREATED", "COMPLETED"}
-	header := strings.Join(columns, "\t") + "\n"
-	fmt.Fprint(writer, header)
-
-	for _, job := range list.Data {
-		fmt.Fprintf(writer, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+	cols := []tableColumn{
+		{header: "RESTORE JOB ID"},
+		{header: "BACKUP ID"},
+		{header: "TARGET INDEX"},
+		{header: "STATUS", colorizer: colorizeRestoreJobStatus},
+		{header: "PERCENT"},
+		{header: "CREATED"},
+		{header: "COMPLETED"},
+	}
+	rows := make([][]string, len(list.Data))
+	for i, job := range list.Data {
+		rows[i] = []string{
 			job.RestoreJobId,
 			job.BackupId,
 			job.TargetIndexName,
@@ -121,14 +131,13 @@ func PrintRestoreJobList(list *pinecone.RestoreJobList) {
 			DisplayOrNone(job.PercentComplete),
 			formatTime(job.CreatedAt),
 			formatTimePtr(job.CompletedAt),
-		)
+		}
 	}
+	printColorizedTable(cols, rows)
 
 	if list.Pagination != nil && list.Pagination.Next != "" {
-		fmt.Fprintf(writer, "\nNext Pagination Token: %s\n", list.Pagination.Next)
+		fmt.Printf("\nNext Pagination Token: %s\n", list.Pagination.Next)
 	}
-
-	writer.Flush()
 }
 
 func colorizeBackupStatus(status string) string {
