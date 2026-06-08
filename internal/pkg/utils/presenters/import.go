@@ -35,7 +35,7 @@ func PrintImportTable(imp *pinecone.Import) {
 	fmt.Fprint(writer, strings.Join(columns, "\t")+"\n")
 
 	fmt.Fprintf(writer, "Import ID\t%s\n", imp.Id)
-	fmt.Fprintf(writer, "Status\t%s\n", colorizeImportStatus(imp.Status))
+	fmt.Fprintf(writer, "Status\t%s\n", colorizeImportStatus(string(imp.Status)))
 	fmt.Fprintf(writer, "URI\t%s\n", imp.Uri)
 	fmt.Fprintf(writer, "Percent Complete\t%.1f%%\n", imp.PercentComplete)
 	fmt.Fprintf(writer, "Records Imported\t%d\n", imp.RecordsImported)
@@ -48,43 +48,49 @@ func PrintImportTable(imp *pinecone.Import) {
 
 // PrintImportList prints a table of import operations.
 func PrintImportList(list *pinecone.ListImportsResponse) {
-	writer := NewTabWriter()
 	if list == nil || len(list.Imports) == 0 {
-		PrintEmptyState(writer, "imports")
+		w := NewTabWriter()
+		PrintEmptyState(w, "imports")
 		return
 	}
 
-	columns := []string{"IMPORT ID", "STATUS", "URI", "PERCENT", "RECORDS", "CREATED", "FINISHED"}
-	fmt.Fprint(writer, strings.Join(columns, "\t")+"\n")
-
-	for _, imp := range list.Imports {
-		fmt.Fprintf(writer, "%s\t%s\t%s\t%.1f%%\t%d\t%s\t%s\n",
+	cols := []tableColumn{
+		{header: "IMPORT ID"},
+		{header: "STATUS", colorizer: colorizeImportStatus},
+		{header: "URI"},
+		{header: "PERCENT"},
+		{header: "RECORDS"},
+		{header: "CREATED"},
+		{header: "FINISHED"},
+	}
+	rows := make([][]string, len(list.Imports))
+	for i, imp := range list.Imports {
+		rows[i] = []string{
 			imp.Id,
-			colorizeImportStatus(imp.Status),
+			string(imp.Status),
 			imp.Uri,
-			imp.PercentComplete,
-			imp.RecordsImported,
+			fmt.Sprintf("%.1f%%", imp.PercentComplete),
+			fmt.Sprintf("%d", imp.RecordsImported),
 			formatTimePtr(imp.CreatedAt),
 			formatTimePtr(imp.FinishedAt),
-		)
+		}
 	}
+	printColorizedTable(cols, rows)
 
 	if list.NextPaginationToken != nil && *list.NextPaginationToken != "" {
-		fmt.Fprintf(writer, "\nNext Pagination Token: %s\n", *list.NextPaginationToken)
+		fmt.Printf("\nNext Pagination Token: %s\n", *list.NextPaginationToken)
 	}
-
-	writer.Flush()
 }
 
-func colorizeImportStatus(status pinecone.ImportStatus) string {
-	switch status {
+func colorizeImportStatus(status string) string {
+	switch pinecone.ImportStatus(status) {
 	case pinecone.Completed:
-		return style.StatusGreen(string(status))
+		return style.StatusGreen(status)
 	case pinecone.InProgress, pinecone.Pending:
-		return style.StatusYellow(string(status))
+		return style.StatusYellow(status)
 	case pinecone.Failed, pinecone.Cancelled:
-		return style.StatusRed(string(status))
+		return style.StatusRed(status)
 	default:
-		return string(status)
+		return status
 	}
 }
