@@ -72,7 +72,7 @@ func (a *APIKeySuite) SetupSuite() {
 
 func (a *APIKeySuite) TearDownSuite() {
 	if a.createdIndex && a.indexName != "" && a.cli != nil {
-		_, _, _ = a.cli.RunCtx(a.ctx, "index", "delete", "--name", a.indexName)
+		_, _, _ = a.cli.RunCtx(a.ctx, "index", "delete", "--index-name", a.indexName)
 	}
 	if a.tempHome != "" {
 		_ = os.RemoveAll(a.tempHome)

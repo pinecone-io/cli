@@ -72,7 +72,7 @@ func NewCreateNamespaceCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of the index to create the namespace in")
+	cmd.Flags().StringVarP(&options.indexName, "index-name", "i", "", "name of the index to create the namespace in")
 	cmd.Flags().StringVar(&options.name, "name", "", "name of the namespace to create")
 	cmd.Flags().StringSliceVar(&options.metadataSchema, "schema", []string{}, "metadata schema for the namespace")
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")

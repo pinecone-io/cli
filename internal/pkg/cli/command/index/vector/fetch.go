@@ -66,9 +66,9 @@ func NewFetchCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().VarP(&options.ids, "ids", "i", "IDs of vectors to fetch (inline JSON string array, ./path.json, or '-' for stdin)")
+	cmd.Flags().Var(&options.ids, "ids", "IDs of vectors to fetch (inline JSON string array, ./path.json, or '-' for stdin)")
 	cmd.Flags().VarP(&options.filter, "filter", "f", "metadata filter to apply to the fetch (inline JSON, ./path.json, or '-' for stdin)")
-	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of the index to fetch from")
+	cmd.Flags().StringVarP(&options.indexName, "index-name", "i", "", "name of the index to fetch from")
 	cmd.Flags().StringVar(&options.namespace, "namespace", "", "namespace to fetch from")
 	cmd.Flags().Uint32VarP(&options.limit, "limit", "l", 0, "maximum number of vectors to fetch")
 	cmd.Flags().StringVarP(&options.paginationToken, "pagination-token", "p", "", "pagination token to continue a previous listing operation")

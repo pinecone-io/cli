@@ -69,7 +69,7 @@ func NewStartImportCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "Name of the index to import into")
+	cmd.Flags().StringVarP(&options.indexName, "index-name", "i", "", "Name of the index to import into")
 	cmd.Flags().StringVarP(&options.uri, "uri", "u", "", "URI of the data to import (e.g. s3://bucket/path/)")
 	cmd.Flags().StringVar(&options.integrationId, "integration-id", "", "Storage integration ID for private buckets")
 	cmd.Flags().StringVar(&options.errorMode, "error-mode", "", "How to handle record errors: continue (default) or abort")

@@ -58,7 +58,7 @@ func NewDeleteNamespaceCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "name of the index to delete the namespace from")
+	cmd.Flags().StringVarP(&options.indexName, "index-name", "i", "", "name of the index to delete the namespace from")
 	cmd.Flags().StringVar(&options.name, "name", "", "name of the namespace to delete")
 	_ = cmd.MarkFlagRequired("index-name")
 	_ = cmd.MarkFlagRequired("name")

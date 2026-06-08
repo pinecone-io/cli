@@ -325,7 +325,7 @@ func renderSuccessOutput(idx *pinecone.Index, options createIndexOptions) {
 		return
 	}
 
-	describeCommand := fmt.Sprintf("pc index describe --name %s", idx.Name)
+	describeCommand := fmt.Sprintf("pc index describe --index-name %s", idx.Name)
 	msg.SuccessMsg("Index %s created successfully. Run %s to check status. \n\n", style.Emphasis(idx.Name), style.Code(describeCommand))
 	presenters.PrintDescribeIndexTable(idx)
 }

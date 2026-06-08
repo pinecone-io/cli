@@ -8,7 +8,7 @@ import (
 
 func (s *ServiceAccountSuite) TestIndexServerless_ServiceAccountDescribeAndList() {
 	var desc pinecone.Index
-	_, err := s.cli.RunJSONCtx(s.ctx, &desc, "index", "describe", "--name", s.indexName)
+	_, err := s.cli.RunJSONCtx(s.ctx, &desc, "index", "describe", "--index-name", s.indexName)
 	s.Require().NoError(err, "index describe failed")
 	s.Require().Equal(s.indexName, desc.Name, "describe name mismatch")
 
@@ -33,7 +33,7 @@ func (a *APIKeySuite) TestIndexServerless_APIKeyDescribeAndList() {
 	}
 
 	var desc pinecone.Index
-	_, err := a.cli.RunJSONCtx(a.ctx, &desc, "index", "describe", "--name", a.indexName)
+	_, err := a.cli.RunJSONCtx(a.ctx, &desc, "index", "describe", "--index-name", a.indexName)
 	a.Require().NoError(err, "index describe failed (api key)")
 	a.Require().Equal(a.indexName, desc.Name, "describe name mismatch (api key)")
 

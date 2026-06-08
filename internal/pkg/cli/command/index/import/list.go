@@ -57,7 +57,7 @@ func NewListImportsCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.indexName, "index-name", "n", "", "Name of the index to list imports for")
+	cmd.Flags().StringVarP(&options.indexName, "index-name", "i", "", "Name of the index to list imports for")
 	cmd.Flags().IntVarP(&options.limit, "limit", "l", 0, "Maximum number of imports to return")
 	cmd.Flags().StringVarP(&options.paginationToken, "pagination-token", "p", "", "Pagination token to continue a previous listing operation")
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")

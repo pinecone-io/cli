@@ -15,8 +15,8 @@ import (
 )
 
 type deleteCmdOptions struct {
-	name string
-	json bool
+	indexName string
+	json      bool
 }
 
 // DeleteIndexService abstracts the Pinecone Go SDK for unit testing (runDeleteIndexCmd)
@@ -31,8 +31,14 @@ func NewDeleteCmd() *cobra.Command {
 		Use:   "delete",
 		Short: "Delete an index by name",
 		Example: help.Examples(`
-			pc index delete --name "index-name"
+			pc index delete --index-name "index-name"
 		`),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if !cmd.Flags().Changed("index-name") && !cmd.Flags().Changed("name") {
+				return fmt.Errorf("required flag(s) \"index-name\" not set")
+			}
+			return nil
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
 			pc := sdk.NewPineconeClient(ctx)
@@ -40,26 +46,27 @@ func NewDeleteCmd() *cobra.Command {
 			err := runDeleteIndexCmd(ctx, pc, options)
 			if err != nil {
 				if strings.Contains(err.Error(), "not found") {
-					msg.FailJSON(options.json, "The index %s does not exist\n", style.Emphasis(options.name))
-					exit.Errorf(err, "The index %s does not exist", style.Emphasis(options.name))
+					msg.FailJSON(options.json, "The index %s does not exist\n", style.Emphasis(options.indexName))
+					exit.Errorf(err, "The index %s does not exist", style.Emphasis(options.indexName))
 				} else {
-					msg.FailJSON(options.json, "Failed to delete index %s: %s\n", style.Emphasis(options.name), err)
-					exit.Errorf(err, "Failed to delete index %s", style.Emphasis(options.name))
+					msg.FailJSON(options.json, "Failed to delete index %s: %s\n", style.Emphasis(options.indexName), err)
+					exit.Errorf(err, "Failed to delete index %s", style.Emphasis(options.indexName))
 				}
 			}
 		},
 	}
 
 	// required flags
-	cmd.Flags().StringVarP(&options.name, "name", "n", "", "name of index to delete")
-	_ = cmd.MarkFlagRequired("name")
+	cmd.Flags().StringVarP(&options.indexName, "index-name", "i", "", "name of index to delete")
+	cmd.Flags().StringVarP(&options.indexName, "name", "n", "", "name of index to delete")
+	_ = cmd.Flags().MarkDeprecated("name", "use --index-name instead")
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output result as JSON")
 
 	return cmd
 }
 
 func runDeleteIndexCmd(ctx context.Context, svc DeleteIndexService, options deleteCmdOptions) error {
-	if err := svc.DeleteIndex(ctx, options.name); err != nil {
+	if err := svc.DeleteIndex(ctx, options.indexName); err != nil {
 		return err
 	}
 
@@ -67,10 +74,10 @@ func runDeleteIndexCmd(ctx context.Context, svc DeleteIndexService, options dele
 		fmt.Println(text.IndentJSON(struct {
 			Deleted bool   `json:"deleted"`
 			Name    string `json:"name"`
-		}{Deleted: true, Name: options.name}))
+		}{Deleted: true, Name: options.indexName}))
 		return nil
 	}
 
-	msg.SuccessMsg("Index %s deleted.\n", style.Emphasis(options.name))
+	msg.SuccessMsg("Index %s deleted.\n", style.Emphasis(options.indexName))
 	return nil
 }
