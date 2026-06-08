@@ -33,7 +33,6 @@ func PrintBackupTable(backup *pinecone.Backup) {
 	fmt.Fprintf(writer, "Record Count\t%s\n", DisplayOrNone(backup.RecordCount))
 	fmt.Fprintf(writer, "Namespace Count\t%s\n", DisplayOrNone(backup.NamespaceCount))
 	fmt.Fprintf(writer, "Size (bytes)\t%s\n", DisplayOrNone(backup.SizeBytes))
-	fmt.Fprintf(writer, "Metric\t%s\n", DisplayOrNone(backup.Metric))
 	schema := "<none>"
 	if backup.Schema != nil {
 		schema = text.InlineJSON(backup.Schema)
