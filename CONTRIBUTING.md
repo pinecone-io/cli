@@ -1,120 +1,127 @@
-# Pinecone CLI
-
-`pc` is Pinecone on the command line. See the [Pinecone CLI PRD](https://www.notion.so/PRD-Pinecone-CLI-59fda5da83bc4e3a8593b74056914cd1?pm=c)
+# Contributing to the Pinecone CLI
 
 ## Building the CLI
 
-1. [Install golang](https://go.dev/doc/install) if you do not have it already
+1. [Install Go](https://go.dev/doc/install) if you do not have it already.
 
-2. [Install just](https://github.com/casey/just?tab=readme-ov-file#installation) if you'd like to run the formulas in the [justfile](https://github.com/pinecone-io/cli/blob/main/justfile).
+2. [Install `just`](https://github.com/casey/just?tab=readme-ov-file#installation) to run the recipes in the [justfile](justfile).
 
-3. Install goreleaser
+3. Install goreleaser:
 
 ```bash
 brew install --cask goreleaser/tap/goreleaser
 ```
 
-4. Clone the repo, and build the CLI
+4. Clone the repo and build:
 
 ```bash
 git clone git@github.com:pinecone-io/cli.git
-goreleaser build --single-target --snapshot --clean
+just build
 ```
 
-For manual testing in development, you can run commands like this
+This builds a binary for your current OS and places it under `./dist/`. The exact subdirectory depends on your platform (e.g. `pc_darwin_arm64_v8.0/pc` on Apple Silicon). Run `ls dist/` to find the right path.
+
+For a quick alias during development:
 
 ```bash
-./dist/pc_darwin_arm64/pc login
-./dist/pc_darwin_arm64/pc index list
-# etc
+alias pc-dev="$(ls -d dist/pc_darwin_arm64*/pc dist/pc_darwin_all/pc 2>/dev/null | head -1)"
 ```
 
-## Usage
+## Verifying your build
 
 ```bash
 # See help
-./dist/pc_darwin_arm64/pc --help
+./dist/pc_darwin_arm64_v8.0/pc --help
 
-# Set authorization credentials - set an API key directly, or log in via the OAuth flow
-./dist/pc_darwin_arm64/pc config set-api-key
-./dist/pc_darwin_arm64/pc login
+# Authenticate
+./dist/pc_darwin_arm64_v8.0/pc auth login
+# or set an API key directly
+./dist/pc_darwin_arm64_v8.0/pc config set api-key "YOUR_API_KEY"
 
-# Check currently configured API key
-./dist/pc_darwin_arm64/pc config get-api-key
-
-# Do index operations
-./dist/pc_darwin_arm64/pc index --help
-
-# Create serverless indexes.
-./dist/pc_darwin_arm64/pc index create-serverless --help
-./dist/pc_darwin_arm64/pc index create-serverless --name example-index --dimension 1536 --metric cosine --cloud aws --region us-west-2
-./dist/pc_darwin_arm64/pc index create-serverless --name="example-index" --dimension=1536 --metric="cosine" --cloud="aws" --region="us-west-2"
-./dist/pc_darwin_arm64/pc index create-serverless -n example-index -d 1536 -m cosine -c aws -r us-west-2
-
-# Describe index
-./dist/pc_darwin_arm64/pc index describe --name "example-index"
-./dist/pc_darwin_arm64/pc index describe --name "example-index" --json
-
-# List indexes
-./dist/pc_darwin_arm64/pc index list
-./dist/pc_darwin_arm64/pc index list --json
-
-# Delete index
-./dist/pc_darwin_arm64/pc index delete --name "example-index"
+# Spot-check index operations
+./dist/pc_darwin_arm64_v8.0/pc index list
+./dist/pc_darwin_arm64_v8.0/pc index create --name my-index --dimension 1536 --metric cosine --cloud aws --region us-east-1
+./dist/pc_darwin_arm64_v8.0/pc index describe --index-name my-index
+./dist/pc_darwin_arm64_v8.0/pc index delete --index-name my-index
 ```
+
+For full usage documentation, see the [README](./README.md).
+
+## Running tests
+
+```bash
+# Unit tests — no external dependencies required
+just test-unit
+
+# Run a single test by name
+go test -v -run TestNameHere ./internal/...
+
+# E2E tests — builds the binary and runs against real Pinecone APIs
+# Requires credentials to be set in the environment or an .env file
+just test-e2e
+```
+
+E2E tests require the following credentials to be available, either as environment variables or in a `.env` file at the repo root:
+
+```
+PINECONE_API_KEY=...
+PINECONE_CLIENT_ID=...
+PINECONE_CLIENT_SECRET=...
+```
+
+E2E tests should use the `//go:build e2e` build tag, so they are excluded from `just test-unit` automatically.
 
 ## Troubleshooting
 
-Some facts that could be useful:
-
-- Configuration files are stored in `~/.config/pinecone`.
-- You can enable debug output with the `PINECONE_LOG_LEVEL=DEBUG` env var.
-- Are you pointed at the correct environment? The current value of the environment setting (i.e. prod or staging) is controlled through `pc config set-environment staging` is not clearly surfaced through the printed output. If things aren't working as you expect, you might be pointed in the wrong place. See `cat ~/.config/pinecone/config.yaml` to confirm.
+- Configuration files are stored in `~/.config/pinecone/`.
+- Enable debug output with `PINECONE_LOG_LEVEL=DEBUG`.
+- Check which environment you're pointed at: `cat ~/.config/pinecone/config.yaml` or `pc config get environment`. If things aren't working as expected, confirm the `environment` setting is correct (`production` or `staging`). To switch: `pc config set environment production`.
 
 ## Making a Pull Request
 
-Please fork this repo and make a PR with your changes. Run `gofmt` and `goimports` on all proposed
-code changes. Code that does not adhere to these formatters will not be merged.
+Fork this repo and open a PR with your changes. Before submitting:
+
+- Run `gofmt` on all changed files.
+- Run `go vet ./...` and resolve any warnings.
+- Run `just test-unit` and ensure tests pass.
 
 ## Releasing the CLI
 
-To make a new release, you simply tag a commit with a version and push it. The heavy lifting all happens in CI.
-
-Something along these lines:
+To make a new release, tag a commit and push to remote. CI handles the rest.
 
 ```sh
-# Pull and ensure you have no uncomitted changes
+# Ensure main is clean and up to date
 git checkout main
 git pull
 git status
 
-# Ensure the tip of main actually builds
-gorelaser build --clean --snapshot
+# Confirm the tip of main builds
+goreleaser build --clean --snapshot
 
-# Look at what version tags have previously been used
+# Check existing tags to pick the next version
 git tag --list
 
-# Based on the previous history and the nature of the
-# new stuff in the code you are releasing, choose a
-# tag that makes sense for the next version.
-#
-# The tag must start with "v" to trigger the CI stuff.
-git tag v0.0.40
-
-# Push the tag to github
+# Tag and push (must start with "v" to trigger CI)
+git tag v0.1.0
 git push --tags
 ```
 
-From there, everything happens in this [publish workflow](https://github.com/pinecone-io/cli/actions/workflows/publish.yaml) which is using [goreleaser](https://goreleaser.com/) to handle the process of building binaries for different platforms, packing them into archives, publishing those artifacts on github, and updating our homebrew formula so those updates are easily installable on mac. In the future this will probably expand to cover more forms of distribution. If anything breaks down in this process, the `.goreleaser.yaml` file is probably where your attention will be needed but so far it has been very reliable.
+The [publish workflow](https://github.com/pinecone-io/cli/actions/workflows/publish.yaml) uses [goreleaser](https://goreleaser.com/) to build binaries for all supported platforms, publish artifacts to the GitHub Releases page, and update the Homebrew tap. The `.goreleaser.yaml` file is the authoritative configuration if anything needs adjusting.
 
-Within a few minutes of pushing tags, you should see:
+Within a few minutes of pushing a tag you should see:
 
-- A new update to the [Releases page](https://github.com/pinecone-io/cli/releases) with built artifacts attached. If you want to be fancy, you can edit the text there to give a more narrative overview of what is in the release. But for these early iterations we're just pushing and shipping without a lot of ceremony.
-- Updates to to the [Homebrew tap](https://github.com/pinecone-io/homebrew-tap) should happen automatically
+- A new entry on the [Releases page](https://github.com/pinecone-io/cli/releases) with built artifacts attached.
+- An automatic update to the [Homebrew tap](https://github.com/pinecone-io/homebrew-tap).
 
-To consume the update from Homebrew (assuming they have previously installed it from homebrew), users should run
+Users on Homebrew can upgrade with:
 
 ```sh
 brew update
-brew upgrade pinecone
+brew upgrade --cask pinecone
+```
+
+Users who installed via the install script can upgrade by re-running it:
+
+```sh
+curl -fsSL https://pinecone.io/install.sh | sh
 ```

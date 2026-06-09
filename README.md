@@ -81,6 +81,14 @@ To install to a custom directory:
 curl -fsSL https://pinecone.io/install.sh | PINECONE_INSTALL=$HOME/.local/bin sh
 ```
 
+#### Upgrading
+
+Re-running the install script will fetch and install the latest version, overwriting the existing binary:
+
+```bash
+curl -fsSL https://pinecone.io/install.sh | sh
+```
+
 ### Download artifacts from release page (Linux, Windows, macOS)
 
 For users who prefer not to use Homebrew or need specific platform binaries, we provide pre-built binaries for many platforms.
