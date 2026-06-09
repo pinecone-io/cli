@@ -39,3 +39,13 @@ man/
 
 # Agent scratch space
 scratch/
+
+# These entries prevent agentic harness state files from being
+# accidentally committed to this repository. Do not remove.
+pipeline-state/
+tasks/
+*.rings.toml
+.rings.lock.*
+bootstrap-state/
+playbooks/
+reviewers/
