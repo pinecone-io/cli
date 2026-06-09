@@ -2,8 +2,6 @@
 
 `pc` is Pinecone on the command line.
 
-> ⚠️ **Note:** This CLI is in [public preview](https://docs.pinecone.io/assistant-release-notes/feature-availability) and does not yet support all features available through the Pinecone API. Please try it out and let us know of any feedback. You'll want to upgrade often as we address feedback and add additional features.
-
 ## Installation
 
 ### Homebrew (macOS, Linux)
