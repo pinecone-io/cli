@@ -178,26 +178,43 @@ Use a project API key directly. Provides access to control/data plane operations
 pc auth configure --api-key "YOUR_API_KEY"
 
 # alternatively
-pc config set-api-key "YOUR_API_KEY"
+pc config set api-key "YOUR_API_KEY"
 ```
 
 For more detailed information, see the [CLI authentication](https://docs.pinecone.io/reference/cli/authentication) documentation.
 
 ## Data plane commands overview
 
-Work with your vector data inside an index. These commands require `--index-name` and optionally `--namespace`:
+Work with data inside an index. Most commands require `--index-name` and optionally `--namespace`:
 
-- Ingest and manage records:
+- Dense and sparse vectors (pre-vectorized data):
   - `pc index vector upsert` — insert or update vectors from JSON/JSONL
   - `pc index vector list` — list vectors (with pagination)
   - `pc index vector fetch` — fetch by IDs or metadata filter
   - `pc index vector update` — update a vector by ID or update many via metadata filter
   - `pc index vector delete` — delete by IDs, by filter, or delete all in a namespace
   - `pc index vector query` — nearest-neighbor search by values or vector ID
+- Text records (integrated indexes with built-in vectorization):
+  - `pc index record upsert` — upsert text records from JSON/JSONL
+  - `pc index record search` — search records by text or vector
+- Namespace management:
+  - `pc index namespace list/describe/create/delete`
 - Index statistics:
   - `pc index stats` — show dimension, vector counts, namespace summary, and metadata field counts (optionally filtered)
 
-Tip: add `--json` to many commands to get structured output.
+Note: add `--json` to many commands to get structured output.
+
+## Index management commands
+
+Manage the lifecycle of indexes and their data:
+
+- Backups and restore jobs (serverless indexes):
+  - `pc index backup create/list/describe/delete` — create and manage index backups
+  - `pc index restore list/describe` — view and monitor restore jobs
+- Bulk imports (serverless indexes):
+  - `pc index import start/list/describe/cancel` — import data into an index from an external source
+- Collections (pod-based indexes):
+  - `pc index collection create/list/describe/delete` — create static snapshots of pod-based indexes
 
 ## Quickstart
 
@@ -208,7 +225,7 @@ After installing the CLI, authenticate with user login or set an API key, verify
 pc auth login
 
 # Option 2: Set API key directly
-pc config set-api-key "YOUR_API_KEY"
+pc config set api-key "YOUR_API_KEY"
 
 # Verify authentication
 pc auth whoami
@@ -223,7 +240,7 @@ pc index list
 
 ## Working with data
 
-Once you've created an index you can use `pc index upsert` to begin storing data in Pinecone. There are a variety of ways to get your data into Pinecone through the CLI.
+Once you've created an index you can use `pc index vector upsert` to begin storing data in Pinecone. There are a variety of ways to get your data into Pinecone through the CLI.
 
 ### JSON input formats
 
