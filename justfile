@@ -24,7 +24,7 @@ ensure-goreleaser:
         exit 127; \
     fi
 
-# Run all unit tests for the CLI
+# Run all unit tests for the CLI (e2e and unit tests)
 test-unit *ARGS: ensure-go
     go test -v ./... {{ARGS}}
 
@@ -37,11 +37,10 @@ test-e2e: ensure-go
 gen-manpages *ARGS: ensure-go
     go run cmd/gen-manpages/main.go {{ARGS}}
 
-# Build the CLI binary locally using goreleaser: current OS, artifacts in ./dist
-# 
+# Build the CLI binary locally using goreleaser: builds for the current OS, built artifacts in ./dist
 build: ensure-go ensure-goreleaser
     goreleaser build --single-target --snapshot --clean
 
-# Build the CLI binary locally using goreleaser: all supported OSes (defined in.goreleaser.yaml), artifacts in ./dist
+# Build the CLI binary locally using goreleaser: all supported OSes (defined in .goreleaser.yaml), built artifacts in ./dist
 build-all: ensure-go ensure-goreleaser
     goreleaser build --snapshot --clean
