@@ -40,7 +40,6 @@ man/
 # Agent scratch space
 scratch/
 
-# === Harness protection (schema v1) ===
 # These entries prevent agentic harness state files from being
 # accidentally committed to this repository. Do not remove.
 pipeline-state/
