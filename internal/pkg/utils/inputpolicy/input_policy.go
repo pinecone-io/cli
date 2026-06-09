@@ -15,7 +15,7 @@ const (
 
 var (
 	// Limits can be overridden via env vars at process start.
-	MaxBodyJSONBytes int64 = parseSizeFromEnv("PC_CLI_MAX_JSON_BYTES", DefaultMaxJSONBytes)
+	MaxBodyJSONBytes int64 = parseSizeFromEnv("PINECONE_CLI_MAX_JSON_BYTES", DefaultMaxJSONBytes)
 )
 
 // parseSizeFromEnv parses a size from an environment variable with a default value.
