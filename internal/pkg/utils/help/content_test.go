@@ -9,7 +9,7 @@ import (
 
 // setColor allows disabling color output for tests
 // it handles restoring configuration to the previous value
-func setColor(t *testing.T, on bool) { //nolint:unparam // all current callers pass false; kept flexible for future tests
+func setColor(t *testing.T, on bool) {
 	prev := config.Color.Get()
 	config.Color.Set(on)
 	t.Cleanup(func() {

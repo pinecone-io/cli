@@ -58,12 +58,14 @@ linters:
         - name: unreachable-code
         - name: redefines-builtin-id
 
+  exclusions:
+    rules:
+      # Test files get more latitude — errcheck and unparam noise is expected there
+      - path: _test\.go
+        linters:
+          - gocritic
+          - unparam
+
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
-  exclude-rules:
-    # Test files get more latitude — errcheck and unparam noise is expected there
-    - path: _test\.go
-      linters:
-        - gocritic
-        - unparam

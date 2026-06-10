@@ -205,7 +205,7 @@ func TestTokenError_Error(t *testing.T) {
 			expected: "<nil>",
 		},
 	}
-	tests := append(baseTests, tokenErrTests...) //nolint:gocritic
+	tests := append(baseTests, tokenErrTests...)
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			result := test.error.Error()
@@ -228,7 +228,7 @@ func TestTokenError_UserMessage(t *testing.T) {
 			expected: "authentication failed",
 		},
 	}
-	tests := append(baseTests, tokenErrTests...) //nolint:gocritic
+	tests := append(baseTests, tokenErrTests...)
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			result := test.error.UserMessage()
