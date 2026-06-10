@@ -11,8 +11,7 @@ func Test_runListCmd_TabularOutputIncludesHeader(t *testing.T) {
 	svc := &mockConfigService{listResult: []ConfigEntry{}}
 
 	out := testutils.CaptureStdout(t, func() {
-		err := runListCmd(svc, ListCmdOptions{})
-		assert.NoError(t, err)
+		runListCmd(svc, ListCmdOptions{})
 	})
 
 	assert.Contains(t, out, "KEY")
@@ -30,8 +29,7 @@ func Test_runListCmd_TabularOutputMasksSensitiveKey(t *testing.T) {
 	}
 
 	out := testutils.CaptureStdout(t, func() {
-		err := runListCmd(svc, ListCmdOptions{})
-		assert.NoError(t, err)
+		runListCmd(svc, ListCmdOptions{})
 	})
 
 	assert.Contains(t, out, "api-key")
@@ -46,8 +44,7 @@ func Test_runListCmd_TabularOutputRevealsSensitiveKey(t *testing.T) {
 	}
 
 	out := testutils.CaptureStdout(t, func() {
-		err := runListCmd(svc, ListCmdOptions{reveal: true})
-		assert.NoError(t, err)
+		runListCmd(svc, ListCmdOptions{reveal: true})
 	})
 
 	assert.Contains(t, out, "sk-supersecret")
@@ -62,8 +59,7 @@ func Test_runListCmd_JSONOutput(t *testing.T) {
 	}
 
 	out := testutils.CaptureStdout(t, func() {
-		err := runListCmd(svc, ListCmdOptions{json: true})
-		assert.NoError(t, err)
+		runListCmd(svc, ListCmdOptions{json: true})
 	})
 
 	// Sensitive key should be masked in JSON output
@@ -83,8 +79,7 @@ func Test_runListCmd_AllFlagIncludesHiddenKeys(t *testing.T) {
 	}
 
 	out := testutils.CaptureStdout(t, func() {
-		err := runListCmd(svc, ListCmdOptions{all: true})
-		assert.NoError(t, err)
+		runListCmd(svc, ListCmdOptions{all: true})
 	})
 
 	assert.Contains(t, out, "environment")
@@ -99,8 +94,7 @@ func Test_runListCmd_JSONAllFlagIncludesHiddenField(t *testing.T) {
 	}
 
 	out := testutils.CaptureStdout(t, func() {
-		err := runListCmd(svc, ListCmdOptions{json: true, all: true})
-		assert.NoError(t, err)
+		runListCmd(svc, ListCmdOptions{json: true, all: true})
 	})
 
 	assert.Contains(t, out, "environment")
@@ -117,8 +111,7 @@ func Test_runListCmd_JSONOutputRevealsSensitiveKey(t *testing.T) {
 	}
 
 	out := testutils.CaptureStdout(t, func() {
-		err := runListCmd(svc, ListCmdOptions{json: true, reveal: true})
-		assert.NoError(t, err)
+		runListCmd(svc, ListCmdOptions{json: true, reveal: true})
 	})
 
 	assert.Contains(t, out, "sk-supersecret")
@@ -132,8 +125,7 @@ func Test_runListCmd_TabularOutputAnnotatesActiveEnvVarOverride(t *testing.T) {
 	}
 
 	out := testutils.CaptureStdout(t, func() {
-		err := runListCmd(svc, ListCmdOptions{all: true})
-		assert.NoError(t, err)
+		runListCmd(svc, ListCmdOptions{all: true})
 	})
 
 	assert.Contains(t, out, "staging")
@@ -148,8 +140,7 @@ func Test_runListCmd_TabularOutputNoAnnotationWithoutOverride(t *testing.T) {
 	}
 
 	out := testutils.CaptureStdout(t, func() {
-		err := runListCmd(svc, ListCmdOptions{all: true})
-		assert.NoError(t, err)
+		runListCmd(svc, ListCmdOptions{all: true})
 	})
 
 	assert.NotContains(t, out, "[$PINECONE_ENVIRONMENT]")
@@ -164,8 +155,7 @@ func Test_runListCmd_JSONOutputIncludesEnvVarFieldsWhenBound(t *testing.T) {
 	}
 
 	out := testutils.CaptureStdout(t, func() {
-		err := runListCmd(svc, ListCmdOptions{json: true, all: true})
-		assert.NoError(t, err)
+		runListCmd(svc, ListCmdOptions{json: true, all: true})
 	})
 
 	assert.Contains(t, out, `"PINECONE_ENVIRONMENT"`)
@@ -182,8 +172,7 @@ func Test_runListCmd_JSONOutputEnvVarOverrideIsFalseWhenNotActive(t *testing.T) 
 	}
 
 	out := testutils.CaptureStdout(t, func() {
-		err := runListCmd(svc, ListCmdOptions{json: true, all: true})
-		assert.NoError(t, err)
+		runListCmd(svc, ListCmdOptions{json: true, all: true})
 	})
 
 	assert.Contains(t, out, `"PINECONE_ENVIRONMENT"`)

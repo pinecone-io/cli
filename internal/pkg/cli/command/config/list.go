@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
-	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/presenters"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
@@ -33,10 +31,7 @@ func NewListCmd() *cobra.Command {
 		Args: cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			svc := newDefaultConfigService()
-			if err := runListCmd(svc, options); err != nil {
-				msg.FailJSON(options.json, "%s", err)
-				exit.ErrorMsg(err.Error())
-			}
+			runListCmd(svc, options)
 		},
 	}
 
@@ -47,7 +42,7 @@ func NewListCmd() *cobra.Command {
 	return cmd
 }
 
-func runListCmd(svc ConfigService, opts ListCmdOptions) error { //nolint:unparam // always nil today; signature kept for consistency with other run* funcs
+func runListCmd(svc ConfigService, opts ListCmdOptions) {
 	// --json output for the list command
 	type listOutput struct {
 		Key            string `json:"key"`
@@ -74,7 +69,7 @@ func runListCmd(svc ConfigService, opts ListCmdOptions) error { //nolint:unparam
 			jsonEntries = append(jsonEntries, entry)
 		}
 		fmt.Fprintln(os.Stdout, text.IndentJSON(jsonEntries))
-		return nil
+		return
 	}
 
 	w := presenters.NewTabWriter()
@@ -102,5 +97,4 @@ func runListCmd(svc ConfigService, opts ListCmdOptions) error { //nolint:unparam
 			e.Description)
 	}
 	w.Flush()
-	return nil
 }
