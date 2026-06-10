@@ -34,7 +34,7 @@ func ensureConfigDir() string {
 	}
 
 	if !doesFileExist(configPath) {
-		err = os.MkdirAll(configPath, 0755)
+		err = os.MkdirAll(configPath, 0o755)
 		if err != nil {
 			exit.Error(err, "Error creating config directory")
 		}

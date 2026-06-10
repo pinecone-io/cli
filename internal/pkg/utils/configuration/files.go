@@ -35,7 +35,7 @@ func (c ConfigFile) Init() {
 	// Set permissions on config file
 	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
 		path := filepath.Join(locations.ConfigPath, fmt.Sprintf("%s.%s", c.FileName, c.FileFormat))
-		os.Chmod(path, 0600)
+		os.Chmod(path, 0o600)
 	}
 
 	c.LoadConfig()
@@ -45,7 +45,7 @@ func (c ConfigFile) Clear() {
 	log.Debug().Str("file_name", c.FileName).Msg("Clearing config file")
 	for _, property := range c.Properties {
 		log.Debug().
-			Str("property", fmt.Sprintf("%s", reflect.TypeOf(property))).
+			Str("property", reflect.TypeOf(property).String()).
 			Msg("Clearing property")
 		property.Clear()
 	}

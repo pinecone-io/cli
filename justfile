@@ -24,6 +24,10 @@ ensure-goreleaser:
         exit 127; \
     fi
 
+# Run golangci-lint (requires golangci-lint to be installed: https://golangci-lint.run/welcome/install/)
+lint: ensure-go
+    golangci-lint run ./...
+
 # Run all unit tests for the CLI (e2e and unit tests)
 test-unit *ARGS: ensure-go
     go test -v ./... {{ARGS}}

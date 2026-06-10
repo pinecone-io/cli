@@ -25,7 +25,7 @@ type mockImportService struct {
 	cancelImportErr  error
 }
 
-func (m *mockImportService) StartImport(ctx context.Context, uri string, integrationId *string, errorMode *string) (*pinecone.StartImportResponse, error) {
+func (m *mockImportService) StartImport(ctx context.Context, uri string, integrationId, errorMode *string) (*pinecone.StartImportResponse, error) {
 	m.lastStartImportUri = uri
 	m.lastStartImportIntegrationId = integrationId
 	m.lastStartImportErrorMode = errorMode

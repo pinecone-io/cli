@@ -74,13 +74,14 @@ func classifyTokenErrorKind(err *TokenError) TokenErrorKind {
 		return TokenErrInvalidScope
 	default:
 		// Unknown oauth error code, fall back to HTTP semantics
-		if err.HTTPStatus == 429 {
+		switch {
+		case err.HTTPStatus == 429:
 			return TokenErrRateLimited
-		} else if err.HTTPStatus >= 500 {
+		case err.HTTPStatus >= 500:
 			return TokenErrAuthServerIssue
-		} else if err.HTTPStatus == 400 {
+		case err.HTTPStatus == 400:
 			return TokenErrInvalidRequest
-		} else {
+		default:
 			return TokenErrUnknown
 		}
 	}

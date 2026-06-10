@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -334,7 +333,7 @@ func Test_createIndexOptions_validate(t *testing.T) {
 }
 
 func Test_buildReadCapacityFromFlags(t *testing.T) {
-	newCmd := func() *cobra.Command { return NewCreateIndexCmd() }
+	newCmd := NewCreateIndexCmd
 
 	t.Run("no flags set returns nil", func(t *testing.T) {
 		cmd := newCmd()

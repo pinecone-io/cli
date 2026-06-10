@@ -10,7 +10,7 @@ import (
 
 func GenerateManPages(rootCmd *cobra.Command, outputDir string) error {
 	// Ensure output directory exists
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
 		return err
 	}
 

@@ -470,18 +470,19 @@ func postLoginInteractiveTargetOrg(orgsList []*pinecone.Organization, jsonOutput
 
 func postLoginInteractiveTargetProject(projectList []*pinecone.Project, jsonOutput bool) *pinecone.Project {
 	var project *pinecone.Project
-	if len(projectList) < 1 {
+	switch {
+	case len(projectList) < 1:
 		log.Debug().Msg("No projects available for organization. Please create a project before proceeding.")
 		exit.ErrorMsg("No projects found. Please create a project before proceeding.")
 		return nil
-	} else if len(projectList) == 1 {
+	case len(projectList) == 1:
 		project = projectList[0]
 		state.TargetProj.Set(state.TargetProject{
 			Name: project.Name,
 			Id:   project.Id,
 		})
 		return project
-	} else {
+	default:
 		projectItems := []string{}
 		for _, proj := range projectList {
 			projectItems = append(projectItems, proj.Name)
@@ -504,7 +505,7 @@ func postLoginInteractiveTargetProject(projectList []*pinecone.Project, jsonOutp
 }
 
 func uiProjectSelector(projectItems []string, jsonOutput bool) string {
-	var targetProject string = ""
+	var targetProject = ""
 	m2 := prompt.NewList(projectItems, len(projectItems)+6, "Choose a project to target", func() {
 		msg.InfoMsg("Exiting without targeting a project.")
 		msg.HintMsg("You can always run %s to set or change a project context later.", style.Code("pc target"))

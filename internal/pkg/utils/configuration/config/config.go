@@ -59,7 +59,7 @@ func validateEnvironment(env string) error {
 	}
 	quotedEnvs := make([]string, len(validEnvs))
 	for i, validEnv := range validEnvs {
-		quotedEnvs[i] = fmt.Sprintf("\"%s\"", validEnv)
+		quotedEnvs[i] = fmt.Sprintf("%q", validEnv)
 	}
 	return fmt.Errorf("invalid environment: \"%s\", must be one of %s", env, strings.Join(quotedEnvs, ", "))
 }

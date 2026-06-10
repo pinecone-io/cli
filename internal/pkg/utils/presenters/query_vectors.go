@@ -103,10 +103,10 @@ func previewSliceUint32(values []uint32, limit int) string {
 		truncated = true
 	}
 
-	text := text.InlineJSON(vals)
-	if truncated && strings.HasSuffix(text, "]") {
-		text = text[:len(text)-1] + ", ...]"
+	jsonStr := text.InlineJSON(vals)
+	if truncated && strings.HasSuffix(jsonStr, "]") {
+		jsonStr = jsonStr[:len(jsonStr)-1] + ", ...]"
 	}
 
-	return text
+	return jsonStr
 }

@@ -23,9 +23,3 @@ func MaskHeadTail(s string, head, tail int) string {
 	return start + "***" + end
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}

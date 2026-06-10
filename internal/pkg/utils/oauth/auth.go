@@ -15,7 +15,7 @@ const (
 	SourceTag = "pinecone_cli"
 )
 
-func (a *Auth) GetAuthURL(ctx context.Context, csrfState string, codeChallenge string, orgId *string, ssoConnection *string) (string, error) {
+func (a *Auth) GetAuthURL(ctx context.Context, csrfState, codeChallenge string, orgId, ssoConnection *string) (string, error) {
 	conf, err := newOauth2Config()
 	if err != nil {
 		return "", err
@@ -27,10 +27,12 @@ func (a *Auth) GetAuthURL(ctx context.Context, csrfState string, codeChallenge s
 	}
 
 	opts := []oauth2.AuthCodeOption{}
-	opts = append(opts, oauth2.SetAuthURLParam("audience", audience))
-	opts = append(opts, oauth2.SetAuthURLParam("code_challenge", codeChallenge))
-	opts = append(opts, oauth2.SetAuthURLParam("code_challenge_method", "S256"))
-	opts = append(opts, oauth2.SetAuthURLParam("sourceTag", SourceTag))
+	opts = append(opts,
+		oauth2.SetAuthURLParam("audience", audience),
+		oauth2.SetAuthURLParam("code_challenge", codeChallenge),
+		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
+		oauth2.SetAuthURLParam("sourceTag", SourceTag),
+	)
 	if orgId != nil && *orgId != "" {
 		opts = append(opts, oauth2.SetAuthURLParam("orgId", *orgId))
 	}
@@ -41,7 +43,7 @@ func (a *Auth) GetAuthURL(ctx context.Context, csrfState string, codeChallenge s
 	return conf.AuthCodeURL(csrfState, opts...), nil
 }
 
-func (a *Auth) ExchangeAuthCode(ctx context.Context, codeVerifier string, authCode string) (*oauth2.Token, error) {
+func (a *Auth) ExchangeAuthCode(ctx context.Context, codeVerifier, authCode string) (*oauth2.Token, error) {
 	conf, err := newOauth2Config()
 	if err != nil {
 		return nil, err
@@ -58,13 +60,13 @@ func (a *Auth) ExchangeAuthCode(ctx context.Context, codeVerifier string, authCo
 	return token, nil
 }
 
-func (a *Auth) CreateNewVerifierAndChallenge() (string, string, error) {
+func (a *Auth) CreateNewVerifierAndChallenge() (verifier, challenge string, err error) {
 	bytes := make([]byte, 32)
-	if _, err := rand.Read(bytes); err != nil {
+	if _, err = rand.Read(bytes); err != nil {
 		return "", "", err
 	}
-	verifier := base64.RawURLEncoding.EncodeToString(bytes)
+	verifier = base64.RawURLEncoding.EncodeToString(bytes)
 	hash := sha256.Sum256([]byte(verifier))
-	challenge := base64.RawURLEncoding.EncodeToString(hash[:])
+	challenge = base64.RawURLEncoding.EncodeToString(hash[:])
 	return verifier, challenge, nil
 }

@@ -90,9 +90,9 @@ func previewSliceFloat32(values *[]float32, limit int) string {
 		vals = vals[:limit]
 		truncated = true
 	}
-	text := text.InlineJSON(vals)
-	if truncated && strings.HasSuffix(text, "]") {
-		text = text[:len(text)-1] + ", ...]"
+	jsonStr := text.InlineJSON(vals)
+	if truncated && strings.HasSuffix(jsonStr, "]") {
+		jsonStr = jsonStr[:len(jsonStr)-1] + ", ...]"
 	}
-	return text
+	return jsonStr
 }

@@ -10,9 +10,8 @@ import (
 )
 
 var (
-	spinnerTextEllipsis = "..."
-	spinnerTextDone     = StatusGreen("done")
-	spinnerTextFailed   = StatusRed("failed")
+	spinnerTextDone   = StatusGreen("done")
+	spinnerTextFailed = StatusRed("failed")
 
 	spinnerColor = "blue"
 )

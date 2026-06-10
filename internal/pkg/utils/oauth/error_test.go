@@ -415,8 +415,11 @@ func TestNewTokenErrorFromResponse(t *testing.T) {
 				defer server.Close()
 
 				client := &http.Client{}
-				req, _ := http.NewRequest("GET", server.URL, nil)
+				req, _ := http.NewRequest("GET", server.URL, http.NoBody)
 				resp, _ = client.Do(req)
+				if resp != nil {
+					defer resp.Body.Close()
+				}
 			}
 
 			got := NewTokenErrorFromResponse(test.operation, resp)

@@ -66,11 +66,11 @@ type GlobalOptions struct {
 }
 
 func Execute() {
-	//Base context: cancel on SIGINT / SIGTERM
+	// Base context: cancel on SIGINT / SIGTERM
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer cancel()
 
 	err := rootCmd.ExecuteContext(ctx)
+	cancel()
 	if err != nil {
 		os.Exit(1)
 	}

@@ -41,12 +41,12 @@ type mockConfigService struct {
 	lastDescribeKey string
 }
 
-func (m *mockConfigService) Get(key string) (string, bool, string, bool, error) {
+func (m *mockConfigService) Get(key string) (value string, sensitive bool, envVarName string, envVarOverride bool, err error) {
 	m.lastGetKey = key
 	return m.getValue, m.getSensitive, m.getEnvVarName, m.getEnvVarOverride, m.getErr
 }
 
-func (m *mockConfigService) GetStored(key string) (string, bool, error) {
+func (m *mockConfigService) GetStored(key string) (value string, sensitive bool, err error) {
 	m.lastGetStoredKey = key
 	if m.getStoredOverride {
 		return m.getStoredValue, m.getStoredSensitive, m.getStoredErr

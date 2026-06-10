@@ -58,7 +58,7 @@ func Test_OpenReader_StdinDash(t *testing.T) {
 
 	go func() {
 		defer pw.Close()
-		if _, err := pw.Write([]byte(`{"stdin":true}`)); err != nil {
+		if _, err := pw.WriteString(`{"stdin":true}`); err != nil {
 			panic(err)
 		}
 	}()
@@ -113,7 +113,7 @@ func Test_OpenReader_StdinOnlyOnce(t *testing.T) {
 
 	go func() {
 		defer pw.Close()
-		if _, err := pw.Write([]byte(`{"stdin":true}`)); err != nil {
+		if _, err := pw.WriteString(`{"stdin":true}`); err != nil {
 			panic(err)
 		}
 	}()

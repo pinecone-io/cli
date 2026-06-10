@@ -151,7 +151,7 @@ func NewPineconeAdminClient(ctx context.Context) *pinecone.AdminClient {
 	return ac
 }
 
-func NewIndexConnection(ctx context.Context, pc *pinecone.Client, indexName string, namespace string) (*pinecone.IndexConnection, error) {
+func NewIndexConnection(ctx context.Context, pc *pinecone.Client, indexName, namespace string) (*pinecone.IndexConnection, error) {
 	index, err := pc.DescribeIndex(ctx, indexName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to describe index: %w", err)

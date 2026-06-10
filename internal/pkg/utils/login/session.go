@@ -35,7 +35,7 @@ const sessionMaxAge = 5 * time.Minute
 
 func sessionsDir() (string, error) {
 	dir := filepath.Join(configuration.ConfigDirPath(), "sessions")
-	if err := os.MkdirAll(dir, 0700); err != nil {
+	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return "", fmt.Errorf("error creating sessions directory: %w", err)
 	}
 	return dir, nil
@@ -66,7 +66,7 @@ func writeSessionState(s SessionState) error {
 	if err != nil {
 		return fmt.Errorf("error marshaling session state: %w", err)
 	}
-	return os.WriteFile(path, data, 0600)
+	return os.WriteFile(path, data, 0o600)
 }
 
 func ReadSessionState(sessionId string) (*SessionState, error) {
@@ -106,7 +106,7 @@ func WriteSessionResult(r SessionResult) error {
 		os.Remove(tmpPath)
 		return fmt.Errorf("error writing temp result file: %w", err)
 	}
-	if err := tmp.Chmod(0600); err != nil {
+	if err := tmp.Chmod(0o600); err != nil {
 		tmp.Close()
 		os.Remove(tmpPath)
 		return fmt.Errorf("error setting permissions on temp result file: %w", err)

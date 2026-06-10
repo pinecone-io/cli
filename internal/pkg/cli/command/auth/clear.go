@@ -49,19 +49,20 @@ func NewClearCmd() *cobra.Command {
 			}
 
 			// After clearing things, we need to resolve whether the user is still authenticated
-			if secrets.DefaultAPIKey.Get() != "" {
+			switch {
+			case secrets.DefaultAPIKey.Get() != "":
 				state.AuthedUser.Update(func(u *state.TargetUser) {
 					u.AuthContext = state.AuthDefaultAPIKey
 				})
-			} else if secrets.ClientId.Get() != "" && secrets.ClientSecret.Get() != "" {
+			case secrets.ClientId.Get() != "" && secrets.ClientSecret.Get() != "":
 				state.AuthedUser.Update(func(u *state.TargetUser) {
 					u.AuthContext = state.AuthServiceAccount
 				})
-			} else if secrets.GetOAuth2Token().AccessToken != "" {
+			case secrets.GetOAuth2Token().AccessToken != "":
 				state.AuthedUser.Update(func(u *state.TargetUser) {
 					u.AuthContext = state.AuthUserToken
 				})
-			} else {
+			default:
 				state.AuthedUser.Update(func(u *state.TargetUser) {
 					u.AuthContext = state.AuthNone
 				})
