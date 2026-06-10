@@ -39,7 +39,7 @@ func main() {
 	}
 
 	// Ensure output directory exists
-	if err := os.MkdirAll(*output, 0755); err != nil {
+	if err := os.MkdirAll(*output, 0o755); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Could not create output directory: %s\n", err)
 		os.Exit(1)
 	}
@@ -70,11 +70,12 @@ func main() {
 	// List generated files for verbose
 	if *verbose {
 		files, err := filepath.Glob(filepath.Join(*output, "*.1"))
-		if err != nil {
+		switch {
+		case err != nil:
 			fmt.Fprintf(os.Stderr, "Warning: Failed to list generated files: %s\n", err)
-		} else if len(files) == 0 {
+		case len(files) == 0:
 			fmt.Printf("No man pages found in output directory: %s\n", *output)
-		} else {
+		default:
 			fmt.Printf("Generated %d man pages:\n", len(files))
 			for _, file := range files {
 				fmt.Printf(" - %s\n", filepath.Base(file))

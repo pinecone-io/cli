@@ -26,7 +26,7 @@ func Hint(s string) string {
 	return applyStyle("Hint: ", color.Faint) + s
 }
 
-func CodeHint(templateString string, codeString string) string {
+func CodeHint(templateString, codeString string) string {
 	return applyStyle("Hint: ", color.Faint) + fmt.Sprintf(templateString, Code(codeString))
 }
 

@@ -1,0 +1,69 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  # Enables the standard set: errcheck, gosimple, govet, ineffassign, staticcheck, unused
+  default: standard
+  enable:
+    - bodyclose      # HTTP response bodies are closed
+    - gocritic       # broad style and correctness checks
+    - misspell       # catches common spelling mistakes in comments and strings
+    - nolintlint     # ensures //nolint directives are valid and specific
+    - unconvert      # removes unnecessary type conversions
+    - unparam        # detects function params that always receive the same value
+  disable:
+    # errcheck: 312 existing violations — deferred to a dedicated cleanup PR
+    - errcheck
+    # revive: 578 existing violations, mostly missing GoDoc on exported symbols — deferred to a dedicated cleanup PR
+    - revive
+
+  settings:
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - style
+        - performance
+      disabled-checks:
+        # CLI performance is not sensitive enough to warrant changing all option structs to pointers
+        - hugeParam
+        # Same rationale: range-copy cost is negligible in a CLI
+        - rangeValCopy
+
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+        - name: exported
+        - name: if-return
+        - name: increment-decrement
+        - name: var-naming
+        - name: var-declaration
+        - name: package-comments
+        - name: range
+        - name: receiver-naming
+        - name: time-naming
+        - name: unexported-return
+        - name: indent-error-flow
+        - name: errorf
+        - name: empty-block
+        - name: superfluous-else
+        - name: unused-parameter
+        - name: unreachable-code
+        - name: redefines-builtin-id
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  exclude-rules:
+    # Test files get more latitude — errcheck and unparam noise is expected there
+    - path: _test\.go
+      linters:
+        - gocritic
+        - unparam

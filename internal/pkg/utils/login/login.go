@@ -396,7 +396,7 @@ func pollForResult(sessionId string, createdAt time.Time, wait bool, ssoConnecti
 			if result == nil {
 				continue // daemon not done yet
 			}
-			defer CleanupSession(sessionId)
+			defer CleanupSession(sessionId) //nolint:gocritic
 			if result.Status == "error" {
 				return fmt.Errorf("authentication failed: %s", result.Error)
 			}
@@ -428,7 +428,7 @@ func printPendingJSON(authURL, sessionId string) {
 
 // getAndSetAccessTokenInteractive is the original interactive path: inline callback server,
 // optional [Enter]-to-open-browser prompt when stdin is a TTY.
-func getAndSetAccessTokenInteractive(ctx context.Context, orgId *string, ssoConnection *string) error {
+func getAndSetAccessTokenInteractive(ctx context.Context, orgId, ssoConnection *string) error {
 	// If a daemon from a prior JSON-mode login exists, check whether it has
 	// already finished before deciding whether to block interactive login.
 	sess, result, err := findResumableSession()
@@ -665,9 +665,9 @@ func ServeAuthCodeListener(ctx context.Context, csrfState string) (string, error
 	mux := http.NewServeMux()
 	mux.HandleFunc("/auth-callback", func(w http.ResponseWriter, r *http.Request) {
 		code := r.URL.Query().Get("code")
-		state := r.URL.Query().Get("state")
+		stateParam := r.URL.Query().Get("state")
 
-		if state != csrfState {
+		if stateParam != csrfState {
 			errCh <- fmt.Errorf("state mismatch on authentication")
 			return
 		}
@@ -779,18 +779,18 @@ func EnsureAuthenticated(ctx context.Context) error {
 			// Token was expired and there's no pending session to fall back to.
 			return err
 		}
-		return fmt.Errorf("not authenticated. Run %s to log in.", style.Code("pc login"))
+		return fmt.Errorf("not authenticated. Run %s to log in", style.Code("pc login"))
 	}
 
 	if result == nil {
 		// Daemon still running — auth not yet complete.
-		return fmt.Errorf("authentication in progress. Visit the following URL to complete login, then retry:\n\n  %s\n\nOr run %s to check status.", sess.AuthURL, style.Code("pc login -j"))
+		return fmt.Errorf("authentication in progress. Visit the following URL to complete login, then retry:\n\n  %s\n\nOr run %s to check status", sess.AuthURL, style.Code("pc login -j"))
 	}
 
 	// Daemon finished.
 	if result.Status == "error" {
 		defer CleanupSession(sess.SessionId)
-		return fmt.Errorf("authentication failed: %s. Run %s to try again.", result.Error, style.Code("pc login"))
+		return fmt.Errorf("authentication failed: %s. Run %s to try again", result.Error, style.Code("pc login"))
 	}
 
 	// Reload credentials so we can check SSO enforcement before finalising.
@@ -807,7 +807,7 @@ func EnsureAuthenticated(ctx context.Context) error {
 		if token != nil && token.AccessToken != "" {
 			if claims, claimsErr := oauth.ParseClaimsUnverified(token); claimsErr == nil {
 				if ResolveSSOConnection(ctx, claims.OrgId) != nil {
-					return fmt.Errorf("SSO authentication is required for this organization. Run %s to complete authentication.", style.Code("pc login"))
+					return fmt.Errorf("SSO authentication is required for this organization. Run %s to complete authentication", style.Code("pc login"))
 				}
 			}
 		}

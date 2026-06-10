@@ -99,7 +99,7 @@ func runDeleteOrganizationCmd(ctx context.Context, svc DeleteOrganizationService
 	return nil
 }
 
-func confirmDelete(organizationName string, organizationID string) {
+func confirmDelete(organizationName, organizationID string) {
 	msg.WarnMsg("This will delete the organization %s (ID: %s).", style.Emphasis(organizationName), style.Emphasis(organizationID))
 	msg.WarnMsg("This action cannot be undone.")
 

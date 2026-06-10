@@ -296,7 +296,7 @@ func (s *defaultConfigService) Get(key string) (value string, sensitive bool, en
 	return desc.getStr(), desc.Sensitive, "", false, nil
 }
 
-func (s *defaultConfigService) GetStored(key string) (string, bool, error) {
+func (s *defaultConfigService) GetStored(key string) (value string, sensitive bool, err error) {
 	desc, err := lookupKey(key)
 	if err != nil {
 		return "", false, err

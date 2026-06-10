@@ -139,7 +139,7 @@ func confirmDelete(projectName string) {
 	}
 }
 
-func verifyNoIndexes(ctx context.Context, projectId string, projectName string, jsonOutput bool) {
+func verifyNoIndexes(ctx context.Context, projectId, projectName string, jsonOutput bool) {
 	// Check if project contains indexes
 	pc := sdk.NewPineconeClientForProjectById(ctx, projectId)
 
@@ -155,7 +155,7 @@ func verifyNoIndexes(ctx context.Context, projectId string, projectName string, 
 	}
 }
 
-func verifyNoCollections(ctx context.Context, projectId string, projectName string, jsonOutput bool) {
+func verifyNoCollections(ctx context.Context, projectId, projectName string, jsonOutput bool) {
 	// Check if project contains collections
 	pc := sdk.NewPineconeClientForProjectById(ctx, projectId)
 

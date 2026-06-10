@@ -60,9 +60,9 @@ func (m ListModel) View() string {
 	return "\n" + m.list.View()
 }
 
-func mapStringsToItems(strings []string) []list.Item {
-	items := make([]list.Item, len(strings))
-	for i, s := range strings {
+func mapStringsToItems(ss []string) []list.Item {
+	items := make([]list.Item, len(ss))
+	for i, s := range ss {
 		items[i] = item(s)
 	}
 	return items
@@ -85,8 +85,6 @@ func NewList(items []string, listHeight int, title string, onQuit func(), onChoi
 		onChoice: onChoice,
 	}
 }
-
-const listHeight = 14
 
 var (
 	titleStyle        = lipgloss.NewStyle().MarginLeft(0)

@@ -47,7 +47,7 @@ func NewListCmd() *cobra.Command {
 	return cmd
 }
 
-func runListCmd(svc ConfigService, opts ListCmdOptions) error {
+func runListCmd(svc ConfigService, opts ListCmdOptions) error { //nolint:unparam // always nil today; signature kept for consistency with other run* funcs
 	// --json output for the list command
 	type listOutput struct {
 		Key            string `json:"key"`

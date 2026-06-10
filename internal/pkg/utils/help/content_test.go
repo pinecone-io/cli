@@ -1,22 +1,15 @@
 package help
 
 import (
-	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/config"
 )
 
-var (
-	ansiRegex = regexp.MustCompile("\x1b\\[[0-9;]*m")
-)
-
-func stripANSI(s string) string { return ansiRegex.ReplaceAllString(s, "") }
-
 // setColor allows disabling color output for tests
 // it handles restoring configuration to the previous value
-func setColor(t *testing.T, on bool) {
+func setColor(t *testing.T, on bool) { //nolint:unparam // all current callers pass false; kept flexible for future tests
 	prev := config.Color.Get()
 	config.Color.Set(on)
 	t.Cleanup(func() {
@@ -65,10 +58,7 @@ func TestExamples_TrimsRightSpacesTabsCRLF(t *testing.T) {
 
 	in := "pc one   \t\r\npc two\t \r\n"
 	got := Examples(in)
-	want := strings.Join([]string{
-		"  $ pc one",
-		"  $ pc two",
-	}, "\n")
+	want := "  $ pc one" + "\n" + "  $ pc two"
 
 	if got != want {
 		t.Fatalf("Mismatch: want %q, got %q", want, got)

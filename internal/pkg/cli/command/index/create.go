@@ -221,7 +221,7 @@ func runCreateIndexCmd(ctx context.Context, cmd *cobra.Command, service CreateIn
 
 		idx, err = service.CreateServerlessIndex(ctx, &args)
 		if err != nil {
-			wrapped := fmt.Errorf("Failed to create serverless index %s: %w", style.Emphasis(options.name), err)
+			wrapped := fmt.Errorf("failed to create serverless index %s: %w", style.Emphasis(options.name), err)
 			return nil, wrapped
 		}
 	case indexTypePod:
@@ -249,7 +249,7 @@ func runCreateIndexCmd(ctx context.Context, cmd *cobra.Command, service CreateIn
 
 		idx, err = service.CreatePodIndex(ctx, &args)
 		if err != nil {
-			wrapped := fmt.Errorf("Failed to create pod index %s: %w", style.Emphasis(options.name), err)
+			wrapped := fmt.Errorf("failed to create pod index %s: %w", style.Emphasis(options.name), err)
 			return nil, wrapped
 		}
 	case indexTypeIntegrated:
@@ -290,7 +290,7 @@ func runCreateIndexCmd(ctx context.Context, cmd *cobra.Command, service CreateIn
 
 		idx, err = service.CreateIndexForModel(ctx, &args)
 		if err != nil {
-			wrapped := fmt.Errorf("Failed to create integrated index %s: %w", style.Emphasis(options.name), err)
+			wrapped := fmt.Errorf("failed to create integrated index %s: %w", style.Emphasis(options.name), err)
 			return nil, wrapped
 		}
 	case indexTypeBYOC:
@@ -307,11 +307,11 @@ func runCreateIndexCmd(ctx context.Context, cmd *cobra.Command, service CreateIn
 
 		idx, err = service.CreateBYOCIndex(ctx, &args)
 		if err != nil {
-			wrapped := fmt.Errorf("Failed to create BYOC index %s: %w", style.Emphasis(options.name), err)
+			wrapped := fmt.Errorf("failed to create BYOC index %s: %w", style.Emphasis(options.name), err)
 			return nil, wrapped
 		}
 	default:
-		err := fmt.Errorf("Error creating index: invalid index type")
+		err := fmt.Errorf("error creating index: invalid index type")
 		return nil, err
 	}
 
@@ -411,10 +411,8 @@ func buildReadCapacityFromFlags(cmd *cobra.Command, mode, nodeType string, shard
 		default:
 			return nil, fmt.Errorf("invalid read-mode")
 		}
-	} else { // read-mode not provided, return nil if no specific configuration values are passed
-		if !nodeSet && !shardsSet && !replSet {
-			return nil, nil
-		}
+	} else if !nodeSet && !shardsSet && !replSet { // read-mode not provided, return nil if no specific configuration values are passed
+		return nil, nil
 	}
 
 	// dedicated mode if ondemand mode was not requested

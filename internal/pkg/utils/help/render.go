@@ -137,7 +137,7 @@ func isListLine(s string) bool {
 }
 
 func isListBlock(lines []string) bool {
-	any := false
+	hasAny := false
 	for _, ln := range lines {
 		if ln == "" {
 			continue
@@ -145,9 +145,9 @@ func isListBlock(lines []string) bool {
 		if !isListLine(ln) {
 			return false
 		}
-		any = true
+		hasAny = true
 	}
-	return any
+	return hasAny
 }
 
 func isHeadingLine(s string) bool {
@@ -213,12 +213,12 @@ func resolveWrapWidth() int {
 	return defaultWidth
 }
 
-func clamp(v, min, max int) int {
-	if v < min {
-		return min
+func clamp(v, lo, hi int) int {
+	if v < lo {
+		return lo
 	}
-	if v > max {
-		return max
+	if v > hi {
+		return hi
 	}
 	return v
 }

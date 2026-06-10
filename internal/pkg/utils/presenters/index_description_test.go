@@ -298,7 +298,7 @@ func stripANSI(s string) string {
 	return ansiRegexp.ReplaceAllString(s, "")
 }
 
-func pointerToMap(m map[string]interface{}) *map[string]interface{} {
+func pointerToMap(m map[string]interface{}) *map[string]interface{} { //nolint:gocritic
 	return &m
 }
 

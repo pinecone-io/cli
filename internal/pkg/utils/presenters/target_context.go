@@ -25,8 +25,8 @@ func PrintTargetContext(context *state.TargetContext) {
 	}
 
 	log.Info().
-		Str("org", string(context.Organization.Name)).
-		Str("project", string(context.Project.Name)).
+		Str("org", context.Organization.Name).
+		Str("project", context.Project.Name).
 		Msg("Printing target context")
 
 	columns := []string{"ATTRIBUTE", "VALUE"}
@@ -36,10 +36,10 @@ func PrintTargetContext(context *state.TargetContext) {
 	// Get API key for presentational layer
 	defaultAPIKeyMasked := MaskHeadTail(secrets.DefaultAPIKey.Get(), 4, 4)
 
-	fmt.Fprintf(writer, "Organization\t%s\n", labelUnsetIfEmpty(string(context.Organization.Name)))
-	fmt.Fprintf(writer, "Organization ID\t%s\n", labelUnsetIfEmpty(string(context.Organization.Id)))
-	fmt.Fprintf(writer, "Project\t%s\n", labelUnsetIfEmpty(string(context.Project.Name)))
-	fmt.Fprintf(writer, "Project ID\t%s\n", labelUnsetIfEmpty(string(context.Project.Id)))
+	fmt.Fprintf(writer, "Organization\t%s\n", labelUnsetIfEmpty(context.Organization.Name))
+	fmt.Fprintf(writer, "Organization ID\t%s\n", labelUnsetIfEmpty(context.Organization.Id))
+	fmt.Fprintf(writer, "Project\t%s\n", labelUnsetIfEmpty(context.Project.Name))
+	fmt.Fprintf(writer, "Project ID\t%s\n", labelUnsetIfEmpty(context.Project.Id))
 	fmt.Fprintf(writer, "Default API Key\t%s\n", labelUnsetIfEmpty(defaultAPIKeyMasked))
 
 	writer.Flush()

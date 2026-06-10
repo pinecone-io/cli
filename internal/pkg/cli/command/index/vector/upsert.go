@@ -136,8 +136,7 @@ func runUpsertCmd(ctx context.Context, options upsertCmdOptions) {
 			exit.Errorf(err, "Failed to upsert %d vectors in batch %d", len(batch), i+1)
 		} else {
 			if options.json {
-				json := text.IndentJSON(resp)
-				fmt.Fprintln(os.Stdout, json)
+				fmt.Fprintln(os.Stdout, text.IndentJSON(resp))
 			} else {
 				msg.SuccessMsg("Upserted %d vectors into namespace %s (batch %d of %d)", len(batch), options.namespace, i+1, len(batches))
 			}

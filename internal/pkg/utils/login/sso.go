@@ -58,9 +58,9 @@ func FetchSSOConnection(ctx context.Context, orgId string) (string, error) {
 
 // fetchSSOConnectionFromURL is the testable core: it takes an explicit HTTP
 // client and dashboard base URL so tests can inject a local httptest.Server.
-func fetchSSOConnectionFromURL(ctx context.Context, orgId string, accessToken string, client *http.Client, dashboardURL string) (string, error) {
+func fetchSSOConnectionFromURL(ctx context.Context, orgId, accessToken string, client *http.Client, dashboardURL string) (string, error) {
 	url := dashboardURL + "/v2/dashboard/organizations"
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return "", nil
 	}

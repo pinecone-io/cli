@@ -209,12 +209,12 @@ func isEmptyToken(token *oauth2.Token) bool {
 	return token == nil || (token.AccessToken == "" && token.RefreshToken == "")
 }
 
-func shouldPersistToken(old, new *oauth2.Token) bool {
-	if old == nil || new == nil {
-		return old != new
+func shouldPersistToken(old, next *oauth2.Token) bool {
+	if old == nil || next == nil {
+		return old != next
 	}
 
-	if old.AccessToken != new.AccessToken || old.RefreshToken != new.RefreshToken {
+	if old.AccessToken != next.AccessToken || old.RefreshToken != next.RefreshToken {
 		return true
 	}
 	return false
