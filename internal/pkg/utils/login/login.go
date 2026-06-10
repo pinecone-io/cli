@@ -396,8 +396,8 @@ func pollForResult(sessionId string, createdAt time.Time, wait bool, ssoConnecti
 			if result == nil {
 				continue // daemon not done yet
 			}
-			defer CleanupSession(sessionId) //nolint:gocritic
 			if result.Status == "error" {
+				CleanupSession(sessionId)
 				return fmt.Errorf("authentication failed: %s", result.Error)
 			}
 			// The daemon wrote the token to secrets.yaml from a separate process.
@@ -405,9 +405,12 @@ func pollForResult(sessionId string, createdAt time.Time, wait bool, ssoConnecti
 			_ = secrets.SecretsViper.ReadInConfig()
 			if wait {
 				// Caller handles post-auth state and output.
+				CleanupSession(sessionId)
 				return nil
 			}
-			return finishAuthWithSSO(context.Background(), sessionId, ssoConnection)
+			err = finishAuthWithSSO(context.Background(), sessionId, ssoConnection)
+			CleanupSession(sessionId)
+			return err
 		}
 	}
 }
