@@ -4,9 +4,45 @@
 
 ## Installation
 
+### Install script (macOS, Linux)
+
+The most convenient way to install the CLI on macOS and Linux is via the installation scripts.
+
+```bash
+curl -fsSL https://pinecone.io/install.sh | sh
+```
+
+To pin a specific version:
+
+```bash
+curl -fsSL https://pinecone.io/install.sh | PINECONE_VERSION=0.4.1 sh
+```
+
+To install to a custom directory:
+
+```bash
+curl -fsSL https://pinecone.io/install.sh | PINECONE_INSTALL=$HOME/.local/bin sh
+```
+
+#### Uninstall
+
+To uninstall the CLI, use the uninstall script:
+
+```bash
+curl -fsSL https://pinecone.io/uninstall.sh | sh
+```
+
+#### Upgrading
+
+Re-running the install script will fetch and install the latest version, overwriting the existing binary:
+
+```bash
+curl -fsSL https://pinecone.io/install.sh | sh
+```
+
 ### Homebrew (macOS, Linux)
 
-The most convenient way to install the CLI on macOS and Linux is via [Homebrew](https://brew.sh).
+You can also install the CLI on macOS and Linux is via [Homebrew](https://brew.sh).
 
 > **Note for Linux users:** Homebrew cask support on Linux requires Homebrew 4.5.0 or later. If you're on an older version, use the [install script](#install-script) or [download directly from the releases page](#download-artifacts-from-release-page-linux-windows-macos) instead.
 
@@ -59,34 +95,6 @@ To remove the Pinecone tap entirely:
 
 ```bash
 brew untap pinecone-io/tap
-```
-
-### Install script (macOS, Linux)
-
-The quickest way to install on macOS or Linux without Homebrew:
-
-```bash
-curl -fsSL https://pinecone.io/install.sh | sh
-```
-
-To pin a specific version:
-
-```bash
-curl -fsSL https://pinecone.io/install.sh | PINECONE_VERSION=0.4.1 sh
-```
-
-To install to a custom directory:
-
-```bash
-curl -fsSL https://pinecone.io/install.sh | PINECONE_INSTALL=$HOME/.local/bin sh
-```
-
-#### Upgrading
-
-Re-running the install script will fetch and install the latest version, overwriting the existing binary:
-
-```bash
-curl -fsSL https://pinecone.io/install.sh | sh
 ```
 
 ### Download artifacts from release page (Linux, Windows, macOS)
