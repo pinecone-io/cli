@@ -87,6 +87,7 @@ func NewConfigureIndexCmd() *cobra.Command {
 	// optional for all index types
 	cmd.Flags().StringVarP(&options.deletionProtection, "deletion-protection", "p", "", "Enable or disable deletion protection for the index. One of: enabled, disabled")
 	cmd.Flags().StringToStringVar(&options.tags, "tags", map[string]string{}, "Custom user tags to add to an index")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
 
 	return cmd
 }

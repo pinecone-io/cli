@@ -123,7 +123,7 @@ func runPruneLocalKeys(ctx context.Context, options pruneLocalKeysCmdOptions) {
 	// Dry run preview
 	if options.dryRun {
 		printDryRunPlan(plan, options)
-		msg.InfoMsg("Dry run complete. Re-run with %s and %s to apply changes", style.Emphasis("--yes"), style.Emphasis("--dry-run=false"))
+		msg.InfoMsg("Dry run complete. Re-run without %s to apply changes (add %s to skip the prompt)", style.Emphasis("--dry-run"), style.Emphasis("--skip-confirmation"))
 		return
 	}
 

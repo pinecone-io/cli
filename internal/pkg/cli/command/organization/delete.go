@@ -35,7 +35,7 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 		Use:   "delete",
 		Short: "Delete an organization by ID",
 		Example: help.Examples(`
-			pc organization delete --id "organization-id""
+			pc organization delete --id "organization-id"
 			pc organization delete --id "organization-id" --skip-confirmation
 		`),
 		GroupID: help.GROUP_ORGANIZATIONS.ID,
