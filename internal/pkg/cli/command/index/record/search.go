@@ -1,7 +1,6 @@
 package record
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -20,13 +19,10 @@ import (
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 )
 
-const defaultSearchTopK = 10
-
 type searchCmdOptions struct {
 	indexName     string
 	namespace     string
 	topK          int
-	topKExplicit  bool // true when --top-k was explicitly passed (vs. the default)
 	inputs        flags.JSONObject
 	filter        flags.JSONObject
 	rerank        flags.JSONObject
@@ -41,9 +37,7 @@ type searchCmdOptions struct {
 }
 
 func NewSearchCmd() *cobra.Command {
-	options := searchCmdOptions{
-		topK: defaultSearchTopK,
-	}
+	options := searchCmdOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "search",
@@ -63,7 +57,7 @@ func NewSearchCmd() *cobra.Command {
 			  --filter      metadata filter applied before ranking
 			  --rerank      re-score results using an inference model
 			  --fields      restrict which fields are returned
-			  --top-k       number of results to return (default: 10)
+			  --top-k       number of results to return (required)
 			  --namespace   target a specific namespace
 			  --match-terms keyword terms that must appear in results; only supported for
 			                sparse indexes with integrated embedding using the
@@ -96,7 +90,6 @@ func NewSearchCmd() *cobra.Command {
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
-			options.topKExplicit = cmd.Flags().Changed("top-k")
 			pc := sdk.NewPineconeClient(ctx)
 			ic, err := sdk.NewIndexConnection(ctx, pc, options.indexName, options.namespace)
 			if err != nil {
@@ -112,7 +105,7 @@ func NewSearchCmd() *cobra.Command {
 
 	cmd.Flags().StringVarP(&options.indexName, "index-name", "i", "", "name of the index to search")
 	cmd.Flags().StringVar(&options.namespace, "namespace", "", "namespace to search")
-	cmd.Flags().IntVarP(&options.topK, "top-k", "k", defaultSearchTopK, "number of results to return")
+	cmd.Flags().IntVarP(&options.topK, "top-k", "k", 0, "number of results to return")
 	cmd.Flags().Var(&options.inputs, "inputs", "query inputs for search (inline JSON, ./path.json, or '-' for stdin); requires integrated embedding")
 	cmd.Flags().Var(&options.filter, "filter", "metadata filter (inline JSON, ./path.json, or '-' for stdin)")
 	cmd.Flags().Var(&options.rerank, "rerank", "rerank results (inline JSON, ./path.json, or '-' for stdin); required fields: model (string), rank_fields (string array)")
@@ -199,57 +192,42 @@ func runSearchCmd(ctx context.Context, ic RecordService, options searchCmdOption
 
 	// Merge --body into req. Flags take precedence: a flag's value in req is
 	// already non-nil/non-zero if the flag was set, so we only overwrite when
-	// the field is still unset. top-k is the exception — its default is non-zero,
-	// so we track whether it was explicitly passed via options.topKExplicit.
+	// the field is still unset. TopK == 0 means the flag was not provided;
+	// the body's value (including an explicit 0 or negative) is applied as-is
+	// and the <= 0 validation below will catch invalid values.
 	if options.body != "" {
-		rawBody, src, err := argio.ReadAll(options.body)
+		b, src, err := argio.DecodeJSONArg[pinecone.SearchRecordsRequest](options.body)
 		if err != nil {
-			return fmt.Errorf("failed to read search body (%s): %w", style.Emphasis(src.Label), err)
-		}
-
-		var bodyReq pinecone.SearchRecordsRequest
-		dec := json.NewDecoder(bytes.NewReader(rawBody))
-		dec.DisallowUnknownFields()
-		if err := dec.Decode(&bodyReq); err != nil {
 			return fmt.Errorf("failed to parse search body (%s): %w", style.Emphasis(src.Label), err)
 		}
-		// Use a pointer-field probe to detect whether top_k was explicitly
-		// present in the JSON body. int32's zero value is indistinguishable
-		// from an absent field after standard decoding, so we need this
-		// secondary pass to tell "top_k: 0" from a missing top_k key.
-		var topKProbe struct {
-			Query struct {
-				TopK *int32 `json:"top_k"`
-			} `json:"query"`
-		}
-		_ = json.Unmarshal(rawBody, &topKProbe)
-		bodyTopKSet := topKProbe.Query.TopK != nil
-
-		if !options.topKExplicit && bodyTopKSet {
-			req.Query.TopK = bodyReq.Query.TopK
-		}
-		if req.Query.Id == nil && bodyReq.Query.Id != nil {
-			req.Query.Id = bodyReq.Query.Id
-		}
-		if req.Query.Inputs == nil && bodyReq.Query.Inputs != nil {
-			req.Query.Inputs = bodyReq.Query.Inputs
-		}
-		if req.Query.Filter == nil && bodyReq.Query.Filter != nil {
-			req.Query.Filter = bodyReq.Query.Filter
-		}
-		if req.Fields == nil && bodyReq.Fields != nil {
-			req.Fields = bodyReq.Fields
-		}
-		if req.Query.Vector == nil && bodyReq.Query.Vector != nil {
-			req.Query.Vector = bodyReq.Query.Vector
-		}
-		if req.Query.MatchTerms == nil && bodyReq.Query.MatchTerms != nil {
-			req.Query.MatchTerms = bodyReq.Query.MatchTerms
-		}
-		if req.Rerank == nil && bodyReq.Rerank != nil {
-			req.Rerank = bodyReq.Rerank
+		if b != nil {
+			if req.Query.TopK == 0 {
+				req.Query.TopK = b.Query.TopK
+			}
+			if req.Query.Id == nil && b.Query.Id != nil {
+				req.Query.Id = b.Query.Id
+			}
+			if req.Query.Inputs == nil && b.Query.Inputs != nil {
+				req.Query.Inputs = b.Query.Inputs
+			}
+			if req.Query.Filter == nil && b.Query.Filter != nil {
+				req.Query.Filter = b.Query.Filter
+			}
+			if req.Fields == nil && b.Fields != nil {
+				req.Fields = b.Fields
+			}
+			if req.Query.Vector == nil && b.Query.Vector != nil {
+				req.Query.Vector = b.Query.Vector
+			}
+			if req.Query.MatchTerms == nil && b.Query.MatchTerms != nil {
+				req.Query.MatchTerms = b.Query.MatchTerms
+			}
+			if req.Rerank == nil && b.Rerank != nil {
+				req.Rerank = b.Rerank
+			}
 		}
 	}
+
 
 	if req.Query.TopK <= 0 {
 		return fmt.Errorf("top-k must be greater than 0")

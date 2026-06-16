@@ -231,8 +231,7 @@ func Test_runSearchCmd_BodyProvidesQuery(t *testing.T) {
 	err := runSearchCmd(context.Background(), svc, searchCmdOptions{
 		indexName: "my-index",
 		namespace: "__default__",
-		topK:      defaultSearchTopK,
-		// No query flags set; body supplies the id.
+		// No query flags set; body supplies both id and top_k.
 		body: `{"query":{"top_k":3,"id":"body-rec"}}`,
 	})
 
@@ -247,7 +246,7 @@ func Test_runSearchCmd_FlagIdWinsOverBody(t *testing.T) {
 	err := runSearchCmd(context.Background(), svc, searchCmdOptions{
 		indexName: "my-index",
 		namespace: "__default__",
-		topK:      defaultSearchTopK,
+		topK:      10,
 		id:        "flag-rec",
 		body:      `{"query":{"id":"body-rec"}}`,
 	})
@@ -257,29 +256,27 @@ func Test_runSearchCmd_FlagIdWinsOverBody(t *testing.T) {
 	assert.Equal(t, "flag-rec", *svc.lastSearchReq.Query.Id)
 }
 
-func Test_runSearchCmd_ExplicitTopKWinsOverBody(t *testing.T) {
+func Test_runSearchCmd_FlagTopKWinsOverBody(t *testing.T) {
 	svc := &mockRecordService{searchResp: emptySearchResp}
 	err := runSearchCmd(context.Background(), svc, searchCmdOptions{
-		indexName:    "my-index",
-		namespace:    "__default__",
-		topK:         20,
-		topKExplicit: true,
-		id:           "rec-1",
-		body:         `{"query":{"top_k":99,"id":"rec-1"}}`,
+		indexName: "my-index",
+		namespace: "__default__",
+		topK:      20,
+		id:        "rec-1",
+		body:      `{"query":{"top_k":99,"id":"rec-1"}}`,
 	})
 
 	require.NoError(t, err)
 	assert.Equal(t, int32(20), svc.lastSearchReq.Query.TopK)
 }
 
-func Test_runSearchCmd_BodyTopKAppliedWhenNotExplicit(t *testing.T) {
+func Test_runSearchCmd_BodyTopKAppliedWhenFlagAbsent(t *testing.T) {
 	svc := &mockRecordService{searchResp: emptySearchResp}
 	err := runSearchCmd(context.Background(), svc, searchCmdOptions{
-		indexName:    "my-index",
-		namespace:    "__default__",
-		topK:         defaultSearchTopK, // default, not explicitly set
-		topKExplicit: false,
-		body:         `{"query":{"top_k":7,"id":"rec-1"}}`,
+		indexName: "my-index",
+		namespace: "__default__",
+		// topK not set (0); body supplies it.
+		body: `{"query":{"top_k":7,"id":"rec-1"}}`,
 	})
 
 	require.NoError(t, err)
@@ -289,13 +286,9 @@ func Test_runSearchCmd_BodyTopKAppliedWhenNotExplicit(t *testing.T) {
 func Test_runSearchCmd_BodyZeroTopKIsValidationError(t *testing.T) {
 	svc := &mockRecordService{searchResp: emptySearchResp}
 	err := runSearchCmd(context.Background(), svc, searchCmdOptions{
-		indexName:    "my-index",
-		namespace:    "__default__",
-		topK:         defaultSearchTopK, // default, not explicitly set
-		topKExplicit: false,
-		// body explicitly sets top_k to 0; should be rejected, not silently
-		// replaced with the default of 10.
-		body: `{"query":{"top_k":0,"id":"rec-1"}}`,
+		indexName: "my-index",
+		namespace: "__default__",
+		body:      `{"query":{"top_k":0,"id":"rec-1"}}`,
 	})
 
 	require.Error(t, err)
@@ -306,11 +299,9 @@ func Test_runSearchCmd_BodyZeroTopKIsValidationError(t *testing.T) {
 func Test_runSearchCmd_BodyNegativeTopKIsValidationError(t *testing.T) {
 	svc := &mockRecordService{searchResp: emptySearchResp}
 	err := runSearchCmd(context.Background(), svc, searchCmdOptions{
-		indexName:    "my-index",
-		namespace:    "__default__",
-		topK:         defaultSearchTopK,
-		topKExplicit: false,
-		body:         `{"query":{"top_k":-5,"id":"rec-1"}}`,
+		indexName: "my-index",
+		namespace: "__default__",
+		body:      `{"query":{"top_k":-5,"id":"rec-1"}}`,
 	})
 
 	require.Error(t, err)

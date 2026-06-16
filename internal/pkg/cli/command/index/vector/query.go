@@ -89,7 +89,7 @@ func NewQueryCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&options.includeMetadata, "include-metadata", false, "include metadata in the query results")
 	cmd.Flags().StringVar(&options.id, "id", "", "ID of the vector to query against")
 	cmd.Flags().VarP(&options.vector, "vector", "v", "vector values to query against (inline JSON array, ./path.json, or '-' for stdin)")
-	cmd.Flags().Var(&options.sparseIndices, "sparse-indices", "sparse indices to query against (inline JSON array, ./path.json, or '-' for stdin)")
+	cmd.Flags().Var(&options.sparseIndices, "sparse-indices", "sparse indices to query against (inline JSON uint32 array, ./path.json, or '-' for stdin)")
 	cmd.Flags().Var(&options.sparseValues, "sparse-values", "sparse values to query against (inline JSON array, ./path.json, or '-' for stdin)")
 	cmd.Flags().StringVar(&options.body, "body", "", "request body JSON (inline, ./path.json, or '-' for stdin; only one argument may use stdin)")
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")

@@ -74,7 +74,7 @@ func NewUpdateCmd() *cobra.Command {
 	cmd.Flags().StringVar(&options.namespace, "namespace", "", "namespace to update the vector in")
 	cmd.Flags().StringVar(&options.id, "id", "", "ID of the vector to update")
 	cmd.Flags().Var(&options.values, "values", "values to update the vector with (inline JSON array, ./path.json, or '-' for stdin)")
-	cmd.Flags().Var(&options.sparseIndices, "sparse-indices", "sparse indices to update the vector with (inline JSON array, ./path.json, or '-' for stdin)")
+	cmd.Flags().Var(&options.sparseIndices, "sparse-indices", "sparse indices to update the vector with (inline JSON uint32 array, ./path.json, or '-' for stdin)")
 	cmd.Flags().Var(&options.sparseValues, "sparse-values", "sparse values to update the vector with (inline JSON array, ./path.json, or '-' for stdin)")
 	cmd.Flags().Var(&options.metadata, "metadata", "metadata to update the vector with (inline JSON, ./path.json, or '-' for stdin)")
 	cmd.Flags().Var(&options.filter, "filter", "filter to update the vectors with (inline JSON, ./path.json, or '-' for stdin)")
