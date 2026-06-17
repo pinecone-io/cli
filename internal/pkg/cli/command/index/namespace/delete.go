@@ -34,6 +34,9 @@ func NewDeleteNamespaceCmd() *cobra.Command {
 		Example: help.Examples(`
 			# delete a namespace from an index
 			pc index namespace delete --index-name "my-index" --name "tenant-a"
+
+			# delete the default namespace
+			pc index namespace delete --index-name "my-index" --name "__default__"
 		`),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
@@ -59,7 +62,7 @@ func NewDeleteNamespaceCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&options.indexName, "index-name", "i", "", "name of the index to delete the namespace from")
-	cmd.Flags().StringVar(&options.name, "name", "", "name of the namespace to delete")
+	cmd.Flags().StringVar(&options.name, "name", "", "name of the namespace to delete (use \"__default__\" for the default namespace)")
 	_ = cmd.MarkFlagRequired("index-name")
 	_ = cmd.MarkFlagRequired("name")
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output result as JSON")
