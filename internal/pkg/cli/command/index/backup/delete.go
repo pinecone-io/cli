@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/confirm"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -15,8 +16,9 @@ import (
 )
 
 type deleteBackupCmdOptions struct {
-	backupId string
-	json     bool
+	backupId         string
+	skipConfirmation bool
+	json             bool
 }
 
 func NewDeleteBackupCmd() *cobra.Command {
@@ -32,6 +34,13 @@ func NewDeleteBackupCmd() *cobra.Command {
 			ctx := cmd.Context()
 			pc := sdk.NewPineconeClient(ctx)
 
+			if !options.skipConfirmation && !options.json {
+				confirm.Deletion(
+					fmt.Sprintf("This will delete backup %s.", style.Emphasis(options.backupId)),
+					"This action cannot be undone.",
+				)
+			}
+
 			err := runDeleteBackupCmd(ctx, pc, options)
 			if err != nil {
 				msg.FailJSON(options.json, "Failed to delete backup: %s\n", err)
@@ -42,7 +51,8 @@ func NewDeleteBackupCmd() *cobra.Command {
 
 	cmd.Flags().StringVarP(&options.backupId, "id", "i", "", "ID of the backup to delete")
 	_ = cmd.MarkFlagRequired("id")
-	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output result as JSON")
+	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "Skip the deletion confirmation prompt")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output result as JSON (also skips confirmation prompt)")
 
 	return cmd
 }

@@ -77,7 +77,7 @@ func NewRestoreCmd() *cobra.Command {
 
 	cmd.Flags().StringVarP(&options.backupId, "id", "i", "", "ID of the backup to restore from")
 	cmd.Flags().StringVarP(&options.name, "name", "n", "", "Name of the index to create from the backup")
-	cmd.Flags().StringVarP(&options.deletionProtection, "deletion-protection", "d", "", "Whether to enable deletion protection on the new index (enabled|disabled)")
+	cmd.Flags().StringVar(&options.deletionProtection, "deletion-protection", "", "Whether to enable deletion protection on the new index (enabled|disabled)")
 	cmd.Flags().StringToStringVarP(&options.tags, "tags", "t", map[string]string{}, "Tags to apply to the new index")
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
 	_ = cmd.MarkFlagRequired("id")

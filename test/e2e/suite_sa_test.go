@@ -57,6 +57,6 @@ func (s *ServiceAccountSuite) TearDownSuite() {
 	if !s.createdIdx || s.indexName == "" || s.cli == nil {
 		return
 	}
-	_, _, err := s.cli.RunCtx(s.ctx, "index", "delete", "--index-name", s.indexName)
+	_, _, err := s.cli.RunCtx(s.ctx, "index", "delete", "--index-name", s.indexName, "--skip-confirmation")
 	s.Require().NoError(err, "index delete failed (sa)")
 }

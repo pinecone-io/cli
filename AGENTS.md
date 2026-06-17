@@ -90,7 +90,7 @@ The `pc config` command manages these settings via a key-based interface. Valid 
 
 ### `--json` flag
 
-Available on most commands. Forces structured, machine-readable output. Also activated automatically when stdout is not a TTY.
+Available on most commands. Must be set explicitly to force structured, machine-readable output — it is **not** inferred from whether stdout is a TTY. (Color is suppressed automatically on a non-TTY, but the data output format is not.) The interactive auth flows — `login`, `target`, and `auth` — are the exception: they additionally infer JSON output when stdout is not a TTY, since an agent on a non-TTY can't drive their prompts.
 
 ---
 

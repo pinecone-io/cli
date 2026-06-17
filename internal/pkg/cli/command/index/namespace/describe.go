@@ -34,6 +34,9 @@ func NewDescribeNamespaceCmd() *cobra.Command {
 			# describe a namespace
 			pc index namespace describe --index-name "my-index" --name "tenant-a"
 
+			# describe the default namespace
+			pc index namespace describe --index-name "my-index" --name "__default__"
+
 			# describe a namespace and return JSON
 			pc index namespace describe --index-name "my-index" --name "tenant-a" --json
 		`),
@@ -61,7 +64,7 @@ func NewDescribeNamespaceCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&options.indexName, "index-name", "i", "", "name of the index to describe the namespace from")
-	cmd.Flags().StringVar(&options.name, "name", "", "name of the namespace to describe")
+	cmd.Flags().StringVar(&options.name, "name", "", "name of the namespace to describe (use \"__default__\" for the default namespace)")
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
 	_ = cmd.MarkFlagRequired("index-name")
 	_ = cmd.MarkFlagRequired("name")

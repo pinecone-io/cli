@@ -2,12 +2,15 @@ package vector
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/confirm"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/flags"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
+	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/go-pinecone/v5/pinecone"
 	"github.com/spf13/cobra"
 )
@@ -18,6 +21,7 @@ type deleteVectorsCmdOptions struct {
 	ids              flags.StringList
 	filter           flags.JSONObject
 	deleteAllVectors bool
+	skipConfirmation bool
 	json             bool
 }
 
@@ -48,7 +52,8 @@ func NewDeleteVectorsCmd() *cobra.Command {
 	cmd.Flags().Var(&options.ids, "ids", "IDs of the vectors to delete (inline JSON string array, ./path.json, or '-' for stdin)")
 	cmd.Flags().Var(&options.filter, "filter", "filter to delete the vectors with (inline JSON, ./path.json, or '-' for stdin)")
 	cmd.Flags().BoolVar(&options.deleteAllVectors, "all-vectors", false, "delete all vectors from the namespace")
-	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON")
+	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "Skip the deletion confirmation prompt")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "output as JSON (also skips confirmation prompt)")
 
 	_ = cmd.MarkFlagRequired("index-name")
 
@@ -70,6 +75,16 @@ func runDeleteVectorsCmd(ctx context.Context, options deleteVectorsCmdOptions) {
 
 	// Delete all vectors in namespace
 	if options.deleteAllVectors {
+		if !options.skipConfirmation && !options.json {
+			target := "the default namespace"
+			if options.namespace != "" {
+				target = fmt.Sprintf("namespace %s", style.Emphasis(options.namespace))
+			}
+			confirm.Deletion(
+				fmt.Sprintf("This will delete ALL vectors in %s of index %s.", target, style.Emphasis(options.indexName)),
+				"This action cannot be undone.",
+			)
+		}
 		err = ic.DeleteAllVectorsInNamespace(ctx)
 		if err != nil {
 			msg.FailJSON(options.json, "Failed to delete all vectors in namespace: %s", err)

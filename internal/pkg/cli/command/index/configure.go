@@ -85,8 +85,9 @@ func NewConfigureIndexCmd() *cobra.Command {
 	cmd.Flags().Int32Var(&options.readReplicas, "read-replicas", 0, "The number of replicas to use. Replicas duplicate the compute resources and data of an index, allowing higher query throughput and availability")
 
 	// optional for all index types
-	cmd.Flags().StringVarP(&options.deletionProtection, "deletion-protection", "p", "", "Enable or disable deletion protection for the index. One of: enabled, disabled")
+	cmd.Flags().StringVar(&options.deletionProtection, "deletion-protection", "", "Enable or disable deletion protection for the index. One of: enabled, disabled")
 	cmd.Flags().StringToStringVar(&options.tags, "tags", map[string]string{}, "Custom user tags to add to an index")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output as JSON")
 
 	return cmd
 }

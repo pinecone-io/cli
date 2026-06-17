@@ -43,7 +43,7 @@ func NewUpdateProjectCmd() *cobra.Command {
 			if projId == "" {
 				projId, err = state.GetTargetProjectId()
 				if err != nil {
-					msg.FailJSON(options.json, "No target project set and no project ID provided. Use %s to set the target project. Use %s to delete a specific project.", style.Code("pc target -p <project>"), style.Code("pc project delete -i <project-id>"))
+					msg.FailJSON(options.json, "No target project set and no project ID provided. Use %s to set the target project. Use %s to update a specific project.", style.Code("pc target -p <project>"), style.Code("pc project update -i <project-id>"))
 					exit.ErrorMsg("No project ID provided, and no target project set")
 				}
 			}

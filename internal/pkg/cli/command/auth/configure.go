@@ -184,6 +184,10 @@ func Run(ctx context.Context, opts configureCmdOptions) {
 					break
 				}
 			}
+			if targetProject == nil {
+				msg.FailJSON(opts.json, "No project found with ID %s for the service account", opts.projectID)
+				exit.ErrorMsg(fmt.Sprintf("No project found with ID %s for the service account", opts.projectID))
+			}
 		} else {
 			targetProject = uiProjectSelector(projects, opts.json)
 		}

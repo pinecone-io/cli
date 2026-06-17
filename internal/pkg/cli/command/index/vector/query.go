@@ -135,8 +135,8 @@ func runQueryCmd(ctx context.Context, options queryCmdOptions) {
 	}
 
 	if options.id == "" && options.vector == nil && options.sparseIndices == nil && options.sparseValues == nil {
-		msg.FailJSON(options.json, "Either --id, --vector, --sparse-indices & --sparse-values")
-		exit.ErrorMsg("Either --id, --vector, --sparse-indices & --sparse-values")
+		msg.FailJSON(options.json, "One of --id, --vector, or --sparse-indices & --sparse-values must be provided")
+		exit.ErrorMsg("One of --id, --vector, or --sparse-indices & --sparse-values must be provided")
 	}
 
 	// Get IndexConnection
