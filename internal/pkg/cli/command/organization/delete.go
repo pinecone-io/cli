@@ -1,13 +1,12 @@
 package organization
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
+	"github.com/pinecone-io/cli/internal/pkg/utils/confirm"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -51,7 +50,10 @@ func NewDeleteOrganizationCmd() *cobra.Command {
 			}
 
 			if !options.skipConfirmation && !options.json {
-				confirmDelete(org.Name, org.Id)
+				confirm.Deletion(
+					fmt.Sprintf("This will delete the organization %s (ID: %s).", style.Emphasis(org.Name), style.Emphasis(org.Id)),
+					"This action cannot be undone.",
+				)
 			}
 
 			err = runDeleteOrganizationCmd(ctx, ac.Organization, options, org.Name, org.Id)
@@ -97,29 +99,4 @@ func runDeleteOrganizationCmd(ctx context.Context, svc DeleteOrganizationService
 
 	msg.SuccessMsg("Organization %s (ID: %s) deleted.\n", style.Emphasis(name), style.Emphasis(id))
 	return nil
-}
-
-func confirmDelete(organizationName, organizationID string) {
-	msg.WarnMsg("This will delete the organization %s (ID: %s).", style.Emphasis(organizationName), style.Emphasis(organizationID))
-	msg.WarnMsg("This action cannot be undone.")
-
-	// Prompt the user
-	fmt.Fprint(os.Stderr, "Do you want to continue? (y/N): ")
-
-	// Read the user's input
-	reader := bufio.NewReader(os.Stdin)
-	input, err := reader.ReadString('\n')
-	if err != nil {
-		msg.FailMsg("Error reading input: %v", err)
-		exit.Error(err, "Error reading input")
-	}
-
-	input = strings.TrimSpace(strings.ToLower(input))
-
-	if input == "y" || input == "yes" {
-		msg.InfoMsg("You chose to continue delete.")
-	} else {
-		msg.InfoMsg("Operation canceled.")
-		exit.Success()
-	}
 }

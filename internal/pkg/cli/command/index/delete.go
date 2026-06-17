@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/confirm"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -15,8 +16,9 @@ import (
 )
 
 type deleteCmdOptions struct {
-	indexName string
-	json      bool
+	indexName        string
+	skipConfirmation bool
+	json             bool
 }
 
 // DeleteIndexService abstracts the Pinecone Go SDK for unit testing (runDeleteIndexCmd)
@@ -43,6 +45,13 @@ func NewDeleteCmd() *cobra.Command {
 			ctx := cmd.Context()
 			pc := sdk.NewPineconeClient(ctx)
 
+			if !options.skipConfirmation && !options.json {
+				confirm.Deletion(
+					fmt.Sprintf("This will delete index %s and all of its data.", style.Emphasis(options.indexName)),
+					"This action cannot be undone.",
+				)
+			}
+
 			err := runDeleteIndexCmd(ctx, pc, options)
 			if err != nil {
 				if strings.Contains(err.Error(), "not found") {
@@ -60,7 +69,8 @@ func NewDeleteCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&options.indexName, "index-name", "i", "", "name of index to delete")
 	cmd.Flags().StringVarP(&options.indexName, "name", "n", "", "name of index to delete")
 	_ = cmd.Flags().MarkDeprecated("name", "use --index-name instead")
-	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output result as JSON")
+	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "Skip the deletion confirmation prompt")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output result as JSON (also skips confirmation prompt)")
 
 	return cmd
 }

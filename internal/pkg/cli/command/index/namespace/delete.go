@@ -5,18 +5,21 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/confirm"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
 	"github.com/pinecone-io/cli/internal/pkg/utils/sdk"
+	"github.com/pinecone-io/cli/internal/pkg/utils/style"
 	"github.com/pinecone-io/cli/internal/pkg/utils/text"
 	"github.com/spf13/cobra"
 )
 
 type deleteNamespaceCmdOptions struct {
-	indexName string
-	name      string
-	json      bool
+	indexName        string
+	name             string
+	skipConfirmation bool
+	json             bool
 }
 
 func NewDeleteNamespaceCmd() *cobra.Command {
@@ -53,6 +56,13 @@ func NewDeleteNamespaceCmd() *cobra.Command {
 				exit.Error(err, "Failed to delete namespace")
 			}
 
+			if !options.skipConfirmation && !options.json {
+				confirm.Deletion(
+					fmt.Sprintf("This will delete namespace %s from index %s and remove all of its data.", style.Emphasis(options.name), style.Emphasis(options.indexName)),
+					"This action cannot be undone.",
+				)
+			}
+
 			err = runDeleteNamespaceCmd(ctx, ic, options)
 			if err != nil {
 				msg.FailJSON(options.json, "Failed to delete namespace: %s", err)
@@ -65,7 +75,8 @@ func NewDeleteNamespaceCmd() *cobra.Command {
 	cmd.Flags().StringVar(&options.name, "name", "", "name of the namespace to delete (use \"__default__\" for the default namespace)")
 	_ = cmd.MarkFlagRequired("index-name")
 	_ = cmd.MarkFlagRequired("name")
-	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output result as JSON")
+	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "Skip the deletion confirmation prompt")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output result as JSON (also skips confirmation prompt)")
 
 	return cmd
 }

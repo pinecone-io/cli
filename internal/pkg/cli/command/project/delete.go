@@ -1,13 +1,12 @@
 package project
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
+	"github.com/pinecone-io/cli/internal/pkg/utils/confirm"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -67,7 +66,10 @@ func NewDeleteProjectCmd() *cobra.Command {
 			verifyNoCollections(ctx, projToDelete.Id, projToDelete.Name, options.json)
 
 			if !options.skipConfirmation && !options.json {
-				confirmDelete(projToDelete.Name)
+				confirm.Deletion(
+					fmt.Sprintf("This will delete the project %s in organization %s.", style.Emphasis(projToDelete.Name), style.Emphasis(state.TargetOrg.Get().Name)),
+					"This action cannot be undone.",
+				)
 			}
 
 			err = runDeleteProjectCmd(ctx, ac.Project, options, projToDelete.Name, projToDelete.Id)
@@ -110,33 +112,6 @@ func runDeleteProjectCmd(ctx context.Context, svc DeleteProjectService, opts del
 
 	msg.SuccessMsg("Project %s deleted.\n", style.Emphasis(name))
 	return nil
-}
-
-func confirmDelete(projectName string) {
-	msg.WarnMsg("This will delete the project %s in organization %s.", style.Emphasis(projectName), style.Emphasis(state.TargetOrg.Get().Name))
-	msg.WarnMsg("This action cannot be undone.")
-
-	// Prompt the user
-	fmt.Fprint(os.Stderr, "Do you want to continue? (y/N): ")
-
-	// Read the user's input
-	reader := bufio.NewReader(os.Stdin)
-	input, err := reader.ReadString('\n')
-	if err != nil {
-		msg.FailMsg("Error reading input: %v", err)
-		exit.Error(err, "Error reading input")
-	}
-
-	// Trim any whitespace from the input and convert to lowercase
-	input = strings.TrimSpace(strings.ToLower(input))
-
-	// Check if the user entered "y" or "yes"
-	if input == "y" || input == "yes" {
-		msg.InfoMsg("You chose to continue delete.")
-	} else {
-		msg.InfoMsg("Operation canceled.")
-		exit.Success()
-	}
 }
 
 func verifyNoIndexes(ctx context.Context, projectId, projectName string, jsonOutput bool) {

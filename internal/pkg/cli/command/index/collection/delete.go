@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pinecone-io/cli/internal/pkg/utils/confirm"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -14,8 +15,9 @@ import (
 )
 
 type deleteCollectionCmdOptions struct {
-	name string
-	json bool
+	name             string
+	skipConfirmation bool
+	json             bool
 }
 
 // DeleteCollectionService abstracts the Pinecone Go SDK for unit testing (runDeleteCollectionCmd)
@@ -36,6 +38,13 @@ func NewDeleteCollectionCmd() *cobra.Command {
 			ctx := cmd.Context()
 			pc := sdk.NewPineconeClient(ctx)
 
+			if !options.skipConfirmation && !options.json {
+				confirm.Deletion(
+					fmt.Sprintf("This will delete collection %s.", style.Emphasis(options.name)),
+					"This action cannot be undone.",
+				)
+			}
+
 			err := runDeleteCollectionCmd(ctx, pc, options)
 			if err != nil {
 				msg.FailJSON(options.json, "Failed to delete collection %s: %s\n", style.Emphasis(options.name), err)
@@ -49,7 +58,8 @@ func NewDeleteCollectionCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("name")
 
 	// Optional flags
-	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output result as JSON")
+	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "Skip the deletion confirmation prompt")
+	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output result as JSON (also skips confirmation prompt)")
 
 	return cmd
 }

@@ -1,13 +1,11 @@
 package apiKey
 
 import (
-	"bufio"
 	"fmt"
-	"os"
-	"strings"
 
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/secrets"
 	"github.com/pinecone-io/cli/internal/pkg/utils/configuration/state"
+	"github.com/pinecone-io/cli/internal/pkg/utils/confirm"
 	"github.com/pinecone-io/cli/internal/pkg/utils/exit"
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
@@ -61,7 +59,11 @@ func NewDeleteKeyCmd() *cobra.Command {
 			}
 
 			if !options.skipConfirmation && !options.json {
-				confirmDeleteApiKey(keyToDelete.Name)
+				confirm.Deletion(
+					fmt.Sprintf("This operation will delete API key %s from project %s.", style.Emphasis(keyToDelete.Name), style.Emphasis(state.TargetProj.Get().Name)),
+					"Any integrations that authenticate with this API key will immediately stop working.",
+					"This action cannot be undone.",
+				)
 			}
 
 			err = ac.APIKey.Delete(cmd.Context(), keyToDelete.Id)
@@ -95,32 +97,4 @@ func NewDeleteKeyCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&options.skipConfirmation, "skip-confirmation", false, "Skip deletion confirmation prompt")
 	cmd.Flags().BoolVarP(&options.json, "json", "j", false, "Output result as JSON (also skips confirmation prompt)")
 	return cmd
-}
-
-func confirmDeleteApiKey(apiKeyName string) {
-	msg.WarnMsg("This operation will delete API key %s from project %s.", style.Emphasis(apiKeyName), style.Emphasis(state.TargetProj.Get().Name))
-	msg.WarnMsg("Any integrations that authenticate with this API key will immediately stop working.")
-	msg.WarnMsg("This action cannot be undone.")
-
-	// Prompt the user
-	fmt.Fprint(os.Stderr, "Do you want to continue? (y/N): ")
-
-	// Read the user's input
-	reader := bufio.NewReader(os.Stdin)
-	input, err := reader.ReadString('\n')
-	if err != nil {
-		msg.FailMsg("Error reading input: %+v", err)
-		exit.Error(err, "Error reading input")
-	}
-
-	// Trim any whitespace from the input and convert to lowercase
-	input = strings.TrimSpace(strings.ToLower(input))
-
-	// Check if the user entered "y" or "yes"
-	if input == "y" || input == "yes" {
-		msg.InfoMsg("You chose to continue delete.")
-	} else {
-		msg.InfoMsg("Operation canceled.")
-		exit.Success()
-	}
 }
