@@ -30,7 +30,7 @@ func (s *ServiceAccountSuite) TestNamespaceLifecycle() {
 	s.Require().Equal(1, len(list.Namespaces), "expected one namespace in list")
 	s.Require().Equal(name, list.Namespaces[0].Name, "namespace name mismatch")
 
-	_, _, err = s.cli.RunCtx(s.ctx, "index", "namespace", "delete", "--index-name", s.indexName, "--name", name)
+	_, _, err = s.cli.RunCtx(s.ctx, "index", "namespace", "delete", "--index-name", s.indexName, "--name", name, "--skip-confirmation")
 	s.Require().NoError(err, "namespace delete failed")
 }
 
@@ -57,6 +57,6 @@ func (a *APIKeySuite) TestNamespaceLifecycle() {
 	a.Require().Equal(1, len(list.Namespaces), "expected one namespace in list")
 	a.Require().Equal(name, list.Namespaces[0].Name, "namespace name mismatch")
 
-	_, _, err = a.cli.RunCtx(a.ctx, "index", "namespace", "delete", "--index-name", a.indexName, "--name", name)
+	_, _, err = a.cli.RunCtx(a.ctx, "index", "namespace", "delete", "--index-name", a.indexName, "--name", name, "--skip-confirmation")
 	a.Require().NoError(err, "namespace delete failed")
 }
