@@ -24,6 +24,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	loginutil "github.com/pinecone-io/cli/internal/pkg/utils/login"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pluginhint"
 	"github.com/spf13/cobra"
 )
 
@@ -66,6 +67,14 @@ type GlobalOptions struct {
 }
 
 func Execute() {
+	// If running inside Claude Code, emit a one-line marker prompting the user
+	// to install the official Pinecone plugin. Placed here (rather than in a
+	// PersistentPreRun) so it fires for every invocation — including --help and
+	// unknown-command errors — regardless of any subcommand PersistentPreRun
+	// overrides. Claude Code strips the marker from the output before it reaches
+	// the model, so it never appears in the conversation.
+	pluginhint.Emit()
+
 	// Base context: cancel on SIGINT / SIGTERM
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 
