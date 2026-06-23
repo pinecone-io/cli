@@ -67,12 +67,9 @@ type GlobalOptions struct {
 }
 
 func Execute() {
-	// If running inside Claude Code, emit a one-line marker prompting the user
-	// to install the official Pinecone plugin. Placed here (rather than in a
-	// PersistentPreRun) so it fires for every invocation — including --help and
-	// unknown-command errors — regardless of any subcommand PersistentPreRun
-	// overrides. Claude Code strips the marker from the output before it reaches
-	// the model, so it never appears in the conversation.
+	// Recommend the Pinecone plugin when running inside Claude Code. Done here
+	// rather than in a PersistentPreRun so it fires for every invocation,
+	// including --help and unknown-command errors.
 	pluginhint.Emit()
 
 	// Base context: cancel on SIGINT / SIGTERM
