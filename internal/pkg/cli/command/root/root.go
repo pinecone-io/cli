@@ -24,6 +24,7 @@ import (
 	"github.com/pinecone-io/cli/internal/pkg/utils/help"
 	loginutil "github.com/pinecone-io/cli/internal/pkg/utils/login"
 	"github.com/pinecone-io/cli/internal/pkg/utils/msg"
+	"github.com/pinecone-io/cli/internal/pkg/utils/pluginhint"
 	"github.com/spf13/cobra"
 )
 
@@ -66,6 +67,11 @@ type GlobalOptions struct {
 }
 
 func Execute() {
+	// Recommend the Pinecone plugin when running inside Claude Code. Done here
+	// rather than in a PersistentPreRun so it fires for every invocation,
+	// including --help and unknown-command errors.
+	pluginhint.Emit()
+
 	// Base context: cancel on SIGINT / SIGTERM
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 
