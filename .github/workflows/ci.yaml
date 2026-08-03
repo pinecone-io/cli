@@ -35,6 +35,8 @@ jobs:
           fetch-depth: 0
       - name: Set up Go
         uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
       - name: Run tests
         run: go test -v ./...
 
@@ -55,6 +57,8 @@ jobs:
           fetch-depth: 0
       - name: Set up Go
         uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v7
         with:
