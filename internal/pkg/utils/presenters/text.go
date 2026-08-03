@@ -27,7 +27,7 @@ func DisplayOrNone(val any) string {
 	v := reflect.ValueOf(val)
 	for v.IsValid() {
 		switch v.Kind() {
-		case reflect.Ptr, reflect.Interface:
+		case reflect.Pointer, reflect.Interface:
 			if v.IsNil() {
 				return nonePlaceholder
 			}
