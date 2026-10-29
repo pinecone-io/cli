@@ -7,22 +7,22 @@ import (
 )
 
 type mockImportService struct {
-	lastStartImportUri           string
-	lastStartImportIntegrationId *string
-	lastStartImportErrorMode     *string
-	lastDescribeImportId         string
-	lastListImportsLimit         *int32
+	lastStartImportUri             string
+	lastStartImportIntegrationId   *string
+	lastStartImportErrorMode       *string
+	lastDescribeImportId           string
+	lastListImportsLimit           *int32
 	lastListImportsPaginationToken *string
-	lastCancelImportId           string
+	lastCancelImportId             string
 
-	startImportResp  *pinecone.StartImportResponse
+	startImportResp    *pinecone.StartImportResponse
 	describeImportResp *pinecone.Import
-	listImportsResp  *pinecone.ListImportsResponse
+	listImportsResp    *pinecone.ListImportsResponse
 
-	startImportErr   error
+	startImportErr    error
 	describeImportErr error
-	listImportsErr   error
-	cancelImportErr  error
+	listImportsErr    error
+	cancelImportErr   error
 }
 
 func (m *mockImportService) StartImport(ctx context.Context, uri string, integrationId, errorMode *string) (*pinecone.StartImportResponse, error) {

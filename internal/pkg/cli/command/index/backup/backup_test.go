@@ -12,14 +12,14 @@ type mockBackupService struct {
 	lastListBackupsParams *pinecone.ListBackupsParams
 	lastDeleteBackupId    string
 
-	createBackupResp  *pinecone.Backup
+	createBackupResp   *pinecone.Backup
 	describeBackupResp *pinecone.Backup
-	listBackupsResp   *pinecone.BackupList
+	listBackupsResp    *pinecone.BackupList
 
-	createBackupErr  error
+	createBackupErr   error
 	describeBackupErr error
-	listBackupsErr   error
-	deleteBackupErr  error
+	listBackupsErr    error
+	deleteBackupErr   error
 }
 
 func (m *mockBackupService) CreateBackup(ctx context.Context, in *pinecone.CreateBackupParams) (*pinecone.Backup, error) {

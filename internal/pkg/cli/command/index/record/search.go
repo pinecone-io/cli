@@ -228,7 +228,6 @@ func runSearchCmd(ctx context.Context, ic RecordService, options searchCmdOption
 		}
 	}
 
-
 	if req.Query.TopK <= 0 {
 		return fmt.Errorf("top-k must be greater than 0")
 	}

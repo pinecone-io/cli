@@ -22,4 +22,3 @@ func MaskHeadTail(s string, head, tail int) string {
 
 	return start + "***" + end
 }
-

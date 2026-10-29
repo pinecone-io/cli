@@ -38,28 +38,28 @@ var (
 // These are commands that either establish credentials or work on local state only.
 // When adding new commands that don't need auth, add their CommandPath() here.
 var skipAuthCommands = map[string]struct{}{
-	"pc login":                   {},
-	"pc logout":                  {},
-	"pc auth login":              {},
-	"pc auth logout":             {},
-	"pc auth configure":          {},
-	"pc auth clear":              {},
-	"pc auth status":             {},
-	"pc auth _daemon":            {},
-	"pc auth local-keys":         {}, // parent command (shows help)
-	"pc auth local-keys list":    {}, // reads local state only, no API calls
-	"pc target":                  {}, // handles its own auth after --show/--clear early returns
-	"pc version":                 {},
-	"pc config":                  {},
-	"pc config get":              {},
-	"pc config set":              {},
-	"pc config unset":            {},
-	"pc config list":             {},
-	"pc config describe":         {},
-	"pc config get-api-key":      {},
-	"pc config set-api-key":      {},
-	"pc config set-color":        {},
-	"pc config set-environment":  {},
+	"pc login":                  {},
+	"pc logout":                 {},
+	"pc auth login":             {},
+	"pc auth logout":            {},
+	"pc auth configure":         {},
+	"pc auth clear":             {},
+	"pc auth status":            {},
+	"pc auth _daemon":           {},
+	"pc auth local-keys":        {}, // parent command (shows help)
+	"pc auth local-keys list":   {}, // reads local state only, no API calls
+	"pc target":                 {}, // handles its own auth after --show/--clear early returns
+	"pc version":                {},
+	"pc config":                 {},
+	"pc config get":             {},
+	"pc config set":             {},
+	"pc config unset":           {},
+	"pc config list":            {},
+	"pc config describe":        {},
+	"pc config get-api-key":     {},
+	"pc config set-api-key":     {},
+	"pc config set-color":       {},
+	"pc config set-environment": {},
 }
 
 type GlobalOptions struct {

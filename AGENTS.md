@@ -24,7 +24,7 @@ Guide for AI agents and assistants contributing to this repository.
 | TUI / output | `github.com/charmbracelet/bubbletea`, `github.com/charmbracelet/lipgloss`, `github.com/fatih/color` |
 | Logging | `github.com/rs/zerolog` |
 | Testing | `github.com/stretchr/testify` |
-| Go version | 1.24.0 |
+| Go version | 1.26.10 (see `go.mod`) |
 
 ---
 
